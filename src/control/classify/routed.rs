@@ -12,16 +12,20 @@
 //!    field is `command` — the one the engine's `bash` reads and the one every
 //!    thrall tool schema of that shape declares — so the two spellings have one
 //!    home and cannot drift.
-//! 2. **Everything else is the class the operator STATED for that name, and
-//!    otherwise [`Opaque`](Effect::Opaque)**, which the shipped table holds. A
-//!    tool whose reach this control cannot read is parked for the operator,
+//! 2. **Else the class the operator STATED for that name.**
+//! 3. **Else, an input naming a `url` (or `urls`) is
+//!    [`OpenWorld`](Effect::OpenWorld)** — the class whose meaning is network
+//!    reach (bl-c6f0). The same reading as item 1, on the other operand a
+//!    routed schema carries.
+//! 4. **Otherwise [`Opaque`](Effect::Opaque)**, which the shipped table holds.
+//!    A tool whose reach this control cannot read is parked for the operator,
 //!    never passed.
 //!
 //! **The row is how a nameable tool stops being opaque** (bl-b65d). An MCP tool
 //! reaches this control as a routed name with an input shaped by its server's
 //! schema — `box2_fetch {"url": …}` — so there is no command line to read and
-//! every call of it holds. The way out is a `rules:` row keyed on the whole
-//! host-qualified name:
+//! (before item 3) every call of it held. The way out is a `rules:` row keyed
+//! on the whole host-qualified name:
 //!
 //! ```yaml
 //! rules:
@@ -67,16 +71,21 @@
 //! default, and the shipped default is now the closed one.
 
 use super::super::policy::{CAPABILITY_YAML, Policy};
-use super::{COMMAND, Classified, Effect, Request, Root};
+use super::{ADDRESS, COMMAND, Classified, Effect, Request, Root};
+use serde_json::Value;
 
-/// Classify one invocation of a name the intrinsic map does not hold.
+/// Classify one invocation of a name the intrinsic map does not hold: the
+/// command line if there is one, else the operator's row, else the address the
+/// input names, else the opaque hold.
 pub(super) fn classify(request: &Request, root: &Root, policy: &Policy) -> Classified {
     let far = far(root);
     let command = request.field(COMMAND);
-    if command.trim().is_empty() {
-        return stated(request, &far, policy);
+    if !command.trim().is_empty() {
+        return super::super::bash::classify(&command, &far, policy);
     }
-    super::super::bash::classify(&command, &far, policy)
+    stated(request, &far, policy)
+        .or_else(|| addressed(request))
+        .unwrap_or_else(|| opaque(request))
 }
 
 /// The writable root **as it stands on the other machine**: empty (bl-1772).
@@ -105,30 +114,82 @@ fn far(root: &Root) -> Root {
     }
 }
 
-/// The class the **operator stated** for this routed name, or the opaque hold
-/// that says how to state one (bl-b65d).
-fn stated(request: &Request, root: &Root, policy: &Policy) -> Classified {
-    let Some(row) = policy.stated(&request.name) else {
-        return Classified::new(
-            Effect::Opaque,
-            format!(
-                "{name} is not a tool this control implements and its input carries no command \
-                 line, so what it reaches cannot be read — held rather than passed. To state what \
-                 it reaches, add a `rules:` row to this workspace's {CAPABILITY_YAML}: \
-                 `{name}: <class>`, where <class> is one of {classes}; a key ending in `_` \
-                 states it for every tool one box advertises",
-                name = request.name,
-                classes = Effect::reach_words(),
-            ),
-        );
-    };
+/// The class the **operator stated** for this routed name (bl-b65d), or `None`
+/// when they have stated none.
+fn stated(request: &Request, root: &Root, policy: &Policy) -> Option<Classified> {
+    let row = policy.stated(&request.name)?;
     let words = [request.name.clone()];
     let found = super::super::bash::matched(&row, &request.name, &words, root);
-    Classified::new(
+    Some(Classified::new(
         found.effect,
         format!(
             "a `rules:` row in {CAPABILITY_YAML} states what `{}` reaches",
             request.name
+        ),
+    ))
+}
+
+/// The class an input that **names an address off this machine** lands in
+/// (bl-c6f0): [`OpenWorld`](Effect::OpenWorld), which is what that class means.
+///
+/// This is the command line's own reading applied to the other operand a
+/// routed schema carries. A `url` is not the invocation's assertion about its
+/// effect — the thing bl-72bd deleted every path to believing — it is an
+/// operand, exactly as a command line is, and the operand says the call
+/// reaches the network. Reading it is what makes an MCP fetch tool usable
+/// without a row per box: `thrall mcp pin`'s fetch entry is
+/// `{"url": …, "max_length": …, "raw": …}` and no line will ever appear in it.
+///
+/// Three things bound it. It is asked **after** the operator's row and after
+/// the command line, so neither is softened by it. It answers only for an
+/// input that actually names an address — anything else keeps the hold. And it
+/// can only ever answer open-world: no shape of input reaches `read` here.
+///
+/// **What it does not solve.** A tool whose input names a url and whose act is
+/// wider than fetching it — a delete keyed on a resource address — reads
+/// open-world and passes, because an operand names the reach and not the verb.
+/// The answer to that is the row, which outranks this: `rules:` /
+/// `  box2_delete_object: destructive` states what the operator knows and this
+/// control cannot see.
+fn addressed(request: &Request) -> Option<Classified> {
+    let field = ADDRESS
+        .iter()
+        .find(|key| names_address(&request.input, key))?;
+    Some(Classified::new(
+        Effect::OpenWorld,
+        format!(
+            "`{}` carries no command line, and its `{field}` input names an address off this \
+             machine — network reach",
+            request.name
+        ),
+    ))
+}
+
+/// Whether `input` names an address under `key`: a non-blank string, or a list
+/// holding one. Total over every shape — an off-schema value names nothing,
+/// which is the hold rather than an error.
+fn names_address(input: &Value, key: &str) -> bool {
+    let said = |value: &Value| value.as_str().is_some_and(|s| !s.trim().is_empty());
+    match input.get(key) {
+        Some(Value::Array(items)) => items.iter().any(said),
+        Some(value) => said(value),
+        None => false,
+    }
+}
+
+/// The hold for a name whose reach this control could not read at all, spelling
+/// the row that would end it (bl-b65d).
+fn opaque(request: &Request) -> Classified {
+    Classified::new(
+        Effect::Opaque,
+        format!(
+            "{name} is not a tool this control implements and its input carries no command \
+             line, so what it reaches cannot be read — held rather than passed. To state what \
+             it reaches, add a `rules:` row to this workspace's {CAPABILITY_YAML}: \
+             `{name}: <class>`, where <class> is one of {classes}; a key ending in `_` \
+             states it for every tool one box advertises",
+            name = request.name,
+            classes = Effect::reach_words(),
         ),
     )
 }

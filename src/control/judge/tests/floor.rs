@@ -162,3 +162,34 @@ fn a_floor_does_not_reach_the_compactor_s_checkpoint_pair() {
         Ruling::Hold
     );
 }
+
+/// **bl-c6f0**: the url reading is a class, not a pass. A routed fetch tool
+/// classifies open-world off its own `url` operand and the shipped table lets
+/// it through — and the moment the operator raises the floor over that
+/// conversation, the very same call parks like every other class above read.
+/// The reading widens what the control can *say*; it takes nothing away from
+/// what the operator can *impose*.
+#[test]
+fn the_url_reading_is_a_class_the_floor_still_bites_on() {
+    let fetch = Request {
+        input: serde_json::json!({"url": "https://example.invalid/x"}),
+        ..call("toolu_f", "box2_fetch", "amber")
+    };
+    let root = crate::control::root::Root {
+        writable: vec![std::path::PathBuf::from("/w/agent")],
+        cwd: std::path::PathBuf::from("/w/agent"),
+        home: std::path::PathBuf::from("/home/op"),
+    };
+    let effect = crate::control::classify::classify(&fetch, &root, &Policy::default()).effect;
+    assert_eq!(effect, Effect::OpenWorld);
+    let open = Answers::fold(&[]);
+    assert_eq!(ruling(&open, &fetch, "w", effect).ruling, Ruling::Pass);
+    let floored = Answers::fold(&[row(&[YOG_CONTROL, "floor", "amber", "raise"])]);
+    assert_eq!(
+        ruling(&floored, &fetch, "w", effect),
+        Standing {
+            ruling: Ruling::Hold,
+            scope: Scope::Conversation
+        }
+    );
+}

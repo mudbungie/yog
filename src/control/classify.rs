@@ -22,8 +22,9 @@
 //! **There is no arm from a tool NAME to a passing class** (bl-72bd). Names are
 //! folded into a closed enum first ([`intrinsic::Known`]) and matched
 //! exhaustively, so a name added without a row does not compile; everything the
-//! enum does not name goes to [`routed`], whose two answers are the command
-//! line's own class and [`Opaque`](Effect::Opaque). The arm this replaced read
+//! enum does not name goes to [`routed`], which reads the invocation's own
+//! operands — a command line, then a `url` — and answers
+//! [`Opaque`](Effect::Opaque) where there are none. The arm this replaced read
 //! `other => OpenWorld`, and open-world passes: a foot's `box2_shell` running
 //! `rm -rf` was therefore passed unread while the engine's own `bash` refused
 //! the same line. Falling off a match into the most permissive class is the one
@@ -36,6 +37,12 @@ use super::wire::Request;
 /// every thrall shell tool's ([`routed`]), said once here so the built-in and
 /// the routed lane read the same field name and cannot drift.
 const COMMAND: &str = "command";
+
+/// The input fields a **network address** rides in — the `url` of every
+/// fetch-shaped MCP schema and the `urls` of its batched form (bl-c6f0), said
+/// here beside [`COMMAND`] because they are read the same way and for the same
+/// reason: an operand of the invocation, never a claim it makes about itself.
+const ADDRESS: [&str; 2] = ["url", "urls"];
 
 /// The intrinsic map: the closed set of names this control implements a row
 /// for, and the row each carries.

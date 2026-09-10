@@ -15,18 +15,29 @@ fn under(policy: &str, name: &str, input: serde_json::Value) -> Classified {
 /// bl-b65d: an MCP tool reaches this control as a routed name whose input its
 /// server's schema shaped — `{"url": …}`, no command line — so every call of it
 /// held. One `rules:` row keyed on the host-qualified name is the way out.
+///
+/// It is still the way out since bl-c6f0 read the `url` itself, and it **still
+/// outranks that reading**: the row is what the operator knows about this tool
+/// on this box, and an operand is only what the invocation points at. A row of
+/// `read` on a fetch tool that this control would otherwise call open-world is
+/// therefore read, not open-world.
 #[test]
 fn a_routed_name_the_operator_stated_classifies_to_the_row() {
     let c = under(
-        "rules:\n  box2_fetch: open-world\n",
+        "rules:\n  box2_fetch: read\n",
         "box2_fetch",
         json!({"url": "https://example.invalid/x"}),
     );
-    assert_eq!(c.effect, Effect::OpenWorld);
+    assert_eq!(c.effect, Effect::Read);
     assert!(c.why.contains("box2_fetch"), "{}", c.why);
     assert!(c.why.contains("capability.yaml"), "{}", c.why);
-    // The same name with no row is the hold it was.
-    assert_eq!(effect("box2_fetch", json!({"url": "u"})), Effect::Opaque);
+    // Without the row the url reads open-world, so the row is doing the work.
+    assert_eq!(
+        effect("box2_fetch", json!({"url": "https://example.invalid/x"})),
+        Effect::OpenWorld
+    );
+    // The same name with no row and nothing to read is the hold it was.
+    assert_eq!(effect("box2_fetch", json!({"page": 2})), Effect::Opaque);
     // Host-qualified: the same server on another box is another decision, and
     // its row does not answer here (REMOTE §5 — locality rides in the name).
     assert_eq!(
@@ -86,7 +97,7 @@ fn a_command_line_outranks_a_row_on_its_name() {
 #[test]
 fn the_shipped_ruleset_never_answers_for_a_routed_name() {
     assert_eq!(effect("rm", json!({"path": "/etc/hosts"})), Effect::Opaque);
-    assert_eq!(effect("curl", json!({"url": "u"})), Effect::Opaque);
+    assert_eq!(effect("curl", json!({"flag": "-s"})), Effect::Opaque);
     // A row qualifying on a further word is about a command line; a name is
     // one word, so it does not answer either.
     assert_eq!(
@@ -104,7 +115,7 @@ fn the_shipped_ruleset_never_answers_for_a_routed_name() {
 /// this tool's own name in it and the class words the file accepts (bl-b65d).
 #[test]
 fn the_hold_sentence_spells_the_row_that_ends_it() {
-    let c = judged("box2_fetch", json!({"url": "https://example.invalid/x"}));
+    let c = judged("box2_fetch", json!({"query": "recent"}));
     assert_eq!(c.effect, Effect::Opaque);
     assert!(c.why.contains("`box2_fetch: <class>`"), "{}", c.why);
     assert!(c.why.contains("capability.yaml"), "{}", c.why);

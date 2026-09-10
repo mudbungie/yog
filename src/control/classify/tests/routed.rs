@@ -99,3 +99,67 @@ fn a_cd_into_the_target_classifies_as_the_direct_form_does() {
         Effect::Read
     );
 }
+
+/// bl-c6f0: the third answer. A routed tool with no command line and a `url`
+/// input reaches the network, and network egress is what the open-world class
+/// means — so the fetch tool `thrall mcp pin` seats (`{"url": …, "max_length":
+/// …, "raw": …}`) passes on the shipped table instead of parking every call.
+/// The same reading as a command line, on the other operand a routed schema
+/// carries.
+#[test]
+fn an_input_naming_a_url_is_the_open_world_class() {
+    let c = judged("box2_fetch", json!({"url": "https://example.invalid/x"}));
+    assert_eq!(c.effect, Effect::OpenWorld);
+    assert!(c.why.contains("box2_fetch"), "{}", c.why);
+    assert!(c.why.contains("url"), "{}", c.why);
+    // …and the shipped table passes it, which is the point of the class.
+    assert_eq!(
+        crate::control::judge::Table::ruling(c.effect),
+        crate::control::judge::Ruling::Pass
+    );
+    // The batched spelling reads the same, and so does a whole pinned schema.
+    assert_eq!(
+        effect("box2_fetch", json!({"urls": ["https://a.invalid"]})),
+        Effect::OpenWorld
+    );
+    assert_eq!(
+        effect(
+            "box2_fetch",
+            json!({"url": "https://a.invalid", "max_length": 5000, "raw": false})
+        ),
+        Effect::OpenWorld
+    );
+    // A command line still outranks it: a shell that happens to carry a `url`
+    // field is classified by the line, exactly as before.
+    assert_eq!(
+        effect(
+            "box2_shell",
+            json!({"command": "rm -rf /srv/data", "url": "https://a.invalid"})
+        ),
+        Effect::Destructive
+    );
+}
+
+/// The other direction: an input that names no address is the hold it was. A
+/// blank string, an empty list, a list of blanks and a non-string all name
+/// nothing — an off-schema value is an operand this control cannot read, which
+/// is the park rather than a guess.
+#[test]
+fn an_input_naming_no_address_stays_opaque() {
+    for input in [
+        json!({}),
+        json!({"name": "curl"}),
+        json!({"url": ""}),
+        json!({"url": "   "}),
+        json!({"url": 7}),
+        json!({"urls": []}),
+        json!({"urls": ["  ", 7]}),
+        json!({"url_prefix": "https://a.invalid"}),
+    ] {
+        assert_eq!(
+            effect("box2_fetch", input.clone()),
+            Effect::Opaque,
+            "{input}"
+        );
+    }
+}
