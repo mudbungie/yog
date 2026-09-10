@@ -1,7 +1,8 @@
 +++
 title = "a routed tool whose input carries a url and no command line is opaque and held on every call: classify it open-world, the class whose meaning is network reach"
 created = 1789002764
-updated = 1789002764
+updated = 1789002785
+claimant = "Cantaloups-Y16"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["usability-r3"]
