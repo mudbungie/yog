@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.57](https://github.com/mudbungie/yog/compare/v0.0.56...v0.0.57) - 2026-09-09
+
+### Changes
+
+- a routed tool whose input carries a url and no command line is opaque and held on every call: classify it open-world, the class whose meaning is network reach [bl-c6f0]
+
 ## [0.0.56](https://github.com/mudbungie/yog/compare/v0.0.55...v0.0.56) - 2026-09-09
 
 ### Changes
