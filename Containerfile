@@ -65,6 +65,13 @@ RUN set -eu; \
 # the dependency answer, and a build that is allowed to solve for a different
 # one is not the build the gate judged.
 COPY Cargo.toml Cargo.lock PROTOCOL build.rs ./
+# The third build input (bl-1be7): `build.rs` reads the corpus's standing
+# record for the edition and the floor, so an image without it fails at the
+# build script with a bare NotFound — which is how four releases published no
+# image (bl-d58a). `tests/image_inputs.rs` derives this list from `build.rs`'s
+# own `rerun-if-changed` lines, so a fourth input fails the gate rather than
+# the registry.
+COPY corpus/shapes.json ./corpus/shapes.json
 COPY src ./src
 RUN cargo build --release --locked --bin yog
 

@@ -7557,6 +7557,20 @@ each repo's `.containerignore` and its `COPY`-by-name discipline are the thing
 the scan is checking has held, and each repo records that as a line of its own
 publication checklist.
 
+**And an include list fails the other way too, and that failure is not
+loud** (bl-d58a). A missing `include` entry costs a build, which is the
+reasoning `Cargo.toml` states beside its key — but the image's list is spent
+on a runner nobody watches, so when bl-1be7 made `corpus/shapes.json` the
+build script's third input and added it to the crate's package, the
+Containerfile's `COPY` list went untouched, `.containerignore` still excluded
+`corpus/` outright, and four consecutive releases published a crate and no
+image while the engine box's reconciler truthfully reported the last image
+that had. The two lists are now held together by `tests/image_inputs.rs`:
+the roster of inputs is DERIVED from `build.rs`'s own `rerun-if-changed`
+lines, and each must be named by a `COPY` and shadowed by no ignore rule —
+so a fourth input fails the gate, where a person is looking, rather than the
+registry.
+
 Three surfaces, because those are the three ways bytes reach an image:
 
 - **The authored filesystem** — what the build ADDED above the pinned base

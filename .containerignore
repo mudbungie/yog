@@ -15,5 +15,12 @@
 # a week; a link cannot.
 target/
 .git/
-corpus/
+# The corpus's fixtures stay out; its standing record `corpus/shapes.json` is
+# a build input the Containerfile COPYs by name (bl-d58a). The siblings are
+# named rather than the directory excluded and the file re-included, because
+# a `!` exception under an excluded directory is honoured by neither engine
+# reliably.
+corpus/reply/
+corpus/request/
+corpus/README.md
 lcov.info
