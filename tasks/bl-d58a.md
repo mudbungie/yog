@@ -2,6 +2,7 @@
 title = "no yog image has published since 0.0.55: build.rs reads corpus/shapes.json (bl-1be7) and the Containerfile never COPYs it, so the ghcr image job fails on every release and noodlezoo's reconciler sits on 0.0.54"
 created = 1789711784
 updated = 1789711784
+claimant = "Cruises"
 priority = 1
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
