@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.59](https://github.com/mudbungie/yog/compare/v0.0.58...v0.0.59) - 2026-09-22
+
+### Changes
+
+- a config gesture missing target.workspace is refused by field name and not by PLACE: the one op in the family where the place is the whole question [bl-edfc]
+
 ## [0.0.58](https://github.com/mudbungie/yog/compare/v0.0.57...v0.0.58) - 2026-09-17
 
 ### Changes
