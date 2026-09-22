@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.62](https://github.com/mudbungie/yog/compare/v0.0.61...v0.0.62) - 2026-09-22
+
+### Changes
+
+- Merge remote-tracking branch 'origin/main'
+- the DHT client — bencode, KRPC iterative lookups, BEP 44 get/put, pure client only [bl-df31]
+
 ## [0.0.61](https://github.com/mudbungie/yog/compare/v0.0.60...v0.0.61) - 2026-09-22
 
 ### Changes
