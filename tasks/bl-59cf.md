@@ -1,7 +1,8 @@
 +++
 title = "yog fixture's world has no roles: block in its config lineage, so /effort and /priority are refused in band on every fixture drive: seed the fixture with an assigned worker role"
 created = 1789002937
-updated = 1789002937
+updated = 1790058297
+claimant = "Urinalyses-C"
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["usability-r3"]
