@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.64](https://github.com/mudbungie/yog/compare/v0.0.63...v0.0.64) - 2026-09-22
+
+### Changes
+
+- the price table keyed by (provider, model) with a * row, read and set through the boundary (/prices, /price, /ceiling), and cost beside every token count on the wire — steps, science, rail, workspaces; PROTOCOL 17 [bl-53d1]
+
 ## [0.0.63](https://github.com/mudbungie/yog/compare/v0.0.62...v0.0.63) - 2026-09-22
 
 ### Changes
