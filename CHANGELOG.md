@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.63](https://github.com/mudbungie/yog/compare/v0.0.62...v0.0.63) - 2026-09-22
+
+### Changes
+
+- the boundary speaks no workflow verb: a seat cannot list a workspace's workflows, read which governs a conversation, or set the mark [bl-b680]
+- the ceiling's second seat — the capability control holds every tool call in a world at or over ui.json ceiling, with the ceiling's own sentence on the mark, so a fleet past the number parks instead of spending to its end [bl-4b48]
+
 ## [0.0.62](https://github.com/mudbungie/yog/compare/v0.0.61...v0.0.62) - 2026-09-22
 
 ### Changes
