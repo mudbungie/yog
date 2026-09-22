@@ -1,7 +1,8 @@
 +++
 title = "yog: the DHT client — bencode, KRPC iterative lookups, BEP 44 get/put, pure client only"
 created = 1788232800
-updated = 1788233559
+updated = 1790058272
+claimant = "Urinalyses-H"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 
