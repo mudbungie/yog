@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.60](https://github.com/mudbungie/yog/compare/v0.0.59...v0.0.60) - 2026-09-22
+
+### Changes
+
+- src/boundary/action.rs rests at 298 of the 300 cap with no seam: split it before the next gesture lands on the wall [bl-d255]
+
 ## [0.0.59](https://github.com/mudbungie/yog/compare/v0.0.58...v0.0.59) - 2026-09-22
 
 ### Changes
