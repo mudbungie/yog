@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.61](https://github.com/mudbungie/yog/compare/v0.0.60...v0.0.61) - 2026-09-22
+
+### Changes
+
+- yog fixture's world has no roles: block in its config lineage, so /effort and /priority are refused in band on every fixture drive: seed the fixture with an assigned worker role [bl-59cf]
+
 ## [0.0.60](https://github.com/mudbungie/yog/compare/v0.0.59...v0.0.60) - 2026-09-22
 
 ### Changes
