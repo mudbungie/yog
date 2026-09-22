@@ -1,7 +1,7 @@
 +++
 title = "an agent with the shipped bash grant advances its own config lineage: EDITOR plus the world's litany shim rewrites souls, facts, skills and role models, and the learning loop's veto is walkable"
 created = 1788673868
-updated = 1790058289
+updated = 1790058389
 claimant = "Urinalyses-E"
 priority = 1
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
@@ -68,3 +68,25 @@ Two facts for the yog side.
 2. The motive is being removed beside the refusal. The agent in this scenario was not attacking anything — it was asked to remember something and had no lawful way (litany bl-3c11, same lane, in flight): a `remember`-shaped door that stages a `facts.md` patch as a proposal, settled by the `litany proposal --accept` the operator already runs. A refusal without that door leaves an agent with no answer at all, which is why the two balls are one pair.
 
 litany docs amended in the same delivery: ARCHITECTURE §3.3 (beside the `LITANY_TOOL_ID` bullet) and DESIGN_LEARNING_LOOP §3 ("One writer per branch holds" — the sentence that stated the veto as a description now states it as a mechanism).
+
+---
+
+Verified END TO END at HEAD, and closed with a regression test plus the DESIGN ruling the code had no doc for.
+
+WHICH SIDE MEETS THE EXPECTED CLAUSE: litany's door, not yog's capability control.
+
+The ball offered two remedies. The one that landed is the second: litany refuses `config` and `proposal --accept` under `LITANY_TOOL_ID` (upstream bl-d273, in the litany 0.0.13 pin yog carries). yog's capability control (DESIGN §8.6) does NOT refuse the verb and should not: it adjudicates a bash COMMAND LINE, so it would have to recognize a verb inside a string, which a different spelling of the path defeats; and it governs yog-hosted conversations only, leaving the same act open elsewhere.
+
+THE THREE LINKS yog OWES, each verified at HEAD:
+
+1. src/tool_host/engine_act.rs — `const TOOL_ID: &str = "LITANY_TOOL_ID"` (line 145) is put on the front-door spawn in `run()` beside LITANY_CONV_REPO/LITANY_CONV_BRANCH. Beat: `every_spawn_carries_the_invocations_own_id` (src/tool_host/engine_act/tests/set.rs). The bash rung reaches the same `perform` — src/tool_host/subject.rs `Lane::Engine => super::engine_act::perform(...)`, selected by `performs(name)` = litany BUILTIN_TOOLS minus engine_act::NAMES, and `bash` is in that difference.
+2. src/world/tools.rs `shim_script` — `#!/bin/sh` plus `exec <yog> litany "$@"`. No env is cleared or reset, so the marker survives the shim.
+3. src/multiplex/litany.rs line 90 — `let tool_id = std::env::var_os(cmd::seam::ENV_TOOL_ID);` filled into `Fx.tool_id` unchanged. Beat: `lineage_refusal_reaches_through_the_binding` (tests/multiplex_litany.rs).
+
+And the link that is upstream's: litany's `bash` built-in spawns `Command::new("sh")` with no `env_clear`, so a step's shell inherits the marker; the world PATH fold puts the shim first, so a bare `litany` in that shell IS yog.
+
+WHAT WAS MISSING: a test of the CHAIN. Each link had a beat; none drove the gesture the ball measured. Added tests/litany_lineage.rs — out of process against the built binary, hermetic world, real `litany` shim: a `bash` step (`<shim> tool bash`, the block on stdin, the stdio contract on the env) whose command is `litany config <workspace>` with a scripted EDITOR that WOULD write facts.md. Marked: non-zero, the refusal names LITANY_TOOL_ID and `litany proposal <workspace>`, the editor sentinel is absent (the refusal stands ahead of the checkout), and `config/default` rev-parse is unchanged. Same for `proposal <ws> <id> --accept`. Unmarked, the same command lands and the tip moves — so the beat cannot pass by refusing everything. Mutation-checked: dropping the value out of `Fx.tool_id` reddens it.
+
+DOC: DESIGN 16.4 gained the ruling beside the `yog`-shim one (bl-3ff4) — why the refusal is litany's and not 8.6's, the three links, `remember` as the lawful door, and the routed rung being out of the chain by subject (a foot holds no workspace repository, so there is no lineage there to advance).
+
+RESIDUAL, named not fixed: the routed leg carries no tool id on the wire (src/tool_host/remote.rs `invoke` sends op/client/tool/input/cwd). That is not this escalation — the ball's scenario is the no-foot rung, and a foot has no config lineage to advance. A foot that reached back at this server's world would be outside REMOTE 12's front-door-only posture and is that component's ruling.
