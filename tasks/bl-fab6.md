@@ -1,8 +1,8 @@
 +++
 title = "a parallel multi-tool envelope costs N sequential round trips once every tool routes"
 created = 1788060204
-updated = 1790058298
-priority = 3
+updated = 1790058302
+priority = 4
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
 Raised from the engine side while landing the seam inversion (engine ball bl-a00a). A consequence, not a defect: the engine ships green and nothing regresses until the pin is bumped.
