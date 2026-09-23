@@ -70,6 +70,16 @@ pub enum Action {
     /// `litany retarget <ws> <agent>` — the §9.4 **change of lineage** (bl-2d19,
     /// re-scoped by bl-e654) ([`conversation`]).
     Retarget { workspace: String, agent: String },
+    /// `litany workflow <ws> <agent> --config <name> | --clear` — the §9.4
+    /// **workflow mark** set or cleared (REMOTE §9.24, bl-b680): `Some` pins
+    /// the named lineage's head as the commit whose `workflow.yaml` governs
+    /// this conversation and its descent from their next step boundary on;
+    /// `None` clears the mark ([`conversation`]).
+    Workflow {
+        workspace: String,
+        agent: String,
+        config: Option<String>,
+    },
     /// **The `bl` family** (§8.2, bl-92d3) over
     /// [`verbs::Verb`](crate::actions::verbs::Verb) ([`folds`]).
     Ball(crate::actions::verbs::Verb),

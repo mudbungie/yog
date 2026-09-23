@@ -101,6 +101,11 @@ fn every_workspace_bearing_action_answers_with_its_name() {
             workspace: WS.into(),
             agent: "c".into(),
         },
+        Action::Workflow {
+            workspace: WS.into(),
+            agent: "c".into(),
+            config: None,
+        },
         Action::Fork {
             workspace: WS.into(),
             parent: "c".into(),

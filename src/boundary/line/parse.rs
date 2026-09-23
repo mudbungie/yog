@@ -85,6 +85,11 @@ pub fn parse(input: &str, ctx: &Context) -> Result<Gesture, String> {
         // conversation is the seat's, the lineage is the workspace's one
         // default, so the verb is the whole line.
         "retarget" => verbs::retarget(tail, ctx, verb),
+        // The §9.4 workflow mark's two directions (bl-b680): the lineage is
+        // the one word the seat cannot supply; the clear takes none.
+        super::workflow::WORKFLOW | super::workflow::CLEAR => {
+            super::workflow::read(verb, tail, ctx)
+        }
         // The §8.2 `bl` family (bl-92d3), one arm at its own door exactly as
         // the fan's three are: an id typed or the focused ball's, and the two
         // authoring verbs' payloads.

@@ -69,6 +69,10 @@ mod tools;
 // discipline every other consumer here gets.
 pub(crate) use addressing::{AGENT_REF_PREFIX, living_agents};
 pub use descent::{DescentRow, children_of, descent_order, parent_index};
+// The descent grammar's one step up (§2.3), shared with the §9.4 workflow-mark
+// walk (`config_edit::branch::workflow_mark`), which climbs it the way litany's
+// own `nearest_mark` does — one spelling of the token arithmetic.
+pub(crate) use descent::parent_id;
 pub(crate) use enumerate::mtime_unix;
 // The view-model types themselves (§7.1), re-exported so `git_tree::Agent` and
 // friends stay the one spelling every consumer already uses.

@@ -48,6 +48,20 @@
           "verb": "retarget"
         },
         {
+          "detail": "Marks the selected conversation to resolve `workflow.yaml` from the named config lineage's head instead of the lineage it follows (`litany workflow --config`). Only the workflow moves: the models, souls and manifest keep following the tip. The mark names the head as it is now, so it is a pin as well as a switch — the lineage advancing later changes nothing until you mark again. It takes effect at the conversation's next step boundary, and it governs its whole descent: a child with no mark of its own inherits it. `/lineages` says what there is to name; `/governing` says which mark stands and who holds it. Takes the workspace and the conversation from the seat; litany declines an unknown lineage, and a head whose `version` or `workflow.yaml` it cannot read, before anything is written.",
+          "summary": "run the selected conversation under a named lineage's workflow from its next step",
+          "surface": "control",
+          "usage": "/workflow <lineage>",
+          "verb": "workflow"
+        },
+        {
+          "detail": "Deletes the selected conversation's workflow mark (`litany workflow --clear`), so from its next step boundary the lineage it follows answers the workflow question again. Removing the mark deletes a setting, never a branch; a conversation inheriting an ancestor's mark keeps inheriting it, because the ancestor's mark is the ancestor's to clear. Takes the workspace and the conversation from the seat.",
+          "summary": "let the selected conversation's followed lineage govern its workflow again",
+          "surface": "control",
+          "usage": "/clear-workflow",
+          "verb": "clear-workflow"
+        },
+        {
           "detail": "Delivers a ball (`bl close`): folds `main` into its worktree, runs the project's pre-commit gate, squashes the work onto the target branch and removes the worktree. A failing gate aborts and leaves the ball claimed. With no id, the focused ball; stamped with its claimant, never your login name.",
           "summary": "close a ball (the focused one by default) and deliver its work",
           "surface": "control",

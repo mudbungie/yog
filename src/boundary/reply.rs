@@ -61,6 +61,9 @@ pub(crate) mod rows;
 /// The search reply's own address-flattening — split at the same budget.
 mod search;
 
+/// The §9.4 workflow mark's spelling on the `governing` reply (bl-b680) —
+/// its own file, beside the type-owning `wire` modules it is shaped like.
+mod workflow;
 /// The one listing row the boundary itself owns — its own file at §12's budget
 /// (bl-296f), for the reason its own doc gives.
 mod ws_row;

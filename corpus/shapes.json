@@ -446,6 +446,13 @@
         "/oid:string": 5,
         "/ok:bool": 5,
         "/short_oid:string": 5,
+        "/workflow_mark/holder:string": 19,
+        "/workflow_mark/lineage:null": 19,
+        "/workflow_mark/lineage:string": 19,
+        "/workflow_mark/oid:string": 19,
+        "/workflow_mark/short_oid:string": 19,
+        "/workflow_mark:null": 19,
+        "/workflow_mark:object": 19,
         ":object": 5
       }
     },
@@ -1045,6 +1052,14 @@
         ":object": 1
       }
     },
+    "request/clear-workflow": {
+      "signature": {
+        "/agent:string": 19,
+        "/op:string": 19,
+        "/workspace:string": 19,
+        ":object": 19
+      }
+    },
     "request/clients": {
       "signature": {
         "/op:string": 1,
@@ -1600,6 +1615,15 @@
         "/op:string": 1,
         "/workspace:string": 1,
         ":object": 1
+      }
+    },
+    "request/workflow": {
+      "signature": {
+        "/agent:string": 19,
+        "/config:string": 19,
+        "/op:string": 19,
+        "/workspace:string": 19,
+        ":object": 19
       }
     },
     "request/workspace-balls": {

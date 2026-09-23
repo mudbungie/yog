@@ -99,9 +99,14 @@ const FOREIGN: &[&str] = &[
     // new ops and the one new reply kind, and why none of them moves the
     // protocol version. DESIGN's own §9.6 carries the engine-side half, so a
     // reader following either prefix lands where the argument is.
+    // §9.24 joins them (bl-b680): the workflow mark made reachable — the mark
+    // grown onto `reply/governing`, the set/clear pair, and why the lineage
+    // browse is the enumeration a selector needs. Cited "REMOTE §9.24" from
+    // DESIGN §8.2's verb table and from the modules that carry it; DESIGN
+    // §9.4 carries the engine-side half.
     // DESIGN §9 is "Config editing write paths" and stops at §9.6, which the
     // sibling test keeps honest.
-    "9.7", "9.8", "9.9", "9.11", "9.14", "9.15", "9.19", "9.20", "9.21", "9.22", "9.23",
+    "9.7", "9.8", "9.9", "9.11", "9.14", "9.15", "9.19", "9.20", "9.21", "9.22", "9.23", "9.24",
     // REMOTE.md's §14 family — §14.1 (the attention lane, bl-09aa) — cited
     // prefixed ("REMOTE §14.1") like every other foreign key. DESIGN §14 is
     // "Rejections" and has no subsections at all, which the sibling test keeps

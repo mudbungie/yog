@@ -16,6 +16,7 @@ mod config;
 mod inspector;
 mod policy;
 mod tools;
+mod workflow;
 
 /// The parity claim, mechanized: spell it, read it back at the seat it was
 /// spelled from, get the same gesture.

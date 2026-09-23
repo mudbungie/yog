@@ -29,6 +29,9 @@ use std::path::Path;
 
 pub mod edit;
 pub mod follow;
+/// The §9.4 **workflow mark** read (bl-b680): which commit's `workflow.yaml`
+/// governs an agent when a standing mark on its descent overrides the tip.
+pub mod workflow_mark;
 
 pub use follow::{Governance, GoverningConfig};
 

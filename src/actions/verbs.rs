@@ -11,6 +11,7 @@
 //! | stop | `litany stop <ws> <agent>` | ws | conversation |
 //! | scan | `litany scan <ws>` | ws | conversation |
 //! | retarget | `litany retarget <ws> <agent>` | ws | conversation |
+//! | workflow | `litany workflow <ws> <agent> --config <name>` \| `--clear` | ws | conversation |
 //! | close | `bl close <id> --as <name>` | project | balls |
 //! | assign | `bl claim <id> --as <name>` | project | balls |
 //! | release / unclaim | `bl unclaim <id> --as <name>` | project | balls |
@@ -58,9 +59,12 @@ use crate::opslog::Origin;
 mod balls;
 mod bound;
 mod dispatch;
+/// The §9.4 workflow mark's verb (bl-b680), its own file beside the table.
+mod workflow;
 pub use balls::{Verb, assign, close, create, edit, unclaim, update};
 pub use bound::Bound;
 pub use dispatch::{Outcome, log_step_done, log_step_failure, run_logged, run_logged_cwdless};
+pub use workflow::workflow;
 // `collect` stays crate-internal — the no-marks knob's `bl conf` seam reuses it.
 pub(crate) use dispatch::collect;
 

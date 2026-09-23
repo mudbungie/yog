@@ -178,8 +178,15 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
         // siblings answer absent, because its walk is the workspace's own git
         // and a conversation with no policy at all is not a reading (the
         // `Lineages` shape).
+        // The §9.4 workflow mark rides beside it (bl-b680), read live off the
+        // agent's descent whatever `at` named: a mark is standing state now,
+        // not a fact of the commit a pin selects.
         Query::Governing { at, .. } => {
-            return inspector::governing(snap, ws, agent, at.as_deref()).map(Reply::Governing);
+            return Ok(Reply::Governing {
+                config: inspector::governing(snap, ws, agent, at.as_deref())?,
+                workflow_mark: crate::config_edit::branch::workflow_mark::read(ws, agent)
+                    .map_err(|e| e.to_string())?,
+            });
         }
         // The seat's own read of its selection (REMOTE §9.4, bl-1eb0) — pure
         // over the snapshot, unlike the five above, because everything it says

@@ -82,6 +82,7 @@ impl Action {
             | Action::Scan { .. }
             | Action::Nudge { .. }
             | Action::Retarget { .. }
+            | Action::Workflow { .. }
             | Action::Prompt { .. }
             | Action::DeleteWorkspace { .. }
             | Action::DeleteAgent { .. }

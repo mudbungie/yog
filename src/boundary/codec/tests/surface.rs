@@ -30,6 +30,7 @@ pub(crate) fn gestures() -> Vec<Gesture> {
         super::control::surface(),
         super::fleet::surface(),
         super::retarget::surface(),
+        super::workflow::surface(),
         super::query::surface(),
         login(),
         pins(),

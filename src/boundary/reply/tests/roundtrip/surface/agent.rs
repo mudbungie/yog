@@ -15,6 +15,7 @@
 use super::super::super::super::Reply;
 use crate::boundary::answer::agent::AgentView;
 use crate::config_edit::branch::GoverningConfig;
+use crate::config_edit::branch::workflow_mark::WorkflowMark;
 use crate::git_tree::{AgentMark, AgentState};
 use crate::nav::convs::{Doing, Flight, FlightStrip, Seat};
 
@@ -118,22 +119,60 @@ pub(super) fn agent() -> Vec<Reply> {
             },
             context: None,
         }),
-        Reply::Governing(GoverningConfig {
-            oid: "b".repeat(40),
-            short_oid: "bbbbbbbb".to_owned(),
-            governance: crate::config_edit::branch::Governance::Follows("default".to_owned()),
-            files: vec!["workflow.yaml".to_owned(), "souls/base.md".to_owned()],
-        }),
+    ]
+}
+
+/// The governing answer's three arms (bl-13f9, bl-e654, bl-b680): followed
+/// with a mark, held with a mark the lineage advanced past, and unmarked.
+pub(super) fn governing() -> Vec<Reply> {
+    vec![
+        // A standing workflow mark beside the followed tip (bl-b680): held by
+        // an ancestor, on a commit a lineage still stands on.
+        Reply::Governing {
+            config: GoverningConfig {
+                oid: "b".repeat(40),
+                short_oid: "bbbbbbbb".to_owned(),
+                governance: crate::config_edit::branch::Governance::Follows("default".to_owned()),
+                files: vec!["workflow.yaml".to_owned(), "souls/base.md".to_owned()],
+            },
+            workflow_mark: Some(WorkflowMark {
+                holder: "r-0".to_owned(),
+                oid: "d".repeat(40),
+                short_oid: "dddddddd".to_owned(),
+                lineage: Some("strict".to_owned()),
+            }),
+        },
         // The held case (bl-e654): diverged lineages reach the conversation,
         // so it follows none, `follows` is the key the encoder writes as null,
-        // and the count is what rides in its place.
-        Reply::Governing(GoverningConfig {
-            oid: "c".repeat(40),
-            short_oid: "cccccccc".to_owned(),
-            governance: crate::config_edit::branch::Governance::Held {
-                diverged_lineages: 2,
+        // and the count is what rides in its place. Its mark pins a commit
+        // the lineage has advanced past, so `lineage` is null too.
+        Reply::Governing {
+            config: GoverningConfig {
+                oid: "c".repeat(40),
+                short_oid: "cccccccc".to_owned(),
+                governance: crate::config_edit::branch::Governance::Held {
+                    diverged_lineages: 2,
+                },
+                files: vec![],
             },
-            files: vec![],
-        }),
+            workflow_mark: Some(WorkflowMark {
+                holder: "r-0-c-1".to_owned(),
+                oid: "e".repeat(40),
+                short_oid: "eeeeeeee".to_owned(),
+                lineage: None,
+            }),
+        },
+        // The general path: no mark anywhere on the descent, which is what
+        // every unmarked conversation answers and the key the encoder writes
+        // as null.
+        Reply::Governing {
+            config: GoverningConfig {
+                oid: "b".repeat(40),
+                short_oid: "bbbbbbbb".to_owned(),
+                governance: crate::config_edit::branch::Governance::Follows("default".to_owned()),
+                files: vec![],
+            },
+            workflow_mark: None,
+        },
     ]
 }

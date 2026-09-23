@@ -66,6 +66,11 @@ fn the_bl_family_names_its_project_and_nothing_else_does() {
             workspace: ws.clone(),
             agent: "c".into(),
         },
+        Action::Workflow {
+            workspace: ws.clone(),
+            agent: "c".into(),
+            config: Some("strict".into()),
+        },
         Action::DeleteWorkspace {
             workspace: ws.clone(),
             typed: "n".into(),

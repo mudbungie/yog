@@ -76,7 +76,7 @@ fn walk(i: usize, depth: usize, children: &HashMap<usize, Vec<usize>>, rows: &mu
 /// (§2.3). `None` for an id of two tokens or fewer — a root, which has no
 /// parent — and the derivation is total over every other string, so an id
 /// outside the grammar simply derives an address nobody holds.
-fn parent_id(id: &str) -> Option<String> {
+pub(crate) fn parent_id(id: &str) -> Option<String> {
     id.rsplitn(3, '-').nth(2).map(str::to_owned)
 }
 

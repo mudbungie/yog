@@ -16,6 +16,7 @@ use tempfile::{TempDir, tempdir};
 mod bound;
 mod dispatch;
 mod edit;
+mod workflow;
 
 /// A fake `bl`/`litany`. Nothing brackets the write: the crate's one fork
 /// (`crate::git_env`) owns the ETXTBSY exclusion, so a fixture just writes.

@@ -64,14 +64,18 @@ fn governing(o: &Map<String, Value>) -> Result<Reply, String> {
             diverged_lineages: usize_of(o, "diverged_lineages")?,
         },
     };
-    Ok(Reply::Governing(
-        crate::config_edit::branch::GoverningConfig {
+    Ok(Reply::Governing {
+        config: crate::config_edit::branch::GoverningConfig {
             oid: str_of(o, "oid")?,
             short_oid: str_of(o, "short_oid")?,
             governance,
             files: strings_of(o, "files")?,
         },
-    ))
+        // Absent reads as null (REMOTE §3.2: a post-floor key an older engine
+        // never wrote is the general path), and a present value is read
+        // strictly by the module that spells it.
+        workflow_mark: opt_val(o, "workflow_mark", super::super::workflow::mark_of)?,
+    })
 }
 
 fn work_diff(o: &Map<String, Value>) -> Result<Reply, String> {

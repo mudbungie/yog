@@ -115,6 +115,16 @@ pub fn dispatch(deps: &Deps, ui: &mut UiState, ts: &str, action: &Action) -> Res
         // goes quiet, and no gesture may block a frame on that.
         Action::Nudge { .. } => control::advance(deps, ts, ws, agent).map(|()| Reply::Nudged),
         Action::Retarget { .. } => outcome(retarget(deps, ts, ws, agent)),
+        // The §9.4 workflow mark (bl-b680): one standing ref, written or
+        // deleted by litany's own verb inside the bound wall, answered in its
+        // words — the retarget's shape one fact over.
+        Action::Workflow { config, .. } => outcome(verbs::workflow(
+            &deps.bound(ws),
+            root,
+            ts,
+            agent,
+            config.as_deref(),
+        )),
         Action::Fork { attempt, goal, .. } => fork(deps, ts, ws, agent, attempt, goal),
         // The §8.2 `bl` family (bl-92d3): one row here, five members one level
         // down, exactly as the monitor's and the fan's route.

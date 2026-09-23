@@ -6,6 +6,7 @@
 
 use serde_json::{Value, json};
 
+use super::super::super::super::decode;
 use super::{refuses, rows};
 
 #[test]
@@ -101,5 +102,32 @@ fn an_inbox_row_must_carry_its_deposit() {
     refuses(
         &rows("inbox", json!({ "name": "n", "raw": "" })),
         "missing deposit",
+    );
+}
+
+/// The §9.4 workflow mark beside the governing commit (bl-b680): absent and
+/// null both read as the general path, and a present body is read by name.
+#[test]
+fn the_workflow_mark_reads_absent_as_null_and_a_body_strictly() {
+    let governing = |mark: Value| {
+        let mut o = json!({ "ok": true, "kind": "governing", "oid": "b", "short_oid": "b",
+                            "follows": "default", "diverged_lineages": 0, "files": [] });
+        if !mark.is_null() {
+            o["workflow_mark"] = mark;
+        }
+        o
+    };
+    assert!(matches!(
+        decode(&governing(Value::Null)),
+        Ok(Ok(crate::boundary::reply::Reply::Governing {
+            workflow_mark: None,
+            ..
+        }))
+    ));
+    refuses(&governing(json!(7)), "workflow_mark: not an object");
+    refuses(&governing(json!({ "holder": "r" })), "field \"oid\"");
+    refuses(
+        &governing(json!({ "holder": "r", "oid": "d", "short_oid": "d", "lineage": 7 })),
+        "lineage",
     );
 }

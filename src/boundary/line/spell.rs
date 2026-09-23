@@ -44,6 +44,9 @@ fn spell_action(action: &Action) -> String {
         // The conversation is the seat's selection, as `/message`'s is, and the
         // lineage is the workspace's one default — so the verb is the line.
         Action::Retarget { .. } => "/retarget".to_owned(),
+        // The conversation is the seat's; the direction is the verb and the
+        // lineage is the set's one word (bl-b680).
+        Action::Workflow { config, .. } => super::workflow::spell(config.as_deref()),
         Action::Ball(verb) => spell_ball(verb),
         Action::Prepare { payload, .. } => spell_payload(payload),
         Action::Prompt { goal, .. } => format!("/prompt {goal}"),

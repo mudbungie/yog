@@ -1,4 +1,4 @@
-//! The six §8.2 verbs whose subject is a conversation **already running**
+//! The eight §8.2 verbs whose subject is a conversation **already running**
 //! (§8.5) — split from [`super`](super) at §12's budget (bl-c088) on the seam
 //! the family itself draws: none of these creates or destroys anything, they
 //! act on what is live, and each is spelled by a `litany` run. Everything left
@@ -10,8 +10,9 @@
 
 use crate::boundary::help::{HelpRow, Surface};
 
-/// The §8.2 conversation verbs: send, cut off, kill, sweep, prompt again, and
-/// move onto the config the workspace runs now.
+/// The §8.2 conversation verbs: send, cut off, kill, sweep, prompt again,
+/// move onto the config the workspace runs now, and pin or unpin the workflow
+/// it runs under.
 pub const DRIVING: &[HelpRow] = &[
     HelpRow {
         verb: "message",
@@ -90,6 +91,35 @@ pub const DRIVING: &[HelpRow] = &[
                  seat; a conversation already on that lineage is a clean no-op litany reports for \
                  itself, and litany declines the move when the target does not describe the role \
                  it runs as.",
+        surface: Surface::Control,
+    },
+    HelpRow {
+        verb: "workflow",
+        usage: "/workflow <lineage>",
+        summary: "run the selected conversation under a named lineage's workflow from its next step",
+        detail: "Marks the selected conversation to resolve `workflow.yaml` from the named config \
+                 lineage's head instead of the lineage it follows (`litany workflow --config`). \
+                 Only the workflow moves: the models, souls and manifest keep following the \
+                 tip. The mark names the head as it is now, so it is a pin as well as a switch \
+                 — the lineage advancing later changes nothing until you mark again. It takes \
+                 effect at the conversation's next step boundary, and it governs its whole \
+                 descent: a child with no mark of its own inherits it. `/lineages` says what \
+                 there is to name; `/governing` says which mark stands and who holds it. \
+                 Takes the workspace and the conversation from the seat; litany declines an \
+                 unknown lineage, and a head whose `version` or `workflow.yaml` it cannot read, \
+                 before anything is written.",
+        surface: Surface::Control,
+    },
+    HelpRow {
+        verb: "clear-workflow",
+        usage: "/clear-workflow",
+        summary: "let the selected conversation's followed lineage govern its workflow again",
+        detail: "Deletes the selected conversation's workflow mark (`litany workflow --clear`), \
+                 so from its next step boundary the lineage it follows answers the workflow \
+                 question again. Removing the mark deletes a setting, never a branch; a \
+                 conversation inheriting an ancestor's mark keeps inheriting it, because the \
+                 ancestor's mark is the ancestor's to clear. Takes the workspace and the \
+                 conversation from the seat.",
         surface: Surface::Control,
     },
 ];

@@ -48,6 +48,7 @@ pub(crate) fn surface() -> Vec<Reply> {
         listings::listings(),
         inspector::inspector(),
         agent::agent(),
+        agent::governing(),
     ]
     .concat()
 }

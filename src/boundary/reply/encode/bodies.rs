@@ -57,13 +57,19 @@ pub(super) fn enrolled_reply(enrolled: &crate::registry::enroll::Enrolled) -> Va
 /// labels with, full is what a `git show` outside yog takes — exactly as a
 /// lineage row's tip does. `follows` and `diverged_lineages` are the two faces
 /// of one enum: a name and `0`, or `null` and the count that held it.
-pub(super) fn governing(gov: &crate::config_edit::branch::GoverningConfig) -> Value {
+/// `workflow_mark` (bl-b680) is `null` — never absent — on the general path,
+/// matching what `follows` spells for its own absence.
+pub(super) fn governing(
+    gov: &crate::config_edit::branch::GoverningConfig,
+    mark: Option<&crate::config_edit::branch::workflow_mark::WorkflowMark>,
+) -> Value {
     json!({
         "ok": true, "kind": "governing",
         "oid": gov.oid, "short_oid": gov.short_oid,
         "follows": gov.followed_lineage(),
         "diverged_lineages": gov.diverged_lineages(),
         "files": gov.files,
+        "workflow_mark": super::super::workflow::value(mark),
     })
 }
 

@@ -43,6 +43,26 @@
 //! one lawful destination, so naming a branch here would be a knob with one
 //! value (§9.3).
 //!
+//! **[`Workflow`](super::Action::Workflow)** (REMOTE §9.24, bl-b680; litany
+//! ARCH §6, upstream bl-5c02) is the workflow fact's per-agent override, and
+//! it is *not* a retarget: a retarget moves the whole config by re-forking the
+//! branch, this moves `workflow.yaml` alone by writing one standing ref
+//! (`refs/litany/workflow/<agent>`) and touches no branch. The ref names a
+//! **commit**, the lineage's head at the moment of marking, so it is a pin as
+//! well as a switch — a lineage that advances afterwards changes nothing the
+//! agent reads until it is re-marked. Nearest mark on the descent wins, so
+//! marking a root switches its whole tree and a child's own mark overrides it.
+//! **Two ops for one variant**, the pin's precedent: setting and clearing are
+//! two instructions, and a clear must never read as a set that lost its
+//! field. The lineage IS named, unlike `Retarget`'s: a mark's whole point is
+//! choosing among lineages, and `request/lineages` is the browse that says
+//! what there is to name. Every refusal — an unknown lineage, a head whose
+//! `version` or `workflow.yaml` will not parse, an agent the workspace has not
+//! got — is litany's own and comes back in its words as the ordinary
+//! `outcome`; an unknown workspace or conversation refuses at the chokepoint
+//! before anything runs, as every conversation act does. **Reading the mark
+//! is not a verb**: it rides `reply/governing` as `workflow_mark`.
+//!
 //! **[`MarkSeen`](super::Action::MarkSeen)** (VISION §5 V5.2, bl-f6fe) — it
 //! records this conversation's present evidence as seen: the very watermarks
 //! the window writes by focusing it, from one evidence definition, so the two

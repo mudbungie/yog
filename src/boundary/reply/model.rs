@@ -249,7 +249,17 @@ pub enum Reply {
     /// member of the family that answers a **derivation over the workspace's
     /// git** rather than a listing, so it refuses where the others answer
     /// absent: a conversation always has a policy, and "none" would be a lie.
-    Governing(crate::config_edit::branch::GoverningConfig),
+    ///
+    /// **The workflow mark rides beside the commit** (REMOTE §9.24, bl-b680):
+    /// the mark is a fact about the *agent's descent* and the config is a fact
+    /// about a *commit*, so the reply joins them rather than either lying
+    /// about the other — `None` is the general path, the followed tip's
+    /// `workflow.yaml` governing; `Some` names the commit that overrides it,
+    /// and who on the descent holds the mark ([`workflow`](super::workflow)).
+    Governing {
+        config: crate::config_edit::branch::GoverningConfig,
+        workflow_mark: Option<crate::config_edit::branch::workflow_mark::WorkflowMark>,
+    },
     /// The step spine (VISION V1) — [`Rail`](super::Query::Rail)'s answer: the
     /// notches and the child cards hanging off them, unpinned. The pin is the
     /// viewport's, and §8.5 files a viewport's folds under views.

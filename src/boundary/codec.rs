@@ -20,6 +20,11 @@ use super::{Action, Gesture};
 mod balls;
 mod config;
 mod control;
+/// The two acts a REMOTE device makes on its own behalf — enrollment and the
+/// sign-in — split out at §12's cap (bl-b680) on the seam `action/device`
+/// already draws for their prose.
+mod device;
+pub(crate) use device::{ENROLL, LOGIN, grade_of};
 /// The two **depositing** envelopes (bl-a33d), one family file on the seam
 /// every other family here is cut on: a plain send and send-and-interrupt carry
 /// the same three fields, and the only difference is what the engine does once
@@ -34,6 +39,9 @@ mod monitor;
 mod query;
 mod start;
 mod tools;
+/// The §9.4 workflow mark's two envelopes (bl-b680), one family file; the
+/// line reader spells its verbs from the same two tokens.
+pub(crate) mod workflow;
 use config::encode_write;
 use deposit::{INTERRUPT, MESSAGE, deposit, deposited};
 use fields::{act, obj, opt_path_of, opt_str_of, path_of, str_of, strings_of, usize_of};
@@ -72,6 +80,11 @@ fn encode_action(action: &Action) -> Value {
         Action::Scan { workspace } => json!({ "op": "scan", "workspace": workspace }),
         Action::Nudge { workspace, agent } => at_agent("nudge", workspace, agent),
         Action::Retarget { workspace, agent } => at_agent("retarget", workspace, agent),
+        Action::Workflow {
+            workspace,
+            agent,
+            config,
+        } => workflow::encode(workspace, agent, config.as_deref()),
         // The §8.2 `bl` family's five, each spelled in its family file
         // (bl-c2bd), one row since bl-92d3 exactly as the fan's three are.
         Action::Ball(verb) => balls::encode(verb),
@@ -121,46 +134,21 @@ fn encode_action(action: &Action) -> Value {
             goal,
         } => fork::encode(workspace, parent, attempt, goal),
         Action::Advertise { tools } => tools::encode(tools),
-        // REMOTE §1.4's enrollment (bl-f4e3): the workspace it seats the new
-        // client in, the common name its certificate will carry, and the grade
-        // — in the one grade vocabulary `Grade::word`/`of` spell both ways.
-        // `address` rides only when the operator stated one (bl-fec6): absent
-        // is "the address this engine wrote for itself", which the executor
-        // reads, and a null would be a second spelling of the same absence.
-        Action::Enroll(request) => {
-            let mut map = serde_json::Map::new();
-            map.insert("op".to_owned(), json!(ENROLL));
-            map.insert("workspace".to_owned(), json!(request.workspace));
-            map.insert("name".to_owned(), json!(request.name));
-            map.insert("grade".to_owned(), json!(request.grade.word()));
-            if let Some(address) = &request.address {
-                map.insert("address".to_owned(), json!(address));
-            }
-            Value::Object(map)
-        }
+        // The two acts a REMOTE device makes on its own behalf, spelled in the
+        // device family's file (bl-b680's split, on `action/device`'s seam).
+        Action::Enroll(request) => device::encode_enroll(request),
         Action::Route(verb) => tools::encode_route(verb),
-        // The §8.3 sign-in (REMOTE §8.3, bl-c285): the wall it runs in and the
-        // provider row it signs into, and nothing else — the flow is the row's
-        // own capability, never a field a seat may spell (DESIGN §8.3 rule 1).
         Action::Login {
             workspace,
             provider,
-        } => json!({ "op": LOGIN, "workspace": workspace, "provider": provider }),
+        } => device::encode_login(workspace, provider),
     }
 }
-
-/// The sign-in act's op token (bl-c285), named once for both directions and
-/// for the line that types it.
-pub(crate) const LOGIN: &str = "login";
 
 /// The §4.1 pin's two op tokens (bl-b986), named once for the envelope, the
 /// line and the help page — which is how one act cannot be spelled three ways.
 pub(crate) const PIN: &str = "pin";
 pub(crate) const UNPIN: &str = "unpin";
-
-/// Enrollment's op token, named once so the envelope, the line and the help
-/// page cannot spell it three ways (REMOTE §1.4 as amended, bl-f4e3).
-pub(crate) const ENROLL: &str = "enroll";
 
 /// The three one-shape **conversation** envelopes — op, workspace, agent — said
 /// once rather than three times, for [`balls::ball`]'s reason exactly: the
@@ -168,13 +156,6 @@ pub(crate) const ENROLL: &str = "enroll";
 /// a match arm that rebuilds it is a body pretending to be a row.
 fn at_agent(op: &str, workspace: &str, agent: &str) -> Value {
     json!({ "op": op, "workspace": workspace, "agent": agent })
-}
-
-/// One grade word read back, or the refusal naming the token (bl-f4e3) — the
-/// registry's own table, spent here and by the line, so the two serializations
-/// share one vocabulary rather than each carrying a copy.
-pub(crate) fn grade_of(word: &str) -> Result<crate::registry::Grade, String> {
-    crate::registry::Grade::of(word).ok_or_else(|| format!("unknown grade {word:?}"))
 }
 
 /// Decode a deposit envelope. The `op` table is the boundary's whole verb
@@ -200,6 +181,8 @@ pub fn decode(v: &Value) -> Result<Gesture, String> {
             workspace: str_of(o, "workspace")?,
             agent: str_of(o, "agent")?,
         })),
+        // The §9.4 workflow mark's two directions (bl-b680), in its family file.
+        workflow::WORKFLOW | workflow::CLEAR => workflow::decode(op.as_str(), o).map(act),
         // The `bl` family's five (§8.2), each in its family file.
         "close" | "assign" | "release" | "create" | "update" => {
             balls::decode(op.as_str(), o).map(act)
@@ -246,31 +229,13 @@ pub fn decode(v: &Value) -> Result<Gesture, String> {
             workspace: str_of(o, "workspace")?,
             pinned: op == PIN,
         })),
-        // Both halves required (REMOTE §8.3): a sign-in that guessed either
-        // would write a credential into the wrong sphere, or into the right
-        // one for a row nobody named.
-        LOGIN => Ok(act(Action::Login {
-            workspace: str_of(o, "workspace")?,
-            provider: str_of(o, "provider")?,
-        })),
+        // The device's own two acts (REMOTE §8.3, §1.4), in their family file.
+        LOGIN | ENROLL => device::decode(op.as_str(), o).map(act),
         // REMOTE §5's tool-host family (bl-4e08, bl-024b): the presentation,
         // and the routing leg's two halves.
         tools::ADVERTISE | tools::INVOKE | tools::COMPLETE => {
             tools::decode(op.as_str(), o).map(act)
         }
-        // REMOTE §1.4's enrollment (bl-f4e3). Every field is required, the
-        // grade included: a default here would be a promotion or a demotion
-        // nobody typed, and §4.2 forbids the first outright.
-        ENROLL => Ok(act(Action::Enroll(crate::registry::enroll::Request {
-            workspace: str_of(o, "workspace")?,
-            name: str_of(o, "name")?,
-            grade: grade_of(&str_of(o, "grade")?)?,
-            // …and the one OPTIONAL field (bl-fec6): the address the device
-            // will dial, absent when the engine's own is right. A present
-            // field must still be a string, so a mistyped one refuses here
-            // rather than reaching a QR.
-            address: opt_str_of(o, "address")?,
-        }))),
         // The two families that read in their own modules (bl-3f46, bl-3746):
         // every query — `config`/`marks` read-shaped among them, bl-0164 —
         // then the §9 config verbs. This match stays the action roster rather

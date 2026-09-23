@@ -142,7 +142,12 @@ pub fn encode(reply: &Reply) -> Value {
         // The oid rides both ways — short is what a pane labels the freeze
         // with, full is what a `git show` outside yog takes — exactly as a
         // lineage row's tip does.
-        Reply::Governing(gov) => governing(gov),
+        // The mark beside it (bl-b680): `null` for the general path, so a
+        // reader that never heard of the key reads the same answer it always did.
+        Reply::Governing {
+            config,
+            workflow_mark,
+        } => governing(config, workflow_mark.as_ref()),
         Reply::Inbox(entries) => crate::inboxview::wire::reply(entries),
         // The seat's read of its selection (REMOTE §9.4, bl-1eb0).
         Reply::Agent(view) => super::agent::reply(view),

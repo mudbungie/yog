@@ -16,6 +16,9 @@ mod confirm;
 /// other beat in this directory is about a derivation and this one is about a
 /// *cadence* every intake shares the bottom of.
 mod follow;
+/// The governing read's answered arm over a real-git workspace, with the §9.4
+/// mark beside it (bl-b680) — its own file at §12's cap.
+mod governing;
 
 use crate::app::Snapshot;
 

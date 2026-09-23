@@ -58,6 +58,11 @@ fn every_conversation_bearing_action_answers_with_its_needle() {
             workspace: WS.into(),
             agent: NEEDLE.into(),
         },
+        Action::Workflow {
+            workspace: WS.into(),
+            agent: NEEDLE.into(),
+            config: None,
+        },
         Action::DeleteAgent {
             workspace: WS.into(),
             agent: NEEDLE.into(),

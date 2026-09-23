@@ -55,6 +55,8 @@ mod tests;
 /// invocation to a tool host and its capture back.
 mod tools;
 mod verbs;
+/// The §9.4 workflow mark's two lines (bl-b680), in their own family file.
+mod workflow;
 
 pub use balls::{CREATE_USAGE, UPDATE_USAGE};
 pub use config::USAGE as CONFIG_USAGE;

@@ -15,6 +15,9 @@ use crate::test_support::engine;
 use std::path::Path;
 use tempfile::tempdir;
 
+/// The §9.4 workflow mark's set and clear (bl-b680), its own file at the cap.
+mod workflow;
+
 /// The door's fire over a wall that is signed in (bl-2291) — these beats are
 /// about the mint and the launch, not the wall.
 fn signed(deps: crate::boundary::dispatch::Deps) -> crate::boundary::dispatch::Deps {

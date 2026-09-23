@@ -55,6 +55,7 @@ impl Action {
             | Action::Interrupt { agent, .. }
             | Action::Nudge { agent, .. }
             | Action::Retarget { agent, .. }
+            | Action::Workflow { agent, .. }
             | Action::DeleteAgent { agent, .. }
             | Action::MarkSeen { agent, .. }
             | Action::AnswerHold { agent, .. }

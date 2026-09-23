@@ -5730,6 +5730,72 @@ cited from three other trees. The chronology is in the `PROTOCOL` numbers this
 ruling and its neighbours state (16, **17**, 18) and in the ball ids, which is
 where it was always readable. `tests/design_citations.rs` holds the gate that
 keeps a second collision from landing.
+### 9.24 The workflow mark is reachable (bl-b680)
+
+**Two new ops, one field gained on a reply in use, and `PROTOCOL` does not
+move** — §3.2 applied: the field is stamped edition 19 in `corpus/shapes.json`,
+the ops are new spellings a peer that has not heard of them refuses in band by
+name, and a seat re-vendors the corpus to gain them rather than re-pinning to
+keep what it has.
+
+litany 0.0.13 (upstream bl-5c02, ARCH §6 *The workflow mark*) made `litany
+workflow <ws> <agent>` a READ — which `workflow.yaml` governs this agent, and
+whether a mark on it, a mark on an ancestor, or the followed lineage answered —
+and the same verb with `--config <lineage>` the write of the standing ref
+`refs/litany/workflow/<agent>`, `--clear` its deletion. None of it could be
+asked or done from a seat: the boundary reached `workflows/<name>.yaml` as a
+config *destination* and spoke no workflow op at all. The android
+workflow-selector (yog-android bl-feee) was filed against that gap.
+
+**Three asks, and two of them dissolve into frames that already exist.**
+
+- **What a conversation can be marked to is `request/lineages`.** A mark
+  names a config lineage's head — litany's preflight is `require_lineage` and
+  a parse of that head's `version` and `workflow.yaml` — never a file. The
+  harness `workflows/` directory the ball named is litany's *template pool*
+  (`install.rs`, what `litany new` freezes into a fresh config), which no mark
+  can name; the browse a selector needs is the lineage listing this wire has
+  had since §9.7, each lineage with the files its tip holds. No new read.
+- **Which workflow governs now rides `reply/governing`**, grown
+  `workflow_mark`: `null` on the general path — the followed tip's
+  `workflow.yaml` governs — else `{holder, oid, short_oid, lineage}`. `holder`
+  is the descent id carrying the mark, the agent's own or the ancestor whose
+  mark it inherits (marking a root switches its whole tree, and the agent
+  asked about need not be the one wearing it); `oid` is the marked commit;
+  `lineage` is the `config/*` name standing exactly on that commit, or `null`
+  once the lineage has advanced past a mark that pins an older one — rendered
+  as the absence it is, never declined. **Beside the commit, not instead of
+  it**: a mark moves `workflow.yaml` alone, the models, souls and manifest keep
+  following the tip, so `oid`/`follows`/`files` still describe the tip and
+  this field names the one file that comes from elsewhere. `null` rather than
+  absent, matching `follows`' own spelling of its absence; a reader that never
+  heard of the key reads the answer it always did. It is read live off the
+  agent's descent whatever `at` named, because a mark is standing state now
+  and not a fact of the commit a pin selects. **Derived, never scraped**: yog
+  walks the same refs litany's `nearest_mark` walks
+  (`config_edit::branch::workflow_mark`, on `follow.rs`'s port of
+  `current_config`) and does not read the verb's one-line stdout back —
+  bl-b95e's ruling that content is diagnosis and never a trigger, and §9.12's
+  same reasoning for the held count.
+- **The act is new: `request/workflow` and `request/clear-workflow`**, one
+  `Action::Workflow { workspace, agent, config }` with two ops on the
+  pin/unpin precedent — the op token IS the direction, so a clear can never
+  read as a set that lost its field, and the set's `config` is required
+  because choosing among lineages is the act's whole point. `/workflow
+  <lineage>` and `/clear-workflow` on the line, the conversation the seat's
+  exactly as `/retarget`'s is. The executor is the workspace-bound `litany
+  workflow <ws> <agent> --config <name>` or `--clear`, piped, answered as the
+  ordinary `reply/outcome`: an unknown lineage, a head whose `version` or
+  `workflow.yaml` will not parse, and an agent the workspace has not got each
+  come back in litany's own words, and every one of them precedes the write.
+  An unknown workspace or conversation refuses at the chokepoint's one
+  resolution before anything runs, as every conversation act does (§8).
+
+It is not a `Retarget` with a name: a retarget moves the whole config by
+re-forking the branch, this writes one standing ref and touches no branch. And
+the read is not a verb, because the fact already had a home — the governing
+answer is *which config governs*, and the mark is that question's second half.
+DESIGN §9.4 and §8.2's verb table carry the engine's side.
 
 ## 10. Open questions (living)
 

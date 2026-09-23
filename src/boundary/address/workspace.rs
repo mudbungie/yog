@@ -63,6 +63,7 @@ impl Action {
             | Action::Scan { workspace }
             | Action::Nudge { workspace, .. }
             | Action::Retarget { workspace, .. }
+            | Action::Workflow { workspace, .. }
             | Action::Fork { workspace, .. }
             | Action::Prepare { workspace, .. }
             | Action::DeleteWorkspace { workspace, .. }
