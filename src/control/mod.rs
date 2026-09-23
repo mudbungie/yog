@@ -42,6 +42,7 @@ use crate::xdg::Env;
 
 pub mod author;
 pub mod bash;
+pub mod ceiling;
 pub mod classify;
 pub mod confine;
 pub mod hold;
@@ -101,12 +102,20 @@ pub struct Consult {
     /// adjudicated exactly as one that has never been edited (§8.6
     /// severability).
     pub policy: Policy,
+    /// The §3.5 spend ceiling's sentence for this world, or `None` when the
+    /// world is unbounded, unpriced, or still under the number (§8.6's last
+    /// bullet, bl-4b48). A value rather than a question, because answering it
+    /// is a `steps/` walk of every workspace and the judgment below must ask it
+    /// **once per consult** — see [`ceiling::parked`].
+    pub ceiling: Option<String>,
 }
 
 impl Consult {
     /// Resolve a consult from the composed world env and the workspace litany
-    /// named. Pure — the two disk reads (the cwd mark, the policy file) are the
-    /// caller's.
+    /// named. Two of its three disk reads are the caller's — the cwd mark and
+    /// the policy file — and the third is [`ceiling::parked`], resolved here
+    /// because *once per consult* is what §8.6's last bullet asks of it and
+    /// this is the one place a consult is made.
     pub fn new(env: &Env, workspace: &Path, cwd: Option<PathBuf>, policy: Policy) -> Consult {
         Consult {
             workspace: workspace.to_path_buf(),
@@ -115,6 +124,7 @@ impl Consult {
             home: env.home_dir(),
             cwd,
             policy,
+            ceiling: ceiling::parked(env),
         }
     }
 
@@ -156,9 +166,24 @@ impl Consult {
 /// ([`reason::verdict`]) — a call, a conversation, or the workspace.
 pub fn adjudicate(consult: &Consult, request: &Request) -> Verdict {
     let entries = opslog::tail(&consult.state_root, usize::MAX);
+    let answers = Answers::fold(&entries);
+    // §3.5's ceiling sits ahead of the table, the floor and the class this
+    // invocation would have landed in: it holds **every** class over every
+    // conversation in the world, so nothing below it can widen what it parks
+    // and nothing below it needs to be asked. Its one exception is the
+    // precedence [`Answers::ruling`] already states rather than a case of its
+    // own — an answer to *this exact* `tool_use` id is the operator looking at
+    // the call in front of them, which outranks every standing policy, and a
+    // world ceiling is the widest standing policy there is. So `/answer pass`
+    // still walks one held call through.
+    if let Some(sentence) = &consult.ceiling
+        && answers.once(&request.id).is_none()
+    {
+        return Verdict::Hold(sentence.clone());
+    }
     let root = consult.root(&request.agent_id, &entries);
     let classified = classify::classify(request, &root, &consult.policy);
-    let standing = Answers::fold(&entries).ruling(
+    let standing = answers.ruling(
         request,
         &crate::nav::ws_key(&consult.workspace),
         classified.effect,

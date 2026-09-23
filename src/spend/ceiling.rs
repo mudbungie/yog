@@ -1,13 +1,23 @@
-//! The spend ceiling (DESIGN §3.5; VISION spend attribution): the spawn gate's **policy**
-//! half — the operator's number and the comparison. The *seat* that enforces
-//! it is [`crate::boundary::ceiling`], the one chokepoint every spawn crosses.
+//! The spend ceiling (DESIGN §3.5; VISION spend attribution): the **policy**
+//! half — the operator's number and the comparison. [`Ceiling::verdict`] is
+//! that comparison and there is exactly one of it; the *seats* that spend it
+//! live elsewhere, and since bl-4b48 there are two:
 //!
-//! The ruling this implements: the ceiling **gates spawns and never kills a
-//! running drone**, because killing mid-ball destroys uncommitted work and
-//! early termination is the expensive failure. So the only thing it can ever
-//! refuse is a *birth* — nothing already running is touched, slowed or
-//! stopped, and the bound on a drone that is already alive is litany's own
-//! `max_total_tokens`, one layer down, where the loop that spends it lives.
+//! - [`crate::boundary::ceiling`] — the spawn gate, the one chokepoint every
+//!   birth crosses (§3.5). It **refuses** a birth.
+//! - [`crate::control::ceiling`] — the §8.6 capability control's consult, which
+//!   runs before every tool call of every live conversation. It **parks** one.
+//!
+//! The ruling this implements: the ceiling **never kills a running drone**,
+//! because killing mid-ball destroys uncommitted work and early termination is
+//! the expensive failure. The second seat does not soften that. A hold is
+//! litany's park — the invocation waits *before* it executes, and the branch
+//! keeps its tree, its history and every uncommitted byte — and it closes the
+//! gap the first seat left open: a fleet already alive spent to the end of its
+//! backlog however far past the number it was (§3.5's fourth bullet). Nothing
+//! is stopped, signalled or written by either seat, and the bound on the model
+//! call itself is litany's own, one layer down, where the loop that spends it
+//! lives.
 //!
 //! **Severable in the strong sense, and in two directions.** The ceiling is
 //! one `ui.json` number beside the price table (§4.1 `ceiling`); deleting the
@@ -55,9 +65,21 @@ impl Ceiling {
         }
     }
 
+    /// Whether this ceiling can bind at all against `prices`: a number to bind
+    /// at, and a table to denominate it in. **The question a seat asks before
+    /// it pays for the walk** — the fold behind [`refusal`](Self::refusal) is a
+    /// `steps/` walk of every workspace in the world, and §8.6's consult spends
+    /// it once per *tool call*, so an unbounded or unpriced world has to cost
+    /// one `ui.json` read and nothing else. It is not a second comparison: it
+    /// answers whether there is one to make.
+    pub fn armed(&self, prices: &Prices) -> bool {
+        self.limit.is_some() && !prices.is_empty()
+    }
+
     /// The refusal the next birth anywhere in this world earns, or `None` to
     /// let it fly. `workspaces` is the world's roster (§3.1's three roots),
-    /// walked here at the instant of the refusal.
+    /// walked here at the instant of the refusal — and only when [`armed`](
+    /// Self::armed) says the walk can change the answer.
     ///
     /// Three ways to fly: no ceiling configured, no price table (an unpriceable
     /// figure bounds nothing), or a world whose priced spend is still under the
@@ -65,7 +87,9 @@ impl Ceiling {
     /// table cannot price are reported by the §11 render and never guessed at
     /// here, so the gate refuses only on spend it can actually name.
     pub fn refusal(&self, workspaces: &[PathBuf], prices: &Prices) -> Option<String> {
-        self.verdict(super::of_world(workspaces, prices))
+        self.armed(prices)
+            .then(|| self.verdict(super::of_world(workspaces, prices)))
+            .flatten()
     }
 
     /// The same judgement over a total someone else already folded — the
@@ -74,6 +98,13 @@ impl Ceiling {
     /// the gate's own comparison rather than a second opinion that could drift.
     /// The gate above is this function with the walk in front of it, and both
     /// arms fold the same scope — every workspace — since bl-a80a.
+    ///
+    /// **The sentence is the mark** (bl-4b48). §8.6's consult hands this text
+    /// to litany's hold mark unaltered, so the fixed head `spend ceiling
+    /// reached:` is what the `/ceiling` release selects a parked conversation
+    /// by — a floor's park or a policy hold carries a different reason and is
+    /// not touched. Write it once, here, or the seat that reads it back and the
+    /// seat that wrote it drift.
     pub fn verdict(&self, spent: Option<Cost>) -> Option<String> {
         let limit = self.limit?;
         let cost = spent?;
@@ -85,8 +116,9 @@ impl Ceiling {
             format!(
                 "spend ceiling reached: this world has spent {} across every workspace \
                  against a {} ceiling (ui.json `ceiling`), so nothing new is started \
-                 anywhere. Everything already running is untouched — raise the ceiling or \
-                 delete the key to spawn again.",
+                 anywhere and everything already running parks at its next tool call. \
+                 Nothing is killed and no work is lost — raise the ceiling or delete the \
+                 key to release it.",
                 cost.usd(),
                 ceiling.usd(),
             )
@@ -162,7 +194,7 @@ mod tests {
             .unwrap();
         assert!(refusal.contains("$3.00"), "{refusal}");
         assert!(refusal.contains("$2.50"), "{refusal}");
-        assert!(refusal.contains("untouched"), "{refusal}");
+        assert!(refusal.contains("parks at its next tool call"), "{refusal}");
     }
 
     /// **bl-a80a, the whole point.** Two workspaces, each half the ceiling and
@@ -181,6 +213,23 @@ mod tests {
         let refusal = ceiling.refusal(&roster, &table()).unwrap();
         assert!(refusal.contains("$4.00"), "{refusal}");
         assert!(refusal.contains("every workspace"), "{refusal}");
+    }
+
+    /// The gate every seat consults *before* it pays for the walk (bl-4b48):
+    /// both halves must be present, and it is the structural statement of
+    /// "an unbounded or unpriced world costs one read and no `steps/` walk".
+    #[test]
+    fn armed_needs_both_a_number_and_a_table() {
+        let set = Ceiling::from_json(Some(&json!(1)));
+        assert!(set.armed(&table()));
+        assert!(
+            !set.armed(&Prices::default()),
+            "a number it cannot denominate"
+        );
+        assert!(
+            !Ceiling::default().armed(&table()),
+            "a table with no number to bind at"
+        );
     }
 
     /// An empty roster is the general path with no inputs, not a bootstrap

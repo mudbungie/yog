@@ -64,7 +64,11 @@ impl Roots {
     pub(super) fn replays(&self) -> PathBuf {
         self.litany_data.join("replays")
     }
-    pub(super) fn ui_json(&self) -> PathBuf {
+    /// `ui.json` under the state root (§4.1) — the world document's one
+    /// address, `pub(crate)` since bl-4b48 because §8.6's consult opens the
+    /// same file from outside this module and a second spelling of the name
+    /// is a second home for it.
+    pub(crate) fn ui_json(&self) -> PathBuf {
         self.yog_state.join("ui.json")
     }
 }

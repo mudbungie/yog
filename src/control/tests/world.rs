@@ -54,6 +54,8 @@ impl World {
             home: self.dir.path().join("home"),
             cwd: None,
             policy: Policy::default(),
+            // An unbounded world: §3.5's ceiling is off unless a beat arms it.
+            ceiling: None,
         }
     }
 

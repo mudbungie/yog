@@ -112,6 +112,16 @@ impl Answers {
             .any(|(conv, raised)| *raised && (agent_id == conv || descends(agent_id, conv)))
     }
 
+    /// The operator's answer to **this exact** `tool_use` id, when they gave
+    /// one. [`ruling`](Self::ruling) takes it ahead of everything below it, and
+    /// §8.6's spend ceiling takes it ahead of *itself* for the same reason: an
+    /// answer to the call in front of the operator outranks standing policy,
+    /// and a world ceiling is the widest standing policy there is. One reader,
+    /// so the two seats cannot disagree about what an answer covers.
+    pub(crate) fn once(&self, id: &str) -> Option<Ruling> {
+        self.once.get(id).copied()
+    }
+
     /// The ruling for one invocation, and the scope it came from: the operator's
     /// answers in precedence order, else the workspace's table.
     pub fn ruling(
@@ -121,9 +131,9 @@ impl Answers {
         effect: Effect,
         policy: &super::super::policy::Policy,
     ) -> Standing {
-        if let Some(once) = self.once.get(&request.id) {
+        if let Some(once) = self.once(&request.id) {
             return Standing {
-                ruling: *once,
+                ruling: once,
                 scope: Scope::Call,
             };
         }

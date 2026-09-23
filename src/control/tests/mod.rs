@@ -5,6 +5,7 @@ use super::*;
 use crate::opslog::YOG_CONTROL;
 use serde_json::json;
 
+mod ceiling;
 mod world;
 use world::{Closed, World, request};
 
