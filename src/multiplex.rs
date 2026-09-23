@@ -205,12 +205,13 @@ mod bl_tracker {
             env::var("XDG_CONFIG_HOME").ok().as_deref(),
             env::var("XDG_STATE_HOME").ok().as_deref(),
         );
-        // `Env::resolve`, never the struct literal: the depth PARSE is balls'
-        // (an absent or unparseable value fails OPEN at 0, publishing), and
-        // `$BALLS_PLUGIN_DEPTH` is the §6 recursion depth core stamps on every
-        // plugin spawn — the fact that tells this tracker whether an enclosing
-        // `bl` still holds the store open (balls 0.5.10, upstream bl-1266).
-        let env = balls::tracker::Env::resolve(xdg, env::var("BALLS_PLUGIN_DEPTH").ok());
+        // `Env::resolve`, never the struct literal: the chain PARSE is balls'
+        // (an absent variable fails OPEN as an empty chain, publishing), and
+        // `$BALLS_HELD_STORES` is the chain of store checkouts core stamps on
+        // every plugin spawn — the fact that tells this tracker whether an
+        // enclosing `bl` still holds THIS store open (balls 0.5.12, upstream
+        // bl-aac7; it replaced the store-blind depth read of bl-1266).
+        let env = balls::tracker::Env::resolve(xdg, env::var_os("BALLS_HELD_STORES"));
         balls::tracker::run(
             args,
             &mut io::stdin().lock(),

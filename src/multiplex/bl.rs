@@ -176,5 +176,6 @@ fn edge(bl_exe: PathBuf, space: &Space) -> Edge {
         env::var("NO_COLOR").ok(),
         std::io::stdout().is_terminal(),
         env::var("BALLS_CLOCK").ok(),
+        env::var_os("BALLS_HELD_STORES"),
     )
 }

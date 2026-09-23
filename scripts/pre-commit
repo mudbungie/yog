@@ -2,10 +2,11 @@
 # yog gate — the complete build gate, factored out of .githooks/pre-commit so
 # it is content-addressable: bl-speculate's verdict cache (balls design
 # docs/design/bl-24e7-speculative-merge-queue.md, adopted for yog in bl-1a5b)
-# fingerprints the gate as the content of THIS file,
-# scripts/check-line-lengths.sh, scripts/check-coverage.sh and the Makefile,
-# plus `rustc -V` — change any of them and every stored verdict silently stops
-# matching, which is exactly the invalidation a gate upgrade must cause.
+# keys a verdict by (tree, `rustc -V`). This file and every script it calls
+# are tracked, so they are INSIDE the tree oid: editing one is a different tree
+# and every stored verdict stops matching, which is exactly the invalidation a
+# gate upgrade must cause (balls bl-6a84 dropped the compiled-in gate-file list
+# that once hashed four of them a second time).
 #
 # Callers: .githooks/pre-commit (which keeps only the commit-context guard and
 # delegates here), the GH Actions speculate workflow
@@ -49,12 +50,11 @@ fi
 # may be skipped on a verdict-cache hit; this may not. Two reasons, and either
 # alone is enough:
 #
-#   - bl-speculate's gate fingerprint is a FIXED file list compiled into that
-#     binary — scripts/pre-commit, scripts/check-line-lengths.sh,
-#     scripts/check-coverage.sh, the Makefile, plus `rustc -V`. The scanner is
-#     not in it and yog cannot put it there. Rather than ask upstream for a
-#     hook (balls bl-6a84) the scan simply stops being cacheable, which is the
-#     smaller change and needs nothing from anyone.
+#   - a verdict is keyed by the TREE, and the scanner and its rule table are
+#     in the tree, so a rule edit does re-key every verdict (balls bl-6a84).
+#     What a key cannot say is that the tree was scanned by THIS box's rules
+#     at THIS moment — the scan is the one step whose answer must never be
+#     taken on trust, so it is not cacheable at all.
 #   - a verdict is a claim, and it can arrive from somewhere else: the
 #     speculate workflow uploads a verdict store and scripts/speculate-gate
 #     imports it. Every other gate step re-derives a build; this one decides

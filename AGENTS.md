@@ -437,10 +437,9 @@ demotion removes an internal API from the boundary's obligations. Reach for
 
   **The scan is never cached.** `scripts/pre-commit` runs it BEFORE consulting
   bl-speculate's verdict cache, so no stored verdict — including one imported
-  from the remote builder — can let a leak through unread. (The cache's gate
-  fingerprint is a fixed file list compiled into `bl-speculate` that cannot
-  name the scanner; not being cacheable dissolves that rather than waiting on
-  upstream.)
+  from the remote builder — can let a leak through unread. (A verdict's key
+  says which tree and which toolchain, never that this box's rules read it
+  just now; the one step that must never be taken on trust is not cacheable.)
 
   **Two scopes, because they answer different questions (bl-1007).** Bare, it
   scans the whole tracked tree — the right question for a commit hook (the tree
@@ -816,22 +815,26 @@ Facts the queue derives from (do not fight them):
   is guarded on its own side. `.github/workflows/speculate.yml` records a FAIL
   only when the gate's exit code says it judged the tree (see "The local gate":
   75 means no verdict, and a job killed outright writes no output at all).
-  `scripts/speculate-gate` cannot be guarded that way, because
-  **`speculate_run::build` takes `status.success()` and writes `pass = false`
-  from anything else** — the gate has no third answer to give it. So it does the
-  only thing it can: an empty `verdicts` artifact is a REBUILD, not an answer,
-  and it pushes the candidate a second time rather than answering. **The
-  residual is upstream's**: two consecutive infrastructure deaths still store a
-  FAIL, and what balls would need is a gate exit code meaning *no verdict,
-  record nothing* — the same 75 the workflow already honors.
+  `scripts/speculate-gate` is the other, and since balls 0.5.12 (bl-1643)
+  `speculate_run::build` honors the same code: **exit 75 records nothing** and
+  leaves the candidate for the next pass to rebuild. So the gate answers 0 only
+  for a PASS under the local key, 1 only when the runner FAILED the tree, and
+  75 for everything else — an empty `verdicts` artifact, or a runner verdict
+  for the tree under a gate key that is not this box's (a fingerprint miss is a
+  fact about the machines, not the tree; bl-5909 measured one written as a
+  false FAIL).
 - **Everything degrades to the stock local gate.** No binary, no verdict, no
   network, no runner: the cache misses honestly and `bl close` builds locally.
   Never wait on the remote to close.
-- **The gate fingerprint is content**: `scripts/pre-commit`,
-  `scripts/check-line-lengths.sh`, `scripts/check-coverage.sh`, `Makefile`,
-  plus local `rustc -V`. Editing any of them invalidates every stored verdict
-  (deliberately). `rust-toolchain.toml` pins the toolchain on both sides —
-  bump it in lockstep or remote verdicts silently stop matching.
+- **A verdict is keyed by (tree, `rustc -V`)** (balls bl-6a84). The gate
+  scripts are tracked, so editing one is a different tree and invalidates
+  every stored verdict (deliberately); the toolchain is the only gate input
+  the tree cannot see. `rust-toolchain.toml` pins it on both sides — bump it
+  in lockstep or remote verdicts silently stop matching.
+- **The local `bl-speculate` must be the crates.io version `Cargo.toml` pins**
+  (`cargo install balls --version <pin>`), never a source build: the runner
+  installs the pin, and a build that derives the key differently misses every
+  imported verdict (bl-5909).
 - A crashed `scripts/speculate-gate` can strand a `speculation/<sha>` branch
   on origin; sweep with `git push origin --delete speculation/<sha>`.
 

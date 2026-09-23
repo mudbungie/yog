@@ -12,8 +12,12 @@
 # builder must never become a close dependency: every failure here degrades
 # to the stock local gate at close.
 #
-# The gate fingerprint hashes `rustc -V`: a verdict recorded here HITS
-# locally only when the runner's toolchain matches yours. rust-toolchain.toml
+# A verdict is keyed by (tree, gate), and since balls 0.5.12 (bl-6a84) the
+# gate half is `rustc -V` and nothing else — the gate scripts are tracked, so
+# they are already in the tree. A verdict recorded here HITS locally only when
+# the runner's toolchain matches yours AND your bl-speculate derives the key
+# the way the pinned one installed below does: install it from crates.io at
+# the Cargo.toml pin, never from a source build (bl-5909). rust-toolchain.toml
 # pins 1.95.0 on both sides — bump it in lockstep with a deliberate upgrade,
 # or remote verdicts silently stop matching (that is the fingerprint refusing
 # to vouch across toolchains, not a bug).
@@ -46,8 +50,8 @@ jobs:
           # Nothing in this job pushes, so leave no credential behind.
           persist-credentials: false
       # Bare `rustc -V` in the checkout makes rustup resolve and install the
-      # rust-toolchain.toml pin — the toolchain half of the fingerprint.
-      - name: toolchain half of the fingerprint (must match local rustc -V)
+      # rust-toolchain.toml pin — the whole gate fingerprint.
+      - name: the gate fingerprint (must match local rustc -V)
         run: rustc -V
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
       - name: Cache cargo-tarpaulin 0.35.2

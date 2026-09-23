@@ -29,8 +29,8 @@
 # tarpaulin CATCHES SIGINT and exits with the very message matched below, so an
 # operator's Ctrl-C at close would otherwise buy a second multi-minute run.
 #
-# Fingerprinted by bl-speculate as part of the gate identity (GATE_FILES,
-# balls src/speculate.rs) — see scripts/pre-commit.
+# Tracked, so it is part of the tree a bl-speculate verdict is keyed by — an
+# edit here re-keys every verdict (see scripts/pre-commit).
 
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"

@@ -11,24 +11,28 @@
 #   3. wait on that exact run (gh run watch), download + bl-speculate import;
 #   4. sweep the branch (the TTL sweep is us; a crash leaves the branch —
 #      sweep by hand: git push origin --delete speculation/<sha>);
-#   5. answer with `bl-speculate check`: exit 0 only if the imported verdict
-#      is a PASS under the LOCAL key (tree + local gate files + local
-#      `rustc -V`). A toolchain mismatch is therefore an honest miss —
-#      reported as failure here so the chain stops instead of vouching blind
-#      (rust-toolchain.toml pins both sides; see the workflow header).
+#   5. answer in THREE words, not two (balls bl-1643, `speculate_run::build`
+#      maps the exit: 0 is a PASS, 75 is "no verdict — record nothing, the
+#      next pass rebuilds", anything else is a FAIL):
+#        0   `bl-speculate check` hits: the imported verdict is a PASS under
+#            the LOCAL key (tree + local `rustc -V`);
+#        1   the runner judged this tree and FAILED it;
+#        75  everything else — nothing came home (the workflow records no
+#            verdict when the gate was killed from outside, bl-673a), or the
+#            runner's verdict for this tree sits under a gate key that is not
+#            ours. That second case is a fingerprint MISS: the runner's
+#            `rustc -V` differs from this box's (rust-toolchain.toml pins both
+#            sides; see the workflow header), or this box runs a bl-speculate
+#            that derives the key differently from the version Cargo.toml pins
+#            (bl-5909). Either is a fact about the machines, not the tree.
 #
-# AN EMPTY ARTIFACT IS A REBUILD, NOT AN ANSWER (bl-673a). A run whose gate
-# died of something outside the tree — five sightings of a runner signalling
-# tarpaulin mid-suite — records no verdict at all, by the workflow's own guard.
-# That is the one case worth spending a second build on, because THIS SCRIPT'S
-# EXIT CODE IS BINARY AND THE CALLER WRITES A VERDICT FROM IT EITHER WAY: balls
-# `speculate_run::build` takes `status.success()` and stores `pass = false` on
-# anything else, and a stored FAIL stops the candidate chain forever without
-# ever rebuilding (`speculate_run`: "fail <id> <tree> — chain stops"). There is
-# no third answer to give it, so the only lever this repo owns is to not answer
-# until a build has actually judged the tree. Two attempts; if the second also
-# comes home empty the poison is unavoidable and upstream's to fix — a gate exit
-# code meaning "no verdict, record nothing" is what balls would need.
+# WHY THE THIRD WORD MATTERS. A stored FAIL is permanent: `speculate_run` stops
+# the candidate chain at it on every later pass without rebuilding, and only a
+# new commit escapes, because the key is the tree. Before balls 0.5.12 this
+# script's exit was binary and the caller wrote a verdict from it either way,
+# so an empty artifact bought a second remote build, and a key mismatch wrote a
+# false FAIL for a tree the runner had passed (bl-5909 measured one). Both are
+# 75 now; the next pass is the retry.
 #
 # Usage:    bl-speculate run --gate scripts/speculate-gate [--builds N]
 # Requires: gh (authenticated) and push access to origin.
@@ -65,17 +69,15 @@ trap cleanup EXIT INT TERM HUP
 
 verdicts="$(mktemp -d)"
 
-# The newest run on our branch that is not `$1`. speculate.yml is the only
-# workflow triggering on speculation/**, and the push that precedes each call
-# mints a run, so "newest, and not the one we already watched" identifies ours
-# on a retry as well as on the first push. Keyed by branch rather than
-# --workflow: gh cannot resolve a workflow by name until it has registered,
-# which the first-ever push is still causing. Bounded wait.
+# The newest run on our branch. speculate.yml is the only workflow triggering
+# on speculation/**, and the push that precedes the call mints a run. Keyed by
+# branch rather than --workflow: gh cannot resolve a workflow by name until it
+# has registered, which the first-ever push is still causing. Bounded wait.
 await_run() {
   for _ in $(seq 30); do
     id="$(gh run list --branch "$branch" \
       --json databaseId --jq '.[0].databaseId' 2>/dev/null || true)"
-    if [ -n "$id" ] && [ "$id" != "$1" ]; then
+    if [ -n "$id" ]; then
       printf '%s' "$id"
       return 0
     fi
@@ -93,11 +95,10 @@ remote_build() {
   # errexit suspended for its whole body, so an unreported push failure would
   # fall through into a 150-second wait for a run that can never appear.
   git push --force origin "HEAD:refs/heads/$branch" >&2 || return 1
-  run_id="$(await_run "$watched")" || {
+  run_id="$(await_run)" || {
     echo "speculate-gate: no workflow run appeared for $branch" >&2
     return 1
   }
-  watched="$run_id"
   echo "speculate-gate: watching run $run_id" >&2
   gh run watch "$run_id" -i 30 >/dev/null || true # the conclusion travels in the verdict
   rm -rf "$verdicts"
@@ -109,22 +110,25 @@ remote_build() {
   compgen -G "$verdicts/*.toml" >/dev/null
 }
 
-watched=""
-attempts=2
-for attempt in $(seq "$attempts"); do
-  remote_build && break
-  echo "speculate-gate: attempt $attempt of $attempts judged nothing about" >&2
-  echo "  this tree — no verdict came home, so the gate died of something that" >&2
-  echo "  is not the tree (bl-673a)." >&2
-done
+remote_build || echo "speculate-gate: no verdict came home for $sha" >&2
 
 if compgen -G "$verdicts/*.toml" >/dev/null; then
   bl-speculate import "$verdicts"/*.toml >&2 || true
 fi
 
-# The one answer: did this exact tree pass this exact gate, per the local key?
-# NOT `exec`: exec REPLACES this shell, and a replaced shell runs no EXIT trap —
-# so the success path, the one that runs every time, would be the one path that
-# leaked the branch. Called plainly, the trap fires and the status is still the
-# check's, because `set -e` carries a failure straight out.
-bl-speculate check
+# NOT `exec` for any answer: exec REPLACES this shell, and a replaced shell
+# runs no EXIT trap — so the success path, the one that runs every time, would
+# be the one path that leaked the branch.
+if bl-speculate check; then
+  exit 0
+fi
+# The runner's verdict for THIS tree, under whatever key it was written:
+# `<tree>-<gate>.toml` is the store's file name, the id being the path.
+tree="$(git rev-parse 'HEAD^{tree}')"
+if grep -qsx 'pass = false' "$verdicts/$tree"-*.toml; then
+  echo "speculate-gate: the runner FAILED tree $tree" >&2
+  exit 1
+fi
+echo "speculate-gate: no verdict for tree $tree under this box's gate key" >&2
+echo "  (nothing came home, or a fingerprint miss) — exit 75, nothing recorded" >&2
+exit 75
