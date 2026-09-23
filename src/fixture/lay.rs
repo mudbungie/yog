@@ -24,6 +24,27 @@ use std::path::{Path, PathBuf};
 /// `litany prime`, which is the general path with the seed already there.
 const MODELS_YAML: &str = "models:\n  default:\n    provider: anthropic\n";
 
+/// **The role assignment every fixture trunk carries** (bl-59cf) — the block
+/// shape `litany new` authors and §9.4's grammar reads: a top-level key at
+/// column 0, two-space entries, four-space fields.
+///
+/// Without it [`found`] committed `version` alone, so a laid world declared no
+/// role: `/roles` answered an empty table and `/effort` and `/priority`
+/// refused with the grammar's *no such entry*, which is a refusal no harness
+/// can clear from outside. A fixture is a world a seat lane drives, so the
+/// trunk states the assignment the same `litany new` a real workspace is
+/// founded by would have left there.
+///
+/// Two roles, because litany's template authors two and a role picker with one
+/// row offers no choice. The pointer names the row
+/// [`Recipe::brazen`](super::recipe::Recipe::brazen) declares, and it carries
+/// **no credential**: the §9.4 tuning pair reads no provider table at all — a
+/// capability decides which control a seat offers, never whether a write is
+/// allowed — so a keyless row is the whole of what the refusal-free path needs.
+const PROVIDERS_YAML: &str = "roles:\n  worker:\n    provider: anthropic\n    \
+     model: claude-sonnet-5\n  compactor:\n    provider: anthropic\n    \
+     model: claude-haiku-4-5\n";
+
 /// The §4.4 tails each [`Step`] arm writes into `response.json`.
 const SETTLED: &str = "{\"type\":\"finish\"}\n{\"type\":\"end\"}\n";
 const FAILED: &str = "{\"type\":\"error\",\"message\":\"the model refused\"}\n{\"type\":\"end\"}\n";
@@ -100,6 +121,10 @@ fn lay_workspace(
 /// The bare `repo.git` and its orphan `config/default` root (ARCH §2.2) — the
 /// lineage every conversation branch forks off, and the `repo.git` marker
 /// that makes the directory a workspace at all.
+///
+/// The root commit carries both files a `litany new` trunk does: the `version`
+/// marker and the [`PROVIDERS_YAML`] role assignment the §9.4 surfaces read
+/// and write.
 fn found(ws: &Path) -> Result<(), String> {
     let repo = ws.join("repo.git");
     mkdir(&repo)?;
@@ -124,7 +149,12 @@ fn found(ws: &Path) -> Result<(), String> {
         None,
     )?;
     write(&author.join("version"), "1\n")?;
-    git(&author, &["add", "version"], None)?;
+    write(&author.join(crate::model_pick::PROVIDERS), PROVIDERS_YAML)?;
+    git(
+        &author,
+        &["add", "version", crate::model_pick::PROVIDERS],
+        None,
+    )?;
     git(
         &author,
         &["commit", "-q", "-m", "config: init"],

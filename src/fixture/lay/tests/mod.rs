@@ -3,6 +3,11 @@
 //! `registry` — because a fixture that only satisfies its own writer is a
 //! fixture that proves nothing about what an engine will serve.
 
+/// The laid trunk driven by the §9.4 surfaces a seat tunes a world with
+/// (bl-59cf) — its own file because those beats spend the boundary's own
+/// chokepoint rather than this file's disk derivations.
+mod lineage;
+
 use super::*;
 use crate::fixture::roster;
 use tempfile::TempDir;
