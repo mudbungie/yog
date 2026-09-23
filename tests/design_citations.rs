@@ -123,6 +123,14 @@ const FOREIGN: &[&str] = &[
     // subsections at all, which the sibling test keeps honest: the day it
     // grows one, these entries fail rather than masking it.
     "6.3", "6.4",
+    // REMOTE.md's §13 family — §13.2 (the DHT rendezvous: both ends pure
+    // clients of the commons) and §13.5 (what the punched wire costs, whose
+    // last item is the fake DHT the coverage floor demands) — cited prefixed
+    // ("REMOTE §13.2") from the `dht` module (bl-df31). DESIGN §13 is
+    // "Deliberate interpretations" and has §13.0, §13.1 and §13.3 only, which
+    // the sibling test keeps honest: the day it grows a §13.2 or §13.5, these
+    // entries fail rather than masking it.
+    "13.2", "13.5",
 ];
 
 /// Parse a section key (`digits`, optionally `.digits`) starting at `i`;

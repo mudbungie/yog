@@ -51,6 +51,9 @@ pub mod context;
 /// tool-control seam consults before every granted tool invocation.
 pub mod control;
 pub mod delete;
+/// The REMOTE §13.2 DHT rendezvous client (bl-df31) — bencode, KRPC walks and
+/// BEP 44 signed items, a pure client of the commons and never a node.
+pub mod dht;
 /// The one assembly a bare `yog` boots (VISION §5 V5) — model, worker, bridge,
 /// gesture consumer, monitor sentry, fleet pilot and the wire listener.
 /// **Is this box wired up?** (bl-28f4) — the one read that asks every question

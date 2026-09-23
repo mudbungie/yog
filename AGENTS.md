@@ -119,6 +119,11 @@ recorded verbatim in the rule — read it before assuming a rule is absolute.**
    has none, which is not an in-channel bootstrap and does not lift REMOTE
    §1.4: the act is the operator's tooling, run on the operator's box, before
    anything is dialled. `yog wire-certs` is the same recipe reached by a verb.
+   **`ring` is a DIRECT dependency since bl-df31** on the same argument as
+   rustls: the REMOTE §13.2 DHT client signs BEP 44 items with ed25519 and
+   names a target by SHA-1, both of which `ring` — the provider rustls names
+   above — already ships, so the manifest gained a line and the lockfile a
+   dependency edge: no crate, no license and no advisory.
    `deny.toml` still bans
    `openssl-sys` AND `native-tls`, which was always the standard's point — a C
    toolchain dep and a non-portable system bridge, either of which breaks the

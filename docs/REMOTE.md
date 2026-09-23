@@ -6145,6 +6145,41 @@ ed25519-signed mutable items; `ring` (already in the graph under rustls)
 signs, std UDP carries, and the expectation is **zero new crates** — a
 proposed dependency here is a rule-6 ruling, not a default.
 
+**Built (bl-df31): yog's `src/dht`, and the shape the rest of this section
+consumes.** The expectation held — the one manifest change was `ring` named
+directly, a crate rustls already linked (AGENTS.md rule 6). The client is
+synchronous over `std::net::UdpSocket` with socket timeouts, and its whole
+interface is the module root:
+
+- `Dht::new(transport, bootstrap, config)` — a `Box<dyn Transport>` (the
+  std UDP socket, or a stand-in), the bootstrap addresses **as already
+  resolved socket addresses** (resolving the mainline's bootstrap hostnames
+  is the caller's act, not the client's), and a `Config` of α, K, the wait
+  per round and a cap on queries per walk — every duration a test can
+  shorten. The client's own id is random per run; nobody routes by it.
+- `lookup(target) → Vec<Node>` — the nodes nearest a 160-bit id, closest
+  first; `get(key, salt) → Option<Mutable>` — the newest item under an
+  ed25519 public key and salt **that verifies**, an unsigned or forged item
+  being nothing rather than a value; `put(item) → usize` — how many of the K
+  closest token holders acknowledged, zero being an error naming the first
+  refusal (a stale `seq`, a bad signature) or the silence.
+- `Keypair::{generate, from_seed}` mint or reload the rendezvous key,
+  `Keypair::sign(salt, seq, value) → Mutable` seals one item under it, and
+  `Mutable::{target, verify}` plus `target_of(key, salt)` name where it lives.
+  The value is always a byte string — both items above are sealed opaque
+  bytes — and one over BEP 44's 1000-byte cap is refused before it leaves.
+- `Err(String)` throughout, the same shape every wire failure already
+  arrives in: a dark commons (nobody answered), no bootstrap at all, or the
+  socket itself failing. A node that answers an error, stays silent, or
+  answers noise is skipped, never fatal.
+
+A walk costs at most `max_queries` datagrams and blocks the calling thread
+for up to a round per hop, so the hourly republish and the 15-second poll
+run on the thread §13.4 gives them, never on a request path. What the suite
+measures is loopback: a fake DHT of one thread per node, scripted routing
+and a BEP 44 store that checks what a real node checks. **A walk against
+the live mainline is unmeasured** and is bl-4263's first act.
+
 **The material grows three facts, all minted out of channel** (§1.4's posture
 byte for byte): an ed25519 rendezvous keypair per engine, one per client, and
 a random **pairing salt** per entry. Public keys and the salt cross inside
@@ -6322,7 +6357,19 @@ Open, awaiting operator ruling:
    and a DHT client is substrate, not protocol. Recommended: build it inside
    yog first, measure its true size, then decide whether the seat, the foot
    and the app reimplement (a Kotlin half exists regardless) or consume it as
-   a published crate of its own.
+   a published crate of its own. **The measurement is in** (bl-df31, §13.2):
+   at landing, 859 lines of production Rust over seven files — bencode 185,
+   the KRPC shapes 133, the signed item 142, the walk 130, the two BEP 44
+   verbs 67, the socket seam 73, the root 129 — and 880 of corpus, a fifth
+   of it the fake node. Nothing in it is yog-shaped: no world, no boundary,
+   no wire type crosses its interface, and its one dependency is `ring`.
+   That is a size a Rust consumer copies in an afternoon and a Kotlin one
+   in a day, and small enough that a published crate would cost more in
+   release machinery (a fifth repository's gate, REMOTE §3's ordering
+   hold widened to a crate nobody's protocol depends on) than the copy
+   costs. **Still open, now with a number**: reimplement per component is
+   the recommendation this measurement supports; the ruling is the
+   operator's.
 3. **Cadence defaults** (15 s poll, hourly republish, 25 s ping) — stated so
    they can be wrong in public; revisit on evidence, not taste.
 

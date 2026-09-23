@@ -364,6 +364,13 @@ notify = "6"
 # vacuous), and no `rcgen`: certificates are the operator's out-of-channel act
 # (REMOTE §1.4), minted by `make wire-certs` shelling to `openssl`.
 rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12", "logging"] }
+# The REMOTE §13.2 DHT rendezvous client (bl-df31): BEP 44's ed25519 signing
+# and the SHA-1 that names a mutable item's target. Named directly for the same
+# reason rustls was — it is the provider rustls above already links, so this
+# **adds no crate**: `Cargo.lock` gains one line under yog's own dependency
+# list and nothing else. bencode and the KRPC shapes are in-house (`src/dht`),
+# and the DHT client is a pure client over std UDP — no node, no listener.
+ring = "0.17"
 serde_json = "1"
 thiserror = "2"
 

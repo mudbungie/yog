@@ -1130,6 +1130,7 @@ dependencies = [
  "libc",
  "litany",
  "notify",
+ "ring",
  "rustls",
  "serde_json",
  "tempfile",
