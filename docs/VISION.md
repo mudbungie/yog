@@ -232,7 +232,7 @@ still sums nothing new.
   litany budget returns; the seat is the consult litany already runs, and the
   release is the number moving.
 
-DESIGN §3.5 carries the ruling in full and REMOTE §9.20 the wire; the one
+DESIGN §3.5 carries the ruling in full and REMOTE §9.23 the wire; the one
 upstream ask is litany's (§6 item 8): the step record names the provider row.
 
 ### 4.6 Model selection

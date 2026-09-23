@@ -11,7 +11,8 @@ cites its ball id — it never narrates the path to the ruling (keep at most one
 sentence of why, where the why changes what an implementer does; relitigation
 guards go to §14). Keyed tables stay sorted by their key. A completed plan
 retires to git history behind a tombstone heading — a section number, once
-cited, resolves forever (machine-checked: `tests/design_citations.rs`).
+cited, resolves forever — and resolves to exactly ONE section (machine-checked:
+`tests/design_citations.rs` and `tests/doc_headings.rs`).
 
 ---
 
@@ -1258,7 +1259,7 @@ below yog.
   echo (the `marks` precedent). Slash spellings: `/prices`,
   `/price <provider> <model> <input> <output> [<cache_read> [<cache_write>]]`
   with `off` in place of the rates to delete, `/ceiling <usd>` and
-  `/ceiling off`. The wire shapes are REMOTE §9.20's.
+  `/ceiling off`. The wire shapes are REMOTE §9.23's.
 - **A token count never travels without the cost the table puts on it.**
   The board's ball rows, the workspace's ball rows and `Reply::Agent` carried
   the figure; the step row, the science attempt, the rail notch and the
@@ -8314,6 +8315,7 @@ that named one of its files; the rule it taught is not.)
 | `tests/brazen_ollama_context.rs` | the Ollama context pin (bl-671d, §9.4): drives the LINKED brazen with a capturing `Transport` — no network, no server — and asserts the three facts the §9.4 caveat and its remedy rest on. A yog turn reaches an `ollama_chat` row with the output cap and **no** `options.num_ctx`, so the server's own default governs; a row's `body_defaults` `options` beside that typed cap **composes** with it per key; and clearing the typed cap lets an explicit `num_ctx`/`num_predict` pair through. A caveat about upstream behaviour that nothing measures outlives the behaviour — and this is the file that proved it: leg two asserted the silent DROP until brazen bl-f19d landed at 0.0.10, where it went red at the pin bump (bl-d58d) and named the remedy sentence to shorten |
 | `tests/design_citations.rs` | the citation guard: every cited `§N`/`§N.M` resolves to a DESIGN heading (the header's retirement doctrine, machine-checked); its `strings` half is the other direction (bl-cdd2) — a `§` belongs in a comment and never in a string the operator reads — split off at the cap on that seam, carrying the scanner only it uses |
 | `tests/design_module_map.rs` | the module-map guard (bl-9f72, widened by bl-273c to every rule §12 states about itself): both path directions, the sort, the no-test-module rule, the two-cell row shape and single-entry — brace lists expanded, test corpora excluded from the file sweep per the rule above. The guard is the mechanism; the prose rule alone had already failed three times over |
+| `tests/doc_headings.rs` | the **uniqueness** half of the citation guard (bl-1732): every `## N.`/`### N.M` heading in DESIGN, REMOTE and VISION numbers exactly one section. `design_citations.rs` asks whether a cited number RESOLVES; this asks whether it resolves to one thing, which it had stopped doing — REMOTE carried two §9.20s (bl-e59e's trail ruling and bl-d13d's spend ruling, landed the same evening) while three other repositories cited the number, and a citation cannot name two sections. The collision resolved by giving the LATER-cited section the next free number (§9.23) rather than shifting the two after it, because a section number is an address held in trees whose authors cannot see this doc. An `amended:` heading is exempt by rule and not by allowlist — it is a back-reference written where the wave that revised the section lands — and a second beat holds the exemption honest: the number it amends must already be a heading of the same document. Both directions, like `rules-audit`: a planted duplicate must fire |
 | `tests/integration/support/{mod,recorder,world,payload,clock}.rs` | the story harness (STORIES "Test harness"): the fake-`bl` runner and the one-agent workspace, the argv/env recorder script and its read-back parser, the **multi-agent** workspace builder (goal stamps, `refs/litany/*` marks incl. the hold blob, dated commits, settled step framing), and the on-disk payload writers (`messages/`, `steps/`, `inbox/`, the balls clone dir) it composes — plus `clock`, the harness's own hand-driven `Clock` (bl-9006): `AppModel::boot` takes an `Arc<dyn Clock>` exactly so a test can supply one, and until INV-1 reddened under a nine-tarpaulin gate every beat in this crate had booted on the system clock and measured the machine instead of yog. Split at those three seams when the Z10–Z14 fake halves landed (bl-3b24) |
 | `tests/support/write_exec.rs` | `src/git_env/write_exec.rs`'s discipline for the integration binaries, which cannot see it (`write_exec` is `pub(crate)`, and publishing it for a test's sake is the trade bl-fd28 declined). `#[path]`-included by each binary that writes an executable fixture. It is the ORIGINAL of the pair: the consolidated integration binary reached it first and could never have used a lock instead — yog linked as a library is not `cfg(test)`, so the spawn lock was compiled out of the one binary that needed it, and ~1 run in 8 failed until the fd moved to a child (bl-fd28 generalized the answer). `make rules-audit` scans `src` only, so nothing enforces it here |
 

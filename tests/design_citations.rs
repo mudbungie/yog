@@ -76,9 +76,17 @@ const FOREIGN: &[&str] = &[
     // §9.19 joins them (bl-2291): the `prompt` door's *sign in first* — a
     // refusal that widened without a shape moving, cited "REMOTE §9.19" from
     // DESIGN §8.1 as the seat's half of the ruling.
-    // §9.20 joins them (bl-d13d): the wire's half of the spend ruling — the
+    // §9.20 joins them (bl-e59e): the trail row's `client` — the identity that
+    // made the act — cited by number from three other repositories and from
+    // §12's row for the guard that keeps the number unique.
+    // §9.23 joins them (bl-d13d): the wire's half of the spend ruling — the
     // cost field beside every token count, and the price/ceiling door — cited
-    // "REMOTE §9.20" from DESIGN §3.5.
+    // "REMOTE §9.23" from DESIGN §3.5 and from VISION §4.5. It was §9.20 until
+    // bl-1732: it landed the same evening as bl-e59e's trail ruling and the two
+    // took one number, and the duplicate resolved in favour of the number three
+    // other repositories already cite, so this one took the next free number at
+    // the end of §9 rather than shifting §9.21 and §9.22 out from under theirs.
+    // `tests/doc_headings.rs` is the guard that keeps a second collision out.
     // §9.11 and §9.21 join them (bl-9ced). §9.21 is the birth role on the
     // prepare rung — `Prepared.role`, `litany prompt --role` and the sign-in
     // door reading it — cited "REMOTE §9.21" from DESIGN §8.1 and from the
@@ -93,7 +101,7 @@ const FOREIGN: &[&str] = &[
     // reader following either prefix lands where the argument is.
     // DESIGN §9 is "Config editing write paths" and stops at §9.6, which the
     // sibling test keeps honest.
-    "9.7", "9.8", "9.9", "9.11", "9.14", "9.15", "9.19", "9.20", "9.21", "9.22",
+    "9.7", "9.8", "9.9", "9.11", "9.14", "9.15", "9.19", "9.20", "9.21", "9.22", "9.23",
     // REMOTE.md's §14 family — §14.1 (the attention lane, bl-09aa) — cited
     // prefixed ("REMOTE §14.1") like every other foreign key. DESIGN §14 is
     // "Rejections" and has no subsections at all, which the sibling test keeps
