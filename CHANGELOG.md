@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.65](https://github.com/mudbungie/yog/compare/v0.0.64...v0.0.65) - 2026-09-23
+
+### Changes
+
+- bl-speculate run poisons the queue on a box whose bl-speculate is a dev build past 0.5.11: the runner's crates.io 0.5.11 and the local bl-6a84 build hash different gate fingerprints, so an imported PASS never matches and scripts/speculate-gate answers FAIL [bl-5909]
+- src/app/balls/tests/glue/ceiling.rs is orphaned: no mod declaration reaches it, so its two spend-ceiling beats never compile or run [bl-862e]
+
 ## [0.0.64](https://github.com/mudbungie/yog/compare/v0.0.63...v0.0.64) - 2026-09-22
 
 ### Changes
