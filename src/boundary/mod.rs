@@ -72,6 +72,9 @@ pub mod reply;
 /// invocation to a tool host and its capture back — one module for both
 /// chokepoints' arms, because they are one mechanism read from four sides.
 mod routing;
+/// The §3.5 spend family's executors (bl-53d1): the table read's one
+/// derivation, both write-throughs, and the ceiling's release.
+mod spend;
 pub mod sugar;
 /// `pub(crate)` so the board's own corpus shares this one `Agent`/`Snapshot`
 /// fixture rather than standing up a second of the same shape.

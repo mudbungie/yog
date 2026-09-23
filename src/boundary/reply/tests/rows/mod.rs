@@ -29,6 +29,10 @@ fn workspace_rows_carry_the_classification_and_rollups() {
                 oid: "c".repeat(40),
                 short_oid: "cccccccc".into(),
             }),
+            spend: Some(crate::spend::Cost {
+                micro_usd: 1_230_000,
+                unpriced_tokens: 0,
+            }),
         },
         WsRow {
             workspace: "f".into(),
@@ -38,6 +42,7 @@ fn workspace_rows_carry_the_classification_and_rollups() {
             running: false,
             pinned: None,
             config_tip: None,
+            spend: None,
         },
         WsRow {
             workspace: "r".into(),
@@ -47,6 +52,7 @@ fn workspace_rows_carry_the_classification_and_rollups() {
             running: false,
             pinned: Some(0),
             config_tip: None,
+            spend: None,
         },
     ];
     let v = encode(&Reply::Workspaces(crate::boundary::reply::Workspaces {
@@ -83,6 +89,11 @@ fn workspace_rows_carry_the_classification_and_rollups() {
     // there is not (bl-b4b5) — a workspace with no lineage derived yet.
     assert_eq!(rows[0]["config_tip"]["short_oid"], "cccccccc");
     assert!(rows[1].get("config_tip").is_none(), "no lineage, no key");
+    // The §3.5 ledger (bl-53d1): the money in the one spelling where the
+    // world is priced, and **absent** — never zero — where it is not.
+    assert_eq!(rows[0]["spend"]["usd"], "$1.23");
+    assert_eq!(rows[0]["spend"]["micro_usd"], 1_230_000);
+    assert!(rows[1].get("spend").is_none(), "unpriced states nothing");
     // A fresh derivation states neither §7.2 note.
     assert!(v.get("stale").is_none(), "a current answer says nothing");
     assert!(v.get("growth").is_none(), "a quiet world says nothing");

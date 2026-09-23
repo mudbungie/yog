@@ -226,5 +226,13 @@ pub fn dispatch(deps: &Deps, ui: &mut UiState, ts: &str, action: &Action) -> Res
         // advertised it, and take a tool host's answer to one. Neither waits —
         // the intake here is one thread for the whole world.
         Action::Route(verb) => routing::route(deps, ts, verb),
+        // The §3.5 spend family (bl-53d1): the table's write-through and the
+        // ceiling's, the second releasing what the number parked.
+        Action::Price {
+            provider,
+            model,
+            rates,
+        } => Ok(super::spend::price(deps, ui, provider, model, *rates)),
+        Action::Ceiling { micro_usd } => Ok(super::spend::ceiling(deps, ui, ts, *micro_usd)),
     }
 }

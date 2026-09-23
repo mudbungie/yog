@@ -163,6 +163,8 @@ pub fn encode(reply: &Reply) -> Value {
         // the same bytes the client's own document holds (REMOTE §5, bl-4e08).
         Reply::Clients(rows) => rows_reply("clients", rows.iter().map(client_row)),
         Reply::Doctor(rows) => rows_reply("doctor", rows.iter().map(doctor_row)),
+        // The §3.5 table, ceiling and ledger (bl-53d1), spelled beside its type.
+        Reply::Prices(view) => super::prices::reply(view),
     }
 }
 

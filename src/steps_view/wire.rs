@@ -56,6 +56,9 @@ fn step_row(step: &StepSummary) -> Value {
     map.insert("framing".to_owned(), json!(framing_token(step.framing)));
     map.insert("attempts".to_owned(), json!(step.attempts));
     map.insert("tokens".to_owned(), spend_value(&step.tokens));
+    // …and what they cost (bl-53d1), in the one money spelling every carrier
+    // shares — absent, never zero, for an unpriced world.
+    crate::boundary::reply::cost::opt_cost("cost", step.cost.as_ref(), &mut map);
     for (key, value) in [
         ("commit", step.commit.as_ref()),
         ("started_at", step.started_at.as_ref()),

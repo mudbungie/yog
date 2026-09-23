@@ -115,3 +115,29 @@ fn malformed_envelopes_refuse_with_a_reason() {
         assert!(err.contains(needle), "{envelope} -> {err:?}");
     }
 }
+
+/// The §3.5 spend family (bl-53d1): a negative or non-numeric figure refuses
+/// by key, a `rates` that is not an object refuses too, and the pair is
+/// required — a row written under a guessed provider prices the wrong thing.
+#[test]
+fn a_spend_envelope_refuses_a_figure_that_is_not_a_figure() {
+    use serde_json::json;
+    for (envelope, needle) in [
+        (
+            json!({"op": "price", "provider": "p", "model": "m", "rates": { "input": -1 }}),
+            "input: -1 is not a non-negative USD figure",
+        ),
+        (
+            json!({"op": "price", "provider": "p", "model": "m", "rates": 7}),
+            "rates: not an object",
+        ),
+        (json!({"op": "price", "model": "m"}), "field \"provider\""),
+        (
+            json!({"op": "ceiling", "usd": "lots"}),
+            "usd: \"lots\" is not",
+        ),
+    ] {
+        let err = decode(&envelope).expect_err(&envelope.to_string());
+        assert!(err.contains(needle), "{envelope} -> {err}");
+    }
+}

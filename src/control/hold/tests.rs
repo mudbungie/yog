@@ -80,6 +80,34 @@ fn an_unparseable_mark_reads_as_no_park() {
     assert_eq!(read(dir.path(), "a-1"), None);
 }
 
+/// The whole namespace at once (bl-53d1): every mark with the agent it parks,
+/// an unreadable blob skipped rather than forged, and a workspace with no
+/// repo holding nothing.
+#[test]
+fn every_mark_in_the_workspace_reads_off_the_namespace_at_once() {
+    let dir = tempdir().unwrap();
+    assert!(all(dir.path()).is_empty(), "no repo, nothing parked");
+    parked(
+        dir.path(),
+        "a-1",
+        r#"{"tool_use_id":"t1","tool":"bash","reason":"spend ceiling reached: x"}"#,
+    );
+    parked(
+        dir.path(),
+        "a-2",
+        r#"{"tool_use_id":"t2","tool":"cd","reason":"floor"}"#,
+    );
+    parked(dir.path(), "a-3", "not a mark");
+    let marks = all(dir.path());
+    assert_eq!(
+        marks
+            .iter()
+            .map(|(agent, held)| (agent.as_str(), held.tool_use_id.as_str()))
+            .collect::<Vec<_>>(),
+        [("a-1", "t1"), ("a-2", "t2")]
+    );
+}
+
 #[test]
 fn the_ref_namespace_is_litanys_own() {
     assert_eq!(HELD_PREFIX, "refs/litany/held/");

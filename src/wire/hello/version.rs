@@ -52,6 +52,19 @@
 //! at that shape's last move — the finer history is [`exact`]'s prose — and
 //! nothing mechanical reads a stamp below the floor.
 
+//! **Edition 19 (bl-53d1, DESIGN §3.5, REMOTE §9.23) — the first post-floor
+//! addition, and the shape of every one after it.** `reply/steps` rows,
+//! `reply/science` attempts and `reply/rail` notches gained `cost`, and
+//! `reply/workspaces` rows gained `spend` — the §3.5 figure's three money
+//! keys as one object, absent for an unpriced world — beside the token count
+//! each already carried; `reply/prices` and the `prices` read, and the
+//! `price` and `ceiling` acts, are new shapes. Under the exact era this was
+//! "PROTOCOL 17, once"; under §3.2 it is a stamp, the ledger refuses nothing
+//! because nothing vanished or re-typed, and a seat that has not vendored 19
+//! reads four optional keys it ignores and three ops it refuses by name.
+//! Recorded here because it is the first, so the next lane can see the
+//! record an edition earns is one paragraph and a ball id, not a bump.
+
 // The constant itself is GENERATED, not declared: `build.rs` reads the
 // repo-root `PROTOCOL` file — the number's one file-shaped home, at the one
 // address a module split cannot move (bl-3e57) — and writes this item.

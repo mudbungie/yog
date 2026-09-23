@@ -5,6 +5,9 @@
 
 use std::collections::BTreeMap;
 
+/// The step spine, its own file at §12's cap (bl-53d1) — the notch gained
+/// the priced rollup and the fixture crossed the wall with it.
+mod rail;
 mod science;
 /// The steps pane's own two reads, its own file at §12's cap.
 mod steps;
@@ -13,12 +16,11 @@ mod workdiff;
 use super::super::super::super::Reply;
 use super::preview;
 use crate::files_view::{FileEntry, FilesView, Preview};
-use crate::git_tree::AgentState;
 use crate::inboxview::{Deposit, Epitaph, InboxEntry};
 use crate::login::auth::AuthFailure;
-use crate::rail::{ChildCard, Notch, Place, Rail};
 use crate::steps_view::{Orphan, StepsView, Wound};
 use crate::transcript::{Block, Entry, EntryKind, Transcript};
+use rail::rail;
 use science::science;
 use steps::{step_detail, steps};
 use workdiff::attempts;
@@ -125,50 +127,6 @@ fn transcript() -> Transcript {
                 },
             ),
             entry("005-junk.json", EntryKind::Raw),
-        ],
-    }
-}
-
-/// A pinnable notch and an unreachable one; a card mid-sentence and a silent
-/// one — the four absences the encoder spells as absent keys.
-fn rail() -> Rail {
-    Rail {
-        notches: vec![
-            Notch {
-                seq: "001".into(),
-                commit: Some("abcdef1234567890".into()),
-                budget: 120,
-                place: Some(Place {
-                    row: "003-claude.json".into(),
-                    cut: 2,
-                }),
-            },
-            Notch {
-                seq: "002".into(),
-                commit: None,
-                budget: 120,
-                place: None,
-            },
-        ],
-        cards: vec![
-            ChildCard {
-                agent_id: "c-1-a".into(),
-                name: "Cobalt".into(),
-                fork: "from here".into(),
-                state: AgentState::Live,
-                tokens: 9,
-                tail: Some("working".into()),
-                provenance_notch: 0,
-            },
-            ChildCard {
-                agent_id: "c-1-b".into(),
-                name: "Dun".into(),
-                fork: "from config/main".into(),
-                state: AgentState::Stopped,
-                tokens: 0,
-                tail: None,
-                provenance_notch: 1,
-            },
         ],
     }
 }

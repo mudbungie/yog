@@ -19,6 +19,12 @@ pub(super) fn steps() -> StepsView {
         framing: Framing::Complete,
         attempts: 1,
         tokens: spend(),
+        // The money beside the tokens (bl-53d1): a priced row here, and the
+        // unpriced arm — the absent key — on the killed row below.
+        cost: Some(crate::spend::Cost {
+            micro_usd: 30_000,
+            unpriced_tokens: 0,
+        }),
         commit: Some("abc".into()),
         started_at: Some("t0".into()),
         ended_at: Some("t1".into()),
@@ -31,6 +37,7 @@ pub(super) fn steps() -> StepsView {
                 seq: "002".into(),
                 framing: Framing::Killed,
                 wound: Wound::Spoke("no bytes".into()),
+                cost: None,
                 commit: None,
                 started_at: None,
                 ended_at: None,

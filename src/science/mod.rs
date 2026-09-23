@@ -108,6 +108,10 @@ pub struct Attempt {
     /// ARCH §6 counters. A judge or synthesis child dispatched *from* the
     /// attempt is part of its cost, which is why the fold is tree-wide.
     pub usage: BudgetSpend,
+    /// **What that usage cost** (§3.5, bl-53d1): the same tree's bills priced
+    /// by each step's own `(provider, model)`. `None` for an unpriced world —
+    /// absent on the wire, never zero.
+    pub cost: Option<crate::spend::Cost>,
     /// Seconds of model-call wall time over the same tree (`meta.json` spans,
     /// summed per step). Zero for an attempt whose steps are still unsettled —
     /// an honest unknown, never an elapsed-since-start guess.
@@ -167,6 +171,7 @@ pub fn project(
     workspace: &Path,
     entries: &[OpEntry],
     world: &crate::xdg::Env,
+    prices: &crate::spend::Prices,
 ) -> Vec<Attempt> {
     let diffs = crate::workdiff::read(snap, workspace, entries, world);
     let fires = crate::fan::fires(entries, workspace);
@@ -180,7 +185,7 @@ pub fn project(
         .map(|diff| {
             let repo = snap.project_path(&diff.project).ok();
             let fire = bound::fire_for(&fires, diff, &layout, repo.as_deref());
-            row(snap, workspace, diff, &diffs, repo.as_deref(), fire)
+            row(snap, workspace, diff, &diffs, repo.as_deref(), fire, prices)
         })
         .collect()
 }
@@ -196,6 +201,7 @@ fn row(
     siblings: &[crate::workdiff::Attempt],
     repo: Option<&Path>,
     fire: Option<crate::fan::Fire>,
+    prices: &crate::spend::Prices,
 ) -> Attempt {
     let agent = fire
         .as_ref()
@@ -203,7 +209,7 @@ fn row(
     let seen = agent
         .as_deref()
         .map_or_else(observed::Observed::default, |id| {
-            observed::observed(snap, workspace, id)
+            observed::observed(snap, workspace, id, prices)
         });
     Attempt {
         diff: diff.clone(),
@@ -213,6 +219,7 @@ fn row(
         pins: fire.map(|f| f.pins).unwrap_or_default(),
         governing: seen.governing,
         usage: seen.usage,
+        cost: seen.cost,
         wall_secs: seen.wall_secs,
         steps: seen.steps,
         response: seen.response,

@@ -102,7 +102,11 @@ impl Action {
             | Action::Route(_)
             // A sign-in writes a credential into a wall, not a ref in a
             // project: nothing on any board moves (REMOTE §8.3).
-            | Action::Login { .. } => None,
+            | Action::Login { .. }
+            // The §3.5 table and ceiling write `ui.json`, not a ref in a
+            // project: no board row moves (bl-53d1).
+            | Action::Price { .. }
+            | Action::Ceiling { .. } => None,
         }
     }
 }

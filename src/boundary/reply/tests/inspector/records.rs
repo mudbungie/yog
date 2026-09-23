@@ -23,6 +23,7 @@ fn step(seq: &str, framing: Framing) -> StepSummary {
             cache_read_tokens: 0,
             cache_write_tokens: 0,
         },
+        cost: None,
         commit: None,
         started_at: None,
         ended_at: None,
@@ -201,6 +202,7 @@ fn a_rail_reply_omits_what_makes_a_notch_unpinnable() {
                 seq: "001".to_owned(),
                 commit: Some("abcdef1234".to_owned()),
                 budget: 7,
+                cost: None,
                 place: Some(Place {
                     row: "001-user.md".to_owned(),
                     cut: 1,
@@ -210,6 +212,7 @@ fn a_rail_reply_omits_what_makes_a_notch_unpinnable() {
                 seq: "002".to_owned(),
                 commit: None,
                 budget: 7,
+                cost: None,
                 place: None,
             },
         ],

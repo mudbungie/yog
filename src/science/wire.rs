@@ -46,6 +46,9 @@ fn row(attempt: &Attempt) -> Value {
     }
     map.insert("pins".to_owned(), json!(attempt.pins));
     map.insert("usage".to_owned(), usage(&attempt.usage));
+    // …and its cost (bl-53d1) beside it, in the one money spelling — absent
+    // for an unpriced world, never zero.
+    crate::boundary::reply::cost::opt_cost("cost", attempt.cost.as_ref(), &mut map);
     map.insert("wall_secs".to_owned(), json!(attempt.wall_secs));
     map.insert("steps".to_owned(), json!(attempt.steps));
     map.insert(
@@ -117,6 +120,11 @@ fn row_of(v: &Value) -> Result<Attempt, String> {
         pins: crate::boundary::codec::fields::strings_of(o, "pins")?,
         governing: opt_str_of(o, "governing")?,
         usage: usage_of(o.get("usage").ok_or("science row: missing usage")?)?,
+        cost: crate::boundary::codec::fields::opt_val(
+            o,
+            "cost",
+            crate::boundary::reply::cost::cost_of,
+        )?,
         wall_secs: u64_of(o, "wall_secs")?,
         steps: usize_of(o, "steps")?,
         response: opt_str_of(o, "response")?,

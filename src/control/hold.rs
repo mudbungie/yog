@@ -69,5 +69,30 @@ pub fn read(workspace: &Path, agent_id: &str) -> Option<Held> {
     parse(&String::from_utf8_lossy(&out.stdout))
 }
 
+/// Every mark in the workspace right now, with the agent each parks — the
+/// ceiling release's enumeration (DESIGN §3.5, bl-53d1). Read live off the
+/// repo, exactly as [`read`] reads one: a workspace with no repo, or whose
+/// git will not run, holds nothing. A ref whose blob is not the shape litany
+/// writes is skipped, for [`parse`]'s reason — never a forged park.
+pub fn all(workspace: &Path) -> Vec<(String, Held)> {
+    let repo = workspace.join("repo.git");
+    let Some(out) =
+        crate::git_env::output(crate::git_env::git().arg("--git-dir").arg(&repo).args([
+            "for-each-ref",
+            "--format=%(refname)",
+            HELD_PREFIX,
+        ]))
+        .ok()
+        .filter(|out| out.status.success())
+    else {
+        return Vec::new();
+    };
+    String::from_utf8_lossy(&out.stdout)
+        .lines()
+        .filter_map(|line| line.strip_prefix(HELD_PREFIX))
+        .filter_map(|agent| Some((agent.to_owned(), read(workspace, agent)?)))
+        .collect()
+}
+
 #[cfg(test)]
 mod tests;

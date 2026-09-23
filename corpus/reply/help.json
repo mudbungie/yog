@@ -293,6 +293,27 @@
           "verb": "enroll"
         },
         {
+          "detail": "Answers every priced (provider, model) row with its four rates in USD per million tokens, the ceiling in USD when one is set, and the whole world's priced spend — the ledger the ceiling is compared against. The table and the ceiling are world facts: one `ui.json` on the engine, shared by every seat, addressed to no workspace. An empty table means no cost is answered anywhere and no ceiling can bind; a step whose row is unpriced is counted in `unpriced_tokens` beside the money, so a partial table reads as *at least*.",
+          "summary": "the price table, the spend ceiling, and what this world has spent against it",
+          "surface": "control",
+          "usage": "/prices",
+          "verb": "prices"
+        },
+        {
+          "detail": "Writes one row of the price table, keyed by the provider row a call went through and the model it named — the same model id bills at list on an API-key row and at nothing on a subscription row, which is why the key is the pair. The rates are input, output, cache read and cache write, quoted in USD per million tokens exactly as a provider's price page prints them; an omitted rate is zero. `*` as the model prices every model that row serves and does not name, so a subscription is `/price <row> * 0 0`: priced, and pricing to $0.00, which is a different fact from unpriced. `off` in place of the rates deletes the row. A negative or unreadable figure is refused. A provider row this workspace's wall does not know is NOT refused — a row may be priced before it is configured, and the name is the one `/providers` lists. The reply is the re-read table, never an echo.",
+          "summary": "price one (provider, model) row in USD per million tokens, or delete it",
+          "surface": "control",
+          "usage": "/price <provider> <model> <input> <output> [<cache_read> [<cache_write>]] | /price <provider> <model> off",
+          "verb": "price"
+        },
+        {
+          "detail": "Writes the one number this whole world's priced spend must stay under, or deletes it with `off`. At or over it, no new conversation is started anywhere and every running one parks at its next tool call — a hold, never a kill, so no uncommitted work is lost — until the number moves. It needs a price table to mean anything: with none, nothing is bounded. Raising it back over the world's spend, or removing it, releases every conversation the ceiling parked, and only those — a floor's park or a policy hold is untouched — and the reply says how many woke as `released`. A literal 0 is the hard stop that starts nothing new. A negative or unreadable figure is refused.",
+          "summary": "set the world's spend ceiling in USD, or remove it",
+          "surface": "control",
+          "usage": "/ceiling <usd> | /ceiling off",
+          "verb": "ceiling"
+        },
+        {
           "detail": "Answers the invocation the capability boundary parked before it ran. `pass` lets it through, `refuse` declines it — the model is told the decision stands, and told not to retry it, rephrase it or reach the same outcome another way — and `hold` keeps it parked even if the policy later would have passed it. The call is read from the conversation's own hold mark, so nothing is typed and nothing can be spent by a different call. `--scope` says how far the answer stands. Left off it settles that one call, which is the safe reading and the one you get without thinking about it. `--scope conversation` settles the whole CLASS of the held call — the same tool at the same reach — for this conversation and everything below it; `--scope workspace` settles that class for every conversation here. A wider answer is how you stop being asked eleven times about one narrow tool. Answer the same scope again to change it, and `/revoke` suspends every standing answer, which is how you take one back. A destructive or credential-reaching call takes the bare form only: those are decided for the call in front of you, never for calls to come. Passing or refusing then drives the conversation on (`litany advance`), which is what actually lifts the hold: the control is asked again and now finds your answer. Nothing here stops the agent. Refuses when nothing is held there.",
           "summary": "release, decline or keep parked the tool call held at this conversation",
           "surface": "control",

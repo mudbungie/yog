@@ -114,6 +114,7 @@ fn bill(input: u64) -> Vec<StepBill> {
         conv: "otter-one".to_owned(),
         seq: "001".to_owned(),
         model: Some("opus".to_owned()),
+        provider: None,
         spend: BudgetSpend {
             input_tokens: input,
             ..BudgetSpend::default()
@@ -125,7 +126,7 @@ fn bill(input: u64) -> Vec<StepBill> {
 }
 
 fn table() -> Prices {
-    Prices::from_json(&json!({ "opus": { "input": 1 } }))
+    Prices::from_json(&json!({ "anthropic": { "opus": { "input": 1 } } }))
 }
 
 #[test]

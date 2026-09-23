@@ -27,6 +27,9 @@ fn notch_row(notch: &Notch) -> Value {
     let mut map = Map::new();
     map.insert("seq".to_owned(), json!(notch.seq));
     map.insert("budget".to_owned(), json!(notch.budget));
+    // The rollup priced (bl-53d1), in the one money spelling — absent for an
+    // unpriced world, exactly as the token figure's carriers say it.
+    crate::boundary::reply::cost::opt_cost("cost", notch.cost.as_ref(), &mut map);
     if let Some(commit) = &notch.commit {
         map.insert("commit".to_owned(), json!(commit));
         map.insert("short".to_owned(), json!(notch.short()));
@@ -74,7 +77,7 @@ pub(crate) fn rail_of(obj: &serde_json::Map<String, Value>) -> Result<Rail, Stri
 /// One notch. `short` is not read back — [`Notch::short`] is its one authority
 /// and the commit it clips IS its storage.
 fn notch_of(v: &Value) -> Result<Notch, String> {
-    use crate::boundary::codec::fields::{opt_str_of, str_of, u64_of, usize_of};
+    use crate::boundary::codec::fields::{opt_str_of, opt_val, str_of, u64_of, usize_of};
     let o = v.as_object().ok_or("notch: not an object")?;
     let place = match opt_str_of(o, "row")? {
         None => None,
@@ -87,6 +90,7 @@ fn notch_of(v: &Value) -> Result<Notch, String> {
         seq: str_of(o, "seq")?,
         commit: opt_str_of(o, "commit")?,
         budget: u64_of(o, "budget")?,
+        cost: opt_val(o, "cost", crate::boundary::reply::cost::cost_of)?,
         place,
     })
 }

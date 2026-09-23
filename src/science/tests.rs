@@ -95,6 +95,7 @@ pub(super) fn bill(conv: &str, seq: &str, input: u64, wall_secs: u64) -> StepBil
         conv: conv.to_owned(),
         seq: seq.to_owned(),
         model: Some("opus".to_owned()),
+        provider: None,
         spend: BudgetSpend {
             input_tokens: input,
             ..BudgetSpend::default()

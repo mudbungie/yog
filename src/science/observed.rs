@@ -31,6 +31,7 @@ pub(super) struct Observed {
     pub(super) goal: Option<String>,
     pub(super) governing: Option<String>,
     pub(super) usage: BudgetSpend,
+    pub(super) cost: Option<crate::spend::Cost>,
     pub(super) wall_secs: u64,
     pub(super) steps: usize,
     pub(super) response: Option<String>,
@@ -41,7 +42,12 @@ pub(super) struct Observed {
 /// Read all of it for one agent. Three sources: the worktree's `goal.md`, the
 /// §5.1 #17 config walk, the published bills, and the committed transcript —
 /// each already the one home of what it answers.
-pub(super) fn observed(snap: &Snapshot, workspace: &Path, agent: &str) -> Observed {
+pub(super) fn observed(
+    snap: &Snapshot,
+    workspace: &Path,
+    agent: &str,
+    prices: &crate::spend::Prices,
+) -> Observed {
     let bills: Vec<_> = snap
         .bills
         .get(workspace)
@@ -58,6 +64,9 @@ pub(super) fn observed(snap: &Snapshot, workspace: &Path, agent: &str) -> Observ
         goal: goal(workspace, agent),
         governing: governing(snap, workspace, agent),
         usage: total(&bills),
+        // The same bills priced (bl-53d1) — the §3.5 join over the walk the
+        // usage column already reads, so the two cannot count different steps.
+        cost: crate::spend::priced(&bills, prices),
         wall_secs: wall(&bills),
         steps: bills.len(),
         response: response(&transcript),

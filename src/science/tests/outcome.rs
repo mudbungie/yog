@@ -63,7 +63,13 @@ impl Fan {
             .collect();
         let entries = trail(&self.ws, &self.project.path, &bindings);
         let snap = snap(&self.ws, &self.project.path, vec![], vec![]);
-        project(&snap, &self.ws, &entries, &self.world)
+        project(
+            &snap,
+            &self.ws,
+            &entries,
+            &self.world,
+            &crate::spend::Prices::default(),
+        )
     }
 
     fn deliver(&self, i: usize) -> Option<String> {

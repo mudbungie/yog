@@ -3,6 +3,9 @@
 //! arithmetic are [`pricing`].
 
 mod pricing;
+/// The table's provider dimension (bl-53d1): the one lookup's five arms, the
+/// zero row, the old shape, and the write-through's spelling both ways.
+mod table;
 
 use super::{Attribution, Prices, of_ball, of_branch, select};
 use crate::budgets::{Scope, StepBill};
@@ -15,7 +18,7 @@ const OTHER: &str = "20260717T130000Z-othr";
 
 /// One priced model at $1/Mtok in, $2/Mtok out, cache unpriced.
 fn table() -> Prices {
-    Prices::from_json(&json!({ "opus": { "input": 1, "output": 2 } }))
+    Prices::from_json(&json!({ "anthropic": { "opus": { "input": 1, "output": 2 } } }))
 }
 
 fn write_step(ws: &Path, conv: &str, seq: &str, input: u64, output: u64, model: Option<&str>) {

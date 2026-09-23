@@ -21,6 +21,31 @@ pub(super) fn refuses(line: &str, ctx: &Context, needle: &str) {
     }
 }
 
+/// The §3.5 spend family's refusals (bl-53d1): a figure that is negative or
+/// not a number, and an arity that is not the grammar's — never a default,
+/// because a rate nobody typed must not be written.
+#[test]
+fn a_spend_figure_or_arity_the_grammar_does_not_take_refuses_by_name() {
+    let bare = Context::default();
+    refuses(
+        "/price anthropic opus -15 75",
+        &bare,
+        "\"-15\" is not a non-negative USD figure",
+    );
+    refuses("/price anthropic opus lots 75", &bare, "\"lots\" is not");
+    refuses("/price anthropic opus 15", &bare, "usage: /price");
+    refuses("/price anthropic", &bare, "usage: /price");
+    refuses("/price anthropic opus 1 2 3 4 5", &bare, "usage: /price");
+    refuses("/ceiling", &bare, "usage: /ceiling");
+    refuses(
+        "/ceiling -1",
+        &bare,
+        "\"-1\" is not a non-negative USD figure",
+    );
+    refuses("/ceiling 1 2", &bare, "at most one word");
+    refuses("/prices now", &bare, "takes no arguments");
+}
+
 #[test]
 fn a_line_that_is_not_a_command_and_a_verb_that_is_not_one() {
     refuses("close bl-1", &ctx(), "starts with '/'");

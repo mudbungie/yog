@@ -78,6 +78,49 @@ fn a_sign_in_frame_is_read_strictly() {
     );
 }
 
+/// The §3.5 answer's figures (bl-53d1): a rate, a ceiling or a money object
+/// that is not what the encoder writes refuses naming it, exactly as the
+/// gesture that would have written it refuses.
+#[test]
+fn the_prices_reply_is_read_strictly() {
+    refuses(
+        &rows(
+            "prices",
+            json!({ "provider": "p", "model": "m", "input": -1 }),
+        ),
+        "input: -1 is not a non-negative USD figure",
+    );
+    refuses(
+        &rows("prices", json!({ "provider": "p" })),
+        "field \"model\"",
+    );
+    refuses(
+        &json!({ "ok": true, "kind": "prices", "rows": [], "ceiling": "lots" }),
+        "ceiling: \"lots\" is not",
+    );
+    refuses(
+        &json!({ "ok": true, "kind": "prices", "rows": [], "spent": 7 }),
+        "cost: not an object",
+    );
+    refuses(
+        &json!({ "ok": true, "kind": "prices", "rows": [], "spent": { "usd": "$1.00" } }),
+        "cost: missing field \"micro_usd\"",
+    );
+    refuses(
+        &json!({ "ok": true, "kind": "prices", "rows": [],
+                 "spent": { "micro_usd": 1 } }),
+        "field \"unpriced_tokens\"",
+    );
+    // …and a carrier's `cost` reads under the same rule (the step row).
+    refuses(
+        &json!({ "ok": true, "kind": "steps", "orphan": "none", "rows": [
+            { "seq": "001", "framing": "complete", "attempts": 1,
+              "tokens": { "input": 0, "output": 0, "cache_read": 0, "cache_write": 0 },
+              "cost": { "micro_usd": "x" }, "wound": "none" }] }),
+        "field \"micro_usd\"",
+    );
+}
+
 #[test]
 fn every_row_level_token_refuses_by_name() {
     refuses(

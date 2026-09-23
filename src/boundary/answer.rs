@@ -72,6 +72,9 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
     // stands here too, once, ahead of the table. A read naming no conversation
     // resolves to nothing and no arm reads it.
     let agent: &str = &super::address::resolve_agent(snap, ws, query.agent())?;
+    // The workspace's pre-walked bills (bl-9dd4), empty for one the derivation
+    // has not billed — what the two priced reads below join their money off.
+    let bills: &[crate::budgets::StepBill] = snap.bills.get(ws).map_or(&[], Vec::as_slice);
     Ok(match query {
         Query::Workspaces => Reply::Workspaces(workspaces(snap, ui, now_unix)),
         Query::Conversations { .. } => Reply::Conversations(conversations(snap, ui, ws, now_unix)),
@@ -124,7 +127,13 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
         // snapshot's own pre-walked bills, so the join costs no second pass.
         Query::Science { .. } => {
             let entries = crate::opslog::tail(&deps.state_root, usize::MAX);
-            Reply::Science(crate::science::project(snap, ws, &entries, &deps.world))
+            Reply::Science(crate::science::project(
+                snap,
+                ws,
+                &entries,
+                &deps.world,
+                &ui.prices(),
+            ))
         }
         // The §11 inspector family (bl-6233, REMOTE §9 step 1): the
         // conversation's own reads, which had no headless spelling at all —
@@ -151,7 +160,13 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
         // of now, and the intake that can hold a connection drives
         // `login::Lane`, whose frames come off this same buffer.
         Query::LoginTail { provider, .. } => login::standing(deps, ws, provider),
-        Query::Steps { .. } => Reply::Steps(inspector::steps(snap, ws, agent, now_unix)),
+        // The rows priced off the snapshot's walk (§3.5, bl-53d1): the list is
+        // read live, the money is the worker's, and the join is one filter.
+        Query::Steps { .. } => Reply::Steps(inspector::steps(snap, ws, agent, now_unix).priced(
+            bills,
+            agent,
+            &ui.prices(),
+        )),
         Query::Step { seq, .. } => Reply::Step(crate::steps_view::detail(ws, agent, seq)?),
         // The listing, plus **where this conversation's work actually lands**
         // when that is not the worktree the listing walked (bl-1015): a path
@@ -167,7 +182,8 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
             }
         }
         Query::Rail { .. } => {
-            let steps = inspector::steps(snap, ws, agent, now_unix);
+            let steps =
+                inspector::steps(snap, ws, agent, now_unix).priced(bills, agent, &ui.prices());
             let tx = inspector::transcript(snap, ws, agent, now_unix);
             Reply::Rail(inspector::rail(snap, ws, agent, &steps, &tx))
         }
@@ -248,6 +264,10 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
         // above.
         Query::Invocations => return super::routing::invocations(deps),
         Query::Capture { invocation } => return super::routing::capture(deps, invocation),
+        // The price table, the ceiling and the world's ledger (§3.5, bl-53d1)
+        // — world facts, addressed to no workspace, answered by the module
+        // that also writes them so a read and a receipt are one derivation.
+        Query::Prices => Reply::Prices(super::spend::view(deps, ui, None)),
     })
 }
 

@@ -77,6 +77,7 @@ pub(crate) fn ws_row(v: &Value) -> Result<WsRow, String> {
         running: bool_of(o, "running")?,
         pinned: opt(o, "pinned", usize_of)?,
         config_tip: opt_val(o, "config_tip", config_tip)?,
+        spend: opt_val(o, "spend", super::super::cost::cost_of)?,
     })
 }
 

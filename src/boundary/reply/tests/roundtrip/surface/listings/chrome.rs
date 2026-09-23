@@ -25,6 +25,12 @@ fn workspaces() -> Vec<WsRow> {
             oid: "c".repeat(40),
             short_oid: "cccccccc".into(),
         }),
+        // Both arms of the §3.5 ledger (bl-53d1): a priced world's figure, a
+        // floor with unpriced tokens on it, and the unpriced world's absence.
+        spend: (agents > 0).then(|| crate::spend::Cost {
+            micro_usd: 2_500_000 * agents as u64,
+            unpriced_tokens: attention as u64,
+        }),
     };
     vec![
         row(

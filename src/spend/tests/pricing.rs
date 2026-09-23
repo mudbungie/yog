@@ -9,13 +9,24 @@ use serde_json::json;
 #[test]
 fn a_malformed_table_degrades_row_by_row() {
     let prices = Prices::from_json(&json!({
-        "opus": { "input": 3, "output": "nope", "cache_read": -5 },
-        "broken": "not an object",
+        "p": {
+            "opus": { "input": 3, "output": "nope", "cache_read": -5 },
+            "broken": "not an object",
+        },
+        "empty": {},
+        "flat": 7,
     }));
-    assert!(prices.of(Some("broken")).is_none());
-    assert!(prices.of(Some("absent")).is_none());
-    assert!(prices.of(None).is_none());
-    let price = prices.of(Some("opus")).unwrap();
+    assert!(prices.of(Some("p"), Some("broken")).is_none());
+    assert!(prices.of(Some("p"), Some("absent")).is_none());
+    assert!(prices.of(Some("p"), None).is_none());
+    assert!(prices.of(Some("empty"), Some("opus")).is_none());
+    assert!(prices.of(Some("flat"), Some("opus")).is_none());
+    assert_eq!(
+        prices.rows().len(),
+        1,
+        "a row with no priced model is no row"
+    );
+    let price = prices.of(Some("p"), Some("opus")).unwrap();
     assert_eq!(price.input, 3_000_000);
     assert_eq!(price.output, 0, "a non-numeric rate reads zero");
     assert_eq!(price.cache_read, 0, "a negative rate reads zero");
@@ -60,9 +71,9 @@ fn money_renders_at_cent_resolution_without_conflating_small_with_none() {
 fn a_contained_cached_slice_is_priced_once_and_the_partition_is_exhaustive() {
     // $2/Mtok in, $8 out, $0.20 cache read, $2.50 cache write.
     let price = Prices::from_json(
-        &json!({ "opus": { "input": 2, "output": 8, "cache_read": 0.2, "cache_write": 2.5 } }),
+        &json!({ "p": { "opus": { "input": 2, "output": 8, "cache_read": 0.2, "cache_write": 2.5 } } }),
     )
-    .of(Some("opus"))
+    .of(Some("p"), Some("opus"))
     .unwrap();
 
     // Contained (OpenAI-shaped, Google): 0.9 Mtok of the 1 Mtok prompt came out
@@ -98,9 +109,9 @@ fn a_contained_cached_slice_is_priced_once_and_the_partition_is_exhaustive() {
     // And on every shape, one flat rate over the whole partition prices exactly
     // the tokens the token figure counts — the two figures cannot diverge.
     let flat = Prices::from_json(
-        &json!({ "m": { "input": 1, "output": 1, "cache_read": 1, "cache_write": 1 } }),
+        &json!({ "p": { "m": { "input": 1, "output": 1, "cache_read": 1, "cache_write": 1 } } }),
     )
-    .of(Some("m"))
+    .of(Some("p"), Some("m"))
     .unwrap();
     for s in [contained, disjoint, uncached] {
         assert_eq!(flat.cost(s), s.total_tokens(), "{s:?}");
@@ -109,8 +120,8 @@ fn a_contained_cached_slice_is_priced_once_and_the_partition_is_exhaustive() {
 
 #[test]
 fn a_nonsense_rate_saturates_rather_than_wrapping() {
-    let prices = Prices::from_json(&json!({ "opus": { "input": 1e300 } }));
-    let price = prices.of(Some("opus")).unwrap();
+    let prices = Prices::from_json(&json!({ "p": { "opus": { "input": 1e300 } } }));
+    let price = prices.of(Some("p"), Some("opus")).unwrap();
     let cost = price.cost(BudgetSpend {
         input_tokens: u64::MAX,
         ..BudgetSpend::default()

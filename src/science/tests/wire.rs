@@ -25,6 +25,7 @@ fn bare() -> Attempt {
         pins: Vec::new(),
         governing: None,
         usage: crate::budgets::BudgetSpend::default(),
+        cost: None,
         wall_secs: 0,
         steps: 0,
         response: None,

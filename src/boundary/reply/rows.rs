@@ -50,6 +50,9 @@ pub(super) fn ws_row(row: &WsRow) -> Value {
             json!({ "oid": tip.oid, "short_oid": tip.short_oid }),
         );
     }
+    // The workspace's priced figure (bl-53d1), in the one money spelling and
+    // absent — never zero — for an unpriced world.
+    super::cost::opt_cost("spend", row.spend.as_ref(), &mut map);
     Value::Object(map)
 }
 

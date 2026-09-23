@@ -33,6 +33,7 @@ pub fn table() -> Vec<HelpRow> {
         table::driving::DRIVING,
         table::ACTIONS,
         table::standing::STANDING,
+        table::spend::SPEND,
         table::capability::CAPABILITY,
         table::world::WORLD,
         table::queries::QUERIES,

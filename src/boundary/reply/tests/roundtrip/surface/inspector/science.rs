@@ -48,6 +48,11 @@ fn row(diff: crate::workdiff::Attempt, i: usize, outcome: Outcome) -> Attempt {
         },
         governing: some("deadbeef"),
         usage: super::super::spend(),
+        // The usage priced (bl-53d1) on the full row; absent on the bare one.
+        cost: full.then_some(crate::spend::Cost {
+            micro_usd: 7_500_000,
+            unpriced_tokens: 3,
+        }),
         wall_secs: 90,
         steps: 4,
         response: some("done, tests green"),

@@ -25,6 +25,9 @@ pub(crate) mod conversation;
 pub(crate) mod device;
 /// Why six families ride ONE variant over their own `Verb`: prose only.
 pub(crate) mod folds;
+/// Why the §3.5 price table and ceiling are written through the boundary, and
+/// what a ceiling write releases: prose only.
+pub(crate) mod spend;
 /// Why the world's make/unmake/rank acts are shaped as they are: prose only.
 pub(crate) mod world;
 
@@ -171,4 +174,16 @@ pub enum Action {
     /// bl-61bf): `bz --login` on the ENGINE, inside the named workspace's wall
     /// ([`device`]).
     Login { workspace: String, provider: String },
+    /// **Write or delete one price-table entry** (DESIGN §3.5, §4.1 `prices`;
+    /// bl-53d1): `(provider row, model)` → its four rates, `None` deleting the
+    /// entry ([`spend`]). Micro-USD here, USD on the wire.
+    Price {
+        provider: String,
+        model: String,
+        rates: Option<crate::spend::Price>,
+    },
+    /// **Write or delete the §3.5 spend ceiling** (§4.1 `ceiling`; bl-53d1),
+    /// and release what it parked when the number moves back over the
+    /// world's spend ([`spend`]). Micro-USD here, USD on the wire.
+    Ceiling { micro_usd: Option<u64> },
 }

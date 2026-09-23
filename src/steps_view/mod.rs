@@ -31,6 +31,9 @@ use crate::budgets::{BudgetSpend, spend_from_bytes};
 use crate::git_tree::{AgentState, Framing, segment_count, settled};
 use crate::login::auth::{AuthFailure, row_of_model};
 
+/// The step row's money (bl-53d1): each row's bill priced off the
+/// snapshot's walk, the join in its own file at the §12 budget.
+mod cost;
 mod detail;
 mod orphan;
 pub(crate) mod records;
@@ -67,6 +70,11 @@ pub struct StepSummary {
     pub attempts: usize,
     /// Whole-segment token spend for this step (§6).
     pub tokens: BudgetSpend,
+    /// **What those tokens cost** (§3.5, bl-53d1): this step's own bill priced
+    /// by its own `(provider, model)`, joined off the snapshot's walk by
+    /// [`StepsView::priced`] — `None` for an unpriced world, and for a step
+    /// the walk has not billed yet. Absent on the wire, never zero.
+    pub cost: Option<crate::spend::Cost>,
     /// Branch-tip sha at step-start (`meta.commit`, §2.10).
     pub commit: Option<String>,
     pub started_at: Option<String>,
@@ -240,6 +248,7 @@ fn summarize(workspace: &Path, agent_id: &str, seq: &str) -> StepSummary {
         framing: settled.framing,
         attempts: segment_count(&response),
         tokens: spend_from_bytes(&response),
+        cost: None,
         commit: meta_field(meta.as_ref(), "commit"),
         started_at: meta_field(meta.as_ref(), "started_at"),
         ended_at: meta_field(meta.as_ref(), "ended_at"),

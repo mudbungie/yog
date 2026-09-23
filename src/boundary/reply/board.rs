@@ -112,10 +112,10 @@ pub(crate) fn figure_value(figure: &Figure) -> Value {
         "tokens".to_owned(),
         crate::steps_view::wire::spend_value(&figure.tokens),
     );
-    if let Some(cost) = figure.cost {
-        map.insert("usd".to_owned(), json!(cost.usd()));
-        map.insert("micro_usd".to_owned(), json!(cost.micro_usd));
-        map.insert("unpriced_tokens".to_owned(), json!(cost.unpriced_tokens));
+    // The money half in the one spelling every carrier shares (bl-53d1),
+    // flat beside the tokens here as it always was.
+    if let Some(cost) = &figure.cost {
+        super::cost::cost_fields(cost, &mut map);
     }
     map.insert("attribution".to_owned(), attribution_value(figure));
     Value::Object(map)

@@ -286,4 +286,10 @@ pub enum Reply {
     /// **Is this box wired up?** — [`Doctor`](super::Query::Doctor)'s answer,
     /// one row per check; the reasoning is [`doctor`](crate::doctor)'s own.
     Doctor(Vec<crate::doctor::Row>),
+    /// **The price table, the ceiling and the world's ledger** (DESIGN §3.5;
+    /// bl-53d1) — [`Prices`](super::Query::Prices)' answer and the receipt
+    /// both spend acts earn, re-derived after the write rather than echoed
+    /// (the [`Marks`](Self::Marks) precedent); [`PricesView`](super::PricesView)'s
+    /// own doc carries the three absences it can say.
+    Prices(super::PricesView),
 }

@@ -96,6 +96,11 @@ pub struct Notch {
     /// folded the prefix itself would be deriving over a reply, which is the one
     /// thing the read path exists to stop.
     pub budget: u64,
+    /// **The budget as of this notch, priced** (§3.5, bl-53d1) — the same
+    /// rollup [`budget`](Self::budget) is, folded over each step's own cost
+    /// through the notch. `None` for an unpriced world, and absent on the
+    /// wire rather than zero: the §3.5 severability gate on the spine.
+    pub cost: Option<crate::spend::Cost>,
     /// Where in the chat this notch's rule paints, and what its pin cuts to
     /// ([`place`]). `None` for a notch the chat has no seat for — a call that
     /// sealed no output and was superseded — which is therefore a notch no
@@ -209,15 +214,25 @@ pub fn build(
         .steps
         .iter()
         .zip(places)
-        .scan(0u64, |spent, (step, place)| {
-            *spent += step.tokens.total_tokens();
-            Some(Notch {
-                seq: step.seq.clone(),
-                commit: step.commit.clone(),
-                budget: *spent,
-                place,
-            })
-        })
+        .scan(
+            (0u64, None::<crate::spend::Cost>),
+            |(spent, cost), (step, place)| {
+                *spent += step.tokens.total_tokens();
+                // The priced rollup folds the same way (bl-53d1): a step with no
+                // cost — an unpriced world, or a bill the walk lacks — adds
+                // nothing, and a spine with no priced step says nothing.
+                if let Some(own) = step.cost {
+                    *cost = Some(cost.unwrap_or_default().plus(own));
+                }
+                Some(Notch {
+                    seq: step.seq.clone(),
+                    commit: step.commit.clone(),
+                    budget: *spent,
+                    cost: *cost,
+                    place,
+                })
+            },
+        )
         .collect();
     let cards = children
         .iter()

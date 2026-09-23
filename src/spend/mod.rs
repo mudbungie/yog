@@ -40,8 +40,9 @@ use std::path::PathBuf;
 
 mod ceiling;
 mod prices;
-pub use ceiling::Ceiling;
-pub use prices::{MICRO_PER_CENT, MICRO_PER_USD, Price, Prices};
+pub use ceiling::{CEILING_HEAD, Ceiling};
+pub use prices::{ANY, MICRO_PER_CENT, MICRO_PER_USD, Price, PriceRow, Prices};
+pub(crate) use prices::{decimal, parse_usd, quoted};
 
 /// What a figure cost, in micro-USD, plus what it could not price.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
@@ -72,6 +73,14 @@ impl Cost {
     fn add(&mut self, micro_usd: u64, unpriced: u64) {
         self.micro_usd = self.micro_usd.saturating_add(micro_usd);
         self.unpriced_tokens = self.unpriced_tokens.saturating_add(unpriced);
+    }
+
+    /// Two figures folded into one — the rail notch's running rollup
+    /// (bl-53d1), which is this same saturating add said over a whole cost.
+    #[must_use]
+    pub fn plus(mut self, other: Self) -> Self {
+        self.add(other.micro_usd, other.unpriced_tokens);
+        self
     }
 }
 
@@ -232,12 +241,14 @@ pub fn priced(bills: &[StepBill], prices: &Prices) -> Option<Cost> {
     (!prices.is_empty()).then(|| cost(bills, prices))
 }
 
-/// Price every bill by its own step's model — the join proper. A bill whose
-/// model the table does not carry lands in `unpriced_tokens`.
+/// Price every bill by its own step's `(provider, model)` — the join proper
+/// (§3.5, bl-53d1). A bill the table has no rate for — no model named, a
+/// model no row prices, or one more than one row prices when the step named
+/// no provider — lands in `unpriced_tokens`.
 fn cost(bills: &[StepBill], prices: &Prices) -> Cost {
     let mut cost = Cost::default();
     for bill in bills {
-        match prices.of(bill.model.as_deref()) {
+        match prices.of(bill.provider.as_deref(), bill.model.as_deref()) {
             Some(price) => cost.add(price.cost(bill.spend), 0),
             None => cost.add(0, bill.spend.total_tokens()),
         }

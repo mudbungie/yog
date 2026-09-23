@@ -70,6 +70,41 @@ fn a_pinned_notch_names_its_commit_and_states_the_budget_as_of_it() {
     assert_eq!(pinned.cut, 3);
 }
 
+/// The priced rollup folds exactly as the token one does (bl-53d1): a step
+/// with no cost adds nothing and a spine whose steps are all unpriced says
+/// nothing, so the notch's `cost` is absent for an unpriced world and a
+/// running sum once any step is priced.
+#[test]
+fn the_priced_rollup_folds_like_the_token_one_and_is_absent_unpriced() {
+    use crate::spend::Cost;
+    let mut steps = steps(vec![
+        step("001", Some("aaaa1111"), 5),
+        step("002", None, 7),
+        step("003", Some("cccc3333"), 11),
+    ]);
+    assert!(
+        build("root", &[], &steps, &chat(3), &[])
+            .notches
+            .iter()
+            .all(|n| n.cost.is_none()),
+        "unpriced steps roll up to no figure"
+    );
+    steps.steps[0].cost = Some(Cost {
+        micro_usd: 10,
+        unpriced_tokens: 0,
+    });
+    steps.steps[2].cost = Some(Cost {
+        micro_usd: 30,
+        unpriced_tokens: 4,
+    });
+    let costs: Vec<Option<(u64, u64)>> = build("root", &[], &steps, &chat(3), &[])
+        .notches
+        .iter()
+        .map(|n| n.cost.map(|c| (c.micro_usd, c.unpriced_tokens)))
+        .collect();
+    assert_eq!(costs, [Some((10, 0)), Some((10, 0)), Some((40, 4))]);
+}
+
 /// Three ways a pin declines, all one answer — today's read: nothing selected,
 /// an index the spine no longer has, and a notch whose step recorded no commit
 /// (there is no tree behind it to pin to).

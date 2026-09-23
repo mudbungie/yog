@@ -149,3 +149,72 @@ fn every_fleet_action_round_trips() {
         verb: Some("prepare".to_owned()),
     }));
 }
+
+/// The §3.5 spend family (bl-53d1): every word stated, nothing elided, so
+/// each act round-trips from a seat holding nothing at all — and the figures
+/// come back to the micro, `off` spelling both deletes.
+#[test]
+fn every_spend_gesture_round_trips_from_an_empty_seat() {
+    use crate::spend::Price;
+    let bare = Context::default();
+    let gestures = [
+        Gesture::Act(Action::Price {
+            provider: "anthropic".to_owned(),
+            model: "opus".to_owned(),
+            rates: Some(Price {
+                input: 15_000_000,
+                output: 75_000_000,
+                cache_read: 1_500_000,
+                cache_write: 18_750_000,
+            }),
+        }),
+        Gesture::Act(Action::Price {
+            provider: "claude-session-direct".to_owned(),
+            model: crate::spend::ANY.to_owned(),
+            rates: Some(Price::default()),
+        }),
+        Gesture::Act(Action::Price {
+            provider: "anthropic".to_owned(),
+            model: "opus".to_owned(),
+            rates: None,
+        }),
+        Gesture::Act(Action::Ceiling {
+            micro_usd: Some(12_500_000),
+        }),
+        Gesture::Act(Action::Ceiling { micro_usd: None }),
+        Gesture::Ask(Query::Prices),
+    ];
+    for gesture in gestures {
+        rt(gesture.clone());
+        let line = crate::boundary::line::spell(&gesture);
+        assert_eq!(parse(&line, &bare), Ok(gesture), "via {line} at no seat");
+    }
+    // Two rates price a row, the other two being the table's own zeros; three
+    // is the cache-read alone.
+    assert_eq!(
+        parse("/price anthropic opus 15 75", &bare),
+        Ok(Gesture::Act(Action::Price {
+            provider: "anthropic".to_owned(),
+            model: "opus".to_owned(),
+            rates: Some(Price {
+                input: 15_000_000,
+                output: 75_000_000,
+                cache_read: 0,
+                cache_write: 0,
+            }),
+        }))
+    );
+    assert_eq!(
+        parse("/price anthropic opus 15 75 1.5", &bare),
+        Ok(Gesture::Act(Action::Price {
+            provider: "anthropic".to_owned(),
+            model: "opus".to_owned(),
+            rates: Some(Price {
+                input: 15_000_000,
+                output: 75_000_000,
+                cache_read: 1_500_000,
+                cache_write: 0,
+            }),
+        }))
+    );
+}

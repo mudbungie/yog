@@ -14,7 +14,7 @@
 
 use super::balls::read as ball;
 use super::verbs::{self, children, payload};
-use super::{Context, args, config, queries};
+use super::{Context, args, config, spend};
 use crate::boundary::{Action, Gesture, Query, help};
 
 /// Read one line into the gesture it spells (§8.5). `ctx` supplies what the
@@ -177,7 +177,8 @@ pub fn parse(input: &str, ctx: &Context) -> Result<Gesture, String> {
         // are — a seat with no panes still has to be able to look. Split out
         // at the §12 line budget; an unknown verb refuses there too, so this
         // stays the whole grammar's one dead end.
-        other => queries::queries(other, tail, ctx),
+        // …behind the §3.5 spend family (bl-53d1), which falls through to them.
+        other => spend::read(other, tail, ctx),
     }
 }
 

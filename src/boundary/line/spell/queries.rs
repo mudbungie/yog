@@ -111,5 +111,7 @@ pub(super) fn spell_query(query: &Query) -> String {
         // handle, which is the one thing a seat cannot hold.
         Query::Invocations => "/invocations".to_owned(),
         Query::Capture { invocation } => format!("/capture {invocation}"),
+        // The §3.5 table read (bl-53d1): a world fact, so the verb is the line.
+        Query::Prices => format!("/{}", crate::boundary::codec::spend::PRICES),
     }
 }

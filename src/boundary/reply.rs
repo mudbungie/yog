@@ -37,6 +37,9 @@ mod config_answer;
 /// What a §9 config read answers (bl-dc3f) — the file's two views as one type,
 /// and both directions of their spelling.
 mod config_view;
+/// The one spelling of money on the wire (bl-53d1): the §3.5 cost's three
+/// keys, both directions, spent by every carrier of a token count.
+pub(crate) mod cost;
 /// The whole surface's JSON spelling read back into the type (bl-7067) -- the
 /// thin seat's half of the codec, cut on the same seam as the spelling itself.
 mod decode;
@@ -52,6 +55,9 @@ mod model;
 /// The §4.2 trail row in both directions (bl-4d81) — its own file on the seam
 /// its own doc gives: the one row whose derived readings are the answer.
 mod op_row;
+/// The price table, the ceiling and the world's ledger as one answer
+/// (bl-53d1) — the `prices` reply's type and both directions of its spelling.
+mod prices;
 /// The §6 decision queue's row encoder — the other reply whose rows carry a
 /// derived list (its firing signals).
 mod queue;
@@ -74,6 +80,7 @@ pub use config_view::ConfigView;
 pub use decode::decode;
 pub use encode::{encode, refusal};
 pub use follow_frame::FollowFrame;
+pub use prices::PricesView;
 pub use ws_row::{Workspaces, WsRow};
 
 pub use model::Reply;

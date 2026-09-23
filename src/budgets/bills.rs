@@ -22,7 +22,8 @@ use super::{
 /// The wire-request snapshot of one step (ARCH §2.3) — where the model that
 /// billed the step is named.
 const REQUEST_FILE: &str = "request.json";
-/// Per-step metadata (ARCH §2.3) — where the `started_at`/`ended_at` span is.
+/// Per-step metadata (ARCH §2.3) — where the `started_at`/`ended_at` span is,
+/// and since litany 0.0.13 the `provider` row the step was billed through.
 const META_FILE: &str = "meta.json";
 
 /// Which conv-id dirs of a workspace's `steps/` tree a fold counts — the
@@ -83,6 +84,12 @@ pub struct StepBill {
     /// Zero-padded to a fixed width, so lexical order **is** step order.
     pub seq: String,
     pub model: Option<String>,
+    /// The brazen **provider row** the step went through — `meta.json`'s
+    /// `provider` (litany bl-4c1c, VISION §6 item 8), the other half of the
+    /// §3.5 price table's key (bl-53d1). `None` for every record written
+    /// before litany learned to say it, which the lookup answers by matching
+    /// the model over every row rather than by a version branch.
+    pub provider: Option<String>,
     pub spend: BudgetSpend,
     /// The **last** attempt segment's counters (§5.1 #35), beside the fold of
     /// all of them. Two different questions over one file: `spend` is what the
@@ -164,24 +171,34 @@ fn conv_bills(conv_dir: &Path, conv: &str, out: &mut Vec<StepBill>) {
 /// the conv-id dir it was found under.
 fn step_bill(step_dir: &Path, conv: &str, seq: &str) -> StepBill {
     let bytes = fs::read(step_dir.join(RESPONSE_FILE)).unwrap_or_default();
+    let meta = step_meta(step_dir);
     StepBill {
         conv: conv.to_owned(),
         seq: seq.to_owned(),
         model: step_model(step_dir),
+        provider: meta
+            .as_ref()
+            .and_then(|meta| meta.get("provider")?.as_str())
+            .map(str::to_owned),
         spend: spend_from_bytes(&bytes),
         last_usage: last_usage(&bytes),
         window: context_window(&bytes),
-        wall_secs: step_wall(step_dir),
+        wall_secs: step_wall(meta.as_ref()),
     }
+}
+
+/// One step's `meta.json`, parsed — read once for the two facts off it. `None`
+/// when it is missing or not JSON, which every reader below takes as absent.
+fn step_meta(step_dir: &Path) -> Option<serde_json::Value> {
+    serde_json::from_slice(&fs::read(step_dir.join(META_FILE)).ok()?).ok()
 }
 
 /// One step's `started_at` → `ended_at` span in seconds (§2.3 `meta.json`).
 /// Zero on any read, parse or ordering failure — the same forgiving reading
 /// every other field here takes, and the reason a still-running step
 /// contributes nothing rather than a negative.
-fn step_wall(step_dir: &Path) -> u64 {
-    let bytes = fs::read(step_dir.join(META_FILE)).unwrap_or_default();
-    let Ok(meta) = serde_json::from_slice::<serde_json::Value>(&bytes) else {
+fn step_wall(meta: Option<&serde_json::Value>) -> u64 {
+    let Some(meta) = meta else {
         return 0;
     };
     let at = |key: &str| {

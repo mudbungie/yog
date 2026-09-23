@@ -69,6 +69,7 @@ pub(super) fn bill(conv: &str, input: u64) -> StepBill {
         conv: conv.to_owned(),
         seq: "001".to_owned(),
         model: Some("opus".to_owned()),
+        provider: None,
         spend: BudgetSpend {
             input_tokens: input,
             ..BudgetSpend::default()
@@ -82,7 +83,7 @@ pub(super) fn bill(conv: &str, input: u64) -> StepBill {
 /// The §4.1 durable a board is built against: the price table above, and no
 /// ceiling — the ungated default every world starts in.
 pub(super) fn ui() -> crate::ui_state::UiState {
-    ui_doc(r#"{"v":1,"prices":{"opus":{"input":1}}}"#)
+    ui_doc(r#"{"v":1,"prices":{"anthropic":{"opus":{"input":1}}}}"#)
 }
 
 /// The same, with whatever `ui.json` a test needs.

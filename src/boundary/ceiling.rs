@@ -102,7 +102,7 @@ mod tests {
     }
 
     /// `$1/Mtok` input, so the fixture workspace has spent exactly $3.
-    const PRICED: &str = r#"{"v":1,"prices":{"opus":{"input":1}},"ceiling":2}"#;
+    const PRICED: &str = r#"{"v":1,"prices":{"anthropic":{"opus":{"input":1}}},"ceiling":2}"#;
 
     /// The world roster a one-workspace fixture presents (bl-a80a).
     fn world(dir: &Path) -> Vec<PathBuf> {
@@ -113,7 +113,10 @@ mod tests {
     fn an_unconfigured_world_is_ungated() {
         let dir = tempfile::tempdir().unwrap();
         spent(dir.path());
-        let ui = ui(dir.path(), r#"{"v":1,"prices":{"opus":{"input":1}}}"#);
+        let ui = ui(
+            dir.path(),
+            r#"{"v":1,"prices":{"anthropic":{"opus":{"input":1}}}}"#,
+        );
         assert!(
             gate(
                 &ui,
@@ -135,7 +138,7 @@ mod tests {
         spent(dir.path());
         let ui = ui(
             dir.path(),
-            r#"{"v":1,"prices":{"opus":{"input":1}},"ceiling":5}"#,
+            r#"{"v":1,"prices":{"anthropic":{"opus":{"input":1}}},"ceiling":5}"#,
         );
         assert!(
             gate(

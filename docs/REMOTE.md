@@ -5663,9 +5663,13 @@ is not, and why freshness is read at ask time and stored nowhere.
 
 **The rule DESIGN §3.5 states — a token count never travels without the cost
 the table puts on it — is a wire rule, and this is where it is paid.** Four
-shapes already in use gain a field, and one bump carries all four, because §3
-prices a second change to a shape inside one cycle at a second integer and
-these are one change: `PROTOCOL` is **17**.
+shapes already in use gain a field, and **one edition carries all four**
+(§3.2, bl-e598): an addition is stamped by `make corpus` in
+`corpus/shapes.json` and moves no major, so `PROTOCOL` stays where it is and
+a seat that vendors the ledger reads the four new keys as optional past the
+floor. (The ruling was written against the exact era and said *"one bump
+carries all four: `PROTOCOL` is 17"*; bl-53d1 landed it under the edition
+rule instead, at edition 19, and nothing about the shapes changed.)
 
 - **`reply/steps` rows gain `cost`**, that step's own bill priced by that
   step's own `(provider, model)`.
@@ -5687,7 +5691,8 @@ say the number. A `$0.00` is a priced figure (a subscription row); an absent
 floor, and a seat says *at least*. No attribution clause on these four: each
 is its own scope.
 
-**One read and two acts, all new shapes, exempt from the bump by §3's rule.**
+**One read and two acts, all new shapes — additions under §3.2 like the four
+fields above, stamped at the same edition.**
 
 - **`Query::Prices` → `reply/prices`**: `{"kind": "prices", "rows": [{"provider",
   "model", "input", "output", "cache_read", "cache_write"}], "ceiling": <usd>,

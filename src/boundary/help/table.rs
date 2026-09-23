@@ -13,6 +13,9 @@ pub mod capability;
 pub mod driving;
 pub mod following;
 pub mod queries;
+/// The §3.5 spend family's three (bl-53d1), joined back after the standing
+/// verbs, whose subject they share.
+pub mod spend;
 pub mod standing;
 /// The eleven reads aimed at a workspace or the world above it — split off at
 /// §12's budget (bl-c088), and joined back *ahead* of [`queries::QUERIES`].

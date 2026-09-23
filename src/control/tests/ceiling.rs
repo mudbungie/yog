@@ -18,7 +18,7 @@ use tempfile::{TempDir, tempdir};
 const HEAD: &str = "spend ceiling reached:";
 const CONV: &str = "20260803T120000Z-root";
 /// `$1/Mtok` input, so a workspace that spent 3 Mtok has spent exactly $3.
-const TABLE: &str = r#""prices":{"opus":{"input":1}}"#;
+const TABLE: &str = r#""prices":{"anthropic":{"opus":{"input":1}}}"#;
 
 /// A world on disk: a `ui.json` at the state root and one named workspace the
 /// §3.1 roster finds — the shape [`ceiling::parked`] resolves against.

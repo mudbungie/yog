@@ -11,7 +11,7 @@ use crate::boundary::codec::fields::{
 };
 use crate::boundary::codec::parse_join;
 use crate::fleet::Facts;
-use crate::spend::{Attribution, Cost, Figure};
+use crate::spend::{Attribution, Figure};
 
 /// The board's four columns, [`Column::word`]'s other half.
 const COLUMNS: [(&str, Column); 4] = [
@@ -98,13 +98,8 @@ fn fleet_facts(v: &Value) -> Result<Facts, String> {
 /// [`Cost::usd`]'s rendering of `micro_usd`, which rides beside it.
 pub(crate) fn figure(v: &Value) -> Result<Figure, String> {
     let o = v.as_object().ok_or("figure: not an object")?;
-    let cost = match o.get("micro_usd") {
-        None => None,
-        Some(_) => Some(Cost {
-            micro_usd: u64_of(o, "micro_usd")?,
-            unpriced_tokens: u64_of(o, "unpriced_tokens")?,
-        }),
-    };
+    // The money half through the one reader every carrier shares (bl-53d1).
+    let cost = super::super::cost::fields_of(o)?;
     Ok(Figure {
         tokens: crate::steps_view::wire::decode::spend(
             o.get("tokens").ok_or("figure: missing tokens")?,

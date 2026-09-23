@@ -4,7 +4,8 @@
 //! proves only that the easy case survives.
 
 use super::super::super::super::Reply;
-use crate::boundary::reply::ConfigAnswer;
+use crate::boundary::reply::{ConfigAnswer, PricesView};
+use crate::spend::PriceRow;
 
 /// The §11 altitude-0 answers — the enumeration with its §7.2 notes, and one
 /// workspace's ball listing — cut off this file at §12's per-file budget
@@ -141,6 +142,42 @@ pub(super) fn listings() -> Vec<Reply> {
         Reply::Board(board()),
         // The unarmed world, whose `fleet` key is absent rather than empty.
         Reply::Board(Board::default()),
+        // The §3.5 table, ceiling and ledger (bl-53d1), at both of its
+        // shapes: a ceiling act's receipt over a priced world — a `*` row
+        // beside a named one, the bound, the floor with unpriced tokens on
+        // it, and the count — and a read of an unpriced, unbounded world,
+        // where all three keys are absent rather than zero.
+        Reply::Prices(PricesView {
+            rows: vec![
+                PriceRow {
+                    provider: "anthropic".into(),
+                    model: crate::spend::ANY.into(),
+                    rates: crate::spend::Price {
+                        input: 3_000_000,
+                        output: 15_000_000,
+                        cache_read: 300_000,
+                        cache_write: 3_750_000,
+                    },
+                },
+                PriceRow {
+                    provider: "claude-session-direct".into(),
+                    model: "claude-opus-4-1".into(),
+                    rates: crate::spend::Price::default(),
+                },
+            ],
+            ceiling: crate::spend::Ceiling::from_json(Some(&serde_json::json!(25))),
+            spent: Some(crate::spend::Cost {
+                micro_usd: 4_250_000,
+                unpriced_tokens: 12,
+            }),
+            released: Some(2),
+        }),
+        Reply::Prices(PricesView {
+            rows: vec![],
+            ceiling: crate::spend::Ceiling::default(),
+            spent: None,
+            released: None,
+        }),
         Reply::Attention(queue()),
         Reply::Ops(trail::ops()),
         Reply::Help(crate::boundary::help::rows(None)),

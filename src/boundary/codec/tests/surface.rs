@@ -35,6 +35,7 @@ pub(crate) fn gestures() -> Vec<Gesture> {
         login(),
         pins(),
         enroll(),
+        spend(),
         crate::boundary::codec::config::tests::surface(),
     ]
     .concat()
@@ -53,6 +54,49 @@ fn pins() -> Vec<Gesture> {
             })
         })
         .collect()
+}
+
+/// The §3.5 spend family (bl-53d1) — **one entry per arm of each act**: a row
+/// priced on all four rates, one priced on two (the absent rates are the
+/// table's own zeros), the delete, a ceiling set and a ceiling deleted, and
+/// the table read beside them. The absences are the second instruction of
+/// each act, so a fixture that only ever spelled a write would leave the
+/// delete unproven on the wire.
+fn spend() -> Vec<Gesture> {
+    use crate::boundary::Action;
+    let price = |model: &str, rates| {
+        Gesture::Act(Action::Price {
+            provider: "anthropic".to_owned(),
+            model: model.to_owned(),
+            rates,
+        })
+    };
+    vec![
+        price(
+            "claude-opus-4-1",
+            Some(crate::spend::Price {
+                input: 15_000_000,
+                output: 75_000_000,
+                cache_read: 1_500_000,
+                cache_write: 18_750_000,
+            }),
+        ),
+        price(
+            crate::spend::ANY,
+            Some(crate::spend::Price {
+                input: 3_000_000,
+                output: 15_000_000,
+                cache_read: 0,
+                cache_write: 0,
+            }),
+        ),
+        price("claude-opus-4-1", None),
+        Gesture::Act(Action::Ceiling {
+            micro_usd: Some(25_000_000),
+        }),
+        Gesture::Act(Action::Ceiling { micro_usd: None }),
+        Gesture::Ask(crate::boundary::Query::Prices),
+    ]
 }
 
 /// The §8.3 sign-in (REMOTE §8.3, bl-c285) — one entry, because the act's

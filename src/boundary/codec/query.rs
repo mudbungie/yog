@@ -126,6 +126,8 @@ pub(super) fn encode(query: &Query) -> Value {
         Query::Capture { invocation } => {
             json!({ "op": CAPTURE, "invocation": invocation })
         }
+        // The §3.5 table read (bl-53d1): a world fact, so the op is the envelope.
+        Query::Prices => json!({ "op": super::spend::PRICES }),
     }
 }
 
@@ -231,6 +233,7 @@ fn read(op: &str, o: &Map<String, Value>) -> Result<Option<Query>, String> {
         CAPTURE => Query::Capture {
             invocation: str_of(o, "invocation")?,
         },
+        super::spend::PRICES => Query::Prices,
         "lineages" => Query::Config(Read::Lineages {
             workspace: str_of(o, "workspace")?,
         }),

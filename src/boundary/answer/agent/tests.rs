@@ -159,6 +159,7 @@ fn bill(conv: &str, tokens: u64) -> crate::budgets::StepBill {
         conv: conv.to_owned(),
         seq: "001".to_owned(),
         model: Some("m".to_owned()),
+        provider: None,
         spend,
         last_usage: spend,
         window: Some(100),

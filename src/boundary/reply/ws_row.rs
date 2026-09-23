@@ -59,6 +59,12 @@ pub struct WsRow {
     /// equal for every conversation following this workspace's lineage, which
     /// is what makes their inequality worth a sentence.
     pub config_tip: Option<crate::model_pick::ConfigTip>,
+    /// **What this whole workspace has spent, priced** (§3.5, REMOTE
+    /// §9.23; bl-53d1) — `spend::priced` over its `Snapshot::bills`,
+    /// the same filter the board runs one altitude up, and the per-workspace
+    /// ledger the round-1 comparator found missing. `None` is the empty price
+    /// table, never a zero: the §3.5 severability gate riding the row.
+    pub spend: Option<crate::spend::Cost>,
 }
 
 /// **The altitude-0 chrome, as one answer** (REMOTE §9.7, bl-b4b5) — the

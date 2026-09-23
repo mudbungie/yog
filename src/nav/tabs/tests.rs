@@ -13,6 +13,7 @@ fn row(name: &str, kind: WorkspaceKind, attention: usize, pinned: Option<usize>)
         running: false,
         pinned,
         config_tip: None,
+        spend: None,
     }
 }
 

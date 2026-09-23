@@ -157,3 +157,32 @@ fn the_wall_span_rides_the_walk_and_degrades_to_zero() {
     assert_eq!(bills.len(), 6);
     assert_eq!(super::wall(&bills), 61, "only the settled span counts");
 }
+
+/// The provider row rides the same `meta.json` read (litany bl-4c1c, VISION
+/// §6 item 8; bl-53d1): present when litany wrote it, and `None` — never a
+/// guess — for every record written before it did, which is the live arm
+/// until the pin moves.
+#[test]
+fn the_provider_row_rides_the_walk_and_is_absent_where_meta_says_nothing() {
+    let dir = tempdir().unwrap();
+    let meta = |seq: &str, body: &str| {
+        write_step(dir.path(), ROOT, seq, 1, Some("opus"));
+        let step = dir.path().join("steps").join(ROOT).join(seq);
+        std::fs::write(step.join("meta.json"), body).unwrap();
+    };
+    meta(
+        "001",
+        r#"{"provider":"claude-session-direct","commit":"abc"}"#,
+    );
+    meta("002", r#"{"commit":"abc"}"#);
+    meta("003", r#"{"provider":7}"#);
+    write_step(dir.path(), ROOT, "004", 1, Some("opus"));
+    let mut bills = bills(dir.path(), &Scope::Tree(ROOT.to_owned()));
+    bills.sort_by(|a, b| a.seq.cmp(&b.seq));
+    let providers: Vec<Option<&str>> = bills.iter().map(|b| b.provider.as_deref()).collect();
+    assert_eq!(
+        providers,
+        [Some("claude-session-direct"), None, None, None],
+        "one written row, three honest absences"
+    );
+}

@@ -53,7 +53,13 @@ impl Lab {
     }
 
     pub(super) fn project_at(&self, snap: &Snapshot, entries: &[OpEntry]) -> Vec<Attempt> {
-        project(snap, &self.ws, entries, &self.world)
+        project(
+            snap,
+            &self.ws,
+            entries,
+            &self.world,
+            &crate::spend::Prices::default(),
+        )
     }
 
     /// The claim attempt's own worktree path, by balls' formula.

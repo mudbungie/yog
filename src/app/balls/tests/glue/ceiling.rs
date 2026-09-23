@@ -26,7 +26,7 @@ fn the_spend_ceiling_refuses_the_fire_and_says_so_on_the_trail() {
     fs::create_dir_all(&w.roots.yog_state).unwrap();
     fs::write(
         w.roots.ui_json(),
-        r#"{"v":1,"prices":{"opus":{"input":1}},"ceiling":0}"#,
+        r#"{"v":1,"prices":{"anthropic":{"opus":{"input":1}}},"ceiling":0}"#,
     )
     .unwrap();
     let (_c, m) = model_focused(&w, &w.ws_cobalt);
@@ -77,7 +77,7 @@ fn spend_in_another_workspace_refuses_a_fire_into_an_idle_one() {
     fs::write(step.join("request.json"), r#"{"model":"opus"}"#).unwrap();
     fs::write(
         w.roots.ui_json(),
-        r#"{"v":1,"prices":{"opus":{"input":1}},"ceiling":2}"#,
+        r#"{"v":1,"prices":{"anthropic":{"opus":{"input":1}}},"ceiling":2}"#,
     )
     .unwrap();
     let (_c, m) = model_focused(&w, &w.ws_cobalt);

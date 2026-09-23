@@ -121,6 +121,8 @@ fn spell_action(action: &Action) -> String {
             )
         }
         Action::Route(verb) => spell_route(verb),
+        // The §3.5 spend family (bl-53d1): every word stated, nothing elided.
+        Action::Price { .. } | Action::Ceiling { .. } => super::spend::spell(action),
     }
 }
 

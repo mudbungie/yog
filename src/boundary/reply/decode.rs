@@ -40,6 +40,9 @@ use crate::boundary::codec::prepared_from_value;
 use crate::registry::mailbox::{capture_of, invocation_of};
 
 mod inspector;
+/// The two world-level rows, their own file at the cap (bl-53d1).
+mod world;
+use world::{client_row, doctor_row};
 
 /// Read one reply body. The outer `Err` is a malformed envelope — bytes this
 /// codec cannot read at all — and the inner `Err` is the refusal the envelope
@@ -207,6 +210,9 @@ fn listing(kind: &str, o: &Map<String, Value>) -> Option<Result<Reply, String>> 
         "clients" => rows_of(o, client_row).map(Reply::Clients),
         "doctor" => rows_of(o, doctor_row).map(Reply::Doctor),
         "invocations" => rows_of(o, invocation_of).map(Reply::Invocations),
+        // The §3.5 table, ceiling and ledger (bl-53d1), read by the module
+        // that spells them.
+        super::prices::KIND => super::prices::view_of(o).map(Reply::Prices),
         _ => return None,
     })
 }
@@ -226,36 +232,6 @@ fn routed(o: &Map<String, Value>) -> Result<Reply, String> {
     Ok(Reply::Routed {
         invocation: str_of(o, "invocation")?,
         capture: opt_val(o, "capture", capture_of)?,
-    })
-}
-
-/// One registered client, read back (REMOTE §5, bl-4e08) — the tools through
-/// `registry::tools`, the same decoder the gesture and the document spend.
-fn client_row(v: &Value) -> Result<crate::registry::roster::ClientRow, String> {
-    let o = v.as_object().ok_or("client row: not an object")?;
-    Ok(crate::registry::roster::ClientRow {
-        client: str_of(o, "client")?,
-        present: bool_of(o, "present")?,
-        tools: crate::registry::tools::decode(o.get("tools").ok_or("client row: missing tools")?)?,
-        // Absent is never (bl-d542); a present field must be a number, so a
-        // stamp that is not one refuses here rather than reading as never.
-        last_seen: crate::boundary::codec::fields::opt(
-            o,
-            "last_seen",
-            crate::boundary::codec::fields::i64_of,
-        )?,
-    })
-}
-
-/// One check, read back (bl-28f4) — the remedy absent exactly where the row
-/// passed, which is the one thing a seat renders differently.
-fn doctor_row(v: &Value) -> Result<crate::doctor::Row, String> {
-    let o = v.as_object().ok_or("doctor row: not an object")?;
-    Ok(crate::doctor::Row {
-        check: str_of(o, "check")?,
-        ok: bool_of(o, "ok")?,
-        fact: str_of(o, "fact")?,
-        remedy: crate::boundary::codec::fields::opt(o, "remedy", str_of)?,
     })
 }
 

@@ -109,6 +109,7 @@ fn step_row(v: &Value) -> Result<StepSummary, String> {
         framing: pick(o, "framing", &FRAMINGS)?,
         attempts: usize_of(o, "attempts")?,
         tokens: spend(o.get("tokens").ok_or("step row: missing tokens")?)?,
+        cost: opt_val(o, "cost", crate::boundary::reply::cost::cost_of)?,
         commit: opt_str_of(o, "commit")?,
         started_at: opt_str_of(o, "started_at")?,
         ended_at: opt_str_of(o, "ended_at")?,

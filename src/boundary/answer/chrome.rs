@@ -55,6 +55,7 @@ pub fn ws_rows(snap: &Snapshot, ui: &UiState) -> Vec<WsRow> {
     // Its keys are paths (durable state whose re-keying is its own migration,
     // bl-7407), which is exactly why the *rank* crosses and the key does not.
     let pinned = ui.pinned();
+    let prices = ui.prices();
     snap.workspaces
         .iter()
         .map(|w| {
@@ -78,6 +79,12 @@ pub fn ws_rows(snap: &Snapshot, ui: &UiState) -> Vec<WsRow> {
                         oid: c.oid.clone(),
                         short_oid: c.short_oid.clone(),
                     }),
+                // The §3.5 ledger per workspace (bl-53d1): the worker's own
+                // walk, priced — a filter over memory, never a walk per row.
+                spend: crate::spend::priced(
+                    snap.bills.get(&w.path).map_or(&[][..], Vec::as_slice),
+                    &prices,
+                ),
             }
         })
         .collect()

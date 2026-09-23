@@ -22,6 +22,7 @@ fn bill(conv: &str, seq: &str, model: Option<&str>, last: BudgetSpend) -> StepBi
         conv: conv.to_owned(),
         seq: seq.to_owned(),
         model: model.map(str::to_owned),
+        provider: None,
         spend: usage(999, 999, 999),
         last_usage: last,
         window: Some(200_000),

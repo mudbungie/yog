@@ -108,7 +108,11 @@ impl Action {
             | Action::Ball(_)
             | Action::Fan(crate::fan::Verb::Retire { .. } | crate::fan::Verb::Deliver { .. })
             | Action::Ack
-            | Action::ClearTrail => None,
+            | Action::ClearTrail
+            // The §3.5 table and ceiling are world facts (bl-53d1): one
+            // `ui.json`, one key each, no workspace to name.
+            | Action::Price { .. }
+            | Action::Ceiling { .. } => None,
         }
     }
 }
@@ -169,7 +173,8 @@ impl Query {
             // The routing leg's two reads: one is answered to the intake's own
             // identity, the other to a handle — neither names a world.
             | Query::Invocations
-            | Query::Capture { .. } => None,
+            | Query::Capture { .. }
+            | Query::Prices => None,
         }
     }
 }

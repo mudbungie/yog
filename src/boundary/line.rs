@@ -49,6 +49,8 @@ mod fork;
 mod parse;
 mod queries;
 mod spell;
+/// The §3.5 spend family's grammar (bl-53d1): `/price`, `/ceiling`, `/prices`.
+mod spend;
 #[cfg(test)]
 mod tests;
 /// REMOTE §5's routing leg, typed (bl-024b) — the two acts that carry an
@@ -62,6 +64,7 @@ pub use balls::{CREATE_USAGE, UPDATE_USAGE};
 pub use config::USAGE as CONFIG_USAGE;
 pub use parse::parse;
 pub use spell::spell;
+pub use spend::{CEILING_USAGE, PRICE_USAGE};
 pub use verbs::control::{ANSWER_USAGE, spell_answer};
 
 /// The selection facts a seat holds (§8.5): what the line elides. Every field

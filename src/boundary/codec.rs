@@ -37,6 +37,8 @@ pub(crate) use fleet::{ARM as FLEET_ARM, DISARM as FLEET_DISARM};
 mod fork;
 mod monitor;
 mod query;
+/// The §3.5 spend family's two acts (bl-53d1), beside the capability family.
+pub(crate) mod spend;
 mod start;
 mod tools;
 /// The §9.4 workflow mark's two envelopes (bl-b680), one family file; the
@@ -142,6 +144,8 @@ fn encode_action(action: &Action) -> Value {
             workspace,
             provider,
         } => device::encode_login(workspace, provider),
+        // The §3.5 spend family (bl-53d1), spelled in its family file.
+        Action::Price { .. } | Action::Ceiling { .. } => spend::encode(action),
     }
 }
 
@@ -236,6 +240,7 @@ pub fn decode(v: &Value) -> Result<Gesture, String> {
         tools::ADVERTISE | tools::INVOKE | tools::COMPLETE => {
             tools::decode(op.as_str(), o).map(act)
         }
+        spend::PRICE | spend::CEILING => spend::decode(op.as_str(), o).map(act),
         // The two families that read in their own modules (bl-3f46, bl-3746):
         // every query — `config`/`marks` read-shaped among them, bl-0164 —
         // then the §9 config verbs. This match stays the action roster rather
