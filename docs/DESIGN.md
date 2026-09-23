@@ -9314,6 +9314,56 @@ sign-in) — and never `YOG_NAME` (§8.4), so a human who ran
 `eval "$(yog env)"` is not an agent seat; and every yog-spawned child
 names a namespace verb, so none reaches the refusal at all.
 
+**Ruling — advancing a config lineage is the operator's own act too, and the
+door that refuses is litany's** (bl-baed; upstream litany bl-d273). The `yog`
+shim's guard above has a sibling one rung down, found the same way: the
+`litany` shim is on the agent's `PATH` because agents drive tools by bash, and
+`litany config <workspace>` opens an `$EDITOR` over a checkout of
+`config/default` and commits it. A worker with the shipped `bash` grant needs
+no adversarial prompt to find that — it was asked to remember something —
+and one shell script later it has rewritten every role's soul, every role's
+model and `tools:` grant, `facts.md` and the workspace skills, from inside the
+conversation those very files govern. That walks litany's learning loop, whose
+whole shape is a reviewer staging a `proposal/<id>` branch and an operator
+reading the diff before accepting it (litany
+`docs/DESIGN_LEARNING_LOOP.md` §3).
+
+**It is refused at litany's door, not by yog's capability control (§8.6), and
+that placement is the ruling.** The control adjudicates a `bash` *command
+line*, so it would have to recognize a verb inside a string — a pattern match
+an agent defeats by spelling the path differently — and it governs yog's own
+conversations only, leaving the same act open to an operator's bare `litany`.
+The engine instead refuses the two verbs that advance a `config/*` branch —
+`litany config` and `litany proposal --accept` — whenever `LITANY_TOOL_ID` is
+set, which is exactly and only when the process is a tool invocation of a
+running step. No flag was added: the marker was already on every tool
+subprocess (litany ARCH §3.3, REMOTE §5.4's *every spawn carries the
+invocation's own id*). Reading stays open — a step may list and read
+proposals, and `--reject` deletes a branch no lineage points at — and the
+`remember` engine act is the lawful door the refusal leaves the agent, so a
+model asked to remember something has an answer that is not a refusal.
+
+**yog's whole part is to hand litany the truth, and it is three links.** The
+front-door spawn puts `LITANY_TOOL_ID` on the child
+(`src/tool_host/engine_act.rs`); the shim is a bare `/bin/sh` re-exec that
+strips nothing, so a step's shell still carries it
+(`world::tools::shim_script`); and the multiplex arm reads it back at the
+binding and fills
+`Fx::tool_id` unchanged, never synthesizing, clearing or forging a value
+(`src/multiplex/litany.rs`). Each link has a beat of its own, and
+`tests/litany_lineage.rs` drives the chain the ball actually measured — a
+`bash` step typing the verb at the real shim — both ways: refused with
+`config/default` byte-identical and no editor ever handed a checkout, and
+unmarked the same command lands.
+
+**The routed rung is out of this chain by subject, not by guard.** A `bash`
+routed to an enrolled foot (REMOTE §5.4's first rung) runs on a box that holds
+no workspace repository, so there is no lineage there to advance; the
+invocation carries no `LITANY_TOOL_ID` for the same reason the record
+directory it names is not the foot's. A foot that reaches *back* to this
+server's world is outside REMOTE §12's front-door-only posture and is that
+component's ruling, not this one's.
+
 **Version coherence is structural, not gated.** The phase-1 capability gate
 (per-verb `--help` probes, a toolchain read, dispatch-layer refusals) could
 only *detect* skew, and only some of it — a `litany` linking a different
