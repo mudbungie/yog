@@ -15,6 +15,9 @@ use crate::test_support::engine;
 use std::path::Path;
 use tempfile::tempdir;
 
+/// The §3.5 spend ceiling refusing this door (bl-56d5, bl-a80a), its own file
+/// at the cap.
+mod ceiling;
 /// The §9.4 workflow mark's set and clear (bl-b680), its own file at the cap.
 mod workflow;
 
