@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.68](https://github.com/mudbungie/yog/compare/v0.0.67...v0.0.68) - 2026-09-25
+
+### Changes
+
+- the first live mainline walk — tune dht::Config on evidence from a box whose egress passes UDP/6881 [bl-5d8d]
+
 ## [0.0.67](https://github.com/mudbungie/yog/compare/v0.0.66...v0.0.67) - 2026-09-25
 
 ### Changes
