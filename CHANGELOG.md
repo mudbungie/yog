@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.66](https://github.com/mudbungie/yog/compare/v0.0.65...v0.0.66) - 2026-09-25
+
+### Changes
+
+- the rendezvous loop and the punch — publish presence, poll the inbox, simultaneous open, held-connection serving [bl-4263]
+
 ## [0.0.65](https://github.com/mudbungie/yog/compare/v0.0.64...v0.0.65) - 2026-09-23
 
 ### Changes
