@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.67](https://github.com/mudbungie/yog/compare/v0.0.66...v0.0.67) - 2026-09-25
+
+### Changes
+
+- presence carries the OBSERVED endpoint — read the reflected address off KRPC replies (BEP 42 `ip`) and publish it beside the route-local one [bl-efae]
+
 ## [0.0.66](https://github.com/mudbungie/yog/compare/v0.0.65...v0.0.66) - 2026-09-25
 
 ### Changes
