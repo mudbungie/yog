@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.71](https://github.com/mudbungie/yog/compare/v0.0.70...v0.0.71) - 2026-09-25
+
+### Changes
+
+- a live put occasionally draws zero acks and zero refusals after a successful walk (2 in 70 from the deployed engine box) [bl-f519]
+- DHT walks take ~12 s (lookup) and ~20 s (put/get, at the 64-query cap) from the deployed engine box since the bl-d00f frontier [bl-d9c1]
+
 ## [0.0.70](https://github.com/mudbungie/yog/compare/v0.0.69...v0.0.70) - 2026-09-25
 
 ### Changes
