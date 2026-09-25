@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.69](https://github.com/mudbungie/yog/compare/v0.0.68...v0.0.69) - 2026-09-25
+
+### Changes
+
+- a mainline walk stalls on the bootstrap and reports the routers as the closest nodes (~1 walk in 5 from the deployed engine box) [bl-9408]
+- BEP 44 get/put walk from the bootstrap routers, which never answer get — every live publish and poll is dark in one round [bl-f6e1]
+
 ## [0.0.68](https://github.com/mudbungie/yog/compare/v0.0.67...v0.0.68) - 2026-09-25
 
 ### Changes
