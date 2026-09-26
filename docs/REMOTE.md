@@ -6259,7 +6259,16 @@ the live mainline is measured** (bl-5d8d, from the deployed engine box;
 `get`, so `get` and `put` are one walk that asks the bootstrap `find_node`
 and every node it opens onto `get` — the tokens `put` spends come from
 nodes near the target, never from the roster. The fake DHT's `Router` mood
-is that router, and the rendezvous bench stands behind one.
+is that router, and the rendezvous bench stands behind one. **And the
+bootstrap is a door, never a result** (bl-9408): its answers seed the walk
+and its BEP 42 claims vote, but no bootstrap address is ever returned as a
+node near the target, and a walk whose learned nodes were all silent is the
+same `Err` as a silent bootstrap — a dark commons — rather than an `Ok` a
+caller cannot tell from success. A node is one `(id, address)`: a router's
+repeated entry is learned once, and one id at two addresses is two nodes.
+The engine's roster (`mainline()`) names the four standard routers —
+`router.bittorrent.com`, `dht.transmissionbt.com`, `router.utorrent.com`,
+`dht.aelitis.com`, all at 6881 — so one silent router is a quarter of it.
 
 **Built (bl-4263): the engine's loop, `src/wire/rendezvous`, and the two
 item formats the client side mirrors.** The mint grows `rendezvous.key`
@@ -6559,8 +6568,11 @@ Open, awaiting operator ruling:
    configuration. The rendezvous loop calls exactly those verbs, so on the
    live commons presence never publishes and the inbox never reads; the
    suite cannot see it because its fake node answers `get` from the
-   bootstrap position. *A walk stalls on the bootstrap about one time in
-   five* (bl-9408): from this box only one of the three bootstrap hosts
+   bootstrap position. *A walk stalled on the bootstrap about one time in
+   five* (bl-9408, **fixed** in what it reports, §13.2: such a walk is now a
+   dark-commons `Err` that never names a router, and the roster is four
+   routers, not two — the added two are the standard ones, not re-measured
+   from this box, where `router.utorrent.com` was already silent): from this box only one of the three bootstrap hosts
    answers, and it answers `find_node` with one node repeated eight times,
    so a first round learns two fresh nodes; when both are silent the walk
    ends in two rounds and `lookup` returns the routers themselves as the

@@ -3,7 +3,7 @@
 
 use super::*;
 
-/// One walk over nodes of `moods`, all asked in the first round.
+/// One walk over nodes of `moods`, all asked in the round after the router's.
 fn walk(moods: &[Mood]) -> Vec<SocketAddr> {
     let mut nodes: Vec<FakeNode> = (0..moods.len())
         .map(|i| FakeNode::bind(id(i as u8 + 1)))
@@ -11,9 +11,9 @@ fn walk(moods: &[Mood]) -> Vec<SocketAddr> {
     for (node, mood) in nodes.iter_mut().zip(moods) {
         node.serve(vec![], *mood, vec![]);
     }
-    let bootstrap = nodes.iter().map(|n| n.addr).collect();
+    let door = router(nodes.iter().map(FakeNode::node).collect());
     let mut dht = client(
-        bootstrap,
+        vec![door.addr],
         Config {
             alpha: moods.len(),
             k: moods.len(),
@@ -69,7 +69,8 @@ fn a_dark_walk_forgets_what_the_last_one_heard() {
     a.serve(vec![], Mood::Claim(us), vec![]);
     let mut dark = FakeNode::bind(id(2));
     dark.serve(vec![], Mood::Silent, vec![]);
-    let mut dht = client(vec![a.addr], quick());
+    let door = router(vec![a.node()]);
+    let mut dht = client(vec![door.addr], quick());
     dht.lookup(id(0xff)).unwrap();
     assert_eq!(dht.observed(), vec![us]);
     dht.bootstrap = vec![dark.addr];

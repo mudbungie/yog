@@ -34,21 +34,34 @@ impl Dht {
     /// ruling 3, bl-f6e1), so a walk that asked them `q` was dark in one
     /// round; the bootstrap is a door into the keyspace, and every node it
     /// opens onto is asked `q`. One walk, not a lookup and then a second one.
-    /// `Err` is a dark commons — nobody answered at all — or the socket
-    /// itself failing; a walk that drew only errors is an `Ok` with none.
+    ///
+    /// The bootstrap is a door and never a result (bl-9408): its answers seed
+    /// the pool and its `ip` claims vote, but it is not a node near the target
+    /// and nothing it says is in the [`Outcome`]. So a walk whose learned
+    /// nodes were all silent — measured one walk in five from the deployed
+    /// engine box, the one answering router naming a single node eight times —
+    /// is the same `Err` as a silent bootstrap: a dark commons. Not an empty
+    /// `Ok`, because an empty `Ok` already means *nodes near the target
+    /// answered and held nothing*, and a caller seeding on it would be dark
+    /// without being told. `Err` is that, or the socket itself failing; a
+    /// walk whose learned nodes drew only errors is an `Ok` with none.
+    ///
+    /// A node is one `(id, address)`: a repeated entry is learned once, and
+    /// one id at two addresses is two nodes to ask.
     pub(crate) fn search(&mut self, target: NodeId, q: &str) -> Result<Outcome, String> {
         if self.bootstrap.is_empty() {
             return Err("no bootstrap node to ask".into());
         }
         let mut asked: BTreeSet<SocketAddr> = BTreeSet::new();
-        let mut pool: BTreeMap<[u8; 20], Node> = BTreeMap::new();
+        let mut pool: BTreeMap<([u8; 20], SocketAddr), Node> = BTreeMap::new();
         let mut out = Outcome::default();
         let mut claims = Vec::new();
         let mut sent = 0usize;
         let args = Dict::from([entry("target", bytes(&target.0))]);
         let mut picks = self.bootstrap.clone();
-        let mut verb = "find_node";
+        let mut seeding = true;
         loop {
+            let verb = if seeding { "find_node" } else { q };
             let mut pending = Pending::new();
             for addr in picks {
                 asked.insert(addr);
@@ -66,16 +79,20 @@ impl Dht {
                     };
                     let node = Node { id, addr };
                     claims.extend(ip);
-                    for near in krpc::nodes_of(&r).into_iter().chain([node]) {
-                        pool.entry(near.id.distance(&target)).or_insert(near);
+                    let this = (!seeding).then_some(node);
+                    for near in krpc::nodes_of(&r).into_iter().chain(this) {
+                        pool.insert((near.id.distance(&target), near.addr), near);
                     }
-                    out.replies.push((node, r));
+                    if !seeding {
+                        out.replies.push((node, r));
+                    }
                 }
-                Message::Error { code, message, .. } => {
+                Message::Error { code, message, .. } if !seeding => {
                     out.errors.push(format!("{addr}: {code} {message}"));
                 }
+                Message::Error { .. } => {}
             })?;
-            verb = q;
+            seeding = false;
             picks = pool
                 .values()
                 .take(self.config.k)

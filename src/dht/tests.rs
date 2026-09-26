@@ -2,6 +2,7 @@
 //! real [`Udp`] transport — and against two stand-in transports for the
 //! socket failures loopback will not produce on demand.
 
+mod bootstrap;
 pub(crate) mod fake;
 mod items;
 mod observed;
@@ -28,6 +29,14 @@ fn client(bootstrap: Vec<SocketAddr>, config: Config) -> Dht {
 
 fn id(fill: u8) -> NodeId {
     NodeId([fill; 20])
+}
+
+/// A mainline bootstrap router at `0x00` (REMOTE §13.7 ruling 3): it
+/// answers `find_node` with `peers` and nothing else.
+fn router(peers: Vec<Node>) -> FakeNode {
+    let mut r = FakeNode::bind(id(0x00));
+    r.serve(peers, Mood::Router, vec![]);
+    r
 }
 
 /// A bootstrap node at `0x00` advertising `B` (`0x0f`) and `C` (`0x10`), `B`

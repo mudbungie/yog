@@ -73,7 +73,8 @@ pub(super) fn loopback(port: u16) -> SocketAddr {
 /// Mint everything and stand the loop up over a node of `mood` behind a
 /// bootstrap router that answers only `find_node`, as the mainline's do
 /// (REMOTE §13.7 ruling 3); `bootstrap` is `None` for the router's address.
-/// A silent commons is silent at the router too.
+/// A silent node behind it is a dark commons: the router is a door, never a
+/// result.
 pub(super) fn bench(mood: Mood, bootstrap: Option<Vec<String>>) -> Bench {
     let tmp = TempDir::new().expect("tmp");
     mint(tmp.path());
@@ -84,11 +85,7 @@ pub(super) fn bench(mood: Mood, bootstrap: Option<Vec<String>>) -> Bench {
     let mut node = FakeNode::bind(NodeId([1u8; 20]));
     node.serve(vec![], mood, vec![]);
     let mut router = FakeNode::bind(NodeId([0u8; 20]));
-    let door = match mood {
-        Mood::Silent => Mood::Silent,
-        _ => Mood::Router,
-    };
-    router.serve(vec![node.node()], door, vec![]);
+    router.serve(vec![node.node()], Mood::Router, vec![]);
     let clock = FakeClock::new();
     let punch = Punch::bind(0).expect("punch port");
     let port = punch.port();

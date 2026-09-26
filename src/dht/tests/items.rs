@@ -96,9 +96,10 @@ fn put_lands_at_the_closest_token_holders_and_reads_back() {
 
 #[test]
 fn put_with_no_token_holder_is_an_error() {
-    let mut a = FakeNode::bind(id(0));
+    let mut a = FakeNode::bind(id(1));
     a.serve(vec![], Mood::Refuse, vec![]);
-    let mut dht = client(vec![a.addr], quick());
+    let door = router(vec![a.node()]);
+    let mut dht = client(vec![door.addr], quick());
     let item = keypair().sign(vec![], 1, b"x".to_vec()).unwrap();
     let e = dht.put(item.clone()).unwrap_err();
     assert_eq!(

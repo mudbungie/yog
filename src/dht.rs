@@ -103,6 +103,8 @@ impl Dht {
     }
 
     /// The nodes nearest `target`, closest first — BEP 5's `find_node` walk.
+    /// Never a bootstrap address, and `Err` rather than an empty answer when
+    /// no node past the bootstrap answered (bl-9408).
     pub fn lookup(&mut self, target: NodeId) -> Result<Vec<Node>, String> {
         let out = self.search(target, "find_node")?;
         Ok(out

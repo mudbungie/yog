@@ -158,5 +158,5 @@ fn the_default_cadence_is_the_stated_one() {
     assert_eq!(cadence.poll, Duration::from_secs(15));
     assert_eq!(cadence.publish, Duration::from_hours(1));
     assert_eq!(cadence.quiet, Quiet::held());
-    assert_eq!(mainline().len(), 2);
+    assert_eq!(mainline().len(), 4);
 }

@@ -22,11 +22,15 @@ fn a_walk_stops_at_its_query_cap() {
     let mut dht = client(
         vec![nodes[0].addr],
         Config {
-            max_queries: 1,
+            max_queries: 2,
             ..quick()
         },
     );
-    assert_eq!(dht.lookup(id(0xff)).unwrap(), vec![nodes[0].node()]);
+    // The bootstrap's round and one more: `D`, two hops out, is never reached.
+    assert_eq!(
+        dht.lookup(id(0xff)).unwrap(),
+        vec![nodes[2].node(), nodes[1].node()]
+    );
 }
 
 #[test]
@@ -67,9 +71,10 @@ fn a_zero_round_never_waits() {
 
 #[test]
 fn a_node_that_refuses_is_heard_but_is_no_result() {
-    let mut a = FakeNode::bind(id(0));
+    let mut a = FakeNode::bind(id(1));
     a.serve(vec![], Mood::Refuse, vec![]);
-    let mut dht = client(vec![a.addr], quick());
+    let door = router(vec![a.node()]);
+    let mut dht = client(vec![door.addr], quick());
     assert_eq!(dht.lookup(id(0xff)).unwrap(), vec![]);
 }
 
@@ -83,9 +88,10 @@ fn noise_on_the_socket_is_not_an_answer() {
     stray.serve(vec![], Mood::Stray, vec![]);
     let mut a = FakeNode::bind(id(4));
     a.serve(vec![], Mood::Answer, vec![]);
-    let bootstrap = vec![garbage.addr, anonymous.addr, stray.addr, a.addr];
+    let noisy = [&garbage, &anonymous, &stray, &a];
+    let door = router(noisy.iter().map(|n| n.node()).collect());
     let mut dht = client(
-        bootstrap,
+        vec![door.addr],
         Config {
             alpha: 4,
             ..quick()
