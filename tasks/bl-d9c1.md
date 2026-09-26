@@ -1,7 +1,8 @@
 +++
 title = "yog: DHT walks take ~12 s (lookup) and ~20 s (put/get, at the 64-query cap) from the deployed engine box since the bl-d00f frontier"
 created = 1790394224
-updated = 1790394224
+updated = 1790394368
+claimant = "Urinalyses-Y"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
