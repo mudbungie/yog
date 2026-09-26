@@ -34,6 +34,9 @@ pub(crate) struct Walk {
     k: usize,
     pub(crate) asked: BTreeSet<SocketAddr>,
     replied: BTreeSet<SocketAddr>,
+    /// Door addresses that have answered this walk — the only ones a
+    /// re-ask spends a query on (bl-f519).
+    opened: BTreeSet<SocketAddr>,
     /// Keyed `(distance, address)`: a repeated entry is learned once, one id
     /// at two addresses is two nodes, and iteration is closest first.
     pool: BTreeMap<([u8; 20], SocketAddr), Node>,
@@ -48,6 +51,7 @@ impl Walk {
             k,
             asked: BTreeSet::new(),
             replied: BTreeSet::new(),
+            opened: BTreeSet::new(),
             pool: BTreeMap::new(),
             out: Outcome::default(),
             claims: Vec::new(),
@@ -77,6 +81,13 @@ impl Walk {
             walking: flight.values().filter(|q| !q.door).count(),
             door: flight.values().any(|q| q.door),
         }
+    }
+
+    /// Whether a door address is worth a query: never asked, or it answered.
+    /// A router silent past its deadline has left the door for this walk,
+    /// as a silent node leaves the frontier (bl-f519).
+    pub(crate) fn knocks(&self, addr: SocketAddr) -> bool {
+        !self.asked.contains(&addr) || self.opened.contains(&addr)
     }
 
     /// Whether the door should be asked again: it has named someone, and
@@ -109,7 +120,9 @@ impl Walk {
                     self.pool
                         .insert((near.id.distance(&self.target), near.addr), near);
                 }
-                if !query.door {
+                if query.door {
+                    self.opened.insert(query.addr);
+                } else {
                     self.replied.insert(query.addr);
                     self.out.replies.push((node, r));
                 }

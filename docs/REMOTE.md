@@ -6303,6 +6303,12 @@ three, and a second ask draws fresh ones. The fake DHT's `Rotor` mood is
 that router. The engine's roster (`mainline()`) names the four standard routers —
 `router.bittorrent.com`, `dht.transmissionbt.com`, `router.utorrent.com`,
 `dht.aelitis.com`, all at 6881 — so one silent router is a quarter of it.
+**A re-ask knocks only where the door answered** (bl-f519): a bootstrap
+address silent past its first deadline leaves the door for the rest of the
+walk, as a silent node leaves the frontier. From the deployed engine box the
+roster resolves to five addresses of which three never answer, so re-asking
+all five spent three of every five door queries on nothing — in the walks
+that ended dark, most of the cap (§13.7 ruling 3).
 
 **Built (bl-4263): the engine's loop, `src/wire/rendezvous`, and the two
 item formats the client side mirrors.** The mint grows `rendezvous.key`
@@ -6686,6 +6692,47 @@ Open, awaiting operator ruling:
    40 traced puts at α 8 (every one acknowledged by 7 or 8 holders within
    0.6 s), so its cause is not measured; the one `get` miss per run is
    bl-d00f's, unchanged.
+
+   **That zero-acknowledgement `put`, measured: it was a dark walk, not a
+   silent `put`** (bl-f519). Five hundred traced `put`s from the deployed
+   engine box — a throwaway static probe under `/tmp`, deleted after,
+   default `Config`, a fresh client and keypair per `put`, one run of 100
+   and one of four clients × 100 — logged every holder (address, token
+   age, send, reply or deadline, transaction id) and, for any walk with
+   fewer than four token holders, every query of the walk. The holders
+   were not the problem: of 3,949 `put` queries 3,809 were acknowledged,
+   93 went unanswered and 47 were refused — 42 of them `203 invalid token`,
+   uncorrelated with the token's age (mean 4.0 s since the holder's `get`
+   reply, against 3.7 s for the acknowledged) — and no reply was matched to
+   the wrong query (17 came from another port of the asked host, under the
+   right transaction). Every failure was in the walk. Three of the 500 ended at ~11.4 s at the query cap: two with no
+   node answering (the dark `Err`), and one whose only answer was a
+   `204 Unknown query type` — an `Ok` walk with no token holder, so `put`
+   sent nothing and reported *no DHT node stored the item*, the symptom
+   bl-d9c1 saw twice in 70. Its trace names the cause: the roster resolves
+   to five addresses from that box, two answer (each naming one node) and
+   three never do, and the door re-asked all five every round — 50 of the
+   walk's 67 queries went to the door, 30 of them to the three silent
+   routers, leaving 17 for the random seeds, all of which were silent. The
+   fix is the frontier's own rule applied to the door (§13.2): a re-ask
+   knocks only at addresses that answered, so a round costs two queries
+   instead of five; and a `put` that reached no token holder now says so
+   (*no DHT node near T offered a write token*) instead of the silent-put
+   message it used to borrow.
+
+   | build | `put`s | failed | of which no token holder | acks (count of `put`s) | median, p90 |
+   |---|---|---|---|---|---|
+   | before (α 8, window) | 500 | 3 (0.6%) | 1 | 8: 369, 7: 107, 6: 14, 5: 2, 4: 2, 3: 1, 2: 1, 1: 1 | 7.7 s, 9.7 s |
+   | bl-f519 (door sheds silent routers) | 400 | **0** | 0 | 8: 301, 7: 85, 6: 12, 5: 1, 2: 1 | 8.3 s, 10.4 s |
+
+   After the fix 220 of the 400 walks re-asked the door at least once and
+   one re-asked it 14 times (33 door queries; 75 under the old rule, past
+   the cap). The failure was rare enough that 0 in 400 against 3 in 500 is
+   not by itself significant; the trace, and the fake-DHT test that ends
+   dark under the old door and converges under the new
+   (`a_silent_router_leaves_the_door_after_its_first_deadline`), carry the
+   argument. Walks are about half a second slower at the median, because
+   the queries the door no longer burns are spent walking.
 
 ### 13.8 What bl-a9b0 and bl-0da2 measured
 
