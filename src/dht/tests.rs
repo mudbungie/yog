@@ -2,7 +2,7 @@
 //! real [`Udp`] transport — and against two stand-in transports for the
 //! socket failures loopback will not produce on demand.
 
-mod fake;
+pub(crate) mod fake;
 mod items;
 mod walks;
 

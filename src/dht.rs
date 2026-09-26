@@ -126,4 +126,4 @@ pub(crate) fn random(buf: &mut [u8]) -> Result<(), String> {
 }
 
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;

@@ -128,5 +128,6 @@ fn founded(dir: &Path) -> Result<(), String> {
 /// one fact this file is the home of, and stating it is the whole act.
 pub(crate) fn state(dir: &Path, address: &str) -> Result<(), String> {
     std::fs::write(dir.join(ADDRESS), format!("{address}\n"))
-        .map_err(|e| format!("{}: {e}", dir.join(ADDRESS).display()))
+        .map_err(|e| format!("{}: {e}", dir.join(ADDRESS).display()))?;
+    super::rendezvous_for(dir, address)
 }

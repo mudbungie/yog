@@ -371,6 +371,14 @@ rustls = { version = "0.23", default-features = false, features = ["ring", "std"
 # list and nothing else. bencode and the KRPC shapes are in-house (`src/dht`),
 # and the DHT client is a pure client over std UDP — no node, no listener.
 ring = "0.17"
+# The REMOTE §13.3 punch (bl-4263; operator ruling 2026-09-23, §13.7 ruling 1):
+# `SO_REUSEADDR` and `SO_REUSEPORT` on the sockets a TCP simultaneous open binds
+# to one port, which std does not expose. The one approved new dependency —
+# pure Rust over `libc`, no C toolchain, MIT OR Apache-2.0 (no new license
+# value), exact-pinned. The `all` feature is where `set_reuse_port` lives; the
+# alternative was `setsockopt` in `sys.rs`, refused because rule 3's residents
+# run once at the process edge and these run per connection.
+socket2 = { version = "=0.6.5", default-features = false, features = ["all"] }
 serde_json = "1"
 thiserror = "2"
 

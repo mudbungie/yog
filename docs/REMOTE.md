@@ -6249,7 +6249,32 @@ for up to a round per hop, so the hourly republish and the 15-second poll
 run on the thread §13.4 gives them, never on a request path. What the suite
 measures is loopback: a fake DHT of one thread per node, scripted routing
 and a BEP 44 store that checks what a real node checks. **A walk against
-the live mainline is unmeasured** and is bl-4263's first act.
+the live mainline is still unmeasured**: bl-4263 ran it once and the box's
+own egress answered for the commons (§13.7 ruling 3); bl-5d8d carries it to
+the deployed engine box.
+
+**Built (bl-4263): the engine's loop, `src/wire/rendezvous`, and the two
+item formats the client side mirrors.** The mint grows `rendezvous.key`
+(a 32-byte ed25519 seed, hex) and `pairing.salt` (32 random bytes, hex)
+beside `ca.pem` — for a box whose `address` names a host other than
+loopback, and only on the box that founded the trust root. Everything else
+both ends need is HKDF-SHA256 over the pairing salt (salt `yog rendezvous`,
+one info label each): `presence salt` and `inbox salt` are the DHT salts the
+two items are filed under, `seal key` is the ChaCha20-Poly1305 key both are
+sealed with, and `inbox key` is a second ed25519 **seed** — the inbox is
+signed under a keypair *derived from the pairing salt*, so a client needs no
+keypair of its own to write it and the engine holds no client key to poll
+it. Presence lives at `(engine public key, presence salt)`; the inbox at
+`(inbox public key, inbox salt)`. A sealed item is `nonce(12) ‖ ciphertext ‖
+tag(16)`; the presence plaintext is one endpoint list, a call's is an
+8-byte big-endian nonce then one; an endpoint list is a count byte and per
+endpoint a family byte (`4`/`6`), the address bytes and a big-endian port.
+The engine remembers the last nonce it punched, so one call is one punch
+and a poll that reads the same item again is quiet. Presence today carries
+the box's **route-local** addresses at the punch port — the direct, LAN and
+port-preserving cases — and not the observed one, which the DHT's own
+replies could reflect (BEP 42) and which bl-efae adds; the loop publishes
+what it can prove and says so.
 
 **The material grows three facts, all minted out of channel** (§1.4's posture
 byte for byte): an ed25519 rendezvous keypair per engine, one per client, and
@@ -6317,11 +6342,19 @@ cares which end's SYN won.
 expose. The first cut deferred this ruling behind a criterion; the criterion
 is spent, and the choice is the same two doors: a `socket2` dependency
 (rule 6: explicit approval required) or `setsockopt` beside the four effects
-in `sys.rs` (rule 3: a location-rule amendment). **Recommended: `socket2`** —
-pure Rust over libc, no C toolchain, one lockfile line, and it dissolves a
-rule-3 widening for calls that, unlike the four residents, run per-connection
-at runtime rather than once at the process edge. Awaiting the ruling either
-way (§13.7).
+in `sys.rs` (rule 3: a location-rule amendment). **Ruled: `socket2`**
+(operator, 2026-09-23; §13.7 ruling 1) — pure Rust over libc, no C
+toolchain, one lockfile line, and it dissolves a rule-3 widening for calls
+that, unlike the four residents, run per-connection at runtime rather than
+once at the process edge. `src/wire/rendezvous/punch.rs` is where the two
+options are set: a listener per family on the punch port and, per target, a
+third socket bound to the same port that connects — every stream that lands
+inside the window is served, because two hosts that can each reach the
+other's listener form two connections and which one the peer keeps is the
+peer's choice, so the engine serves all and lets the unspoken ones die in
+the handshake. The punch port is chosen by the kernel once per run and
+published; a fixed number was a second file for a fact the presence item
+already carries.
 
 ### 13.4 Held connections — §10's criterion is met
 
@@ -6421,8 +6454,13 @@ Rejected, with the rulings that decided them:
 
 Open, awaiting operator ruling:
 
-1. **`socket2` versus `sys.rs`** for source-port reuse (§13.3; `socket2`
-   recommended). This is the one gate on starting the punch work.
+1. **`socket2` versus `sys.rs`** for source-port reuse (§13.3) — **ruled
+   `socket2`, 2026-09-23**, the one approved exception to rule 6's
+   zero-new-dependencies line: `socket2 =0.6.5` with the `all` feature (which
+   is where `set_reuse_port` lives), MIT OR Apache-2.0, no new license value
+   and no new advisory, pinned exact in the lockfile. The `sys.rs` door was
+   refused for the reason §13.3 gave: the four residents there run once at
+   the process edge, and these calls run per connection.
 2. **Where the DHT client lives.** Each component reimplements the wire by
    §8's no-shared-crate rule — but that rule guards the *protocol authority*,
    and a DHT client is substrate, not protocol. Recommended: build it inside
@@ -6441,8 +6479,19 @@ Open, awaiting operator ruling:
    costs. **Still open, now with a number**: reimplement per component is
    the recommendation this measurement supports; the ruling is the
    operator's.
-3. **Cadence defaults** (15 s poll, hourly republish, 25 s ping) — stated so
-   they can be wrong in public; revisit on evidence, not taste.
+3. **Cadence defaults** (15 s poll, hourly republish, 25 s ping; and the
+   punch's 20 s window, 2 s per SYN, 300 ms linger after the first stream) —
+   stated so they can be wrong in public; revisit on evidence, not taste.
+   **The `dht::Config` evidence is still owed.** bl-4263 ran the first live
+   walk from the development box under four configurations (BEP 5 defaults,
+   α = 5, a 1 s round, 128 queries): every bootstrap node was silent for the
+   whole round every time, so each verb failed in exactly one round — 2.0 s
+   at the default, 1.0 s at the short one — and a raw KRPC `ping` sent to
+   three bootstrap nodes from outside yog answered nothing either. That is
+   the box's egress dropping UDP/6881, not the client, whose walk the suite
+   measures in milliseconds against its fake node; bl-5d8d runs the same
+   walk from the deployed engine box and records the numbers here. The
+   defaults stand untuned until then.
 
 ### 13.8 What bl-a9b0 and bl-0da2 measured
 

@@ -124,6 +124,14 @@ recorded verbatim in the rule — read it before assuming a rule is absolute.**
    names a target by SHA-1, both of which `ring` — the provider rustls names
    above — already ships, so the manifest gained a line and the lockfile a
    dependency edge: no crate, no license and no advisory.
+   **`socket2` is a DIRECT dependency since bl-4263** (operator ruling
+   2026-09-23, REMOTE §13.7 ruling 1): the punch needs `SO_REUSEADDR` and
+   `SO_REUSEPORT` on every socket it binds, std exposes neither, and the
+   alternative was `setsockopt` beside the four effects rule 3 confines to
+   `sys.rs` — which are once-at-the-process-edge acts, where these run per
+   connection at runtime. Pinned `=0.6.5` with `features = ["all"]` (the
+   feature `set_reuse_port` lives behind), pure Rust over `libc`, MIT OR
+   Apache-2.0: no new license value, no advisory, one lockfile entry.
    `deny.toml` still bans
    `openssl-sys` AND `native-tls`, which was always the standard's point — a C
    toolchain dep and a non-portable system bridge, either of which breaks the

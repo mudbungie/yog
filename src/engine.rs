@@ -61,6 +61,7 @@ pub struct Engine {
     /// and names the address. Held so it lives as long as the engine and stops
     /// when it drops.
     _wire: crate::wire::server::Listener,
+    _rendezvous: Option<crate::wire::rendezvous::Rendezvous>,
     _sentry: Sentry,
     _pilot: Pilot,
     /// **The world's one-engine exclusion** ([`sole`], bl-1d9b), declared last
@@ -171,11 +172,19 @@ impl Engine {
         // gesture inbox while looking healthy — which is worse than no engine,
         // because the operator cannot see it. The refusal is returned rather
         // than printed, since one caller owns the saying and the exit code.
-        let wire = crate::wire::listen(
-            world,
-            Arc::new(crate::wire::intake::Intake::new(Arc::clone(&intake)))
-                as Arc<dyn crate::wire::server::Answerer>,
+        let answerer = Arc::new(crate::wire::intake::Intake::new(Arc::clone(&intake)))
+            as Arc<dyn crate::wire::server::Answerer>;
+        let wire = crate::wire::listen(world, Arc::clone(&answerer), presence.clone())
+            .map_err(|reason| format!("wire: {reason}"))?;
+        // The punched wire's engine end (REMOTE §13, bl-4263): a second door
+        // into the same answerer, started only where the mint grew rendezvous
+        // material — a loopback-only box starts no thread (REMOTE §13.4).
+        let rendezvous = crate::wire::rendezvous::start(
+            &crate::wire::material::dir(world),
+            answerer,
             presence,
+            Arc::clone(&clock),
+            crate::wire::rendezvous::mainline(),
         )
         .map_err(|reason| format!("wire: {reason}"))?;
         // **The engine says what it bound** (REMOTE §8, bl-e058). A `:0` in
@@ -236,6 +245,7 @@ impl Engine {
             _worker: worker,
             _consumer: consumer,
             _wire: wire,
+            _rendezvous: rendezvous,
             _sentry: sentry,
             _pilot: pilot,
             _sole: sole,

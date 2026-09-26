@@ -13,10 +13,10 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread::JoinHandle;
 use std::time::Duration;
 
-pub(super) const TOKEN: &[u8] = b"tok";
+pub(crate) const TOKEN: &[u8] = b"tok";
 
 #[derive(Clone, Copy)]
-pub(super) enum Mood {
+pub(crate) enum Mood {
     Answer,
     Silent,
     Garbage,
@@ -27,16 +27,16 @@ pub(super) enum Mood {
     Stray,
 }
 
-pub(super) struct FakeNode {
+pub(crate) struct FakeNode {
     socket: Option<UdpSocket>,
-    pub(super) addr: SocketAddr,
-    pub(super) id: NodeId,
+    pub(crate) addr: SocketAddr,
+    pub(crate) id: NodeId,
     stop: Arc<AtomicBool>,
     thread: Option<JoinHandle<()>>,
 }
 
 impl FakeNode {
-    pub(super) fn bind(id: NodeId) -> FakeNode {
+    pub(crate) fn bind(id: NodeId) -> FakeNode {
         let socket = UdpSocket::bind("127.0.0.1:0").unwrap();
         socket
             .set_read_timeout(Some(Duration::from_millis(20)))
@@ -51,14 +51,14 @@ impl FakeNode {
         }
     }
 
-    pub(super) fn node(&self) -> Node {
+    pub(crate) fn node(&self) -> Node {
         Node {
             id: self.id,
             addr: self.addr,
         }
     }
 
-    pub(super) fn serve(&mut self, peers: Vec<Node>, mood: Mood, items: Vec<Mutable>) {
+    pub(crate) fn serve(&mut self, peers: Vec<Node>, mood: Mood, items: Vec<Mutable>) {
         let socket = self.socket.take().unwrap();
         let (id, stop) = (self.id, Arc::clone(&self.stop));
         self.thread = Some(std::thread::spawn(move || {

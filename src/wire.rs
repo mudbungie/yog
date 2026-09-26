@@ -146,3 +146,11 @@ impl Listening {
         self.bound.get().cloned()
     }
 }
+
+/// The punched wire's engine end (REMOTE §13, bl-4263): presence, the inbox
+/// poll, the punch, and held-connection serving. Declared here, after
+/// everything that was in the file before it, for [`Listening`]'s own reason:
+/// declared above `mod tests;` it shifted every byte below and llvm-cov drew
+/// the phantom uncovered region onto `Listening`'s header (measured, one
+/// line, 99.99%).
+pub mod rendezvous;

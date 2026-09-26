@@ -9,6 +9,7 @@
 //! handshake.
 
 use super::*;
+use rustls::pki_types::CertificateDer;
 
 /// **An unauthenticated connection gets a TLS refusal, not a yog reply**
 /// (REMOTE §4): a peer holding no client certificate never reaches the

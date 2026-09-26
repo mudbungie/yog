@@ -164,7 +164,7 @@ fn report(dir: &Path, address: &str) {
     println!(
         "yog {SUBCMD}: {} holds {}",
         dir.display(),
-        super::super::artifacts().join(", ")
+        super::super::artifacts(address).join(", ")
     );
     println!("  the engine binds and a local seat dials {address}");
     println!(

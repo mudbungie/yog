@@ -159,7 +159,7 @@ fn an_identity_the_registry_would_refuse_is_refused_here() {
         assert!(refusal.contains(LOCAL), "{name:?} → {refusal}");
         assert_eq!(
             std::fs::read_dir(tmp.path()).expect("dir").count(),
-            super::super::artifacts().len(),
+            super::super::artifacts(crate::test_support::wire::EPHEMERAL).len(),
             "{name:?} wrote something"
         );
     }

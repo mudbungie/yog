@@ -111,7 +111,7 @@ pub fn mint(dir: &Path, address: &str, also: &[String], force: bool) -> Result<(
     std::fs::create_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
     private(dir, 0o700);
     if force {
-        for name in artifacts() {
+        for name in artifacts(address) {
             let _ = std::fs::remove_file(dir.join(name));
         }
     }
@@ -135,17 +135,35 @@ pub fn mint(dir: &Path, address: &str, also: &[String], force: bool) -> Result<(
         std::fs::write(dir.join(ADDRESS), format!("{address}\n"))
             .map_err(|e| format!("{}: {e}", dir.join(ADDRESS).display()))?;
     }
-    Ok(())
+    rendezvous_for(dir, address)
 }
 
-/// Every file the mint writes — the rotation's delete list, and the summary a
-/// caller prints.
-pub fn artifacts() -> Vec<String> {
+/// **The rendezvous material grows with a stated host** (REMOTE §13.2, §13.4;
+/// bl-4263). A box only its own seat dials — `address` on loopback — has
+/// nothing to rendezvous for and must start no thread, so the ed25519 seed
+/// and the pairing salt are minted exactly when the address names another
+/// machine's way in, and only on the box that founded the trust root: a
+/// client box holds the engine's public key, not a seed of its own. Called
+/// from every act that writes the address, so the two facts cannot drift.
+pub(crate) fn rendezvous_for(dir: &Path, address: &str) -> Result<(), String> {
+    if host_of(address) == LOOPBACK || !dir.join(CA_KEY).is_file() {
+        return Ok(());
+    }
+    super::rendezvous::material::mint(dir)
+}
+
+/// Every file a mint aimed at `address` writes — the rotation's delete list,
+/// and the summary a caller prints. The rendezvous pair rides only a stated
+/// host ([`rendezvous_for`]).
+pub fn artifacts(address: &str) -> Vec<String> {
     let mut names = vec![ANCHORS.to_owned(), CA_KEY.to_owned(), ADDRESS.to_owned()];
     for role in LEAVES {
         let leaf = role.leaf();
         names.push(format!("{leaf}.pem"));
         names.push(format!("{leaf}.key"));
+    }
+    if host_of(address) != LOOPBACK {
+        names.extend(super::rendezvous::material::artifacts());
     }
     names
 }
@@ -208,13 +226,13 @@ fn leaf_present(dir: &Path, role: Role) -> bool {
 /// through the ambient umask. Unix-only because the mode bits are; elsewhere
 /// the directory's own inheritance is what there is.
 #[cfg(unix)]
-fn private(path: &Path, mode: u32) {
+pub(crate) fn private(path: &Path, mode: u32) {
     use std::os::unix::fs::PermissionsExt;
     let _ = std::fs::set_permissions(path, std::fs::Permissions::from_mode(mode));
 }
 
 #[cfg(not(unix))]
-fn private(_path: &Path, _mode: u32) {}
+pub(crate) fn private(_path: &Path, _mode: u32) {}
 
 /// The `yog wire-certs` verb — the operator's explicit act over [`mint`].
 pub mod verb;

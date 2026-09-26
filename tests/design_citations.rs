@@ -135,7 +135,13 @@ const FOREIGN: &[&str] = &[
     // "Deliberate interpretations" and has §13.0, §13.1 and §13.3 only, which
     // the sibling test keeps honest: the day it grows a §13.2 or §13.5, these
     // entries fail rather than masking it.
-    "13.2", "13.5",
+    // §13.4, §13.7 and §13.8 join them (bl-4263): held connections and the
+    // severability-by-material rule, the open rulings (socket2 decided; the
+    // cadence defaults), and what the two NAT trials measured — cited
+    // prefixed ("REMOTE §13.4") from `wire::rendezvous` and the listener's
+    // held-connection mode. The same sibling test keeps DESIGN §13 at its
+    // three subsections.
+    "13.2", "13.4", "13.5", "13.7", "13.8",
 ];
 
 /// Parse a section key (`digits`, optionally `.digits`) starting at `i`;

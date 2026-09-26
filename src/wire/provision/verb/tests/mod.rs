@@ -170,7 +170,7 @@ fn the_leaf_act_issues_once_and_writes_nothing_else() {
         .filter_map(|e| Some(e.ok()?.file_name().to_string_lossy().into_owned()))
         .collect();
     left.sort();
-    let mut named = super::super::artifacts();
+    let mut named = super::super::artifacts(crate::test_support::wire::EPHEMERAL);
     named.push("phone.key".to_owned());
     named.push("phone.pem".to_owned());
     named.sort();
