@@ -8,6 +8,7 @@ mod frontier;
 mod items;
 mod observed;
 mod walks;
+mod window;
 
 use super::*;
 use fake::{FakeNode, Mood};
@@ -18,7 +19,7 @@ fn quick() -> Config {
     Config {
         alpha: 3,
         k: 3,
-        round: Duration::from_millis(300),
+        deadline: Duration::from_millis(300),
         max_queries: 64,
     }
 }
@@ -68,11 +69,11 @@ fn serve(nodes: &mut [FakeNode; 4], items_on_c: Vec<Mutable>, items_on_d: Vec<Mu
 }
 
 #[test]
-fn the_defaults_are_bep5_and_the_measured_round() {
+fn the_defaults_are_the_measured_window_and_deadline() {
     let c = Config::default();
     assert_eq!(
-        (c.alpha, c.k, c.round, c.max_queries),
-        (3, 8, Duration::from_secs(1), 64)
+        (c.alpha, c.k, c.deadline, c.max_queries),
+        (8, 8, Duration::from_secs(1), 64)
     );
 }
 

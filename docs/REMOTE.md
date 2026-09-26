@@ -6240,8 +6240,8 @@ interface is the module root:
 - `Dht::new(transport, bootstrap, config)` — a `Box<dyn Transport>` (the
   std UDP socket, or a stand-in), the bootstrap addresses **as already
   resolved socket addresses** (resolving the mainline's bootstrap hostnames
-  is the caller's act, not the client's), and a `Config` of α, K, the wait
-  per round and a cap on queries per walk — every duration a test can
+  is the caller's act, not the client's), and a `Config` of α (the window), K,
+  the deadline per query and a cap on queries per walk — every duration a test can
   shorten. The client's own id is random per run; nobody routes by it.
 - `lookup(target) → Vec<Node>` — the nodes nearest a 160-bit id, closest
   first; `get(key, salt) → Option<Mutable>` — the newest item under an
@@ -6263,14 +6263,21 @@ interface is the module root:
   answers noise is skipped, never fatal.
 
 A walk costs at most `max_queries` datagrams and blocks the calling thread
-for up to a round per hop, so the hourly republish and the 15-second poll
+until its window drains — each query waits at most its own deadline — so the hourly republish and the 15-second poll
 run on the thread §13.4 gives them, never on a request path. What the suite
 measures is loopback: a fake DHT of one thread per node, scripted routing
 and a BEP 44 store that checks what a real node checks. **The walk against
 the live mainline is measured** (bl-5d8d, from the deployed engine box;
 §13.7 ruling 3 holds the numbers): a `find_node` walk took about 7 s at the
-1 s round, and since the frontier (below, bl-d00f) about 12 s, with `put`
-and `get` near 20 s at the query cap. **The bootstrap is asked `find_node` whatever the walk's verb**
+1 s round, since the frontier (below, bl-d00f) about 12 s, with `put`
+and `get` near 20 s at the query cap — and since the **sliding window**
+(bl-d9c1) about 6.5 s, with `put` and `get` about 7.5 s. **The walk is a
+window, not lockstep rounds**: up to α queries in the air, each with its
+own deadline (1 s, the measured p99), and the next node is asked the
+moment any of them answers or times out, reading the one socket with a
+timeout equal to the nearest outstanding deadline. A silent node costs its
+own slot for one deadline and never delays an answer beside it, and the
+walk ends without waiting out a query no longer on the frontier. **The bootstrap is asked `find_node` whatever the walk's verb**
 (bl-f6e1): the mainline's routers answer `find_node` and never BEP 44's
 `get`, so `get` and `put` are one walk that asks the bootstrap `find_node`
 and every node it opens onto `get` — the tokens `put` spends come from
@@ -6287,7 +6294,7 @@ repeated entry is learned once, and one id at two addresses is two nodes.
 asked and silent, one that answered only an error, and one this socket cannot
 send to (a v6 address from the v4 socket the engine binds) all leave it, so
 the walk ends when the K closest responsive nodes have been asked — or at
-`max_queries` — and a refused send spends no query and no slot in its round.
+`max_queries` — and a refused send spends no query and no slot in the window.
 **And the door is asked again** whenever the frontier runs dry with fewer
 than K replies past it, as long as it has ever named anyone, bounded by the
 same cap: the one router that answers from the deployed engine box names one
@@ -6645,6 +6652,40 @@ Open, awaiting operator ruling:
    64-query cap — which, contrary to bl-5d8d's reading above, now binds.
    Every silent query costs a whole synchronous round; that is the lever
    for the latency, filed as its own ball, not taken here.
+
+   **The lever, taken** (bl-d9c1). The lockstep round became a sliding
+   window (§13.2): α queries in the air, each with its own 1 s deadline,
+   and a slot refilled the moment its query answers or times out. The
+   frontier and termination rules above are unchanged, except that a node
+   in the air stays on the frontier until its deadline, and the door's
+   queries hold no α slot. Measured the same way — ten trials per verb from
+   the deployed engine box, a throwaway static probe under `/tmp`, deleted
+   after — at α 3 and α 8, and α 8 twice more (the third run with trace
+   lines in a throwaway build):
+
+   | build | `lookup` | `put` | `get` (after a good `put`) | acks |
+   |---|---|---|---|---|
+   | bl-d00f (lockstep, α 3), from above | 10/10, 12.6 s, 18.1 s | 10/10, 19.2 s, 21.3 s | 9/10 hits, 16.5 s, 20.7 s | 8,8,7,7,8,8,7,8,7,7 |
+   | bl-d9c1 window, α 3 | 10/10, 7.8 s, 13.3 s | 9/10, 11.4 s, 16.9 s | 9/9 hits, 11.8 s, 12.7 s | 8,8,8,8,8,7,8,8,8 |
+   | **bl-d9c1 window, α 8 (the default)** | **10/10**, 6.7 s, 8.1 s | **10/10**, 7.7 s, 8.9 s | **9/10 hits**, 7.5 s, 9.8 s | 8,8,8,7,8,7,7,8,8,8 |
+   | the same, second run | 10/10, 6.5 s, 8.8 s | 9/10, 6.7 s, 12.7 s | 9/9 hits, 7.8 s, 9.5 s | 8,8,8,8,8,8,7,7,8 |
+   | the same, traced | 10/10, 6.5 s, 10.9 s | 10/10, 7.5 s, 8.2 s | 9/10 hits, 6.8 s, 8.0 s | 8,8,8,8,8,8,7,8,8,8 |
+
+   (Median, then p90.) **The window alone cut every verb by 30-40%, and α 8
+   cut `put` and `get` by about as much again**: with ~40% of queried nodes
+   silent a slot is held a whole deadline two queries in five, so a walk's
+   pace is its window's width over the mean slot time, and the walks still
+   send close to the cap (traced: `get` walks 48-64 queries, `find_node`
+   23-64) — so the pace is the time. A typical `get` now fits inside the
+   15 s inbox poll with room to spare. **α moved from BEP 5's 3 to 8**,
+   pinned by `the_defaults_are_the_measured_window_and_deadline`; K, the
+   1 s deadline and the 64-query cap stay — the cap still nearly binds, and
+   nothing here measured a different one. A `put` whose walk succeeded and
+   whose flight drew no acknowledgement and no refusal was seen once in
+   each of the α 3 run and the second α 8 run, and not at all in a further
+   40 traced puts at α 8 (every one acknowledged by 7 or 8 holders within
+   0.6 s), so its cause is not measured; the one `get` miss per run is
+   bl-d00f's, unchanged.
 
 ### 13.8 What bl-a9b0 and bl-0da2 measured
 

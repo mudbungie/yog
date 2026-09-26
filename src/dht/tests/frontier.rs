@@ -88,15 +88,16 @@ fn a_dry_frontier_asks_the_door_again_for_fresh_seeds() {
 }
 
 /// A door that only ever names a dead node is asked again until the query
-/// cap, and the walk is the dark-commons `Err`: two queries a cycle, door and
-/// seed, so a cap of six is three door rounds and never a fourth.
+/// cap, and the walk is the dark-commons `Err`: the dead node is asked once
+/// and waited out once, and every later door ask names only it, so the cap
+/// of six ends the knocking in one deadline and a few loopback answers.
 #[test]
 fn a_door_naming_only_the_dead_is_asked_until_the_cap() {
     let silent = node(0x41, Mood::Silent, vec![]);
     let door = router(vec![silent.node()]);
     let config = Config {
         max_queries: 6,
-        round: Duration::from_millis(100),
+        deadline: Duration::from_millis(100),
         ..quick()
     };
     let mut dht = client(vec![door.addr], config);

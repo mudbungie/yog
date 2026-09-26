@@ -38,6 +38,8 @@ pub(crate) enum Mood {
     /// (bl-d00f): a `Router` whose every `find_node` answer is ONE of its
     /// peers repeated eight times, the next peer on the next query.
     Rotor,
+    /// Answers everything but `put`: offers a token and never spends it.
+    Mute,
 }
 
 pub(crate) struct FakeNode {
@@ -112,6 +114,7 @@ fn run(
             {
                 continue;
             }
+            Mood::Mute if q.get("q").unwrap().as_bytes().unwrap() == b"put" => continue,
             Mood::Rotor => {
                 turn += 1;
                 let one = vec![peers[(turn - 1) % peers.len()]; 8];
@@ -121,7 +124,7 @@ fn run(
             Mood::Refuse => error(&tid, 201, "refused"),
             Mood::Anonymous => reply(&tid, Dict::new()),
             Mood::Stray => reply(b"stray", Dict::from([entry("id", bytes(&id.0))])),
-            Mood::Answer | Mood::Router => answer(&tid, id, peers, &mut items, &q),
+            Mood::Answer | Mood::Router | Mood::Mute => answer(&tid, id, peers, &mut items, &q),
             Mood::Claim(ip) => claim(answer(&tid, id, peers, &mut items, &q), ip),
         };
         socket.send_to(&datagram, from).unwrap();

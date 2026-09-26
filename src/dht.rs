@@ -15,18 +15,20 @@
 //!
 //! Four files under this root, one concern each: `bencode` the encoding,
 //! `krpc` the datagram shapes, `mutable` the signed item, `transport` the
-//! socket seam; `lookup` is the walk, `round` one round of it, and `items` the two BEP
+//! socket seam; `lookup` is the walk, `frontier` its state, `flight` the window of
+//! queries in the air, and `items` the two BEP
 //! 44 verbs over it. Synchronous throughout — `std::net` with socket timeouts, no tokio
 //! (AGENTS.md rule 8) — and every duration is a [`Config`] field a test can
 //! shorten, so the fake DHT the suite runs on loopback UDP answers in
 //! milliseconds where the commons answers in seconds.
 
 pub mod bencode;
+mod flight;
+mod frontier;
 mod items;
 pub mod krpc;
 mod lookup;
 pub mod mutable;
-mod round;
 pub mod transport;
 
 pub use krpc::{Node, NodeId};
@@ -39,16 +41,18 @@ use std::net::SocketAddr;
 use std::time::Duration;
 
 /// The walk's parameters — stated so a test can shrink them and a caller
-/// can widen them. α and K are BEP 5's; the round is measured (REMOTE §13.7
-/// ruling 3): on the live mainline p99 of answers landed inside 0.9 s.
+/// can widen them. K is BEP 5's; the deadline and α are measured (REMOTE
+/// §13.7 ruling 3): on the live mainline p99 of answers landed inside 0.9 s,
+/// and with ~40% of queried nodes silent a window of 8 walked in about half
+/// the time BEP 5's 3 did, losing no result (bl-d9c1).
 #[derive(Clone, Debug)]
 pub struct Config {
-    /// Queries in flight per round.
+    /// Walk queries in the air at once — the sliding window (bl-d9c1).
     pub alpha: usize,
     /// How many closest nodes a walk converges on and a `put` writes to.
     pub k: usize,
-    /// How long one round waits for its answers.
-    pub round: Duration,
+    /// How long one query waits for its answer before its slot is refilled.
+    pub deadline: Duration,
     /// The most queries one walk may send, however the commons answers.
     pub max_queries: usize,
 }
@@ -56,9 +60,9 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Config {
         Config {
-            alpha: 3,
+            alpha: 8,
             k: 8,
-            round: Duration::from_secs(1),
+            deadline: Duration::from_secs(1),
             max_queries: 64,
         }
     }

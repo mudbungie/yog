@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.70](https://github.com/mudbungie/yog/compare/v0.0.69...v0.0.70) - 2026-09-25
+
+### Changes
+
+- DHT walks still end dark at two rounds ~1 in 3 live, so BEP 44 put/get fail ~4 in 10 from the deployed engine box [bl-d00f]
+- hand the rendezvous material to a client — wire-certs writes rendezvous.pub beside pairing.salt and every client leaf, and the §8.4 enrollment envelope carries the engine pubkey and the salt [bl-9043]
+
 ## [0.0.69](https://github.com/mudbungie/yog/compare/v0.0.68...v0.0.69) - 2026-09-25
 
 ### Changes

@@ -61,12 +61,14 @@ fn bep44_walks_past_a_router_that_never_answers_get() {
     router.serve(vec![holder.node()], Mood::Router, vec![]);
     let mut dht = client(vec![router.addr], quick());
 
-    let mut pending = round::Pending::new();
+    let mut flight = flight::Flight::new();
     let target = bencode::Dict::from([bencode::entry("target", bencode::bytes(&item.target().0))]);
-    dht.ask(&mut pending, router.addr, "get", target);
-    let mut heard = 0usize;
-    dht.collect(&mut pending, &mut |_, _| heard += 1).unwrap();
-    assert_eq!(heard, 0, "the router is silent to get");
+    assert!(dht.ask(&mut flight, router.addr, false, "get", target));
+    assert!(
+        dht.land(&mut flight).unwrap().is_none(),
+        "the router is silent to get"
+    );
+    assert!(flight.is_empty());
 
     assert_eq!(dht.put(item.clone()).unwrap(), 1);
     assert_eq!(dht.get(kp.public(), vec![]).unwrap(), Some(item));
