@@ -1,7 +1,8 @@
 +++
 title = "yog: the first live mainline walk — tune dht::Config on evidence from a box whose egress passes UDP/6881"
 created = 1790144363
-updated = 1790144363
+updated = 1790392562
+claimant = "Urinalyses-P"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 
