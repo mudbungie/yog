@@ -1,7 +1,8 @@
 +++
 title = "yog: BEP 44 get/put walk from the bootstrap routers, which never answer get — every live publish and poll is dark in one round"
 created = 1790392847
-updated = 1790392847
+updated = 1790393009
+claimant = "Urinalyses-T"
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
