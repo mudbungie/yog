@@ -6,6 +6,7 @@ use super::item::Presence as Published;
 use super::*;
 use crate::dht::tests::fake::Mood;
 use bench::{bench, loopback, until};
+use std::net::SocketAddr;
 use std::sync::atomic::Ordering::Relaxed;
 use std::time::Duration;
 
@@ -37,6 +38,28 @@ fn presence_is_published_sealed_and_republished_hourly() {
         .expect("walk")
         .expect("republished");
     assert!(again.seq > item.seq, "{} > {}", again.seq, item.seq);
+}
+
+/// The presence a bench over a node of `mood` publishes first.
+fn first_presence(mood: Mood) -> (Vec<SocketAddr>, u16) {
+    let b = bench(mood, None);
+    let stats = b.engine.stats();
+    assert!(until(|| stats.published.load(Relaxed) >= 1, WAIT));
+    let key = b.pairing.keypair().expect("key").public();
+    let item = b.dht().get(key, b.pairing.presence_salt());
+    let item = item.expect("walk").expect("published");
+    let open = Published::open(&b.pairing.seal_key(), &item.value).expect("opens");
+    (open.endpoints, b.port)
+}
+
+#[test]
+fn presence_carries_the_observed_address_at_the_punch_port() {
+    let (endpoints, port) = first_presence(Mood::Claim("203.0.113.7:6881".parse().expect("ip")));
+    let observed = SocketAddr::new("203.0.113.7".parse().expect("ip"), port);
+    assert_eq!(endpoints, vec![loopback(port), observed]);
+    // An observed address that is already a local one is not said twice.
+    let (endpoints, port) = first_presence(Mood::Claim(loopback(6881)));
+    assert_eq!(endpoints, vec![loopback(port)]);
 }
 
 #[test]

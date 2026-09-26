@@ -72,15 +72,17 @@ impl Cycle {
     pub(super) fn run(mut self, stop: &AtomicBool) {
         while !stop.load(Ordering::Relaxed) {
             let now = self.clock.now();
-            if now >= self.next_publish {
-                let outcome = self.publish();
-                count(outcome, &self.stats.published, &self.stats.publish_failures);
-                self.next_publish = now + self.cadence.publish;
-            }
+            // The poll first: its walk is what tells a publish due at the
+            // same moment — the first one, at boot — where the commons sees us.
             if now >= self.next_poll {
                 let outcome = self.poll();
                 count(outcome, &self.stats.polls, &self.stats.poll_failures);
                 self.next_poll = now + self.cadence.poll;
+            }
+            if now >= self.next_publish {
+                let outcome = self.publish();
+                count(outcome, &self.stats.published, &self.stats.publish_failures);
+                self.next_publish = now + self.cadence.publish;
             }
             std::thread::sleep(self.cadence.tick);
         }
@@ -106,14 +108,26 @@ impl Cycle {
         self.dht.as_mut().ok_or_else(|| "no DHT client".to_owned())
     }
 
-    /// Seal and publish presence under the rendezvous key.
+    /// Seal and publish presence under the rendezvous key: the route-local
+    /// addresses, then every address the last walk's nodes agreed they saw
+    /// us at (`Dht::observed`) that is not one of them — all at the punch
+    /// port. The observed PORT is the DHT socket's UDP mapping, not the
+    /// punch port's TCP one, so only the address is taken and port
+    /// preservation is trusted (REMOTE §13.8 measured it at home; a carrier
+    /// that rewrites the port is the case this does not reach).
     fn publish(&mut self) -> Result<(), String> {
+        let observed = self.dht()?.observed();
+        let mut ips = self.advertise.clone();
+        for ip in observed.iter().map(SocketAddr::ip) {
+            if !ips.contains(&ip) {
+                ips.push(ip);
+            }
+        }
         let seq = self.clock.unix().max(self.last_seq + 1);
         let port = self.punch.port();
-        let endpoints = self
-            .advertise
-            .iter()
-            .map(|ip| SocketAddr::new(*ip, port))
+        let endpoints = ips
+            .into_iter()
+            .map(|ip| SocketAddr::new(ip, port))
             .collect();
         let sealed = Published { endpoints }.seal(&self.pairing.seal_key())?;
         let item = self

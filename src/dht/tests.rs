@@ -4,6 +4,7 @@
 
 pub(crate) mod fake;
 mod items;
+mod observed;
 mod walks;
 
 use super::*;

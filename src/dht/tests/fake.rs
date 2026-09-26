@@ -7,11 +7,14 @@
 use super::super::bencode::{Dict, Value, bytes, entry};
 use super::super::krpc::{Node, NodeId};
 use super::super::mutable::Mutable;
-use std::net::{IpAddr, SocketAddr, UdpSocket};
+use std::net::{SocketAddr, UdpSocket};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread::JoinHandle;
 use std::time::Duration;
+use wire::{claim, error, reply, routing};
+
+mod wire;
 
 pub(crate) const TOKEN: &[u8] = b"tok";
 
@@ -25,6 +28,9 @@ pub(crate) enum Mood {
     Anonymous,
     /// Replies under a transaction nobody opened.
     Stray,
+    /// Answers, and says (BEP 42's `ip`) the query came from this address —
+    /// true or not, which is the point: one node's word is only a claim.
+    Claim(SocketAddr),
 }
 
 pub(crate) struct FakeNode {
@@ -98,6 +104,7 @@ fn run(
             Mood::Anonymous => reply(&tid, Dict::new()),
             Mood::Stray => reply(b"stray", Dict::from([entry("id", bytes(&id.0))])),
             Mood::Answer => answer(&tid, id, peers, &mut items, &q),
+            Mood::Claim(ip) => claim(answer(&tid, id, peers, &mut items, &q), ip),
         };
         socket.send_to(&datagram, from).unwrap();
     }
@@ -159,45 +166,4 @@ fn answer(tid: &[u8], id: NodeId, peers: &[Node], items: &mut Vec<Mutable>, q: &
         }
         _ => error(tid, 204, "unknown method"),
     }
-}
-
-/// `nodes` and `nodes6` in compact form, from the peers this node advertises.
-fn routing(peers: &[Node]) -> Dict {
-    let (mut v4, mut v6) = (Vec::new(), Vec::new());
-    for n in peers {
-        match n.addr.ip() {
-            IpAddr::V4(ip) => {
-                v4.extend_from_slice(&n.id.0);
-                v4.extend_from_slice(&ip.octets());
-                v4.extend_from_slice(&n.addr.port().to_be_bytes());
-            }
-            IpAddr::V6(ip) => {
-                v6.extend_from_slice(&n.id.0);
-                v6.extend_from_slice(&ip.octets());
-                v6.extend_from_slice(&n.addr.port().to_be_bytes());
-            }
-        }
-    }
-    Dict::from([entry("nodes", bytes(&v4)), entry("nodes6", bytes(&v6))])
-}
-
-fn reply(tid: &[u8], r: Dict) -> Vec<u8> {
-    Value::Dict(Dict::from([
-        entry("t", bytes(tid)),
-        entry("y", bytes(b"r")),
-        entry("r", Value::Dict(r)),
-    ]))
-    .encode()
-}
-
-fn error(tid: &[u8], code: i64, message: &str) -> Vec<u8> {
-    Value::Dict(Dict::from([
-        entry("t", bytes(tid)),
-        entry("y", bytes(b"e")),
-        entry(
-            "e",
-            Value::List(vec![Value::Int(code), bytes(message.as_bytes())]),
-        ),
-    ]))
-    .encode()
 }

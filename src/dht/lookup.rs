@@ -5,7 +5,9 @@
 //! and a node that stays silent is simply never asked again. Bounded twice
 //! over against a hostile commons: a round ends at its deadline whatever is
 //! still pending, and the walk ends at `max_queries` however many "closer"
-//! nodes the answers keep inventing.
+//! nodes the answers keep inventing. Each node that answers may also say
+//! where it saw the query come from; the walk keeps those claims, one per
+//! answering node, for [`Dht::observed`] to vote on.
 
 use super::Dht;
 use super::bencode::Dict;
@@ -41,6 +43,7 @@ impl Dht {
         let mut asked: BTreeSet<SocketAddr> = BTreeSet::new();
         let mut pool: BTreeMap<[u8; 20], Node> = BTreeMap::new();
         let mut out = Outcome::default();
+        let mut claims = Vec::new();
         let mut sent = 0usize;
         let mut picks = self.bootstrap.clone();
         loop {
@@ -51,7 +54,7 @@ impl Dht {
                 self.ask(&mut pending, addr, q, args.clone());
             }
             self.collect(&mut pending, &mut |addr, message| match message {
-                Message::Reply { r, .. } => {
+                Message::Reply { r, ip, .. } => {
                     let Some(id) = r
                         .get(b"id".as_slice())
                         .and_then(|v| v.as_bytes())
@@ -60,6 +63,7 @@ impl Dht {
                         return;
                     };
                     let node = Node { id, addr };
+                    claims.extend(ip);
                     for near in krpc::nodes_of(&r).into_iter().chain([node]) {
                         pool.entry(near.id.distance(&target)).or_insert(near);
                     }
@@ -80,6 +84,7 @@ impl Dht {
                 break;
             }
         }
+        self.claims = claims;
         if out.replies.is_empty() && out.errors.is_empty() {
             return Err(format!("no DHT node answered {q} for {target}"));
         }

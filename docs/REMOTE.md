@@ -6234,6 +6234,9 @@ interface is the module root:
   being nothing rather than a value; `put(item) → usize` — how many of the K
   closest token holders acknowledged, zero being an error naming the first
   refusal (a stale `seq`, a bad signature) or the silence.
+- `observed() → Vec<SocketAddr>` (bl-efae) — where the last walk's answering
+  nodes said they saw this client (BEP 42's `ip`), voted per family; see the
+  presence paragraph below for the vote and what it does not reach.
 - `Keypair::{generate, from_seed}` mint or reload the rendezvous key,
   `Keypair::sign(salt, seq, value) → Mutable` seals one item under it, and
   `Mutable::{target, verify}` plus `target_of(key, salt)` name where it lives.
@@ -6270,11 +6273,27 @@ tag(16)`; the presence plaintext is one endpoint list, a call's is an
 8-byte big-endian nonce then one; an endpoint list is a count byte and per
 endpoint a family byte (`4`/`6`), the address bytes and a big-endian port.
 The engine remembers the last nonce it punched, so one call is one punch
-and a poll that reads the same item again is quiet. Presence today carries
-the box's **route-local** addresses at the punch port — the direct, LAN and
-port-preserving cases — and not the observed one, which the DHT's own
-replies could reflect (BEP 42) and which bl-efae adds; the loop publishes
-what it can prove and says so.
+and a poll that reads the same item again is quiet. Presence carries the
+box's **route-local** addresses at the punch port — the direct, LAN and
+port-preserving cases — **and, since bl-efae, the observed one**. The commons
+already reflects it: a KRPC reply may carry the querier's address as that
+node saw it (BEP 42's top-level `ip`, six or eighteen compact bytes), and
+the walk keeps every answering node's claim. `Dht::observed() →
+Vec<SocketAddr>` is the vote over the last walk's claims, per address
+family: the endpoint the most nodes named, and nothing on a tie, because one
+node's `ip` is one node's claim and a lone liar must outvote nobody. The
+vote is over the whole endpoint — nodes that agree on the address and not
+the port are seeing a mapping that moves per destination, and no port of it
+is ours. Publish takes the observed **address**, drops it where it is
+already a local one, and puts it at the **punch port**: the observed port is
+the DHT socket's UDP mapping, not the punch port's TCP one, so this trusts
+port preservation, which §13.8 measured on the residential NAT. **The
+carrier case stays open**: §13.8's cellular path rewrote the port, and an
+observed address at the punch port does not reach a NAT that does that. The
+loop polls before it publishes when both are due, so even the first
+publish has a walk behind it. **The item format did not change** — presence
+was always an endpoint list, and the observed address is one more entry in
+it; a client that reads the list reads it.
 
 **The material grows three facts, all minted out of channel** (§1.4's posture
 byte for byte): an ed25519 rendezvous keypair per engine, one per client, and
@@ -6549,7 +6568,10 @@ usable, and is not advertised by the phone at all** — the translator mints it,
 and only the peer receiving the packets can read it off the wire. That is a
 design fact, not a curiosity: it is precisely why §13.2 makes presence carry
 the *observed* endpoint and not the local one, and on a cellular path the
-observed endpoint is the only one there is.
+observed endpoint is the only one there is. **Since bl-efae the engine
+publishes it** — the address the DHT's own replies agree they saw, at the
+punch port; for the phone's half, a client writing its inbox item wants the
+same vote, and it is the port rewrite below that this does not yet answer.
 
 **The shape of the carrier's port allocation, described and not classified.**
 The engine box's view of the phone was stable: one external port, unchanged
