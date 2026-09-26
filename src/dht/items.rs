@@ -6,7 +6,6 @@
 //! only once its signature verifies under the key the caller asked for.
 
 use super::Dht;
-use super::bencode::{Dict, bytes, entry};
 use super::krpc::{Message, Node};
 use super::lookup::Pending;
 use super::mutable::{Mutable, target_of};
@@ -16,11 +15,7 @@ impl Dht {
     /// held one, or none held one that verifies.
     pub fn get(&mut self, key: [u8; 32], salt: Vec<u8>) -> Result<Option<Mutable>, String> {
         let target = target_of(&key, &salt);
-        let out = self.search(
-            target,
-            "get",
-            Dict::from([entry("target", bytes(&target.0))]),
-        )?;
+        let out = self.search(target, "get")?;
         Ok(out
             .replies
             .iter()
@@ -33,11 +28,7 @@ impl Dht {
     /// a stale sequence number, say — or the silence.
     pub fn put(&mut self, item: Mutable) -> Result<usize, String> {
         let target = item.target();
-        let out = self.search(
-            target,
-            "get",
-            Dict::from([entry("target", bytes(&target.0))]),
-        )?;
+        let out = self.search(target, "get")?;
         let holders: Vec<(Node, Vec<u8>)> = out
             .replies
             .iter()

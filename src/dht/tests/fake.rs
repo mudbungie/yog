@@ -31,6 +31,9 @@ pub(crate) enum Mood {
     /// Answers, and says (BEP 42's `ip`) the query came from this address —
     /// true or not, which is the point: one node's word is only a claim.
     Claim(SocketAddr),
+    /// A mainline bootstrap router as measured (REMOTE §13.7 ruling 3):
+    /// answers `find_node`, silent to BEP 44's `get` and `put`.
+    Router,
 }
 
 pub(crate) struct FakeNode {
@@ -99,11 +102,12 @@ fn run(
         let tid = q.get("t").unwrap().as_bytes().unwrap().to_vec();
         let datagram = match mood {
             Mood::Silent => continue,
+            Mood::Router if q.get("q").unwrap().as_bytes().unwrap() != b"find_node" => continue,
             Mood::Garbage => b"not bencode".to_vec(),
             Mood::Refuse => error(&tid, 201, "refused"),
             Mood::Anonymous => reply(&tid, Dict::new()),
             Mood::Stray => reply(b"stray", Dict::from([entry("id", bytes(&id.0))])),
-            Mood::Answer => answer(&tid, id, peers, &mut items, &q),
+            Mood::Answer | Mood::Router => answer(&tid, id, peers, &mut items, &q),
             Mood::Claim(ip) => claim(answer(&tid, id, peers, &mut items, &q), ip),
         };
         socket.send_to(&datagram, from).unwrap();

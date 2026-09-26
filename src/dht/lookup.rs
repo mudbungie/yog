@@ -10,7 +10,7 @@
 //! answering node, for [`Dht::observed`] to vote on.
 
 use super::Dht;
-use super::bencode::Dict;
+use super::bencode::{Dict, bytes, entry};
 use super::krpc::{self, Message, Node, NodeId};
 use std::collections::{BTreeMap, BTreeSet};
 use std::net::SocketAddr;
@@ -28,15 +28,15 @@ pub(crate) struct Outcome {
 pub(crate) type Pending = BTreeMap<Vec<u8>, SocketAddr>;
 
 impl Dht {
-    /// Walk toward `target` asking `q` with `args` of every node on the way.
+    /// Walk toward `target` asking `q` of every node on the way — except the
+    /// bootstrap, which is asked `find_node` whatever `q` is. The mainline's
+    /// routers answer `find_node` and never BEP 44's `get` (REMOTE §13.7
+    /// ruling 3, bl-f6e1), so a walk that asked them `q` was dark in one
+    /// round; the bootstrap is a door into the keyspace, and every node it
+    /// opens onto is asked `q`. One walk, not a lookup and then a second one.
     /// `Err` is a dark commons — nobody answered at all — or the socket
     /// itself failing; a walk that drew only errors is an `Ok` with none.
-    pub(crate) fn search(
-        &mut self,
-        target: NodeId,
-        q: &str,
-        args: Dict,
-    ) -> Result<Outcome, String> {
+    pub(crate) fn search(&mut self, target: NodeId, q: &str) -> Result<Outcome, String> {
         if self.bootstrap.is_empty() {
             return Err("no bootstrap node to ask".into());
         }
@@ -45,13 +45,15 @@ impl Dht {
         let mut out = Outcome::default();
         let mut claims = Vec::new();
         let mut sent = 0usize;
+        let args = Dict::from([entry("target", bytes(&target.0))]);
         let mut picks = self.bootstrap.clone();
+        let mut verb = "find_node";
         loop {
             let mut pending = Pending::new();
             for addr in picks {
                 asked.insert(addr);
                 sent += 1;
-                self.ask(&mut pending, addr, q, args.clone());
+                self.ask(&mut pending, addr, verb, args.clone());
             }
             self.collect(&mut pending, &mut |addr, message| match message {
                 Message::Reply { r, ip, .. } => {
@@ -73,6 +75,7 @@ impl Dht {
                     out.errors.push(format!("{addr}: {code} {message}"));
                 }
             })?;
+            verb = q;
             picks = pool
                 .values()
                 .take(self.config.k)

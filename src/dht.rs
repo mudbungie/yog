@@ -32,7 +32,6 @@ pub use krpc::{Node, NodeId};
 pub use mutable::{Keypair, Mutable, target_of};
 pub use transport::{Transport, Udp};
 
-use bencode::{Dict, bytes, entry};
 use ring::rand::SecureRandom;
 use std::collections::BTreeMap;
 use std::net::SocketAddr;
@@ -105,11 +104,7 @@ impl Dht {
 
     /// The nodes nearest `target`, closest first — BEP 5's `find_node` walk.
     pub fn lookup(&mut self, target: NodeId) -> Result<Vec<Node>, String> {
-        let out = self.search(
-            target,
-            "find_node",
-            Dict::from([entry("target", bytes(&target.0))]),
-        )?;
+        let out = self.search(target, "find_node")?;
         Ok(out
             .replies
             .into_iter()

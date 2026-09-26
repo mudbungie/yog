@@ -10,7 +10,9 @@ fn keypair() -> Keypair {
 
 /// An item's target is a hash, not `0xff`, so the topology's closest three
 /// are whichever the hash says: `k = 8` asks every node there is, which is
-/// what puts a known holder inside the walk.
+/// what puts a known holder inside the walk. The bootstrap `A` is asked
+/// `find_node`, never `get`, so it holds no token and stores nothing: a `put`
+/// lands at the three nodes past it.
 fn wide() -> Config {
     Config { k: 8, ..quick() }
 }
@@ -44,6 +46,32 @@ fn get_is_none_when_nobody_holds_one() {
     assert_eq!(dht.get(keypair().public(), vec![]).unwrap(), None);
 }
 
+/// The live mainline's shape (REMOTE §13.7 ruling 3, bl-f6e1): the bootstrap
+/// is a router that answers `find_node` and never `get`, and the item's home
+/// is a node past it. Asking the router `get` — the old walk's first and only
+/// round — hears nothing; the walk asks it `find_node` instead, and `get` and
+/// `put` of the node it opens onto.
+#[test]
+fn bep44_walks_past_a_router_that_never_answers_get() {
+    let kp = keypair();
+    let item = kp.sign(vec![], 1, b"presence".to_vec()).unwrap();
+    let mut holder = FakeNode::bind(id(0x42));
+    holder.serve(vec![], Mood::Answer, vec![]);
+    let mut router = FakeNode::bind(id(0));
+    router.serve(vec![holder.node()], Mood::Router, vec![]);
+    let mut dht = client(vec![router.addr], quick());
+
+    let mut pending = lookup::Pending::new();
+    let target = bencode::Dict::from([bencode::entry("target", bencode::bytes(&item.target().0))]);
+    dht.ask(&mut pending, router.addr, "get", target);
+    let mut heard = 0usize;
+    dht.collect(&mut pending, &mut |_, _| heard += 1).unwrap();
+    assert_eq!(heard, 0, "the router is silent to get");
+
+    assert_eq!(dht.put(item.clone()).unwrap(), 1);
+    assert_eq!(dht.get(kp.public(), vec![]).unwrap(), Some(item));
+}
+
 #[test]
 fn put_lands_at_the_closest_token_holders_and_reads_back() {
     let kp = keypair();
@@ -51,7 +79,7 @@ fn put_lands_at_the_closest_token_holders_and_reads_back() {
     let mut nodes = topology();
     serve(&mut nodes, vec![], vec![]);
     let mut dht = client(vec![nodes[0].addr], wide());
-    assert_eq!(dht.put(item.clone()).unwrap(), 4);
+    assert_eq!(dht.put(item.clone()).unwrap(), 3);
     assert_eq!(dht.get(kp.public(), vec![]).unwrap(), Some(item.clone()));
 
     // A sequence number the nodes already hold is refused by every one.
@@ -62,7 +90,7 @@ fn put_lands_at_the_closest_token_holders_and_reads_back() {
     );
     // A newer one supersedes it.
     let next = kp.sign(vec![], 2, b"moved".to_vec()).unwrap();
-    assert_eq!(dht.put(next.clone()).unwrap(), 4);
+    assert_eq!(dht.put(next.clone()).unwrap(), 3);
     assert_eq!(dht.get(kp.public(), vec![]).unwrap(), Some(next));
 }
 

@@ -6254,8 +6254,12 @@ measures is loopback: a fake DHT of one thread per node, scripted routing
 and a BEP 44 store that checks what a real node checks. **The walk against
 the live mainline is measured** (bl-5d8d, from the deployed engine box;
 §13.7 ruling 3 holds the numbers): a `find_node` walk takes about 7 s at the
-1 s round, and the BEP 44 verbs need the defect fix recorded there before
-they work at all.
+1 s round. **The bootstrap is asked `find_node` whatever the walk's verb**
+(bl-f6e1): the mainline's routers answer `find_node` and never BEP 44's
+`get`, so `get` and `put` are one walk that asks the bootstrap `find_node`
+and every node it opens onto `get` — the tokens `put` spends come from
+nodes near the target, never from the roster. The fake DHT's `Router` mood
+is that router, and the rendezvous bench stands behind one.
 
 **Built (bl-4263): the engine's loop, `src/wire/rendezvous`, and the two
 item formats the client side mirrors.** The mint grows `rendezvous.key`
@@ -6546,7 +6550,9 @@ Open, awaiting operator ruling:
    `the_defaults_are_bep5_and_the_measured_round`.
 
    **Two defects the walk found, filed rather than fixed here.** *The BEP 44
-   verbs are dark on the live mainline* (bl-f6e1): `get` and `put` walk
+   verbs were dark on the live mainline* (bl-f6e1, **fixed**: the bootstrap
+   is now asked `find_node` and only the nodes it opens onto `get`, §13.2 —
+   the seeded runs above are that walk done by hand): `get` and `put` walked
    `get` straight from the bootstrap list, and the bootstrap routers
    answer `ping`, `find_node` and `get_peers` but never `get` — so unseeded,
    every `put` and `get` failed after exactly one round, 24 of 24, in every

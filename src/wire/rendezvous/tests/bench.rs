@@ -33,7 +33,9 @@ impl Answerer for Echo {
 
 pub(super) struct Bench {
     pub(super) tmp: TempDir,
-    pub(super) node: FakeNode,
+    /// The node that holds the items — held so its thread outlives the loop.
+    _node: FakeNode,
+    pub(super) router: FakeNode,
     pub(super) pairing: Pairing,
     pub(super) clock: FakeClock,
     pub(super) port: u16,
@@ -68,8 +70,10 @@ pub(super) fn loopback(port: u16) -> SocketAddr {
     SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), port)
 }
 
-/// Mint everything and stand the loop up over a node of `mood`; `bootstrap`
-/// is `None` for the node's own address.
+/// Mint everything and stand the loop up over a node of `mood` behind a
+/// bootstrap router that answers only `find_node`, as the mainline's do
+/// (REMOTE §13.7 ruling 3); `bootstrap` is `None` for the router's address.
+/// A silent commons is silent at the router too.
 pub(super) fn bench(mood: Mood, bootstrap: Option<Vec<String>>) -> Bench {
     let tmp = TempDir::new().expect("tmp");
     mint(tmp.path());
@@ -79,13 +83,19 @@ pub(super) fn bench(mood: Mood, bootstrap: Option<Vec<String>>) -> Bench {
         .expect("minted");
     let mut node = FakeNode::bind(NodeId([1u8; 20]));
     node.serve(vec![], mood, vec![]);
+    let mut router = FakeNode::bind(NodeId([0u8; 20]));
+    let door = match mood {
+        Mood::Silent => Mood::Silent,
+        _ => Mood::Router,
+    };
+    router.serve(vec![node.node()], door, vec![]);
     let clock = FakeClock::new();
     let punch = Punch::bind(0).expect("punch port");
     let port = punch.port();
     let engine = Rendezvous::spawn(Ctx {
         pairing: pairing.clone(),
         transport: Box::new(Udp::bind(loopback(0)).expect("udp")),
-        bootstrap: bootstrap.unwrap_or_else(|| vec![node.addr.to_string()]),
+        bootstrap: bootstrap.unwrap_or_else(|| vec![router.addr.to_string()]),
         config: quick(),
         punch,
         advertise: vec![IpAddr::V4(Ipv4Addr::LOCALHOST)],
@@ -98,7 +108,8 @@ pub(super) fn bench(mood: Mood, bootstrap: Option<Vec<String>>) -> Bench {
     .expect("spawn");
     Bench {
         tmp,
-        node,
+        _node: node,
+        router,
         pairing,
         clock,
         port,
@@ -110,7 +121,7 @@ impl Bench {
     /// A client of the same fake DHT.
     pub(super) fn dht(&self) -> Dht {
         let udp = Udp::bind(loopback(0)).expect("udp");
-        Dht::new(Box::new(udp), vec![self.node.addr], quick()).expect("client")
+        Dht::new(Box::new(udp), vec![self.router.addr], quick()).expect("client")
     }
 
     /// Write one inbox item under the derived key: `value` is what a client
