@@ -7,8 +7,8 @@
 
 use super::Dht;
 use super::krpc::{Message, Node};
-use super::lookup::Pending;
 use super::mutable::{Mutable, target_of};
+use super::round::Pending;
 
 impl Dht {
     /// The newest item signed under `key` for `salt`, or nothing: no node

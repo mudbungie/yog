@@ -15,8 +15,8 @@
 //!
 //! Four files under this root, one concern each: `bencode` the encoding,
 //! `krpc` the datagram shapes, `mutable` the signed item, `transport` the
-//! socket seam; `lookup` is the walk and `items` the two BEP 44 verbs over
-//! it. Synchronous throughout — `std::net` with socket timeouts, no tokio
+//! socket seam; `lookup` is the walk, `round` one round of it, and `items` the two BEP
+//! 44 verbs over it. Synchronous throughout — `std::net` with socket timeouts, no tokio
 //! (AGENTS.md rule 8) — and every duration is a [`Config`] field a test can
 //! shorten, so the fake DHT the suite runs on loopback UDP answers in
 //! milliseconds where the commons answers in seconds.
@@ -26,6 +26,7 @@ mod items;
 pub mod krpc;
 mod lookup;
 pub mod mutable;
+mod round;
 pub mod transport;
 
 pub use krpc::{Node, NodeId};

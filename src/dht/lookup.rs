@@ -1,20 +1,20 @@
 //! The iterative lookup (BEP 5), the one walk every read and write of the
 //! commons makes: ask the closest nodes you know, learn closer ones from
 //! their answers, repeat until the K closest have all been asked. Rounds are
-//! synchronous — α queries out, then one bounded wait for whatever answers —
-//! and a node that stays silent is simply never asked again. Bounded twice
-//! over against a hostile commons: a round ends at its deadline whatever is
-//! still pending, and the walk ends at `max_queries` however many "closer"
-//! nodes the answers keep inventing. Each node that answers may also say
+//! synchronous — α queries out, then one bounded wait for whatever answers
+//! (`round`) — and a node that stays silent is never asked again and leaves
+//! the frontier. Bounded twice over against a hostile commons: a round ends
+//! at its deadline whatever is still pending, and the walk ends at
+//! `max_queries` however many "closer" nodes the answers keep inventing. Each node that answers may also say
 //! where it saw the query come from; the walk keeps those claims, one per
 //! answering node, for [`Dht::observed`] to vote on.
 
 use super::Dht;
 use super::bencode::{Dict, bytes, entry};
 use super::krpc::{self, Message, Node, NodeId};
+use super::round::Pending;
 use std::collections::{BTreeMap, BTreeSet};
 use std::net::SocketAddr;
-use std::time::Instant;
 
 /// What a walk found: every reply, closest first, and every error a node
 /// answered instead of a reply.
@@ -23,9 +23,6 @@ pub(crate) struct Outcome {
     pub(crate) replies: Vec<(Node, Dict)>,
     pub(crate) errors: Vec<String>,
 }
-
-/// The transactions one round is waiting on, by transaction id.
-pub(crate) type Pending = BTreeMap<Vec<u8>, SocketAddr>;
 
 impl Dht {
     /// Walk toward `target` asking `q` of every node on the way — except the
@@ -48,11 +45,34 @@ impl Dht {
     ///
     /// A node is one `(id, address)`: a repeated entry is learned once, and
     /// one id at two addresses is two nodes to ask.
+    ///
+    /// The walk converges on a frontier, not on the pool (bl-d00f): the K
+    /// closest nodes that replied or are not yet asked. A node asked and
+    /// silent, or that answered only an error (live, a `get` refused as an
+    /// unknown query), leaves it, so the walk ends when the K closest
+    /// *responsive* nodes have all been asked — or at `max_queries` — never
+    /// because dead nodes sat on the slots a live one past them needed. A
+    /// node this socket cannot send to (a v6 address from a v4 socket) leaves
+    /// it the same way, before the query is spent: a refused send is not
+    /// counted and the round's slot goes to the next node.
+    ///
+    /// The door is asked again whenever the frontier runs dry before K nodes
+    /// past it have replied — none, the dark case, being the one measured —
+    /// as long as it has ever named anyone; `max_queries` bounds it. Measured from the deployed engine box (REMOTE §13.7 ruling
+    /// 3), the one router that answers names a single random node eight times
+    /// per query — often the same one several queries running — so the two
+    /// seeds a round yields are both silent about one walk in three, and
+    /// re-asking draws fresh ones for a round's wait. Asking only while the
+    /// door named someone NEW was tried and measured: its repeats ended a
+    /// walk dark that the next ask would have opened. A door that is silent
+    /// or names nobody leaves the pool empty and is not re-asked, so a dark
+    /// commons stays one round.
     pub(crate) fn search(&mut self, target: NodeId, q: &str) -> Result<Outcome, String> {
         if self.bootstrap.is_empty() {
             return Err("no bootstrap node to ask".into());
         }
         let mut asked: BTreeSet<SocketAddr> = BTreeSet::new();
+        let mut replied: BTreeSet<SocketAddr> = BTreeSet::new();
         let mut pool: BTreeMap<([u8; 20], SocketAddr), Node> = BTreeMap::new();
         let mut out = Outcome::default();
         let mut claims = Vec::new();
@@ -62,12 +82,20 @@ impl Dht {
         let mut seeding = true;
         loop {
             let verb = if seeding { "find_node" } else { q };
+            let quota = if seeding {
+                picks.len()
+            } else {
+                self.config.alpha
+            };
             let mut pending = Pending::new();
             for addr in picks {
+                if pending.len() >= quota {
+                    break;
+                }
                 asked.insert(addr);
-                sent += 1;
                 self.ask(&mut pending, addr, verb, args.clone());
             }
+            sent += pending.len();
             self.collect(&mut pending, &mut |addr, message| match message {
                 Message::Reply { r, ip, .. } => {
                     let Some(id) = r
@@ -84,6 +112,7 @@ impl Dht {
                         pool.insert((near.id.distance(&target), near.addr), near);
                     }
                     if !seeding {
+                        replied.insert(addr);
                         out.replies.push((node, r));
                     }
                 }
@@ -92,14 +121,21 @@ impl Dht {
                 }
                 Message::Error { .. } => {}
             })?;
-            seeding = false;
+            // The frontier: the K closest nodes that answered or are still
+            // to ask. A node asked and silent — or one this socket could not
+            // send to — has left it, so it never holds a slot a live node
+            // past it would take.
             picks = pool
                 .values()
+                .filter(|n| replied.contains(&n.addr) || !asked.contains(&n.addr))
                 .take(self.config.k)
                 .filter(|n| !asked.contains(&n.addr))
-                .take(self.config.alpha)
                 .map(|n| n.addr)
                 .collect();
+            seeding = picks.is_empty() && !pool.is_empty() && replied.len() < self.config.k;
+            if seeding {
+                picks.clone_from(&self.bootstrap);
+            }
             if picks.is_empty() || sent >= self.config.max_queries {
                 break;
             }
@@ -110,46 +146,5 @@ impl Dht {
         }
         out.replies.sort_by_key(|(n, _)| n.id.distance(&target));
         Ok(out)
-    }
-
-    /// Send one query and, if the send itself went, remember the transaction.
-    pub(crate) fn ask(&mut self, pending: &mut Pending, addr: SocketAddr, q: &str, args: Dict) {
-        let tid = self.next_tid();
-        let datagram = krpc::query(&tid, &self.id, q, args);
-        if self.transport.send(addr, &datagram).is_ok() {
-            pending.insert(tid, addr);
-        }
-    }
-
-    /// One round: read datagrams until every pending transaction has answered
-    /// or the round's deadline passes. Only an answer to a transaction this
-    /// round sent reaches `on`; everything else on the socket is noise.
-    pub(crate) fn collect(
-        &mut self,
-        pending: &mut Pending,
-        on: &mut dyn FnMut(SocketAddr, Message),
-    ) -> Result<(), String> {
-        let deadline = Instant::now() + self.config.round;
-        while !pending.is_empty() {
-            let wait = deadline.saturating_duration_since(Instant::now());
-            if wait.is_zero() {
-                break;
-            }
-            let Some((_, bytes)) = self
-                .transport
-                .recv(wait)
-                .map_err(|e| format!("DHT socket: {e}"))?
-            else {
-                break;
-            };
-            let Some(message) = krpc::parse(&bytes) else {
-                continue;
-            };
-            let (Message::Reply { tid, .. } | Message::Error { tid, .. }) = &message;
-            if let Some(addr) = pending.remove(tid) {
-                on(addr, message);
-            }
-        }
-        Ok(())
     }
 }

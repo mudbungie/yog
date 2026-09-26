@@ -6268,8 +6268,9 @@ run on the thread §13.4 gives them, never on a request path. What the suite
 measures is loopback: a fake DHT of one thread per node, scripted routing
 and a BEP 44 store that checks what a real node checks. **The walk against
 the live mainline is measured** (bl-5d8d, from the deployed engine box;
-§13.7 ruling 3 holds the numbers): a `find_node` walk takes about 7 s at the
-1 s round. **The bootstrap is asked `find_node` whatever the walk's verb**
+§13.7 ruling 3 holds the numbers): a `find_node` walk took about 7 s at the
+1 s round, and since the frontier (below, bl-d00f) about 12 s, with `put`
+and `get` near 20 s at the query cap. **The bootstrap is asked `find_node` whatever the walk's verb**
 (bl-f6e1): the mainline's routers answer `find_node` and never BEP 44's
 `get`, so `get` and `put` are one walk that asks the bootstrap `find_node`
 and every node it opens onto `get` — the tokens `put` spends come from
@@ -6281,7 +6282,18 @@ node near the target, and a walk whose learned nodes were all silent is the
 same `Err` as a silent bootstrap — a dark commons — rather than an `Ok` a
 caller cannot tell from success. A node is one `(id, address)`: a router's
 repeated entry is learned once, and one id at two addresses is two nodes.
-The engine's roster (`mainline()`) names the four standard routers —
+**The walk converges on a frontier, not on everything it has heard of**
+(bl-d00f): the K closest nodes that *replied* or are not yet asked. A node
+asked and silent, one that answered only an error, and one this socket cannot
+send to (a v6 address from the v4 socket the engine binds) all leave it, so
+the walk ends when the K closest responsive nodes have been asked — or at
+`max_queries` — and a refused send spends no query and no slot in its round.
+**And the door is asked again** whenever the frontier runs dry with fewer
+than K replies past it, as long as it has ever named anyone, bounded by the
+same cap: the one router that answers from the deployed engine box names one
+random node per query, so its two seeds are both silent about one walk in
+three, and a second ask draws fresh ones. The fake DHT's `Rotor` mood is
+that router. The engine's roster (`mainline()`) names the four standard routers —
 `router.bittorrent.com`, `dht.transmissionbt.com`, `router.utorrent.com`,
 `dht.aelitis.com`, all at 6881 — so one silent router is a quarter of it.
 
@@ -6601,6 +6613,38 @@ Open, awaiting operator ruling:
    nearest nodes — an `Ok` a caller cannot tell from success. The cadence
    defaults above (poll, republish, ping, punch) are untouched by this
    measurement and still stated to be wrong in public.
+
+   **The stall's cause, measured, and its fix** (bl-d00f). A traced re-run
+   of the walk from the same box settled what bl-9408 had only reported:
+   each of the router's two answering addresses names ONE node eight times
+   — a random node, not one near the target, often the same several
+   queries running — so the pool after the bootstrap round holds two
+   nodes, and when both are silent nothing is left to ask. The suspected
+   cause — silent nodes holding slots among the K closest while live ones
+   waited past them — was real in principle but was not this stall: the
+   pool held nothing past the two seeds. The fix is both halves of §13.2's
+   frontier: silent, refusing and unreachable nodes leave it, and a dry
+   frontier short of K replies asks the door again. The live traces also
+   showed nodes near a target answering `get` with `204 Unknown query
+   type` — heard, but no reply to walk on. Ten trials per verb, default
+   `Config`, a fresh client per verb, `put` of a fresh `Keypair::generate`
+   item and `get` of it from a third client:
+
+   | build | `lookup` | `put` | `get` (after a good `put`) | acks |
+   |---|---|---|---|---|
+   | bl-65dc verification (after bl-f6e1, bl-9408) | 7/10, median 5.8 s, p90 7.4 s | 6/10, 8.8 s, 10.8 s | 5/6 hits, 7.9 s, 8.6 s | 6,8,8,7,8,8 |
+   | the same build, re-measured for bl-d00f | 5/10, 5.9 s, 9.6 s | 6/10, 8.2 s, 8.9 s | 3/6 hits, 9.2 s, 9.5 s | 8,7,6,8,7,8 |
+   | bl-d00f | **10/10**, 12.6 s, 18.1 s | **10/10**, 19.2 s, 21.3 s | **9/10 hits**, 16.5 s, 20.7 s | 8,8,7,7,8,8,7,8,7,7 |
+
+   Every failure before the fix ended at ~2.05 s — two rounds, the dark
+   door. After it none did; the one `get` miss ran to the query cap without
+   reaching any of the eight nodes that had acknowledged the `put`. **The
+   price is time**: a walk now keeps asking until K responsive nodes near
+   the target have answered, and near a target most nodes are silent, so
+   walks run about twice as long and `put` and `get` usually reach the
+   64-query cap — which, contrary to bl-5d8d's reading above, now binds.
+   Every silent query costs a whole synchronous round; that is the lever
+   for the latency, filed as its own ball, not taken here.
 
 ### 13.8 What bl-a9b0 and bl-0da2 measured
 

@@ -34,6 +34,10 @@ pub(crate) enum Mood {
     /// A mainline bootstrap router as measured (REMOTE §13.7 ruling 3):
     /// answers `find_node`, silent to BEP 44's `get` and `put`.
     Router,
+    /// The one router that answers from the deployed engine box, as measured
+    /// (bl-d00f): a `Router` whose every `find_node` answer is ONE of its
+    /// peers repeated eight times, the next peer on the next query.
+    Rotor,
 }
 
 pub(crate) struct FakeNode {
@@ -94,6 +98,7 @@ fn run(
     stop: &AtomicBool,
 ) {
     let mut buf = vec![0u8; 8192];
+    let mut turn = 0usize;
     while !stop.load(Ordering::Relaxed) {
         let Ok((n, from)) = socket.recv_from(&mut buf) else {
             continue;
@@ -102,7 +107,16 @@ fn run(
         let tid = q.get("t").unwrap().as_bytes().unwrap().to_vec();
         let datagram = match mood {
             Mood::Silent => continue,
-            Mood::Router if q.get("q").unwrap().as_bytes().unwrap() != b"find_node" => continue,
+            Mood::Router | Mood::Rotor
+                if q.get("q").unwrap().as_bytes().unwrap() != b"find_node" =>
+            {
+                continue;
+            }
+            Mood::Rotor => {
+                turn += 1;
+                let one = vec![peers[(turn - 1) % peers.len()]; 8];
+                answer(&tid, id, &one, &mut items, &q)
+            }
             Mood::Garbage => b"not bencode".to_vec(),
             Mood::Refuse => error(&tid, 201, "refused"),
             Mood::Anonymous => reply(&tid, Dict::new()),

@@ -61,7 +61,7 @@ fn bep44_walks_past_a_router_that_never_answers_get() {
     router.serve(vec![holder.node()], Mood::Router, vec![]);
     let mut dht = client(vec![router.addr], quick());
 
-    let mut pending = lookup::Pending::new();
+    let mut pending = round::Pending::new();
     let target = bencode::Dict::from([bencode::entry("target", bencode::bytes(&item.target().0))]);
     dht.ask(&mut pending, router.addr, "get", target);
     let mut heard = 0usize;
