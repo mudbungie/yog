@@ -39,7 +39,8 @@ use std::net::SocketAddr;
 use std::time::Duration;
 
 /// The walk's parameters — stated so a test can shrink them and a caller
-/// can widen them; the defaults are BEP 5's.
+/// can widen them. α and K are BEP 5's; the round is measured (REMOTE §13.7
+/// ruling 3): on the live mainline p99 of answers landed inside 0.9 s.
 #[derive(Clone, Debug)]
 pub struct Config {
     /// Queries in flight per round.
@@ -57,7 +58,7 @@ impl Default for Config {
         Config {
             alpha: 3,
             k: 8,
-            round: Duration::from_secs(2),
+            round: Duration::from_secs(1),
             max_queries: 64,
         }
     }

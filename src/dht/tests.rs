@@ -58,11 +58,11 @@ fn serve(nodes: &mut [FakeNode; 4], items_on_c: Vec<Mutable>, items_on_d: Vec<Mu
 }
 
 #[test]
-fn the_defaults_are_the_beps() {
+fn the_defaults_are_bep5_and_the_measured_round() {
     let c = Config::default();
     assert_eq!(
         (c.alpha, c.k, c.round, c.max_queries),
-        (3, 8, Duration::from_secs(2), 64)
+        (3, 8, Duration::from_secs(1), 64)
     );
 }
 

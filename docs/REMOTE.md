@@ -6251,10 +6251,11 @@ A walk costs at most `max_queries` datagrams and blocks the calling thread
 for up to a round per hop, so the hourly republish and the 15-second poll
 run on the thread §13.4 gives them, never on a request path. What the suite
 measures is loopback: a fake DHT of one thread per node, scripted routing
-and a BEP 44 store that checks what a real node checks. **A walk against
-the live mainline is still unmeasured**: bl-4263 ran it once and the box's
-own egress answered for the commons (§13.7 ruling 3); bl-5d8d carries it to
-the deployed engine box.
+and a BEP 44 store that checks what a real node checks. **The walk against
+the live mainline is measured** (bl-5d8d, from the deployed engine box;
+§13.7 ruling 3 holds the numbers): a `find_node` walk takes about 7 s at the
+1 s round, and the BEP 44 verbs need the defect fix recorded there before
+they work at all.
 
 **Built (bl-4263): the engine's loop, `src/wire/rendezvous`, and the two
 item formats the client side mirrors.** The mint grows `rendezvous.key`
@@ -6501,16 +6502,65 @@ Open, awaiting operator ruling:
 3. **Cadence defaults** (15 s poll, hourly republish, 25 s ping; and the
    punch's 20 s window, 2 s per SYN, 300 ms linger after the first stream) —
    stated so they can be wrong in public; revisit on evidence, not taste.
-   **The `dht::Config` evidence is still owed.** bl-4263 ran the first live
-   walk from the development box under four configurations (BEP 5 defaults,
-   α = 5, a 1 s round, 128 queries): every bootstrap node was silent for the
-   whole round every time, so each verb failed in exactly one round — 2.0 s
-   at the default, 1.0 s at the short one — and a raw KRPC `ping` sent to
-   three bootstrap nodes from outside yog answered nothing either. That is
-   the box's egress dropping UDP/6881, not the client, whose walk the suite
-   measures in milliseconds against its fake node; bl-5d8d runs the same
-   walk from the deployed engine box and records the numbers here. The
-   defaults stand untuned until then.
+   **The `dht::Config` evidence is in (bl-5d8d), and it moved one default:
+   the round is 1 s, down from 2 s.** bl-4263's first walk, from the
+   development box, measured only that box's egress (every bootstrap node
+   silent to a raw KRPC `ping` too). bl-5d8d ran the walk again from the
+   deployed engine box — the box that carries the wire, §13.6's own
+   criterion — whose egress passes UDP/6881: a throwaway static binary
+   under `/tmp`, deleted after, driving `Dht` through `lookup` of a random
+   id, then `put` and `get` of a throwaway signed item, three runs of each
+   configuration, twice over, and a twenty-walk diagnostic trace at the
+   default. `find_node` walks, nine per configuration:
+
+   | config | converged on K = 8 | median walk | median queries sent / answered | stalled on the bootstrap |
+   |---|---|---|---|---|
+   | defaults (α 3, 2 s round, 64 queries) | 5 of 9 | 12.5 s | 22 / 13 | 4 (4.1 s each) |
+   | α = 5 | 8 of 9 | 14.6 s | 33 / 22 | 1 |
+   | 1 s round | 8 of 9 | 7.1 s | 26 / 15.5 | 1 (2.0 s) |
+   | 128 queries | 7 of 9 | 14.7 s | 25 / 12 | 2 |
+
+   BEP 44, seeded from the nodes a `find_node` walk toward the item's
+   target returned (see the defect below for why seeded):
+
+   | config | `put` time, acks | `get` time, read back |
+   |---|---|---|
+   | defaults | 6.4 s, 5 acks (1 of 3 runs; 2 seed walks stalled) | 6.2 s, seq 1 |
+   | α = 5 | 6.4 / 6.6 / 6.4 s, 4 / 4 / 7 acks | 6.1 s, seq 1, all three |
+   | 1 s round | 4.4 / 3.5 / 6.1 s, 4 / 6 / 5 acks | 4.1 / 3.2 / 4.3 s, seq 1, all three |
+   | 128 queries | 6.3 s, 3 acks (1 of 3 runs; 2 seed walks stalled) | 6.1 s, seq 1 |
+
+   Three things the numbers say. **Silence sets the pace, not distance**:
+   about 40% of queried nodes never answer (260 answers to 436 queries in
+   the trace), and a synchronous round waits out its whole deadline
+   whenever one query in it is silent, so a walk costs rounds × `round`
+   almost exactly. The answers that do come are fast — p50 153 ms, p90
+   233 ms, p95 327 ms, p99 0.9 s, and 2 of 260 (0.8%) past 1 s. **So the
+   round is the lever, and 1 s is the evidence's value**: it halves every
+   verb (walk 12.5 → 7.1 s, `put` and `get` about 6.3 → 4 s) and lost no
+   result — acks 4-6 against 3-7, every `get` read the item back. **α = 5
+   and a 128-query cap buy nothing**: α 5 sends half again as many queries
+   for a slower walk and no more acks, and no walk came near 64 queries
+   (the most any sent was 40), so the cap never bound. α, K and the cap
+   stay BEP 5's; `Config::default().round` is 1 s, pinned by
+   `the_defaults_are_bep5_and_the_measured_round`.
+
+   **Two defects the walk found, filed rather than fixed here.** *The BEP 44
+   verbs are dark on the live mainline* (bl-f6e1): `get` and `put` walk
+   `get` straight from the bootstrap list, and the bootstrap routers
+   answer `ping`, `find_node` and `get_peers` but never `get` — so unseeded,
+   every `put` and `get` failed after exactly one round, 24 of 24, in every
+   configuration. The rendezvous loop calls exactly those verbs, so on the
+   live commons presence never publishes and the inbox never reads; the
+   suite cannot see it because its fake node answers `get` from the
+   bootstrap position. *A walk stalls on the bootstrap about one time in
+   five* (bl-9408): from this box only one of the three bootstrap hosts
+   answers, and it answers `find_node` with one node repeated eight times,
+   so a first round learns two fresh nodes; when both are silent the walk
+   ends in two rounds and `lookup` returns the routers themselves as the
+   nearest nodes — an `Ok` a caller cannot tell from success. The cadence
+   defaults above (poll, republish, ping, punch) are untouched by this
+   measurement and still stated to be wrong in public.
 
 ### 13.8 What bl-a9b0 and bl-0da2 measured
 
