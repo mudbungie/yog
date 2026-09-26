@@ -222,8 +222,8 @@ fn the_artifact_list_is_the_whole_of_what_is_written() {
     );
     assert_eq!(
         artifacts("192.0.2.1:7737").len(),
-        11,
-        "and a stated host adds the rendezvous pair"
+        12,
+        "and a stated host adds the rendezvous seed, salt and public key"
     );
     let mut left: Vec<String> = std::fs::read_dir(tmp.path())
         .expect("read the mint's directory")

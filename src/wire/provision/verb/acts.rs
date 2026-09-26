@@ -119,26 +119,27 @@ fn restate(dir: &Path, hosts: &[String], port: Option<&str>) -> i32 {
 /// verbatim and forever, so the carrying is the operator's and yog's last word
 /// on it is a sentence.
 fn leaf(dir: &Path, cn: &str, grade: Grade) -> i32 {
-    if let Err(e) = super::super::issue(dir, cn, grade) {
-        eprintln!("yog {SUBCMD}: {e}");
-        return 1;
-    }
+    let files =
+        match super::super::issue(dir, cn, grade).and_then(|()| super::super::bundle(dir, cn)) {
+            Ok(files) => files,
+            Err(e) => {
+                eprintln!("yog {SUBCMD}: {e}");
+                return 1;
+            }
+        };
     println!("yog {SUBCMD}: issued a {} leaf for {cn}", word(grade));
-    for name in [format!("{cn}.pem"), format!("{cn}.key")] {
-        println!("  {}", dir.join(name).display());
+    for (file, name) in &files {
+        println!("  {}  (as {name})", file.display());
     }
     // Spelled from the reader's own constants — the destination's own name
     // ([`ENTRY`]) among them, because that was the one token still written by
     // hand here and it is the one that drifted (bl-686c): it said `<leaf>`, and
     // a directory named for the leaf just issued is a channel no gesture routes
-    // to.
-    let client = Role::Client.leaf();
+    // to. Each file's own landing name is the bundle's (bl-9043).
     println!(
-        "  carry those and {} to that box by hand, into its {DIR}/{ENTRIES}/{ENTRY}/ — named for \
-         the WORKSPACE it will address, not for {cn} — as {client}.pem, {client}.key and \
-         {ANCHORS}, beside an {ADDRESS} you state; the common name inside, not the basename, is \
-         the identity",
-        dir.join(ANCHORS).display()
+        "  carry those to that box by hand, into its {DIR}/{ENTRIES}/{ENTRY}/ — named for the \
+         WORKSPACE it will address, not for {cn} — each under the name shown, beside an \
+         {ADDRESS} you state; the common name inside, not the basename, is the identity"
     );
     // **And say what it is NOT** (bl-6b14). This act issues; it registers
     // nothing, and an advertisement reaches only the workspaces its client is

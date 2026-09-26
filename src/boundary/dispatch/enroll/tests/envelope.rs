@@ -12,8 +12,9 @@
 //! photograph.
 
 use super::super::*;
-use super::{enrolled, provisioned, request};
+use super::{deps, enrolled, provisioned, request};
 use crate::registry::Grade;
+use crate::wire::rendezvous::material::{PUBLIC, SALT};
 use serde_json::{Value, json};
 use tempfile::tempdir;
 
@@ -28,7 +29,7 @@ const CAPACITY: [(&str, usize); 4] = [("L", 2953), ("M", 2331), ("Q", 1663), ("H
 /// has to carry. `ok` and `kind` do not travel: they say what a *wire answer*
 /// is, and a photograph is not one.
 fn envelope(enrolled: &Enrolled) -> String {
-    let value: Value = json!({
+    let mut value: Value = json!({
         "yog-enroll": 1,
         "grade": enrolled.grade.word(),
         "name": enrolled.name,
@@ -37,6 +38,10 @@ fn envelope(enrolled: &Enrolled) -> String {
         "cert": enrolled.cert,
         "key": enrolled.key,
     });
+    if let (Some(object), Some(handoff)) = (value.as_object_mut(), &enrolled.rendezvous) {
+        object.insert("rendezvous_pub".into(), json!(handoff.public));
+        object.insert("pairing_salt".into(), json!(handoff.salt));
+    }
     value.to_string()
 }
 
@@ -52,27 +57,29 @@ fn the_envelope_fits_a_version_40_qr_code() {
     // The recorded figure. P-256 keys and 825-day leaves are what
     // `wire::provision` mints, so this is stable to within the few bytes a
     // DER serial and a name length move it — the bound, not the equality, is
-    // what REMOTE states.
+    // what REMOTE states. A stated host carries the rendezvous pair too
+    // (bl-9043), which is what takes it past Q.
     assert!(
-        (1400..1700).contains(&size),
-        "the envelope measured {size} bytes; REMOTE §1.4 records ~1.6 kB, so the encoding \
+        (1600..1850).contains(&size),
+        "the envelope measured {size} bytes; REMOTE §8.4 records ~1.7 kB, so the encoding \
          ruling needs re-taking"
     );
     for (level, capacity) in CAPACITY {
         assert_eq!(
             size <= capacity,
-            level != "H",
+            matches!(level, "L" | "M"),
             "level {level} carries {capacity} bytes and the envelope is {size}"
         );
     }
 }
 
 /// Every field is present and every one of them is needed: a device handed five
-/// of the six cannot dial, cannot verify, or cannot prove who it is.
+/// of the six cannot dial, cannot verify, or cannot prove who it is. A stated
+/// host adds the rendezvous pair, exactly as its two files hold it (bl-9043).
 #[test]
 fn the_envelope_carries_exactly_the_six_facts_and_a_version() {
     let tmp = tempdir().expect("tmp");
-    let (deps, _) = provisioned(&tmp);
+    let (deps, dir) = provisioned(&tmp);
     let answer = enrolled(enroll(&deps, "7", &request("phone-1", Grade::Operator)).expect("act"));
     let value: Value = serde_json::from_str(&envelope(&answer)).expect("compact JSON");
     let object = value.as_object().expect("an object");
@@ -89,11 +96,55 @@ fn the_envelope_carries_exactly_the_six_facts_and_a_version() {
             "grade",
             "key",
             "name",
+            "pairing_salt",
+            "rendezvous_pub",
             "yog-enroll"
         ]
     );
+    let file = |name: &str| read(&dir.join(name)).expect("minted").trim().to_owned();
+    assert_eq!(object.get("rendezvous_pub"), Some(&json!(file(PUBLIC))));
+    assert_eq!(object.get("pairing_salt"), Some(&json!(file(SALT))));
     // PEM verbatim: the newlines survive, which is the one thing a naive
     // scanner-side decoder gets wrong.
     assert!(answer.ca.contains("-----BEGIN CERTIFICATE-----\n"));
     assert!(envelope(&answer).contains("-----BEGIN CERTIFICATE-----\\n"));
+}
+
+/// **A loopback-only box hands off no rendezvous material** (bl-9043): it
+/// minted none — nothing another machine dials it by — so the envelope omits
+/// both keys, and still fits every level but H, as it always did.
+#[test]
+fn a_loopback_box_omits_the_rendezvous_pair() {
+    let tmp = tempdir().expect("tmp");
+    let world = crate::test_support::world_under(tmp.path());
+    let dir = material::dir(&world);
+    provision::mint(&dir, "127.0.0.1:7737", &[], false).expect("mint");
+    assert!(!dir.join(PUBLIC).exists() && !dir.join(SALT).exists());
+    let deps = deps(&world, &tmp.path().join("state-root"));
+    let answer = enrolled(enroll(&deps, "7", &request("phone-1", Grade::Foot)).expect("act"));
+    assert_eq!(answer.rendezvous, None);
+    let text = envelope(&answer);
+    assert!(!text.contains("rendezvous_pub") && !text.contains("pairing_salt"));
+    assert!(text.len() <= CAPACITY[2].1, "{} bytes fit Q", text.len());
+}
+
+/// Half a pairing is not a pairing — the reply refuses rather than read one
+/// key without the other, and a box holding half refuses before it mints.
+#[test]
+fn half_the_pair_refuses_on_the_wire_and_on_disk() {
+    let mut reply = serde_json::from_str::<Value>(
+        r#"{"ok":true,"kind":"enrolled","grade":"foot","name":"n","address":"h:1","ca":"","cert":"","key":"","rendezvous_pub":"00"}"#,
+    )
+    .expect("json");
+    let refusal = crate::boundary::reply::decode(&reply).expect_err("half");
+    assert!(refusal.contains("travel together"), "{refusal}");
+    reply["pairing_salt"] = json!("11");
+    assert!(crate::boundary::reply::decode(&reply).is_ok());
+
+    let tmp = tempdir().expect("tmp");
+    let (deps, dir) = provisioned(&tmp);
+    std::fs::remove_file(dir.join(SALT)).expect("rm");
+    let refusal = enroll(&deps, "7", &request("phone-1", Grade::Foot)).expect_err("half");
+    assert!(refusal.contains(SALT), "{refusal}");
+    assert!(!dir.join("phone-1.pem").exists(), "nothing minted");
 }

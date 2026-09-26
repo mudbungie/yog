@@ -169,6 +169,7 @@ fn enrolled(o: &Map<String, Value>) -> Result<Reply, String> {
         ca: str_of(o, "ca")?,
         cert: str_of(o, "cert")?,
         key: str_of(o, "key")?,
+        rendezvous: crate::registry::enroll::handoff_of(o)?,
     }))
 }
 

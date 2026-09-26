@@ -12,8 +12,8 @@
 //! material.
 
 use super::openssl;
-use super::{ADDRESS, CA_KEY, Role};
-use std::path::Path;
+use super::{ADDRESS, ANCHORS, CA_KEY, Role};
+use std::path::{Path, PathBuf};
 
 /// Issue **one extra client leaf** under a stated common name — the host half
 /// of provisioning an entry (REMOTE §8.2, bl-64a7). The operator mints a leaf
@@ -70,6 +70,26 @@ pub(crate) fn issue(dir: &Path, cn: &str, grade: crate::registry::Grade) -> Resu
         ));
     }
     openssl::stated_leaf(dir, cn, grade)
+}
+
+/// **Every file a client leaf's bundle is, and the name each lands under**
+/// (REMOTE §8.2, §13.2; bl-9043): the pair [`issue`] wrote — renamed to the
+/// client end's own names, since the common name inside is the identity — the
+/// anchors, and on a box holding rendezvous material `rendezvous.pub` and
+/// `pairing.salt`, under the names a seat reads them by. One out-of-channel
+/// hand-off then carries everything a seat or a foot needs; a loopback box
+/// minted no rendezvous material and hands off none.
+pub(crate) fn bundle(dir: &Path, cn: &str) -> Result<Vec<(PathBuf, String)>, String> {
+    let client = Role::Client.leaf();
+    let mut files = vec![
+        (dir.join(format!("{cn}.pem")), format!("{client}.pem")),
+        (dir.join(format!("{cn}.key")), format!("{client}.key")),
+        (dir.join(ANCHORS), ANCHORS.to_owned()),
+    ];
+    for name in crate::wire::rendezvous::material::bundle(dir)? {
+        files.push((dir.join(&name), name));
+    }
+    Ok(files)
 }
 
 /// Re-issue **this box's own server leaf** over the CA already here (REMOTE §8,

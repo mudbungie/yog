@@ -64,6 +64,13 @@
 //! reads four optional keys it ignores and three ops it refuses by name.
 //! Recorded here because it is the first, so the next lane can see the
 //! record an edition earns is one paragraph and a ball id, not a bump.
+//!
+//! **Edition 20 (bl-9043, REMOTE §8.4, §13.2).** `reply/enrolled` gained
+//! `rendezvous_pub` and `pairing_salt` — the engine's rendezvous public key
+//! and the pairing salt, 32 bytes of hex each, present together on a box
+//! holding rendezvous material and absent together on a loopback-only one —
+//! so an enrolled device can find its engine off the stated address. A seat
+//! below 20 reads two optional keys it ignores.
 
 // The constant itself is GENERATED, not declared: `build.rs` reads the
 // repo-root `PROTOCOL` file — the number's one file-shaped home, at the one

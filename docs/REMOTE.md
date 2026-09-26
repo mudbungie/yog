@@ -3691,6 +3691,21 @@ smaller envelope and there is no payer for one. `boundary::dispatch::enroll`'s
 `envelope` test takes that measurement against a real mint on every run, so a
 recipe that moved to RSA would fail there rather than in a photograph.
 
+**The rendezvous pair rides beside the six facts** *(amended bl-9043,
+edition 20)*. On a box holding rendezvous material (§13.2 — a stated host,
+on the box that founded the root) the envelope carries two more keys,
+`rendezvous_pub` and `pairing_salt`: the engine's public rendezvous key and
+the pairing salt, 32 bytes of lowercase hex each, exactly as the files
+`rendezvous.pub` and `pairing.salt` hold them. They are present together or
+absent together — a loopback-only engine has nothing to rendezvous for and
+the envelope omits both — and a decoder refuses one without the other. They
+are an **edition**, not a `PROTOCOL` bump: a seat below 20 ignores two keys.
+The engine reads them before it mints, so half a pair refuses with nothing
+issued. The cost is measured by the same test: with the pair the envelope is
+~1730 bytes, which fits L and M and no longer fits Q; a loopback envelope is
+the ~1567 it was. The rule above — PEM as minted, at level M or lower — is
+unchanged.
+
 **The corpus carries the shapes and none of the material** (§3). `request/enroll`
 and `reply/enrolled` are additions, so `PROTOCOL` is **not** bumped — strict
 decode already refuses an unknown op in band, and the drift ledger records both
@@ -6274,7 +6289,14 @@ The engine's roster (`mainline()`) names the four standard routers —
 item formats the client side mirrors.** The mint grows `rendezvous.key`
 (a 32-byte ed25519 seed, hex) and `pairing.salt` (32 random bytes, hex)
 beside `ca.pem` — for a box whose `address` names a host other than
-loopback, and only on the box that founded the trust root. Everything else
+loopback, and only on the box that founded the trust root — **and, since
+bl-9043, `rendezvous.pub`**: the seed's public half, 32 bytes of hex, mode
+0644, derived rather than drawn, so every mint re-derives it where it is
+absent and a box minted before the file existed gains it on its next boot.
+That file and `pairing.salt` are what a client carries, under those names:
+`yog wire-certs WIRE_LEAF=…` lists them in the bundle beside the leaf and
+`ca.pem`, and the §8.4 envelope answers them as `rendezvous_pub` and
+`pairing_salt`. A loopback box minted none and hands off none. Everything else
 both ends need is HKDF-SHA256 over the pairing salt (salt `yog rendezvous`,
 one info label each): `presence salt` and `inbox salt` are the DHT salts the
 two items are filed under, `seal key` is the ChaCha20-Poly1305 key both are

@@ -5,7 +5,7 @@
 //! Real `openssl` at test runtime, like every other test of the mint — a
 //! certificate fixture is never committed (REMOTE §8).
 
-use super::super::{CA_KEY, ensure, issue};
+use super::super::{CA_KEY, bundle, ensure, issue, mint};
 use super::described;
 use crate::git_env;
 use crate::registry::{Grade, LOCAL};
@@ -163,4 +163,37 @@ fn an_identity_the_registry_would_refuse_is_refused_here() {
             "{name:?} wrote something"
         );
     }
+}
+
+/// **The bundle is everything a visiting box needs, under the names it reads**
+/// (bl-9043): the pair renamed to the client end's own, the anchors, and on a
+/// box with a stated host the rendezvous pair — `rendezvous.pub` derived on
+/// the way if the box was minted before it existed. A loopback box has none.
+#[test]
+fn the_bundle_carries_the_rendezvous_pair_exactly_when_minted() {
+    use crate::wire::rendezvous::material::{PUBLIC, SALT};
+    let names = |dir: &Path| -> Vec<String> {
+        bundle(dir, VISITOR)
+            .expect("bundle")
+            .into_iter()
+            .map(|(file, name)| {
+                assert!(file.is_file(), "{} is there to carry", file.display());
+                name
+            })
+            .collect()
+    };
+    let tmp = TempDir::new().expect("tmp");
+    let stated = tmp.path().join("stated");
+    mint(&stated, "192.0.2.1:7737", &[], false).expect("mint");
+    std::fs::remove_file(stated.join(PUBLIC)).expect("a box minted before bl-9043");
+    issue(&stated, VISITOR, Grade::Operator).expect("issue");
+    assert_eq!(
+        names(&stated),
+        ["client.pem", "client.key", ANCHORS, PUBLIC, SALT]
+    );
+
+    let local = tmp.path().join("local");
+    ensure(&local).expect("mint");
+    issue(&local, VISITOR, Grade::Operator).expect("issue");
+    assert_eq!(names(&local), ["client.pem", "client.key", ANCHORS]);
 }

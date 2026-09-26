@@ -62,7 +62,7 @@ mod issuing;
 /// The `openssl` invocations and the two X.509 facts they carry.
 mod openssl;
 
-pub(crate) use issuing::{issue, reissue, state};
+pub(crate) use issuing::{bundle, issue, reissue, state};
 
 /// The CA's private key. [`material`](super::material) never names it: it is
 /// what issues the *next* leaf, and nothing but issuance reads it — so its

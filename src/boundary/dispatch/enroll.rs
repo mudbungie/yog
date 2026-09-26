@@ -30,7 +30,7 @@ use std::path::Path;
 use crate::opslog::Origin;
 use crate::registry::enroll::{Enrolled, Request};
 use crate::registry::{self, Client};
-use crate::wire::{material, provision};
+use crate::wire::{material, provision, rendezvous};
 
 use super::Deps;
 use crate::boundary::reply::Reply;
@@ -49,8 +49,8 @@ mod stance;
 ///
 /// The order is the fail-closed one. The identity is parsed first, so an
 /// unusable name refuses before `openssl` runs; the address second, because
-/// material a device cannot dial is not worth minting; the mint third, being
-/// the only step that can fail for a reason outside yog; and the registration
+/// material a device cannot dial is not worth minting, and the rendezvous
+/// hand-off with it (bl-9043); the mint third, being the only step that can fail for a reason outside yog; and the registration
 /// last, its input already validated by the chokepoint's own resolution.
 ///
 /// **The third step mints OR adopts** ([`stance`], bl-bd48): a name whose leaf
@@ -69,6 +69,11 @@ pub(super) fn enroll(deps: &Deps, ts: &str, request: &Request) -> Result<Reply, 
     let client = Client::parse(&request.name)?;
     let dir = material::dir(&deps.world);
     let address = dialable(&dir, request.address.as_deref())?;
+    // Read before the mint, like the address: half a pairing refuses with
+    // nothing issued (bl-9043).
+    let rendezvous = rendezvous::material::read_dir(&dir)?
+        .map(|pairing| pairing.handoff())
+        .transpose()?;
     let grade = stance::mint_or_adopt(&dir, &deps.state_root, request)?;
     let (ca, cert, key) = carry(&dir, &request.name)?;
     registry::register(&deps.state_root, &client, &request.workspace).map_err(|e| e.to_string())?;
@@ -88,6 +93,7 @@ pub(super) fn enroll(deps: &Deps, ts: &str, request: &Request) -> Result<Reply, 
         ca,
         cert,
         key,
+        rendezvous,
     }))
 }
 

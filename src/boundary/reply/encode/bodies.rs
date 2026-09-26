@@ -38,18 +38,21 @@ pub(super) fn delivered(delivery: &crate::fan::Delivery) -> Value {
     Value::Object(map)
 }
 
-/// The QR envelope's payload (REMOTE §1.4 as amended, bl-f4e3). Every field is
-/// present always — there is no absent case, because a device handed five of
-/// the six facts cannot dial, cannot verify, or cannot say who it is — and the
-/// three PEMs ride **verbatim**, newlines and all: the envelope measures 1567
-/// bytes of compact JSON against a byte-mode QR's 2953, so nothing is
-/// re-encoded to buy room it does not need.
+/// The QR envelope's payload (REMOTE §8.4, bl-f4e3). The six facts are
+/// present always — a device handed five of them cannot dial, cannot verify,
+/// or cannot say who it is — and the three PEMs ride **verbatim**, newlines
+/// and all. The rendezvous pair rides beside them only when this box minted
+/// one (bl-9043), an edition a reader may ignore.
 pub(super) fn enrolled_reply(enrolled: &crate::registry::enroll::Enrolled) -> Value {
-    json!({
+    let mut value = json!({
         "ok": true, "kind": ENROLLED, "grade": enrolled.grade.word(),
         "name": enrolled.name, "address": enrolled.address,
         "ca": enrolled.ca, "cert": enrolled.cert, "key": enrolled.key,
-    })
+    });
+    if let Value::Object(map) = &mut value {
+        crate::registry::enroll::handoff_into(map, enrolled.rendezvous.as_ref());
+    }
+    value
 }
 
 /// The which-config-governs answer (bl-13f9; follow-the-tip, bl-e654). The oid

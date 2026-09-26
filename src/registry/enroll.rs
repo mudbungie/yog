@@ -22,6 +22,9 @@
 //! the boundary, one home for the doc.
 
 use super::Grade;
+use crate::boundary::codec::fields::opt_str_of;
+pub use crate::wire::rendezvous::material::Handoff;
+use serde_json::{Map, Value};
 
 /// What an enrollment asks for: a workspace to seat the new client in, the
 /// common name its certificate will carry, and what that certificate may say.
@@ -79,8 +82,9 @@ pub struct Request {
 /// the same leaf again at will, so it discloses nothing to anyone who could
 /// not already mint. It does *persist*, and the remedy is `rm`.
 ///
-/// **The payload contract is REMOTE §1.4's**: the QR envelope is these six
-/// fields under a `"yog-enroll": 1` marker, compact JSON, PEM verbatim.
+/// **The payload contract is REMOTE §8.4's**: the QR envelope is these six
+/// fields under a `"yog-enroll": 1` marker, compact JSON, PEM verbatim — and
+/// the rendezvous pair beside them when this box holds one.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Enrolled {
     /// The grade minted into the subject (§4.2).
@@ -99,4 +103,33 @@ pub struct Enrolled {
     /// Its private key, PEM — held by nothing on this box once this value is
     /// built.
     pub key: String,
+    /// **The rendezvous hand-off** (REMOTE §8.4, §13.2; bl-9043): the engine's
+    /// public rendezvous key and the pairing salt, so a device can find this
+    /// engine off its stated address. `None` on a box that minted none — a
+    /// loopback-only engine has nothing to rendezvous for — and then the
+    /// envelope omits both keys.
+    pub rendezvous: Option<Handoff>,
+}
+
+/// The envelope keys the hand-off rides under — the files' own names
+/// (`rendezvous.pub`, `pairing.salt`) with the dot a JSON key would not want.
+const PUBLIC: &str = "rendezvous_pub";
+const SALT: &str = "pairing_salt";
+
+/// Write the hand-off into a reply object, or nothing when there is none.
+pub(crate) fn handoff_into(map: &mut Map<String, Value>, handoff: Option<&Handoff>) {
+    if let Some(handoff) = handoff {
+        map.insert(PUBLIC.to_owned(), Value::from(handoff.public.clone()));
+        map.insert(SALT.to_owned(), Value::from(handoff.salt.clone()));
+    }
+}
+
+/// Read the hand-off back: both keys or neither, because half a pairing
+/// derives nothing a device could use.
+pub(crate) fn handoff_of(o: &Map<String, Value>) -> Result<Option<Handoff>, String> {
+    match (opt_str_of(o, PUBLIC)?, opt_str_of(o, SALT)?) {
+        (None, None) => Ok(None),
+        (Some(public), Some(salt)) => Ok(Some(Handoff { public, salt })),
+        _ => Err(format!("enrolled: {PUBLIC} and {SALT} travel together")),
+    }
 }

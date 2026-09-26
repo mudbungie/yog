@@ -365,6 +365,8 @@
         "/kind:string": 1,
         "/name:string": 1,
         "/ok:bool": 1,
+        "/pairing_salt:string": 20,
+        "/rendezvous_pub:string": 20,
         ":object": 1
       }
     },

@@ -7,7 +7,10 @@
 //! only for a box whose `address` is not loopback, because a box only a local
 //! seat dials has nothing to rendezvous for and REMOTE §13.4's severability says it
 //! starts no thread. The public key and the salt cross inside a client's
-//! entry exactly as `ca.pem` does.
+//! entry exactly as `ca.pem` does: the mint writes the public half beside the
+//! seed as [`PUBLIC`], derived and never drawn, so the files a client carries
+//! are files that exist (bl-9043), and [`Handoff`] is the same pair as the
+//! enrollment envelope answers it.
 //!
 //! **One salt, four derivations, all HKDF** — so the commons stores nothing
 //! that names the pairing: the DHT salt each item is filed under, the
@@ -25,6 +28,21 @@ use std::path::Path;
 pub const KEY: &str = "rendezvous.key";
 /// The pairing salt, hex — the secret a client and this engine share.
 pub const SALT: &str = "pairing.salt";
+/// The public half of [`KEY`], hex — what a client verifies presence under.
+/// Derived from the seed, so it is re-derived wherever it is absent and never
+/// a second draw; the names are the ones a seat reads (REMOTE §13.2).
+pub const PUBLIC: &str = "rendezvous.pub";
+
+/// What a client is handed beside its leaf: the engine's public rendezvous key
+/// and the pairing salt, each 32 bytes of lowercase hex, exactly as [`PUBLIC`]
+/// and [`SALT`] hold them (REMOTE §8.4, §13.2).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Handoff {
+    /// The engine's rendezvous public key.
+    pub public: String,
+    /// The pairing salt.
+    pub salt: String,
+}
 
 /// What the two files hold, decoded.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -37,6 +55,16 @@ impl Pairing {
     /// The engine's rendezvous keypair — presence is signed under it.
     pub(crate) fn keypair(&self) -> Result<Keypair, String> {
         Keypair::from_seed(self.seed)
+    }
+
+    /// The pair a client carries — the seed's public half and the salt. The
+    /// one derivation, [`Keypair::from_seed`], so what the envelope answers and
+    /// what [`PUBLIC`] holds cannot disagree.
+    pub(crate) fn handoff(&self) -> Result<Handoff, String> {
+        Ok(Handoff {
+            public: hex(&self.keypair()?.public()),
+            salt: hex(&self.salt),
+        })
     }
 
     /// The keypair the inbox is signed with, which both ends can derive.
@@ -108,12 +136,40 @@ pub(crate) fn mint(dir: &Path) -> Result<(), String> {
         // the box can read is the disclosure the wire exists to prevent.
         super::super::provision::private(&path, 0o600);
     }
+    publish(dir)
+}
+
+/// Write [`PUBLIC`] from the seed when it is absent — the mint's last step, and
+/// the heal a box minted before the file existed gets on its next boot. It is
+/// public material, so it is left readable (0644) where the seed is narrowed.
+fn publish(dir: &Path) -> Result<(), String> {
+    let path = dir.join(PUBLIC);
+    if path.is_file() {
+        return Ok(());
+    }
+    let seed = hex_file(&dir.join(KEY))
+        .ok_or_else(|| format!("{} is not 32 bytes of hex", dir.join(KEY).display()))?;
+    let public = crate::dht::Keypair::from_seed(seed)?.public();
+    std::fs::write(&path, format!("{}\n", hex(&public)))
+        .map_err(|e| format!("{}: {e}", path.display()))?;
+    super::super::provision::private(&path, 0o644);
     Ok(())
 }
 
-/// The two files, for the rotation's delete list.
+/// The files a client's bundle carries beside its leaf (bl-9043): [`PUBLIC`]
+/// and [`SALT`] on a box holding rendezvous material — [`PUBLIC`] derived
+/// first if it is absent — and none on a box that minted none.
+pub(crate) fn bundle(dir: &Path) -> Result<Vec<String>, String> {
+    if read_dir(dir)?.is_none() {
+        return Ok(Vec::new());
+    }
+    publish(dir)?;
+    Ok(vec![PUBLIC.to_owned(), SALT.to_owned()])
+}
+
+/// The three files, for the rotation's delete list.
 pub(crate) fn artifacts() -> Vec<String> {
-    vec![KEY.to_owned(), SALT.to_owned()]
+    vec![KEY.to_owned(), SALT.to_owned(), PUBLIC.to_owned()]
 }
 
 /// Exactly 32 bytes of hex in `path`, or nothing — a file that will not read
