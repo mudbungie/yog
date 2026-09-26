@@ -1,7 +1,8 @@
 +++
 title = "yog: presence carries the OBSERVED endpoint — read the reflected address off KRPC replies (BEP 42 `ip`) and publish it beside the route-local one"
 created = 1790144360
-updated = 1790144360
+updated = 1790392548
+claimant = "Urinalyses-O"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 
