@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.72](https://github.com/mudbungie/yog/compare/v0.0.71...v0.0.72) - 2026-09-28
+
+### Changes
+
+- the rendezvous loop is silent — no stderr line for any event, and its counters reach no wire reply [bl-355c]
+
 ## [0.0.71](https://github.com/mudbungie/yog/compare/v0.0.70...v0.0.71) - 2026-09-25
 
 ### Changes
