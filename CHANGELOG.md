@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.75](https://github.com/mudbungie/yog/compare/v0.0.74...v0.0.75) - 2026-09-29
+
+### Changes
+
+- Delegate the per-commit gate to the noodlezoo builder (bl-remote-gate); bump balls to 0.5.13 [bl-1b8d]
+- REMOTE §13.3 rung 3 (client-only re-punch at cached endpoints) cannot land when the engine is behind a NAT: the engine's mapping dies with the served stream, so the reframe is a RE-CALL — skip the presence read, write a call from the cached presence, punch — and the held connection is the only thing that keeps a mapping alive [bl-278f]
+
 ## [0.0.74](https://github.com/mudbungie/yog/compare/v0.0.73...v0.0.74) - 2026-09-29
 
 ### Changes
