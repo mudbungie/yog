@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.73](https://github.com/mudbungie/yog/compare/v0.0.72...v0.0.73) - 2026-09-29
+
+### Changes
+
+- the rendezvous log says 'call nonce N already punched — no punch' a dozen times over hours with no dial — the said-once rule does not hold across polls that alternate with a quiet empty-inbox outcome [bl-1633]
+
 ## [0.0.72](https://github.com/mudbungie/yog/compare/v0.0.71...v0.0.72) - 2026-09-28
 
 ### Changes
