@@ -185,6 +185,7 @@ impl Engine {
             presence,
             Arc::clone(&clock),
             crate::wire::rendezvous::mainline(),
+            listening.rendezvous(),
         )
         .map_err(|reason| format!("wire: {reason}"))?;
         // **The engine says what it bound** (REMOTE §8, bl-e058). A `:0` in

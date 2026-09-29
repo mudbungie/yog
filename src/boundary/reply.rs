@@ -43,6 +43,8 @@ pub(crate) mod cost;
 /// The whole surface's JSON spelling read back into the type (bl-7067) -- the
 /// thin seat's half of the codec, cut on the same seam as the spelling itself.
 mod decode;
+/// The doctor's rows and the rendezvous counters as one answer (bl-355c).
+mod doctor;
 /// The whole surface's JSON spelling, and the envelope helpers it shares.
 mod encode;
 /// One follow frame — the two folds it carries and their spelling both ways

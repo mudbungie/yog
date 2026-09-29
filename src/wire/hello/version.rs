@@ -71,6 +71,12 @@
 //! holding rendezvous material and absent together on a loopback-only one —
 //! so an enrolled device can find its engine off the stated address. A seat
 //! below 20 reads two optional keys it ignores.
+//!
+//! **Edition 21 (bl-355c, REMOTE §13.4).** `reply/doctor` gained
+//! `rendezvous` — the punched wire's counters as one object, `active`,
+//! `published`, `calls`, `punched`, `served` and `last_poll_unix`, all
+//! required when the object is present; absent from a process with no
+//! listener. A seat below 21 reads one optional key it ignores.
 
 // The constant itself is GENERATED, not declared: `build.rs` reads the
 // repo-root `PROTOCOL` file — the number's one file-shaped home, at the one

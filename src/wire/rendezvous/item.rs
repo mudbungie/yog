@@ -54,13 +54,30 @@ impl Call {
         seal(key, &plain)
     }
 
-    pub(crate) fn open(key: &[u8; 32], sealed: &[u8]) -> Option<Call> {
-        let plain = open(key, sealed)?;
+    /// Open an inbox item — or say which of the two ways it is not a call,
+    /// since the loop's log tells them apart (bl-355c): a seal that does not
+    /// verify is another key's item or a stale pairing; one that verifies and
+    /// does not parse is a client that spells the format wrong.
+    pub(crate) fn open(key: &[u8; 32], sealed: &[u8]) -> Result<Call, Unopened> {
+        let plain = open(key, sealed).ok_or(Unopened::Unverified)?;
+        Call::parse(&plain).ok_or(Unopened::NotACall)
+    }
+
+    fn parse(plain: &[u8]) -> Option<Call> {
         let (head, tail) = plain.split_at_checked(8)?;
         let nonce = u64::from_be_bytes(<[u8; 8]>::try_from(head).ok()?);
         let (endpoints, rest) = decode(tail)?;
         rest.is_empty().then_some(Call { nonce, endpoints })
     }
+}
+
+/// Why an inbox item drew no punch.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum Unopened {
+    /// The AEAD tag did not verify under the pairing's seal key.
+    Unverified,
+    /// It verified, and its plaintext is not a call.
+    NotACall,
 }
 
 /// An endpoint list, as the module doc spells it.

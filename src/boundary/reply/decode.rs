@@ -42,7 +42,7 @@ use crate::registry::mailbox::{capture_of, invocation_of};
 mod inspector;
 /// The two world-level rows, their own file at the cap (bl-53d1).
 mod world;
-use world::{client_row, doctor_row};
+use world::client_row;
 
 /// Read one reply body. The outer `Err` is a malformed envelope — bytes this
 /// codec cannot read at all — and the inner `Err` is the refusal the envelope
@@ -209,7 +209,7 @@ fn listing(kind: &str, o: &Map<String, Value>) -> Option<Result<Reply, String>> 
             crate::proposals::wire::view_of(o).map(|v| config(A::Proposals(v)))
         }
         "clients" => rows_of(o, client_row).map(Reply::Clients),
-        "doctor" => rows_of(o, doctor_row).map(Reply::Doctor),
+        super::doctor::KIND => super::doctor::report_of(o).map(Reply::Doctor),
         "invocations" => rows_of(o, invocation_of).map(Reply::Invocations),
         // The §3.5 table, ceiling and ledger (bl-53d1), read by the module
         // that spells them.

@@ -6458,6 +6458,39 @@ byte for byte. An entry with `address` and no rendezvous material is today's
 entry. The phone pays nothing for the machinery when idle: only the engine
 polls; a client touches the DHT only at the moment it wants a connection.
 
+**The operator's view of the loop** (bl-355c). A loop that fails silently is
+indistinguishable from one that was never called, so the engine says each
+event on its stderr, one line apiece in the `yog: wire: listening on …`
+shape, and nothing else is needed to tell which step a seat's call stopped
+at:
+
+    yog: rendezvous: started — punch port <p>, DHT socket port <q>
+    yog: rendezvous: presence published — seq <s>, <n> endpoint(s), <a> ack(s)
+    yog: rendezvous: presence not published — the DHT walk failed (reason withheld: it names nodes)
+    yog: rendezvous: inbox poll failed — the DHT walk failed (reason withheld: it names nodes)
+    yog: rendezvous: inbox item seq <s> did not verify under the pairing's seal key — no punch
+    yog: rendezvous: inbox item seq <s> verified but is not a call — no punch
+    yog: rendezvous: call nonce <n> already punched — no punch
+    yog: rendezvous: call nonce <n> opened — <k> endpoint(s) (1 v6, 1 v4) — punch started
+    yog: rendezvous: punch for nonce <n> landed <m> stream(s) (1 v4)
+    yog: rendezvous: punch for nonce <n> expired after <w>s with no stream
+    yog: rendezvous: served stream for nonce <n> ended
+
+A line carries counts, sequence numbers, nonces and address families, and
+never an address, a key, a salt or a sealed byte: an engine's log is public
+in some deployments. That is why a DHT failure is said without its reason —
+the walk's refusals name the nodes asked and the target walked toward, a
+derivation of the key and the salt. An empty inbox says nothing, and a poll
+says its outcome only when it differs from the last poll's, since an item
+stays in the inbox until the commons forgets it and a call already punched
+would otherwise be said every fifteen seconds.
+
+The same facts are asked for, not only said: `/doctor`'s reply carries a
+`rendezvous` object beside its rows — `active`, `published`, `calls`,
+`punched`, `served` and `last_poll_unix` — present from any process with a
+listener (all zero and `active: false` on a loopback-only box, which started
+no loop) and absent otherwise. It is an edition (21), not a bump (§3.2).
+
 ### 13.5 What it costs, named
 
 - **First contact is seconds, not milliseconds** — the poll period bounds it.

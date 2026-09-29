@@ -11,6 +11,7 @@ use std::sync::atomic::Ordering::Relaxed;
 use std::time::Duration;
 
 mod bench;
+mod said;
 
 const WAIT: Duration = Duration::from_secs(10);
 
@@ -141,6 +142,7 @@ fn start_composes_only_over_rendezvous_material() {
             Presence::default(),
             crate::test_support::clock::FakeClock::new().arc(),
             vec![node.addr.to_string()],
+            Arc::new(Stats::default()),
         )
     };
     assert!(compose().expect("nothing minted").is_none());

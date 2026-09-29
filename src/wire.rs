@@ -128,9 +128,15 @@ mod tests;
 /// same sentence, kept in RAM so it can be *asked for*: never written, never
 /// derived from, and empty in every process that did not bind (a test, the §4.3
 /// pilot, an engine whose bind was refused), which is the honest reading.
+///
+/// **It carries the punched wire's counters too** (REMOTE §13.4, bl-355c) —
+/// the second door's facts about this process, shared with the loop by handle
+/// for the same reason, and all zero where no loop started. Its two readers
+/// sit in `rendezvous::stats`, off this file for the phantom's reason above.
 #[derive(Clone, Default)]
 pub struct Listening {
     bound: Arc<std::sync::OnceLock<String>>,
+    rendezvous: Arc<rendezvous::Stats>,
 }
 
 impl Listening {

@@ -80,6 +80,27 @@ impl Row {
     }
 }
 
+/// **The whole answer** (bl-355c): the rows, and beside them the punched
+/// wire's counters (REMOTE §13.4) — numbers, not a check, because whether a
+/// loop that has served nobody is healthy depends on whether anybody called.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Report {
+    /// One row per check.
+    pub rows: Vec<Row>,
+    /// The rendezvous loop's standing — `None` from a process with no
+    /// listener, which has no loop to speak of (and from an engine older
+    /// than edition 21, which cannot say).
+    pub rendezvous: Option<crate::wire::rendezvous::Standing>,
+}
+
+/// [`examine`], with the engine's own counters beside it.
+pub fn report(deps: &Deps, workspace: Option<(&str, &Path)>) -> Report {
+    Report {
+        rows: examine(deps, workspace),
+        rendezvous: deps.caller.listening.standing(),
+    }
+}
+
 /// Examine this box, and — when the gesture named one — the workspace with it.
 ///
 /// The engine rows always answer, because the questions they ask are the ones a

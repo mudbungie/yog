@@ -42,7 +42,7 @@ fn a_call_round_trips_with_its_nonce() {
         endpoints: endpoints(),
     };
     let sealed = call.seal(&KEY).expect("seal");
-    assert_eq!(Call::open(&KEY, &sealed), Some(call));
+    assert_eq!(Call::open(&KEY, &sealed), Ok(call));
 }
 
 #[test]
@@ -60,7 +60,12 @@ fn a_sealed_item_of_one_kind_is_not_the_other() {
         endpoints: endpoints(),
     };
     let sealed = presence.seal(&KEY).expect("seal");
-    assert_eq!(Call::open(&KEY, &sealed), None, "no nonce to read");
+    assert_eq!(
+        Call::open(&KEY, &sealed),
+        Err(Unopened::NotACall),
+        "no nonce to read"
+    );
+    assert_eq!(Call::open(&[8u8; 32], &sealed), Err(Unopened::Unverified));
     let call = Call {
         nonce: 1,
         endpoints: endpoints(),
@@ -92,7 +97,7 @@ fn what_will_not_decode_is_nothing() {
     let sealed = seal(&KEY, &[0, 0, 0, 0, 0, 0, 0, 1, 0]).expect("seal");
     assert_eq!(
         Call::open(&KEY, &sealed),
-        Some(Call {
+        Ok(Call {
             nonce: 1,
             endpoints: Vec::new()
         })

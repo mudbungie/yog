@@ -17,6 +17,8 @@ mod chrome;
 mod config;
 /// The conversation rows, the widest row type here.
 mod convs;
+/// The doctor's answers, with and without the rendezvous counters.
+mod doctor;
 /// The §4.2 trail, whose rows only mean anything together (bl-4d81).
 mod trail;
 use super::board::board;
@@ -197,6 +199,7 @@ pub(super) fn listings() -> Vec<Reply> {
     ]);
     out.extend(config::answers());
     out.extend(routing());
+    out.extend(doctor::doctor());
     out
 }
 
@@ -259,24 +262,6 @@ fn routing() -> Vec<Reply> {
                 present: false,
                 tools: Vec::new(),
                 last_seen: None,
-            },
-        ]),
-        // The doctor's two shapes (bl-28f4): a passing row, whose remedy is
-        // ABSENT, and a failing one carrying the act — the one difference a
-        // seat renders differently, so a corpus that carried only one would
-        // prove only half of it.
-        Reply::Doctor(vec![
-            crate::doctor::Row {
-                check: "listener".into(),
-                ok: true,
-                fact: "listening on 127.0.0.1:7737".into(),
-                remedy: None,
-            },
-            crate::doctor::Row {
-                check: "address".into(),
-                ok: false,
-                fact: "127.0.0.1:0 is a request, not an endpoint".into(),
-                remedy: Some("`WIRE_HOST=<host> WIRE_PORT=<port> yog wire-certs` states it".into()),
             },
         ]),
     ]

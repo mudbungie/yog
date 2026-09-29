@@ -284,8 +284,9 @@ pub enum Reply {
     /// and the payload the navigator's clients section paints.
     Clients(Vec<crate::registry::roster::ClientRow>),
     /// **Is this box wired up?** — [`Doctor`](super::Query::Doctor)'s answer,
-    /// one row per check; the reasoning is [`doctor`](crate::doctor)'s own.
-    Doctor(Vec<crate::doctor::Row>),
+    /// one row per check and the rendezvous loop's counters; the reasoning
+    /// is [`doctor`](crate::doctor)'s own.
+    Doctor(crate::doctor::Report),
     /// **The price table, the ceiling and the world's ledger** (DESIGN §3.5;
     /// bl-53d1) — [`Prices`](super::Query::Prices)' answer and the receipt
     /// both spend acts earn, re-derived after the write rather than echoed

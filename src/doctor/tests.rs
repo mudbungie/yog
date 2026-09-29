@@ -98,7 +98,14 @@ fn the_listener_row_answers_what_this_process_bound() {
         },
     );
     assert!(!row(&examine(&deps, None), "listener").ok, "nothing bound");
+    assert_eq!(report(&deps, None).rendezvous, None, "no loop to speak of");
     listening.state("127.0.0.1:39969");
+    let standing = crate::wire::rendezvous::Standing::default();
+    assert_eq!(
+        report(&deps, None).rendezvous,
+        Some(standing),
+        "bound, no loop"
+    );
     let bound = examine(&deps, None);
     assert!(row(&bound, "listener").ok);
     assert!(row(&bound, "listener").fact.contains("127.0.0.1:39969"));

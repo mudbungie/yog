@@ -2,19 +2,28 @@
 //! each does when it comes due. Split from the root at §12's cap on the seam
 //! the root's doc already draws — the root is the handle and the composition,
 //! this is what the thread runs.
+//!
+//! **A poll says its outcome only when it differs from the last poll's**
+//! (bl-355c). An item sits in the inbox until the commons forgets it, so a
+//! call already punched, or an item that will not verify, is read again every
+//! fifteen seconds; said once, it is news, and said every poll it is the noise
+//! that hides the next call. A quiet poll — no item — says nothing, and a
+//! failure streak says itself once; `/doctor`'s `last_poll_unix` is the
+//! liveness.
 
-use super::item::{Call, Presence as Published};
+use super::call::Answer;
+use super::item::{Call, Unopened};
 use super::material::Pairing;
-use super::{Cadence, Ctx, Punch, Stats};
-use crate::dht::{Dht, Keypair, Transport};
-use crate::registry::presence::Presence;
+use super::{Cadence, Ctx, Say, Stats, say};
+use crate::dht::{Dht, Keypair, Udp};
 use crate::ui_state::Clock;
-use crate::wire::server::{Answerer, serve};
-use rustls::ServerConfig;
 use std::net::{IpAddr, SocketAddr, ToSocketAddrs};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::time::Instant;
+
+/// Presence, sealed and published — its own file at §12's budget.
+mod publish;
 
 pub(super) struct Cycle {
     pairing: Pairing,
@@ -23,16 +32,17 @@ pub(super) struct Cycle {
     bootstrap: Vec<String>,
     config: crate::dht::Config,
     /// The transport, until the bootstrap resolves and the client takes it.
-    transport: Option<Box<dyn Transport>>,
+    transport: Option<Udp>,
     dht: Option<Dht>,
-    punch: Arc<Punch>,
     advertise: Vec<IpAddr>,
-    tls: Arc<ServerConfig>,
-    answerer: Arc<dyn Answerer>,
-    presence: Presence,
+    /// What an opened call is handed to — the punch and the serving.
+    answer: Answer,
     clock: Arc<dyn Clock>,
     cadence: Cadence,
     stats: Arc<Stats>,
+    say: Say,
+    /// The last poll's line, so an unchanged outcome is said once.
+    last_said: Option<String>,
     /// The last sequence published, so two publishes in one second still
     /// move forward — a node refuses a `seq` that does not.
     last_seq: i64,
@@ -44,8 +54,18 @@ pub(super) struct Cycle {
 }
 
 impl Cycle {
-    pub(super) fn new(ctx: Ctx, stats: Arc<Stats>) -> Result<Cycle, String> {
+    pub(super) fn new(ctx: Ctx) -> Result<Cycle, String> {
         let now = ctx.clock.now();
+        let answer = Answer {
+            punch: Arc::new(ctx.punch),
+            tls: ctx.tls,
+            answerer: ctx.answerer,
+            presence: ctx.presence,
+            window: ctx.cadence.window,
+            quiet: ctx.cadence.quiet,
+            stats: Arc::clone(&ctx.stats),
+            say: Arc::clone(&ctx.say),
+        };
         Ok(Cycle {
             keypair: ctx.pairing.keypair()?,
             inbox_key: ctx.pairing.inbox_keypair()?.public(),
@@ -54,19 +74,23 @@ impl Cycle {
             config: ctx.config,
             transport: Some(ctx.transport),
             dht: None,
-            punch: Arc::new(ctx.punch),
             advertise: ctx.advertise,
-            tls: ctx.tls,
-            answerer: ctx.answerer,
-            presence: ctx.presence,
+            answer,
             clock: ctx.clock,
             cadence: ctx.cadence,
-            stats,
+            stats: ctx.stats,
+            say: ctx.say,
+            last_said: None,
             last_seq: 0,
             last_nonce: None,
             next_publish: now,
             next_poll: now,
         })
+    }
+
+    /// The port every SYN leaves from — said at start.
+    pub(super) fn punch_port(&self) -> u16 {
+        self.answer.punch.port()
     }
 
     pub(super) fn run(mut self, stop: &AtomicBool) {
@@ -75,13 +99,25 @@ impl Cycle {
             // The poll first: its walk is what tells a publish due at the
             // same moment — the first one, at boot — where the commons sees us.
             if now >= self.next_poll {
+                let unix = self.clock.unix().max(0) as u64;
+                self.stats.last_poll_unix.store(unix, Ordering::Relaxed);
                 let outcome = self.poll();
-                count(outcome, &self.stats.polls, &self.stats.poll_failures);
+                self.tell(outcome.clone().unwrap_or_else(|_| Some(say::poll_failed())));
+                count(
+                    outcome.map(drop),
+                    &self.stats.polls,
+                    &self.stats.poll_failures,
+                );
                 self.next_poll = now + self.cadence.poll;
             }
             if now >= self.next_publish {
                 let outcome = self.publish();
-                count(outcome, &self.stats.published, &self.stats.publish_failures);
+                (self.say)(&outcome.clone().unwrap_or_else(|_| say::not_published()));
+                count(
+                    outcome.map(drop),
+                    &self.stats.published,
+                    &self.stats.publish_failures,
+                );
                 self.next_publish = now + self.cadence.publish;
             }
             std::thread::sleep(self.cadence.tick);
@@ -103,74 +139,49 @@ impl Cycle {
                 return Err("no bootstrap node resolved".to_owned());
             }
             let transport = self.transport.take().ok_or("the transport is spent")?;
-            self.dht = Some(Dht::new(transport, bootstrap, self.config.clone())?);
+            self.dht = Some(Dht::new(
+                Box::new(transport),
+                bootstrap,
+                self.config.clone(),
+            )?);
         }
         self.dht.as_mut().ok_or_else(|| "no DHT client".to_owned())
     }
 
-    /// Seal and publish presence under the rendezvous key: the route-local
-    /// addresses, then every address the last walk's nodes agreed they saw
-    /// us at (`Dht::observed`) that is not one of them — all at the punch
-    /// port. The observed PORT is the DHT socket's UDP mapping, not the
-    /// punch port's TCP one, so only the address is taken and port
-    /// preservation is trusted (REMOTE §13.8 measured it at home; a carrier
-    /// that rewrites the port is the case this does not reach).
-    fn publish(&mut self) -> Result<(), String> {
-        let observed = self.dht()?.observed();
-        let mut ips = self.advertise.clone();
-        for ip in observed.iter().map(SocketAddr::ip) {
-            if !ips.contains(&ip) {
-                ips.push(ip);
-            }
-        }
-        let seq = self.clock.unix().max(self.last_seq + 1);
-        let port = self.punch.port();
-        let endpoints = ips
-            .into_iter()
-            .map(|ip| SocketAddr::new(ip, port))
-            .collect();
-        let sealed = Published { endpoints }.seal(&self.pairing.seal_key())?;
-        let item = self
-            .keypair
-            .sign(self.pairing.presence_salt(), seq, sealed)?;
-        self.dht()?.put(item)?;
-        self.last_seq = seq;
-        Ok(())
-    }
-
     /// Read the inbox; a call that verifies, unseals and is new is punched
-    /// on its own thread, and every stream that lands is served.
-    fn poll(&mut self) -> Result<(), String> {
+    /// on its own thread, and every stream that lands is served. Answers the
+    /// line the outcome earns — none for an empty inbox.
+    fn poll(&mut self) -> Result<Option<String>, String> {
         let (key, salt) = (self.inbox_key, self.pairing.inbox_salt());
         let Some(item) = self.dht()?.get(key, salt)? else {
-            return Ok(());
+            return Ok(None);
         };
-        let Some(call) = Call::open(&self.pairing.seal_key(), &item.value) else {
-            return Ok(());
+        let call = match Call::open(&self.pairing.seal_key(), &item.value) {
+            Ok(call) => call,
+            Err(Unopened::Unverified) => return Ok(Some(say::unverified(item.seq))),
+            Err(Unopened::NotACall) => return Ok(Some(say::unopened(item.seq))),
         };
         if self.last_nonce == Some(call.nonce) {
-            return Ok(());
+            return Ok(Some(say::seen(call.nonce)));
         }
         self.last_nonce = Some(call.nonce);
         self.stats.calls.fetch_add(1, Ordering::Relaxed);
-        let (punch, tls, answerer) = (
-            Arc::clone(&self.punch),
-            Arc::clone(&self.tls),
-            Arc::clone(&self.answerer),
-        );
-        let (presence, cadence, stats) =
-            (self.presence.clone(), self.cadence, Arc::clone(&self.stats));
-        std::thread::spawn(move || {
-            for stream in punch.punch(call.endpoints, cadence.window) {
-                stats.served.fetch_add(1, Ordering::Relaxed);
-                let (tls, answerer, presence) =
-                    (Arc::clone(&tls), Arc::clone(&answerer), presence.clone());
-                std::thread::spawn(move || {
-                    serve(stream, &tls, answerer.as_ref(), &presence, cadence.quiet);
-                });
-            }
-        });
-        Ok(())
+        // Said before the punch starts, so its own lines follow this one;
+        // the loop's `tell` of the same line is then the no-op it looks like.
+        let line = Some(say::opened(call.nonce, &call.endpoints));
+        self.tell(line.clone());
+        self.answer.clone().spawn(call);
+        Ok(line)
+    }
+
+    /// Say a poll's line, unless it is the last poll's.
+    fn tell(&mut self, line: Option<String>) {
+        if line != self.last_said
+            && let Some(said) = &line
+        {
+            (self.say)(said);
+        }
+        self.last_said = line;
     }
 }
 

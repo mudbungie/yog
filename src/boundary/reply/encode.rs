@@ -162,7 +162,7 @@ pub fn encode(reply: &Reply) -> Value {
         // The tool set rides in its ONE spelling (`registry::tools::encode`),
         // the same bytes the client's own document holds (REMOTE §5, bl-4e08).
         Reply::Clients(rows) => rows_reply("clients", rows.iter().map(client_row)),
-        Reply::Doctor(rows) => rows_reply("doctor", rows.iter().map(doctor_row)),
+        Reply::Doctor(report) => super::doctor::reply(report),
         // The §3.5 table, ceiling and ledger (bl-53d1), spelled beside its type.
         Reply::Prices(view) => super::prices::reply(view),
     }
@@ -235,21 +235,6 @@ fn routed_reply(invocation: &str, capture: Option<&crate::registry::mailbox::Cap
     map.insert("invocation".to_owned(), json!(invocation));
     if let Some(capture) = capture {
         map.insert("capture".to_owned(), capture_value(capture));
-    }
-    Value::Object(map)
-}
-
-/// One check, as every seat renders it (bl-28f4): what was examined, whether
-/// this box passes it, the fact that was read — and the act, **absent on a
-/// passing row**, because a remedy beside a fact that is fine is advice nobody
-/// asked for.
-fn doctor_row(row: &crate::doctor::Row) -> Value {
-    let mut map = Map::new();
-    map.insert("check".to_owned(), json!(row.check));
-    map.insert("ok".to_owned(), json!(row.ok));
-    map.insert("fact".to_owned(), json!(row.fact));
-    if let Some(remedy) = &row.remedy {
-        map.insert("remedy".to_owned(), json!(remedy));
     }
     Value::Object(map)
 }

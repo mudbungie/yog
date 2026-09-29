@@ -7,6 +7,8 @@
 //! inherits from the field readers (`missing or non-string field "x"`) are the
 //! gesture codec's, tested there once rather than once per field here.
 
+/// The doctor's rendezvous object (bl-355c).
+mod doctor;
 /// The inspector families' own tokens, split off at §12's cap.
 mod inspector;
 

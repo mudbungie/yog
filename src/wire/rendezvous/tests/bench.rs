@@ -4,7 +4,7 @@
 
 use super::super::item::Call;
 use super::super::material::Pairing;
-use super::super::{Cadence, Ctx, Punch, Rendezvous};
+use super::super::{Cadence, Ctx, Punch, Rendezvous, Stats};
 use crate::dht::tests::fake::{FakeNode, Mood};
 use crate::dht::{Config, Dht, NodeId, Udp};
 use crate::registry::Peer;
@@ -18,7 +18,7 @@ use rustls::pki_types::ServerName;
 use rustls::{ClientConnection, StreamOwned};
 use serde_json::{Value, json};
 use std::net::{IpAddr, Ipv4Addr, SocketAddr, TcpStream};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex, PoisonError};
 use std::time::{Duration, Instant};
 use tempfile::TempDir;
 
@@ -39,6 +39,7 @@ pub(super) struct Bench {
     pub(super) pairing: Pairing,
     pub(super) clock: FakeClock,
     pub(super) port: u16,
+    heard: Arc<Mutex<Vec<String>>>,
     pub(super) engine: Rendezvous,
 }
 
@@ -89,9 +90,11 @@ pub(super) fn bench(mood: Mood, bootstrap: Option<Vec<String>>) -> Bench {
     let clock = FakeClock::new();
     let punch = Punch::bind(0).expect("punch port");
     let port = punch.port();
+    let heard = Arc::new(Mutex::new(Vec::new()));
+    let sink = Arc::clone(&heard);
     let engine = Rendezvous::spawn(Ctx {
         pairing: pairing.clone(),
-        transport: Box::new(Udp::bind(loopback(0)).expect("udp")),
+        transport: Udp::bind(loopback(0)).expect("udp"),
         bootstrap: bootstrap.unwrap_or_else(|| vec![router.addr.to_string()]),
         config: quick(),
         punch,
@@ -101,6 +104,11 @@ pub(super) fn bench(mood: Mood, bootstrap: Option<Vec<String>>) -> Bench {
         presence: Presence::default(),
         clock: clock.arc(),
         cadence: cadence(),
+        stats: Arc::new(Stats::default()),
+        say: Arc::new(move |line: &str| {
+            let mut lines = sink.lock().unwrap_or_else(PoisonError::into_inner);
+            lines.push(line.to_owned());
+        }),
     })
     .expect("spawn");
     Bench {
@@ -110,11 +118,25 @@ pub(super) fn bench(mood: Mood, bootstrap: Option<Vec<String>>) -> Bench {
         pairing,
         clock,
         port,
+        heard,
         engine,
     }
 }
 
 impl Bench {
+    /// Every line said so far, in order.
+    pub(super) fn heard(&self) -> Vec<String> {
+        self.heard
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .clone()
+    }
+
+    /// How many lines said so far start with `head`.
+    pub(super) fn said(&self, head: &str) -> usize {
+        self.heard().iter().filter(|l| l.starts_with(head)).count()
+    }
+
     /// A client of the same fake DHT.
     pub(super) fn dht(&self) -> Dht {
         let udp = Udp::bind(loopback(0)).expect("udp");

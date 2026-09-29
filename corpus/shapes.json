@@ -346,6 +346,13 @@
       "signature": {
         "/kind:string": 13,
         "/ok:bool": 13,
+        "/rendezvous/active:bool": 21,
+        "/rendezvous/calls:number": 21,
+        "/rendezvous/last_poll_unix:number": 21,
+        "/rendezvous/published:number": 21,
+        "/rendezvous/punched:number": 21,
+        "/rendezvous/served:number": 21,
+        "/rendezvous:object": 21,
         "/rows/[]/check:string": 13,
         "/rows/[]/fact:string": 13,
         "/rows/[]/ok:bool": 13,

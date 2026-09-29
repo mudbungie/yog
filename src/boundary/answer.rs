@@ -254,7 +254,7 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
         // reads the path, and the sentence names the workspace the operator
         // typed. A doctor that named no workspace answers the engine's own
         // checks alone, which is the state the box it exists for is in.
-        Query::Doctor { workspace } => Reply::Doctor(crate::doctor::examine(
+        Query::Doctor { workspace } => Reply::Doctor(crate::doctor::report(
             deps,
             workspace.as_deref().map(|name| (name, ws)),
         )),
