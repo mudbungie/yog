@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.74](https://github.com/mudbungie/yog/compare/v0.0.73...v0.0.74) - 2026-09-29
+
+### Changes
+
+- the engine serves a punched stream only inside a call's punch window, so a client's re-punch from the port its call named (REMOTE §13.3 rung 3) connects at TCP level and is never served — the punch listener must serve every stream that lands, at any time [bl-5276]
+
 ## [0.0.73](https://github.com/mudbungie/yog/compare/v0.0.72...v0.0.73) - 2026-09-29
 
 ### Changes
