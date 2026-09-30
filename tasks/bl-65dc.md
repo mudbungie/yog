@@ -1,7 +1,7 @@
 +++
 title = "deploy: prove the punched path live from a laptop and the phone, then walk the engine off the overlay"
 created = 1788232804
-updated = 1790733273
+updated = 1790733833
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 
@@ -38,3 +38,7 @@ WIFI LEG PROVEN 2026-09-28 (phone on wifi behind a residential NAT, engine behin
 ---
 
 CELLULAR LEG, first live attempt 2026-09-29 (engine 0.0.74): the phone app launched on wifi (fresh call landed as before), then wifi was dropped by a phone-side script for 100 s while the app stayed in the foreground. On cellular the app wrote a new call (3 endpoints: 1 v6, 2 v4 — the carrier-observed v4 address and a stale wlan address); the engine opened it and punched v4 only — its SYNs toward the carrier-observed address at the call's port drew nothing for the 20 s window ('expired with no stream'); the engine never tried the v6 endpoint because the engine box has no global IPv6. When wifi returned the next call landed at once from the home address. So TCP simultaneous open across (residential NAT, carrier NAT) failed on the one attempt measured — REMOTE §13.8's open case (a carrier NAT that rewrites the port per mapping), and §13.6's criterion is now a live question for the operator: accept wifi-only roving, stand up the carriage rung (bl-89d2), or give the engine a global IPv6 — the carrier is IPv6-native, and the phone's v6 endpoint would be a plain connect with no punch at all. Phone-side evidence for this window is absent (wireless debugging dies with wifi).
+
+---
+
+CELLULAR LEG MEASURED, three attempts over USB adb 2026-09-29 (engine 0.0.74): TCP simultaneous open does NOT cross (home NAT, carrier NAT). Both ends SYN'd at the same time for ~20 s in two attempts; no SYN-RECV at either end. Cause measured with TCP STUN from the phone on cellular: the carrier maps one local port to a DIFFERENT random external port per destination (symmetric for TCP; 12 probes, never preserved), so the engine's SYNs toward the call's port hit no mapping and the phone's SYNs arrive from a port the engine's NAT holds no mapping for. IPv6 is no exit: the phone's internet APN is v4-only; its only global v6 lives on the carrier's IMS network, which apps cannot use — an engine with v6 would have nothing to aim at. On wifi the same phone lands every time. So §13.6's criterion has fired for this carrier: the ruling is the operator's — wifi-only roving, or stand up the carriage rung (bl-89d2). Side findings filed as yog-android balls (network change detected 34–53 s late; calls carry the translator-side and stale addresses; an unidentified v6 endpoint). The docs' UDP-based optimism in §13.3/§13.6/§13.8 is superseded for TCP on this carrier: yog bl to amend.
