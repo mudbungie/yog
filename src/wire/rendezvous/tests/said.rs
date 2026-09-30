@@ -121,6 +121,27 @@ fn a_call_says_opened_landed_ended_and_then_seen_once() {
 }
 
 #[test]
+fn a_punched_call_read_between_quiet_polls_is_said_seen_once() {
+    // The commons shows the stale call, then nothing, then the call again
+    // (bl-1633): a quiet poll between them must not make it news twice.
+    let b = bench(Mood::Blink, None);
+    let stats = b.engine.stats();
+    assert!(until(|| stats.polls.load(Relaxed) >= 1, WAIT));
+    let closed = Punch::bind(0).expect("a port").port();
+    assert!(b.write_inbox(1, b.call(9, closed)) >= 1);
+    for polls in 2..=6 {
+        b.clock.advance(Duration::from_secs(15));
+        assert!(until(|| stats.polls.load(Relaxed) >= polls, WAIT));
+    }
+    let heard = b.heard();
+    let opened = format!("{P} call nonce 9 opened");
+    assert_eq!(b.said(&opened), 1, "{heard:?}");
+    let seen = format!("{P} call nonce 9 already punched — no punch");
+    assert_eq!(b.said(&seen), 1, "{heard:?}");
+    assert_eq!(stats.standing().calls, 1);
+}
+
+#[test]
 fn a_punch_toward_nobody_says_it_expired() {
     let b = bench(Mood::Answer, None);
     let stats = b.engine.stats();

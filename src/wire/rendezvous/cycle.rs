@@ -9,7 +9,8 @@
 //! fifteen seconds; said once, it is news, and said every poll it is the noise
 //! that hides the next call. A quiet poll — no item — says nothing, and a
 //! failure streak says itself once; `/doctor`'s `last_poll_unix` is the
-//! liveness.
+//! liveness. A quiet poll resets that memory, so an already-punched call is
+//! said once per NONCE (bl-1633): a thin swarm alternates it with nothing.
 
 use super::call::Answer;
 use super::item::{Call, Unopened};
@@ -49,6 +50,8 @@ pub(super) struct Cycle {
     /// The last call punched, so a poll that reads the same item again does
     /// not punch it again.
     last_nonce: Option<u64>,
+    /// The call whose already-punched line was said — once per nonce.
+    seen_said: Option<u64>,
     next_publish: Instant,
     next_poll: Instant,
 }
@@ -83,6 +86,7 @@ impl Cycle {
             last_said: None,
             last_seq: 0,
             last_nonce: None,
+            seen_said: None,
             next_publish: now,
             next_poll: now,
         })
@@ -162,7 +166,8 @@ impl Cycle {
             Err(Unopened::NotACall) => return Ok(Some(say::unopened(item.seq))),
         };
         if self.last_nonce == Some(call.nonce) {
-            return Ok(Some(say::seen(call.nonce)));
+            let fresh = self.seen_said.replace(call.nonce) != Some(call.nonce);
+            return Ok(fresh.then(|| say::seen(call.nonce)));
         }
         self.last_nonce = Some(call.nonce);
         self.stats.calls.fetch_add(1, Ordering::Relaxed);

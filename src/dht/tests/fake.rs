@@ -40,6 +40,10 @@ pub(crate) enum Mood {
     Rotor,
     /// Answers everything but `put`: offers a token and never spends it.
     Mute,
+    /// Answers, but every second `get` for an item it holds comes back
+    /// without it — an inbox that alternates between a stale item and a
+    /// quiet read, as a thin swarm's does (bl-1633).
+    Blink,
 }
 
 pub(crate) struct FakeNode {
@@ -120,15 +124,42 @@ fn run(
                 let one = vec![peers[(turn - 1) % peers.len()]; 8];
                 answer(&tid, id, &one, &mut items, &q)
             }
+            Mood::Blink if hits(&q, &items) => {
+                turn += 1;
+                let mut none = Vec::new();
+                let shown = if turn.is_multiple_of(2) {
+                    &mut none
+                } else {
+                    &mut items
+                };
+                answer(&tid, id, peers, shown, &q)
+            }
             Mood::Garbage => b"not bencode".to_vec(),
             Mood::Refuse => error(&tid, 201, "refused"),
             Mood::Anonymous => reply(&tid, Dict::new()),
             Mood::Stray => reply(b"stray", Dict::from([entry("id", bytes(&id.0))])),
-            Mood::Answer | Mood::Router | Mood::Mute => answer(&tid, id, peers, &mut items, &q),
+            Mood::Answer | Mood::Router | Mood::Mute | Mood::Blink => {
+                answer(&tid, id, peers, &mut items, &q)
+            }
             Mood::Claim(ip) => claim(answer(&tid, id, peers, &mut items, &q), ip),
         };
         socket.send_to(&datagram, from).unwrap();
     }
+}
+
+/// A `get` for an item this node holds.
+fn hits(q: &Value, items: &[Mutable]) -> bool {
+    q.get("q").unwrap().as_bytes().unwrap() == b"get"
+        && items.iter().any(|i| {
+            let target = q
+                .get("a")
+                .unwrap()
+                .get("target")
+                .unwrap()
+                .as_bytes()
+                .unwrap();
+            i.target().0 == target
+        })
 }
 
 fn answer(tid: &[u8], id: NodeId, peers: &[Node], items: &mut Vec<Mutable>, q: &Value) -> Vec<u8> {
