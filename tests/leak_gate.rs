@@ -179,20 +179,52 @@ fn every_fixture_value_is_unmistakably_fabricated() {
 }
 
 // 6. A gate verdict may skip the build. It may not skip the disclosure scan.
+//
+// The hook no longer carries the gate: `scripts/pre-commit` is `exec bl-gate`,
+// and bl-gate (userconf, one copy for every repo on the box) is where the scan
+// and the verdict cache live. Two halves, then. The tree's half: the hook hands
+// EVERYTHING to bl-gate — no step of its own ahead of the exec, so nothing in
+// this repository can consult a verdict before bl-gate scans. The box's half:
+// the bl-gate this box would run scans before it checks the cache. bl-gate is
+// resolved as the hook resolves it, on PATH; a box without one cannot commit
+// through this hook at all (the exec fails), so there is no gate there to
+// judge — the noodlezoo builder's container is such a box.
 #[test]
 fn the_leak_scan_runs_before_the_verdict_cache() {
-    let gate = fs::read_to_string(repo().join("scripts/pre-commit")).unwrap();
-    let scan_at = gate
-        .find("\nmake leak-scan")
-        .expect("an unconditional leak-scan step");
-    let cache_at = gate
-        .find("bl-speculate check")
-        .expect("the verdict-cache check");
+    let hook = fs::read_to_string(repo().join("scripts/pre-commit")).unwrap();
+    let commands: Vec<&str> = hook
+        .lines()
+        .map(str::trim)
+        .filter(|l| !l.is_empty() && !l.starts_with('#'))
+        .collect();
+    assert_eq!(
+        commands,
+        ["exec bl-gate \"$@\""],
+        "the hook runs something of its own: only bl-gate may decide what runs \
+         ahead of the disclosure scan"
+    );
+    let Some(gate) = on_path("bl-gate") else {
+        eprintln!("no bl-gate on PATH: no commit can pass this hook here, nothing to judge");
+        return;
+    };
+    let gate = fs::read_to_string(&gate).unwrap();
+    let step = |needle: &str| {
+        gate.lines()
+            .position(|l| !l.trim_start().starts_with('#') && l.contains(needle))
+            .unwrap_or_else(|| panic!("bl-gate has no `{needle}` step"))
+    };
     assert!(
-        scan_at < cache_at,
+        step("make leak-scan") < step("bl-speculate check"),
         "the verdict cache can short-circuit the scan: a stored pass — including one \
          imported from a remote builder — would let a leak through unread"
     );
+}
+
+/// The file `exec NAME` would run: the first executable NAME on PATH.
+fn on_path(name: &str) -> Option<std::path::PathBuf> {
+    std::env::split_paths(&std::env::var_os("PATH")?)
+        .map(|dir| dir.join(name))
+        .find(|p| p.is_file())
 }
 
 // 7. The gate is not only a local hook: CI reaches it from its entry point.
@@ -221,7 +253,7 @@ fn ci_reaches_the_leak_scan_from_its_own_entry_point() {
     );
     // And the merge-queue builder runs the same script `make check` does, so a
     // remote verdict is earned under the same scan (the noodlezoo builder runs
-    // `make check` itself — scripts/pre-commit).
+    // `make check` itself — bl-gate, via scripts/pre-commit).
     let spec = fs::read_to_string(repo().join(".github/workflows/speculate.yml")).unwrap();
     assert!(
         spec.contains("scripts/check\n"),

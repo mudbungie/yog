@@ -20,7 +20,8 @@
 #   nonzero  the gate failed on the tree's own merits.
 #
 # Tracked, so it is part of the tree a bl-speculate verdict is keyed by — an
-# edit here re-keys every verdict (see scripts/pre-commit).
+# edit here re-keys every verdict (the hook is bl-gate, userconf; AGENTS.md
+# "The gate").
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 make fmt-check lint

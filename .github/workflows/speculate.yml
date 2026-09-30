@@ -10,13 +10,14 @@
 # crashed driver leaves the branch behind — sweep by hand: git push origin
 # --delete speculation/<sha>. This is the merge-queue builder for a
 # public-repo close; the per-commit gate is the noodlezoo builder
-# (scripts/pre-commit, bl-1b8d), which runs the same `make check`. Neither
-# box builds locally: no verdict is exit 75, and the close waits.
+# (bl-gate, userconf, via scripts/pre-commit; bl-1b8d), which runs the same
+# `make check`. Neither box builds locally: no verdict is exit 75, and the
+# close waits.
 #
 # A verdict is keyed by (tree, gate). The gate scripts are tracked, so they
 # are already in the tree (balls bl-6a84); the gate half is BALLS_TOOLCHAIN,
 # which since balls 0.5.13 the caller of bl-speculate must export itself —
-# `rustc -V` here, as scripts/pre-commit exports it on the laptop. A verdict
+# `rustc -V` here, as bl-gate exports it on the laptop. A verdict
 # recorded here HITS locally only when the runner's toolchain matches yours
 # AND your bl-speculate derives the key the way the pinned one installed
 # below does: install it from crates.io at the Cargo.toml pin, never from a

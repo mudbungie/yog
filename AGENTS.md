@@ -329,22 +329,28 @@ demotion removes an internal API from the boundary's obligations. Reach for
 
     fmt-check → lint (line-cap + beat-audit + deploy-selftest + protocol-gate + leak-scan + clippy + ast-grep scan + cargo-deny) → scripts/check-coverage.sh
 
-**This machine does not run it** (bl-1b8d; ops bl-3e3f, `~/ops/remote-builds.md`
-"Repo gate"). The pre-commit hook (`scripts/pre-commit`, seated by
-`make install-hooks`) leak-scans locally, asks `bl-speculate check` for a
-verified verdict on the staged tree, and otherwise has the **noodlezoo builder**
-run `make check` in a container whose rustc is the `rust-toolchain.toml` pin and
-sign one (`bl-remote-gate`, a userconf script; runbook
-`~/ops/noodlezoo/docs/builder.md`). Its exit is the hook's exit: 0 pass, 1 the
-builder failed the tree, 75 no verdict (unreachable, a tool missing from the
-image, an unverifiable signature) — nothing recorded, commit refused, next
+**This machine does not run it.** The pre-commit hook (`.githooks/pre-commit`,
+seated by `make install-hooks`, the mainline refusal) execs `scripts/pre-commit`,
+which is `exec bl-gate "$@"`: the gate is `bl-gate` from userconf
+(`~/userconf/bin/bl-gate`, ops bl-1f80, `~/ops/remote-builds.md` "Phase 2"),
+the one copy every repo on this machine runs. This laptop does not compile in
+the gate, and `cargo tarpaulin` / `cargo llvm-cov` are shimmed here and refuse
+to run. bl-gate leak-scans locally (`make leak-scan`, ahead of any cache —
+bl-167d), exports `BALLS_TOOLCHAIN`, asks `bl-speculate check` for a verified
+verdict on the staged tree, and otherwise has the **noodlezoo builder** run
+`make check` in a container whose rustc is the `rust-toolchain.toml` pin and
+sign one (`bl-remote-gate`, userconf; runbook `~/ops/noodlezoo/docs/builder.md`).
+Its exit is the hook's exit: 0 pass, 1 the builder failed the tree (`ssh builder
+cat /tank/build/out/<sha>/log`), 75 no verdict (unreachable, a tool missing from
+the image, an unverifiable signature) — nothing recorded, commit refused, next
 attempt rebuilds. There is no local build path and no bypass: an unreachable
-builder is a 75, not a `make check` here. `.github/workflows/ci.yml` runs
-`make ci` on pull requests and `main`; the GitHub Actions merge-queue builder
-(`.github/workflows/speculate.yml`, "The merge queue" below) runs `scripts/check`,
-the script `make check` is a door onto. Nobody restates a step the Makefile
-defines. Hand-run targets (`make lint`, `make coverage`) still work here; they
-are just not the gate.
+builder is a 75, not a `make check` here. `bl-remote-run <target>` runs any make
+target on the builder when you want tests before committing.
+`.github/workflows/ci.yml` runs `make ci` on pull requests and `main`; the
+GitHub Actions merge-queue builder (`.github/workflows/speculate.yml`, "The
+merge queue" below) runs `scripts/check`, the script `make check` is a door
+onto. Nobody restates a step the Makefile defines. Hand-run targets (`make
+lint`) still work here; they are just not the gate.
 
 - `make lint` — `make line-cap` (sub-second, so it fails first), then
   `make beat-audit` (milliseconds), then `make deploy-selftest`, then
@@ -460,7 +466,7 @@ are just not the gate.
   window (bl-7942), so this repository tracks no binary at all and every one is
   refused.
 
-  **The scan is never cached.** `scripts/pre-commit` runs it BEFORE consulting
+  **The scan is never cached.** `bl-gate` (userconf, the hook) runs it BEFORE consulting
   bl-speculate's verdict cache, so no stored verdict — including one imported
   from the remote builder — can let a leak through unread. (A verdict's key
   says which tree and which toolchain, never that this box's rules read it
@@ -823,7 +829,7 @@ cost is recorded per item; the notes are the checklist's evidence that it works.
 The gate above costs minutes and closes serialize on it. yog rides balls'
 speculative merge queue (balls `docs/design/bl-24e7-speculative-merge-queue.md`,
 adopted in bl-1a5b): the gate consults a tree-keyed **verdict cache** first —
-`scripts/pre-commit` exits in seconds when this exact worktree tree already
+the hook (`bl-gate`) exits in seconds when this exact worktree tree already
 passed this exact gate — and speculative builds warm that cache ahead of the
 queue, on GitHub Actions (`.github/workflows/speculate.yml`). The per-commit
 gate already builds on noodlezoo (`bl-remote-gate`, "The gate"), so a close
@@ -865,7 +871,7 @@ Facts the queue derives from (do not fight them):
   env var since 0.5.13). The gate scripts are tracked, so editing one is a
   different tree and invalidates every stored verdict (deliberately); the
   toolchain is the only gate input the tree cannot see, and the gate exports
-  it itself as `rustc -V` — `scripts/pre-commit` and `scripts/speculate-gate`
+  it itself as `rustc -V` — `bl-gate` (userconf) and `scripts/speculate-gate`
   here, `speculate.yml` on the runner, the builder in its container. Nothing
   else derives it. `rust-toolchain.toml` pins it on every side — bump it in
   lockstep or remote verdicts silently stop matching.
