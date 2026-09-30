@@ -6217,9 +6217,10 @@ there is none. This design therefore ships **without carriage, and says so**:
 a NAT pair that refuses a punch has no path — not a slow one, none. That is
 accepted with open eyes, and §13.6 parks the first cut's relay as the named
 exit if it bites where it matters. The pair this was written to worry about —
-cellular CGNAT to residential — has since been measured and it punches
-(§13.8), which retires the assumption rather than the caution: what was
-measured is UDP, and the wire is TCP.
+cellular CGNAT to residential — was measured twice (§13.8): over UDP it
+punches, and over TCP, on the operator's carrier, it does not. The TCP result
+is the one the wire rides, so the caution stands and §13.6's criterion has
+fired for that carrier (bl-d185).
 
 ### 13.2 The DHT rendezvous
 
@@ -6385,6 +6386,17 @@ suite cannot fake.
 
 ### 13.3 The punch is the data path
 
+**The precondition, stated (bl-d185):** a TCP simultaneous open lands only
+when **both** ends' NATs give the punch port an **endpoint-independent,
+port-preserving TCP mapping** — the external port a peer aims its SYNs at must
+be the one the call published, whoever the SYNs come from. The design cannot
+repair a side that lacks it: a NAT that mints a fresh external port per
+destination leaves the peer's SYNs aimed at a port that maps nowhere, and its
+own SYNs arrive from a port the other NAT holds no mapping for. That is
+measured, not hypothetical — the operator's carrier does exactly this for TCP,
+and the pair does not cross (§13.8's table). A UDP mapping is no evidence for
+the TCP one; the same carrier preserved the port for UDP.
+
 Both ends bind their fixed punch port and TCP-simultaneous-open toward each
 other's observed endpoints — listen and connect from one port, SYNs retried
 across a bounded window, v6 tried first where both ends published it
@@ -6405,8 +6417,11 @@ an address a SYN can be aimed at; it is simply an address the phone itself
 never publishes, because the carrier's translator mints it and only the peer
 receiving the packets can read it off the wire. So the v4 rung is live on the
 pair §13.1 called the risk case, and the correct statement of the residual is
-narrower: what is measured is a **UDP** punch, and TCP simultaneous open
-across that same pair remains unmeasured (§13.8). Presence carrying the
+narrower: what is measured is a **UDP** punch. **TCP simultaneous open across
+that same pair has since been run and fails** (bl-65dc, §13.8): the carrier's
+TCP mapping is per destination, which breaks the precondition above, so this
+paragraph's optimism holds for UDP only and the v4 rung does not land on that
+carrier. Presence carrying the
 *observed* endpoint rather than the local one (§13.2) is not an optimisation
 here — on this path it is the only endpoint that exists.
 
@@ -6554,7 +6569,26 @@ the operator's CA, `moor`/`reach`/`back`, dial-back and splice (bl-4d56's
 criterion: **a client the operator actually needs measurably cannot punch**
 — bl-a9b0's verdict, or a live pairing that fails where it matters.
 
-**The criterion is NOT met on the pair this design exists for** (§13.8).
+**The criterion has fired for the operator's carrier** (bl-65dc, bl-d185;
+§13.8's table). The phone on cellular cannot punch the engine over TCP — the
+carrier's TCP mapping is symmetric per destination, 0 of 3 attempts crossed —
+and no IPv6 route exists around it, because the phone's internet APN carries
+none. The same phone on Wi-Fi behind a home NAT lands every time. **Two exits,
+and choosing is the operator's ruling, not the builder's:**
+
+1. **Wi-Fi-only roving.** Accept that the phone reaches the engine only from a
+   network whose NAT meets §13.3's precondition; on cellular it has no path,
+   and the seat says so rather than spending a window it cannot win. Nothing
+   is built.
+2. **Stand up this rung** — the relay above. bl-89d2 is its build ball and is
+   claimable on this ruling; it gives cellular a path at the cost of one
+   public box, which ruling 1 otherwise refuses.
+
+Until the operator rules, the relay stays unbuilt and the cellular phone has
+no path. What follows is the reasoning that held before the TCP trial, kept
+because its caution is what the trial confirmed.
+
+**The criterion was NOT met on the UDP evidence** (§13.8).
 bl-a9b0 left it open — the residential end measured green and the cellular
 end could not be measured at all — and bl-0da2 ran the trial it was waiting
 on: with the phone on cellular, the engine box established a direct path to a
@@ -6562,9 +6596,10 @@ carrier-observed IPv4 endpoint and held it. A client the operator actually
 needs *can* punch, so the relay stays parked.
 
 Read the evidence for exactly what it is, because the criterion is per
-protocol and per pair. What is measured is a **UDP** punch by an overlay whose
-discovery is not this design's; **TCP simultaneous open on the same pair is
-still unmeasured**, and §13.3's data path is TCP. A UDP result is strong
+protocol and per pair. What was measured then is a **UDP** punch by an overlay
+whose discovery is not this design's; TCP simultaneous open on the same pair
+was unmeasured, and §13.3's data path is TCP — the gap bl-65dc closed, the
+wrong way. A UDP result is strong
 evidence about the carrier's *mapping* — the property a punch turns on — and
 no evidence at all about its *filtering* of TCP. And one pair measured green
 does not generalise: the second residential host reached the same phone by
@@ -6794,7 +6829,7 @@ Open, awaiting operator ruling:
    argument. Walks are about half a second slower at the median, because
    the queries the door no longer burns are spent walking.
 
-### 13.8 What bl-a9b0 and bl-0da2 measured
+### 13.8 What bl-a9b0, bl-0da2 and bl-65dc measured
 
 Three paths were probed: the operator's laptop and the deployed engine box,
 both behind one residential NAT, and the phone seat. The full table and method
@@ -6892,12 +6927,40 @@ preserved external port, which bl-a9b0 saw the NAT resolve by rewriting the
 second host's port. Either would make this a fact about a shared NAT rather
 than about the carrier.
 
-**What is still unmeasured.** The overlay punches UDP, so the result above is
-a UDP result. **TCP simultaneous open between the engine box and the phone on
-cellular has never been run**, and §13.3's data path is TCP. A UDP punch is
-strong evidence about the carrier's mapping behaviour and none at all about
-its TCP filtering, which is the second half a simultaneous open needs. That
-trial still wants code on the phone, or the punched wire itself.
+**The punched wire itself, measured (bl-65dc, 2026-09-28/29, engine 0.0.74).**
+Everything above is a UDP result read off an overlay. bl-65dc ran the real
+thing — the phone app's rendezvous against the deployed engine, the entry's
+direct address closed — and it supersedes the UDP optimism for TCP:
+
+| client path | TCP simultaneous open | cause, measured |
+|---|---|---|
+| phone on Wi-Fi behind a home NAT | **lands every time** — six dials, each landing 1–2 streams ~30 s after launch; mTLS completed, roster rendered | both NATs endpoint-independent and port-preserving (§13.3's precondition holds); only the phone's *observed* public address ever connected, never its LAN address |
+| phone on the phone's carrier | **0 of 3** — both ends SYN'd together for ~20 s; no SYN-RECV at either end | the carrier maps one local TCP port to a **different random external port per destination** (TCP STUN, 12 probes, never preserved) — symmetric for TCP, though its UDP mapping preserved the port |
+| phone on the phone's carrier, over IPv6 | **no path** | the phone's internet APN is v4-only; its global v6 addresses belong to the carrier's IMS network, which apps cannot use — an engine with v6 would have nothing to aim at |
+| laptop using the engine's own box as its overlay exit node | **no punch possible** (the engine punched correctly) | the overlay exit-node trap, below |
+
+So the risk pair is decided for this carrier: **the punch cannot cross it**,
+and §13.6's criterion has fired. Giving the engine routable IPv6 — named
+above as the cheapest improvement — is no exit here, because the phone's
+usable internet path has no v6 either.
+
+**The overlay exit-node trap** (bl-f612, measured on the laptop leg). A
+client whose default route is a tunnel through the engine's own box
+advertises addresses that are not really its own: its local address toward a
+public destination is the overlay's (v4 and v6), and the DHT-observed address
+is the *engine box's* public address, because the client's UDP leaves through
+it. The engine read the call and punched within a second — at overlay
+addresses the overlay drops for engine-initiated connections (SYN-SENT on the
+engine's punch port, nothing arriving at the client; a plain connect and a
+ping from the engine box fail while the reverse works) and at its own router.
+Nothing in yog is wrong; §13.3's assumption that a client advertises
+addresses that are really its own does not hold under an exit node. What it
+means for the operator: a client tunnelled through the engine's own box needs
+no punch — its direct address works (§13.4's direct rung); a client tunnelled
+through a *third* box publishes that box's address and cannot be punched at
+all; and the overlay's ACLs decide engine→client reachability separately from
+anything here. Whether `local_ips` should skip tunnel interfaces, and the
+seat refusing a rendezvous it can predict cannot land, stay bl-f612's.
 
 **Component impact.** yog: the DHT client, the rendezvous loop (publish,
 poll, verify, punch), held-connection serving, and the mint growing the
