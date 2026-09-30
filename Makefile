@@ -279,15 +279,17 @@ fmt:
 fmt-check:
 	cargo fmt --check
 
-# The complete gate, and the exact target CI runs (`ci`). Coverage goes through
-# `scripts/check-coverage.sh` rather than the bare `coverage` target so the
-# pre-commit hook, `make check` and CI share ONE coverage step: the held-and-
-# replayed output and the signaled-tarpaulin retry (bl-673a) belonged to the
-# hook alone while this line named `coverage`, so a runner-side kill reddened a
-# release-PR CI run where the same kill was survivable at close. `make coverage`
+# The complete gate — `fmt-check → lint → scripts/check-coverage.sh` — and the
+# exact target CI runs (`ci`) and the noodlezoo builder runs on every commit's
+# staged tree (scripts/pre-commit, bl-1b8d). The sequence lives in
+# `scripts/check`, not here, because make speaks two exit words and the gate
+# has three: a recipe exiting 75 (check-coverage.sh's "no verdict", bl-673a)
+# leaves make at 2, and a builder reading that as a FAIL writes a permanent
+# false verdict. A builder that must tell 75 from 1 runs the script; this
+# target is the same script, so nothing restates the steps. `make coverage`
 # stays the bare, always-verbose invocation for a hand-run.
-check: fmt-check lint
-	@scripts/check-coverage.sh
+check:
+	@scripts/check
 
 # Arm this clone's git hooks: one symlink per file in .githooks/, seated in the
 # repo's own hooks directory. Symlinks, not copies, so an updated hook is live

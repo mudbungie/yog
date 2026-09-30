@@ -39,6 +39,10 @@
 
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)" # the build dir is its own toplevel
+# The gate half of the verdict key (balls >= 0.5.13): the import and the check
+# below run under it, and the parent `bl-speculate run` must carry the same
+# string (AGENTS.md "The merge queue" exports it before the run).
+export BALLS_TOOLCHAIN="$(rustc -V)"
 
 sha="$(git rev-parse HEAD)"
 branch="speculation/$sha"

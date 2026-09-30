@@ -4,15 +4,14 @@
 #   1. The COMMIT-CONTEXT guard, which only a hook can do: no direct commits
 #      to mainline (main/master). Squash-merges from bl delivery are
 #      permitted; detected via presence of MERGE_MSG or SQUASH_MSG.
-#   2. The BUILD GATE — delegated whole to scripts/pre-commit, where it is
-#      content-addressable: bl-speculate's verdict cache (balls design
-#      bl-24e7) fingerprints the gate as the content of scripts/pre-commit,
-#      scripts/check-line-lengths.sh, scripts/check-coverage.sh and the
-#      Makefile plus `rustc -V`. The GH Actions speculate workflow and
-#      `bl-speculate run` build dirs run scripts/pre-commit directly — no
-#      commit context there, so nothing but the guard may live here. The
-#      gate's own history (fmt-check/lint/coverage as one make target each —
-#      bl-92e2, bl-35bb, bl-0dff) is documented in scripts/pre-commit.
+#   2. The BUILD GATE — delegated whole to scripts/pre-commit: leak-scan
+#      here, then bl-speculate's verdict cache (balls design bl-24e7, keyed
+#      by tree + BALLS_TOOLCHAIN), else the noodlezoo builder runs
+#      `make check` on the staged tree and signs the verdict (bl-remote-gate,
+#      bl-1b8d). Nothing compiles on this box. The gate's own history
+#      (fmt-check/lint/coverage as one make target each — bl-92e2, bl-35bb,
+#      bl-0dff; the three-word exit — bl-673a) is documented in
+#      scripts/pre-commit and scripts/check.
 #
 # Bypass is intentionally not supported. If something is broken, fix it.
 

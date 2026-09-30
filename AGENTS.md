@@ -301,7 +301,7 @@ demotion removes an internal API from the boundary's obligations. Reach for
   config (`.md`/`.toml`/`.yml`/`.json`/lock, `Makefile`, `LICENSE`) are exempt.
   Anything projected ≥200 is pre-split at design time (DESIGN §12), not at the
   cap — 200 is the aspiration the tree was swept to (bl-52f8), 300 the wall. **`make line-cap` is the one definition of the cap and of the exempt
-  set**; the pre-commit hook and `make lint` both call it, neither restates it.
+  set**; `make lint` calls it, and nothing restates it.
   It scans the **whole tree**, not the staged diff — the hook once checked only
   the files you happened to touch, which made the cap a sampling rather than an
   invariant (`src/app/balls.rs` rode at 308 lines undetected until an unrelated
@@ -323,11 +323,28 @@ demotion removes an internal API from the boundary's obligations. Reach for
 
 ---
 
-## The local gate
+## The gate
 
-`make check` is the complete local gate and mirrors CI exactly:
+`make check` is the complete gate, and every judge runs exactly it:
 
     fmt-check → lint (line-cap + beat-audit + deploy-selftest + protocol-gate + leak-scan + clippy + ast-grep scan + cargo-deny) → scripts/check-coverage.sh
+
+**This machine does not run it** (bl-1b8d; ops bl-3e3f, `~/ops/remote-builds.md`
+"Repo gate"). The pre-commit hook (`scripts/pre-commit`, seated by
+`make install-hooks`) leak-scans locally, asks `bl-speculate check` for a
+verified verdict on the staged tree, and otherwise has the **noodlezoo builder**
+run `make check` in a container whose rustc is the `rust-toolchain.toml` pin and
+sign one (`bl-remote-gate`, a userconf script; runbook
+`~/ops/noodlezoo/docs/builder.md`). Its exit is the hook's exit: 0 pass, 1 the
+builder failed the tree, 75 no verdict (unreachable, a tool missing from the
+image, an unverifiable signature) — nothing recorded, commit refused, next
+attempt rebuilds. There is no local build path and no bypass: an unreachable
+builder is a 75, not a `make check` here. `.github/workflows/ci.yml` runs
+`make ci` on pull requests and `main`; the GitHub Actions merge-queue builder
+(`.github/workflows/speculate.yml`, "The merge queue" below) runs `scripts/check`,
+the script `make check` is a door onto. Nobody restates a step the Makefile
+defines. Hand-run targets (`make lint`, `make coverage`) still work here; they
+are just not the gate.
 
 - `make lint` — `make line-cap` (sub-second, so it fails first), then
   `make beat-audit` (milliseconds), then `make deploy-selftest`, then
@@ -536,15 +553,21 @@ demotion removes an internal API from the boundary's obligations. Reach for
 - `make coverage` — pinned tarpaulin, `--fail-under 100`. The bare invocation,
   always verbose; `check` does not call it directly.
 - `scripts/check-coverage.sh` — the coverage STEP, and the one every caller
-  shares: the hook, `make check` and therefore CI (`make ci`). It holds
+  shares: `scripts/check`, therefore `make check`, CI (`make ci`) and both
+  builders. It holds
   tarpaulin's stdout and replays it only on a failure (bl-0dff), and since
   bl-673a it answers with **three outcomes, not two**, because the gate's exit
   code is what two callers write a cached verdict from:
-  - **0** — the tree passed. `scripts/pre-commit` records a PASS for
-    `(tree, gate)`.
+  - **0** — the tree passed. The builder records a PASS for
+    `(tree, BALLS_TOOLCHAIN)`.
   - **75** (`EX_TEMPFAIL`) — **no verdict.** tarpaulin reported *being signaled*
     on both of its two attempts, so something outside the gate killed the run.
-    `.github/workflows/speculate.yml` records NOTHING on this code.
+    `.github/workflows/speculate.yml` records NOTHING on this code. **make
+    cannot carry it**: GNU make exits 2 for any failed recipe, so the workflow
+    runs `scripts/check` (the sequence `make check` is a door onto) rather than
+    `make check`. The noodlezoo builder runs `make check` and so reads a 75 as a
+    FAIL — a builder-side gap recorded in ops bl-3e3f; its own timeout and a
+    killed container still land as no verdict.
   - **any other non-zero** — the gate failed on the tree's own merits, and that
     is recorded as a FAIL. **A FAIL is permanent**: balls' `speculate_run` stops
     the candidate chain at a stored FAIL on every later pass *without
@@ -802,9 +825,13 @@ speculative merge queue (balls `docs/design/bl-24e7-speculative-merge-queue.md`,
 adopted in bl-1a5b): the gate consults a tree-keyed **verdict cache** first —
 `scripts/pre-commit` exits in seconds when this exact worktree tree already
 passed this exact gate — and speculative builds warm that cache ahead of the
-queue, on GitHub Actions (`.github/workflows/speculate.yml`), so the local
-machine never pays the build. After your last commit in the claim worktree:
+queue, on GitHub Actions (`.github/workflows/speculate.yml`). The per-commit
+gate already builds on noodlezoo (`bl-remote-gate`, "The gate"), so a close
+whose tip commit passed the hook is a cache hit either way; this queue is the
+public-repo path, and the one that folds `main` in ahead of you. After your
+last commit in the claim worktree:
 
+    export BALLS_TOOLCHAIN="$(rustc -V)"              # the gate half of every verdict key (balls ≥ 0.5.13)
     bl-speculate enqueue bl-XXXX                      # seal work/bl-XXXX into the queue
     bl-speculate run --gate scripts/speculate-gate    # builds run on GH Actions
     bl close bl-XXXX --as YOU                         # cache hit → seconds
@@ -821,7 +848,7 @@ Facts the queue derives from (do not fight them):
   on every later pass *without rebuilding*; the key is the tree, so re-running
   answers from cache and only a new commit escapes. Two writers exist and each
   is guarded on its own side. `.github/workflows/speculate.yml` records a FAIL
-  only when the gate's exit code says it judged the tree (see "The local gate":
+  only when the gate's exit code says it judged the tree (see "The gate":
   75 means no verdict, and a job killed outright writes no output at all).
   `scripts/speculate-gate` is the other, and since balls 0.5.12 (bl-1643)
   `speculate_run::build` honors the same code: **exit 75 records nothing** and
@@ -831,14 +858,17 @@ Facts the queue derives from (do not fight them):
   for the tree under a gate key that is not this box's (a fingerprint miss is a
   fact about the machines, not the tree; bl-5909 measured one written as a
   false FAIL).
-- **Everything degrades to the stock local gate.** No binary, no verdict, no
-  network, no runner: the cache misses honestly and `bl close` builds locally.
-  Never wait on the remote to close.
-- **A verdict is keyed by (tree, `rustc -V`)** (balls bl-6a84). The gate
-  scripts are tracked, so editing one is a different tree and invalidates
-  every stored verdict (deliberately); the toolchain is the only gate input
-  the tree cannot see. `rust-toolchain.toml` pins it on both sides — bump it
-  in lockstep or remote verdicts silently stop matching.
+- **Nothing degrades to a local build** (bl-1b8d). No verdict, no network, no
+  builder: the cache misses honestly, `bl close` runs the hook, the hook asks
+  noodlezoo, and an unreachable builder is exit 75 — the close waits.
+- **A verdict is keyed by (tree, `BALLS_TOOLCHAIN`)** (balls bl-6a84; the
+  env var since 0.5.13). The gate scripts are tracked, so editing one is a
+  different tree and invalidates every stored verdict (deliberately); the
+  toolchain is the only gate input the tree cannot see, and the gate exports
+  it itself as `rustc -V` — `scripts/pre-commit` and `scripts/speculate-gate`
+  here, `speculate.yml` on the runner, the builder in its container. Nothing
+  else derives it. `rust-toolchain.toml` pins it on every side — bump it in
+  lockstep or remote verdicts silently stop matching.
 - **The local `bl-speculate` must be the crates.io version `Cargo.toml` pins**
   (`cargo install balls --version <pin>`), never a source build: the runner
   installs the pin, and a build that derives the key differently misses every

@@ -206,7 +206,7 @@ fn ci_reaches_the_leak_scan_from_its_own_entry_point() {
     );
     for link in [
         "\nci: check\n",
-        "\ncheck: fmt-check lint\n\t@scripts/check-coverage.sh\n",
+        "\ncheck:\n\t@scripts/check\n",
         "\t$(MAKE) leak-scan\n",
     ] {
         assert!(
@@ -214,11 +214,17 @@ fn ci_reaches_the_leak_scan_from_its_own_entry_point() {
             "the CI -> leak-scan chain is broken at {link:?}"
         );
     }
-    // And the speculative builder runs the same gate file the hook does, so a
-    // remote verdict is earned under the same uncached scan.
+    let check = fs::read_to_string(repo().join("scripts/check")).unwrap();
+    assert!(
+        check.contains("\nmake fmt-check lint\n"),
+        "scripts/check no longer runs the static gate"
+    );
+    // And the merge-queue builder runs the same script `make check` does, so a
+    // remote verdict is earned under the same scan (the noodlezoo builder runs
+    // `make check` itself — scripts/pre-commit).
     let spec = fs::read_to_string(repo().join(".github/workflows/speculate.yml")).unwrap();
     assert!(
-        spec.contains("scripts/pre-commit"),
+        spec.contains("scripts/check\n"),
         "the remote builder runs some other gate"
     );
 }

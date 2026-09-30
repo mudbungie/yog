@@ -3,24 +3,27 @@
 #
 # The contract is the verdict store's own file format — no workflow-specific
 # protocol exists. scripts/speculate-gate pushes a candidate commit to a
-# speculation/<sha> branch; this job runs yog's STOCK gate
-# (scripts/pre-commit) on it, the gate records the verdict into the runner's
-# local store exactly as it would on a laptop, and the store dir ships home
-# as an artifact named `verdicts`. scripts/speculate-gate downloads and
-# imports it and sweeps the branch; a crashed driver leaves the branch behind
-# — sweep by hand: git push origin --delete speculation/<sha>. A remote
-# builder must never become a close dependency: every failure here degrades
-# to the stock local gate at close.
+# speculation/<sha> branch; this job runs yog's gate — `scripts/check`, the
+# script `make check` is a door onto — records the verdict into the runner's
+# local store, and the store dir ships home as an artifact named `verdicts`.
+# scripts/speculate-gate downloads and imports it and sweeps the branch; a
+# crashed driver leaves the branch behind — sweep by hand: git push origin
+# --delete speculation/<sha>. This is the merge-queue builder for a
+# public-repo close; the per-commit gate is the noodlezoo builder
+# (scripts/pre-commit, bl-1b8d), which runs the same `make check`. Neither
+# box builds locally: no verdict is exit 75, and the close waits.
 #
-# A verdict is keyed by (tree, gate), and since balls 0.5.12 (bl-6a84) the
-# gate half is `rustc -V` and nothing else — the gate scripts are tracked, so
-# they are already in the tree. A verdict recorded here HITS locally only when
-# the runner's toolchain matches yours AND your bl-speculate derives the key
-# the way the pinned one installed below does: install it from crates.io at
-# the Cargo.toml pin, never from a source build (bl-5909). rust-toolchain.toml
-# pins 1.95.0 on both sides — bump it in lockstep with a deliberate upgrade,
-# or remote verdicts silently stop matching (that is the fingerprint refusing
-# to vouch across toolchains, not a bug).
+# A verdict is keyed by (tree, gate). The gate scripts are tracked, so they
+# are already in the tree (balls bl-6a84); the gate half is BALLS_TOOLCHAIN,
+# which since balls 0.5.13 the caller of bl-speculate must export itself —
+# `rustc -V` here, as scripts/pre-commit exports it on the laptop. A verdict
+# recorded here HITS locally only when the runner's toolchain matches yours
+# AND your bl-speculate derives the key the way the pinned one installed
+# below does: install it from crates.io at the Cargo.toml pin, never from a
+# source build (bl-5909). rust-toolchain.toml pins 1.95.0 on both sides —
+# bump it in lockstep with a deliberate upgrade, or remote verdicts silently
+# stop matching (that is the fingerprint refusing to vouch across toolchains,
+# not a bug).
 #
 # yog is a PUBLIC repo (2026-08-13 publication): standard hosted runners are
 # free with no minutes quota. What remains bounded is concurrency and GitHub's
@@ -96,8 +99,8 @@ jobs:
       - name: Install bl-speculate (balls, pinned by Cargo.toml)
         if: steps.speculate-cache.outputs.cache-hit != 'true'
         run: cargo install balls --version "${{ steps.balls-pin.outputs.version }}" --locked --bin bl-speculate
-      # A FAIL is recorded ONLY when the gate reached a conclusion about the
-      # tree, and the gate's exit code is what says so (bl-673a). 75 is
+      # A verdict is recorded ONLY when the gate reached a conclusion about
+      # the tree, and the gate's exit code is what says so (bl-673a). 75 is
       # scripts/check-coverage.sh reporting that this runner signaled tarpaulin
       # on both attempts: an infrastructure death, five times sighted, once with
       # the macOS leg of the same tree green. It is not a verdict, and recording
@@ -106,24 +109,33 @@ jobs:
       # every later pass WITHOUT rebuilding, and no re-run can dislodge it
       # because the tree is unchanged. A run that is killed outright writes no
       # output here at all, which lands in the same safe place: no verdict.
-      - name: run the stock gate (it records the verdict on pass)
+      # `scripts/check`, not `make check`: make reports a recipe's 75 as its
+      # own exit 2, and the distinction this step exists for would be gone.
+      - name: run the gate (scripts/check — three exit words)
         id: gate
         run: |
           set +e
-          BALLS_IDENTITY=github-actions scripts/pre-commit
+          scripts/check
           code=$?
-          if [ "$code" -ne 0 ] && [ "$code" -ne 75 ]; then
-            echo "verdict=fail" >>"$GITHUB_OUTPUT"
-          fi
-          if [ "$code" -eq 75 ]; then
+          if [ "$code" -eq 0 ]; then
+            echo "verdict=pass" >>"$GITHUB_OUTPUT"
+          elif [ "$code" -eq 75 ]; then
             echo "the gate produced NO verdict about this tree: it was killed" >&2
             echo "from outside (bl-673a). Nothing is recorded; the driver" >&2
             echo "rebuilds rather than reading a failure into this." >&2
+          else
+            echo "verdict=fail" >>"$GITHUB_OUTPUT"
           fi
           exit "$code"
-      - name: record the failure the aborting gate cannot
-        if: failure() && steps.gate.outputs.verdict == 'fail'
-        run: BALLS_IDENTITY=github-actions bl-speculate record fail
+      # The gate does not record (it is the same script every builder runs);
+      # the builder does, under the key the laptop will ask for: the tree and
+      # this runner's `rustc -V`, which the rust-toolchain.toml pin makes the
+      # laptop's own.
+      - name: record the verdict (BALLS_TOOLCHAIN is the gate half of the key)
+        if: always() && (steps.gate.outputs.verdict == 'pass' || steps.gate.outputs.verdict == 'fail')
+        env:
+          VERDICT: ${{ steps.gate.outputs.verdict }}
+        run: BALLS_IDENTITY=github-actions BALLS_TOOLCHAIN="$(rustc -V)" bl-speculate record "$VERDICT"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:

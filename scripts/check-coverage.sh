@@ -30,7 +30,7 @@
 # operator's Ctrl-C at close would otherwise buy a second multi-minute run.
 #
 # Tracked, so it is part of the tree a bl-speculate verdict is keyed by — an
-# edit here re-keys every verdict (see scripts/pre-commit).
+# edit here re-keys every verdict (see scripts/pre-commit, scripts/check).
 
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"

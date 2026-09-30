@@ -78,8 +78,10 @@ include = [
 # and the interim git revs were held for: the promoted typed read surface
 # (`reads::Catalog`/`Entry`, `record::task_json`, W8) and the plugin-binary lib
 # seam (`delivery_bin::run`/`tracker::run`, U-balls-3) the bl-2930 multiplex
-# arms stand on — plus the current §7 plugin wire (`command.id`).
-balls = "=0.5.12"
+# arms stand on — plus the current §7 plugin wire (`command.id`). 0.5.13 makes
+# BALLS_TOOLCHAIN the gate half of every bl-speculate verdict key: the gate
+# exports it, bl-speculate derives nothing (bl-1b8d; ops bl-3e3f).
+balls = "=0.5.13"
 # The embedded LLM adapter (DESIGN §16.7 W10). EXACT pin: `native-host` re-exposes
 # the `bz` bin's impure shim (ureq/rustls transport, XDG credential store + model
 # cache) with NO semver contract, so the version is the contract — and the lockfile
