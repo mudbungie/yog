@@ -12,6 +12,11 @@
 //! 1: per-connection runtime calls, not the once-at-the-edge effects rule 3
 //! keeps in `sys.rs`).
 //!
+//! **The listeners have one acceptor, and it is not the punch** (bl-5276):
+//! `accept` beside this file serves whatever lands at any time (REMOTE §13.3
+//! rung 3) and hands a stream from a peer a live window punches toward to
+//! that window's `landed` feed. A window only sends SYNs and reads its feed.
+//!
 //! **Every stream that lands inside the window is handed back**, not the
 //! first alone. Two hosts that can both reach each other's listener form two
 //! connections, and which one the peer keeps is the peer's choice — so the
@@ -24,7 +29,7 @@
 //! ordering is which stream a client of this module sees first.
 
 use socket2::{Domain, Protocol, SockAddr, Socket, Type};
-use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr, TcpListener, TcpStream, UdpSocket};
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr, TcpListener, TcpStream};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc;
@@ -63,10 +68,36 @@ impl Punch {
         self.port
     }
 
-    /// Simultaneous-open toward every target for up to `window`: every
-    /// stream that landed — connected or accepted — by [`LINGER`] after the
-    /// first, v6 first, or none.
+    /// Every stream waiting on the listeners this instant, blocking again.
+    /// **One caller in the engine** — the port's acceptor (bl-5276) — so no
+    /// two loops race for the same accepted stream.
+    pub(crate) fn accept(&self) -> Vec<TcpStream> {
+        let accepted = self.listeners.iter().filter_map(|l| l.accept().ok());
+        accepted
+            .map(|(stream, _)| {
+                let _ = stream.set_nonblocking(false);
+                stream
+            })
+            .collect()
+    }
+
+    /// The client's mirror, which a test is: SYNs toward `targets` while
+    /// this end's own listeners are what `landed` reads.
+    #[cfg(test)]
     pub(crate) fn punch(&self, targets: Vec<SocketAddr>, window: Duration) -> Vec<TcpStream> {
+        self.toward(targets, window, &|| self.accept())
+    }
+
+    /// Simultaneous-open toward every target for up to `window`: every
+    /// stream that landed — connected here, or handed over by `landed`, which
+    /// is polled beside the connectors — by [`LINGER`] after the first, v6
+    /// first, or none.
+    pub(crate) fn toward(
+        &self,
+        targets: Vec<SocketAddr>,
+        window: Duration,
+        landed: &dyn Fn() -> Vec<TcpStream>,
+    ) -> Vec<TcpStream> {
         let (tx, rx) = mpsc::channel();
         let done = Arc::new(AtomicBool::new(false));
         for target in ordered(targets) {
@@ -78,15 +109,8 @@ impl Punch {
         let mut streams = Vec::new();
         let mut linger_until = None;
         while started.elapsed() < window && linger_until.is_none_or(|at| Instant::now() < at) {
-            for listener in &self.listeners {
-                if let Ok((stream, _)) = listener.accept() {
-                    let _ = stream.set_nonblocking(false);
-                    streams.push(stream);
-                }
-            }
-            while let Ok(stream) = rx.try_recv() {
-                streams.push(stream);
-            }
+            streams.extend(landed());
+            streams.extend(rx.try_iter());
             if !streams.is_empty() && linger_until.is_none() {
                 linger_until = Some(Instant::now() + LINGER);
             }
@@ -167,29 +191,9 @@ fn reuse_port(_socket: &Socket) -> std::io::Result<()> {
     Ok(())
 }
 
-/// The addresses this box would send from, one per family it has a route
-/// on: a UDP socket "connected" to a global address sends nothing and reads
-/// back the local end the route would use — so the address only has to
-/// select the default route, and the documentation ranges (RFC 5737, RFC
-/// 3849) do that as well as any real host would. Loopback never appears — a
-/// box with no route has no address to publish, and says so with an empty
-/// list.
-pub(crate) fn local_ips() -> Vec<IpAddr> {
-    ["[2001:db8::1]:53", "192.0.2.1:53"]
-        .iter()
-        .filter_map(|probe| {
-            let bind = if probe.starts_with('[') {
-                "[::]:0"
-            } else {
-                "0.0.0.0:0"
-            };
-            let socket = UdpSocket::bind(bind).ok()?;
-            socket.connect(probe).ok()?;
-            let ip = socket.local_addr().ok()?.ip();
-            (!ip.is_loopback()).then_some(ip)
-        })
-        .collect()
-}
+/// The addresses presence names — its own file at §12's budget (bl-5276).
+mod local;
+pub(crate) use local::local_ips;
 
 #[cfg(test)]
 mod tests;

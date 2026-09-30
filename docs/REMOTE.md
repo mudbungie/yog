@@ -6436,6 +6436,24 @@ the handshake. The punch port is chosen by the kernel once per run and
 published; a fixed number was a second file for a fact the presence item
 already carries.
 
+**The engine serves what lands on its punch port at any time** (bl-5276) —
+rung 3's engine half. A re-punch from the port a call named reaches the
+engine through a NAT mapping that outlives the window, and the kernel
+completes that handshake whether anybody is reading; while a window was the
+only reader of the listeners, such a stream was a connected socket that never
+heard an opening frame. So the punch port has **one acceptor, for the whole
+run**, on the loop's own thread family, and every stream it accepts goes to
+the same serve path a window feeds. mTLS authenticates it there (§5,
+fail-closed), which is why an unsolicited stream is exactly as safe as one the
+front door accepts. A live window tells the acceptor which addresses it
+punches toward, and a stream from one of them is handed to that window — so a
+call still says what landed for it and stops its SYNs — over a channel that
+holds nothing, so a stream is either taken or refused back, never buffered into
+a window that is ending. Everything else is served by the acceptor itself and
+counted `accepted`; the one acceptor is the point, since two loops polling one
+socket race for the same accepted stream. A client's guard (a bound on the
+preface, a spent re-punch falling to a fresh call) stays as its own safety.
+
 ### 13.4 Held connections — §10's criterion is met
 
 §10 has refused every held connection for want of a payer; the punch is the
@@ -6475,6 +6493,8 @@ at:
     yog: rendezvous: punch for nonce <n> landed <m> stream(s) (1 v4)
     yog: rendezvous: punch for nonce <n> expired after <w>s with no stream
     yog: rendezvous: served stream for nonce <n> ended
+    yog: rendezvous: stream accepted on the punch port (v4) — served
+    yog: rendezvous: stream on the punch port (v4) refused at the handshake — dropped
 
 A line carries counts, sequence numbers, nonces and address families, and
 never an address, a key, a salt or a sealed byte: an engine's log is public
@@ -6483,13 +6503,20 @@ the walk's refusals name the nodes asked and the target walked toward, a
 derivation of the key and the salt. An empty inbox says nothing, and a poll
 says its outcome only when it differs from the last poll's, since an item
 stays in the inbox until the commons forgets it and a call already punched
-would otherwise be said every fifteen seconds.
+would otherwise be said every fifteen seconds. A stream the acceptor serves is
+said once per burst — streams landing within the punch's linger of the last
+are one arrival — and a refusal once per stream, by family alone.
 
 The same facts are asked for, not only said: `/doctor`'s reply carries a
 `rendezvous` object beside its rows — `active`, `published`, `calls`,
 `punched`, `served` and `last_poll_unix` — present from any process with a
 listener (all zero and `active: false` on a loopback-only box, which started
 no loop) and absent otherwise. It is an edition (21), not a bump (§3.2).
+`accepted` joined it at edition 22 (bl-5276): of the streams `served`, those
+the acceptor took with no window toward their peer — rung 3's re-punch, a
+plain connect through a live mapping, a SYN that beat the engine's poll — read
+as `0` from an engine that predates it. It is what makes rung 3 measurable
+live.
 
 ### 13.5 What it costs, named
 

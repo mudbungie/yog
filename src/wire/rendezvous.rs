@@ -1,9 +1,10 @@
 //! **The rendezvous loop** (REMOTE §13.2–§13.4, bl-4263): the engine's end of
 //! the punched wire. It publishes presence hourly, polls the inbox every
 //! fifteen seconds, verifies and unseals before it ever emits a SYN, punches
-//! from one fixed port, and serves what lands exactly as the listener serves
-//! what it accepts — one thread, one `Drop` that joins, the [`Listener`]
-//! shape ([`server`](super::server)).
+//! from one fixed port, and serves every stream that lands on that port — in
+//! a call's window or at any other time (bl-5276) — exactly as the listener
+//! serves what it accepts: two threads, one `Drop` that joins both, the
+//! [`Listener`] shape ([`server`](super::server)).
 //!
 //! **Severable by material** (REMOTE §13.4). An engine whose wire root holds no
 //! [`material`] punches nothing, polls nothing and starts no thread: [`start`]
@@ -23,9 +24,10 @@
 //!
 //! Three files under this root: [`material`] the two minted facts and their
 //! derivations, [`item`] the two sealed items, [`punch`] the simultaneous
-//! open; `cycle` is the loop itself and `call` what one opened call draws.
+//! open; `cycle` is the loop itself, `call` what one opened call draws,
+//! `accept` the port's one acceptor, and `cadence` every duration.
 
-use super::server::{Answerer, Quiet};
+use super::server::Answerer;
 use crate::dht::{Config, Udp};
 use crate::registry::presence::Presence;
 use crate::ui_state::Clock;
@@ -35,8 +37,9 @@ use std::path::Path;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread::JoinHandle;
-use std::time::Duration;
 
+mod accept;
+mod cadence;
 mod call;
 mod cycle;
 pub mod item;
@@ -45,52 +48,11 @@ pub mod punch;
 mod say;
 mod stats;
 
+pub(crate) use cadence::{Cadence, mainline};
 pub(crate) use punch::Punch;
 pub(crate) use say::{Say, stderr};
 pub use stats::Standing;
 pub(crate) use stats::Stats;
-
-/// The mainline DHT's bootstrap nodes — the caller's fact, resolved on the
-/// loop's own thread (a name lookup is a network act and boot is not). The
-/// four standard long-lived routers, because from the deployed engine box
-/// only one of the first two answered at all (REMOTE §13.7 ruling 3,
-/// bl-9408): a silent router should cost a quarter of the roster, not half.
-pub(crate) fn mainline() -> Vec<String> {
-    vec![
-        "router.bittorrent.com:6881".to_owned(),
-        "dht.transmissionbt.com:6881".to_owned(),
-        "router.utorrent.com:6881".to_owned(),
-        "dht.aelitis.com:6881".to_owned(),
-    ]
-}
-
-/// Every duration the loop keeps — stated defaults (REMOTE §13.7 ruling 3), and a
-/// test's to shorten.
-#[derive(Clone, Copy, Debug)]
-pub(crate) struct Cadence {
-    /// How often presence is republished against the DHT's storage decay.
-    pub(crate) publish: Duration,
-    /// How often the inbox is read.
-    pub(crate) poll: Duration,
-    /// How long the loop sleeps between looks at the clock.
-    pub(crate) tick: Duration,
-    /// How long a punch keeps sending SYNs.
-    pub(crate) window: Duration,
-    /// How a punched connection's silence is read.
-    pub(crate) quiet: Quiet,
-}
-
-impl Default for Cadence {
-    fn default() -> Cadence {
-        Cadence {
-            publish: Duration::from_hours(1),
-            poll: Duration::from_secs(15),
-            tick: Duration::from_secs(1),
-            window: Duration::from_secs(20),
-            quiet: Quiet::held(),
-        }
-    }
-}
 
 /// What the loop is made of, handed over whole to its thread.
 pub(crate) struct Ctx {
@@ -113,30 +75,37 @@ pub(crate) struct Ctx {
     pub(crate) say: Say,
 }
 
-/// The loop's thread. Owns its join handle and a stop flag; [`Drop`] signals
-/// stop and joins, the engine's own shutdown shape (§7.2).
+/// The loop's two threads — the cycle and the punch port's acceptor
+/// (`accept`, bl-5276). Owns their join handles and one stop flag; [`Drop`]
+/// signals stop and joins both, the engine's own shutdown shape (§7.2).
 pub(crate) struct Rendezvous {
     stats: Arc<Stats>,
     stop: Arc<AtomicBool>,
-    handle: Option<JoinHandle<()>>,
+    handles: Vec<JoinHandle<()>>,
 }
 
 impl Rendezvous {
-    /// Run `ctx`'s loop until dropped, marked active and its ports said. The
-    /// one refusal is a seed no keypair comes from, judged here.
+    /// Run `ctx`'s loop and its acceptor until dropped, marked active and
+    /// its ports said. The one refusal is a seed no keypair comes from,
+    /// judged here.
     pub(crate) fn spawn(ctx: Ctx) -> Result<Rendezvous, String> {
         let dht_port = ctx.transport.local_addr().map_or(0, |at| at.port());
         let (stats, say) = (Arc::clone(&ctx.stats), Arc::clone(&ctx.say));
-        let cycle = cycle::Cycle::new(ctx)?;
+        let (hints, toward) = std::sync::mpsc::channel();
+        let cycle = cycle::Cycle::new(ctx, hints)?;
+        let answer = cycle.answer.clone();
         stats.active.store(true, Ordering::Relaxed);
         say(&say::started(cycle.punch_port(), dht_port));
         let stop = Arc::new(AtomicBool::new(false));
-        let flag = Arc::clone(&stop);
-        let handle = std::thread::spawn(move || cycle.run(&flag));
+        let (flag, also) = (Arc::clone(&stop), Arc::clone(&stop));
+        let handles = vec![
+            std::thread::spawn(move || cycle.run(&flag)),
+            std::thread::spawn(move || answer.accept(&toward, &also)),
+        ];
         Ok(Rendezvous {
             stats,
             stop,
-            handle: Some(handle),
+            handles,
         })
     }
 
@@ -150,7 +119,7 @@ impl Rendezvous {
 impl Drop for Rendezvous {
     fn drop(&mut self) {
         self.stop.store(true, Ordering::Relaxed);
-        if let Some(handle) = self.handle.take() {
+        for handle in self.handles.drain(..) {
             let _ = handle.join();
         }
         self.stats.active.store(false, Ordering::Relaxed);

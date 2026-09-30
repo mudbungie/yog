@@ -50,3 +50,16 @@ fn a_present_rendezvous_is_read_strictly() {
         "published",
     );
 }
+
+#[test]
+fn accepted_is_zero_from_an_edition_21_engine_and_typed_when_said() {
+    let old = json!({ "active": true, "published": 1, "calls": 2, "punched": 3,
+                      "served": 4, "last_poll_unix": 5 });
+    let Ok(Ok(Reply::Doctor(report))) = decode(&doctor(old.clone())) else {
+        panic!("an edition-21 standing did not decode");
+    };
+    assert_eq!(report.rendezvous.map(|s| s.accepted), Some(0));
+    let mut wrong = old;
+    wrong["accepted"] = json!("x");
+    refuses(&doctor(wrong), "accepted");
+}

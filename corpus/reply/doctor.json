@@ -22,6 +22,7 @@
       "kind": "doctor",
       "ok": true,
       "rendezvous": {
+        "accepted": 2,
         "active": true,
         "calls": 5,
         "last_poll_unix": 1700000015,

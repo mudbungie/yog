@@ -346,6 +346,7 @@
       "signature": {
         "/kind:string": 13,
         "/ok:bool": 13,
+        "/rendezvous/accepted:number": 22,
         "/rendezvous/active:bool": 21,
         "/rendezvous/calls:number": 21,
         "/rendezvous/last_poll_unix:number": 21,

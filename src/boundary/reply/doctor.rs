@@ -4,7 +4,9 @@
 //!
 //! `rendezvous` is **absent, never null**, for its two readings: the answering
 //! process has no listener and so no loop to speak of, or the engine predates
-//! edition 21. Present, every one of its six keys is required.
+//! edition 21. Present, every one of its six edition-21 keys is required;
+//! `accepted` (edition 22, bl-5276) is read as `0` where an older engine
+//! leaves it out, and typed where it is said.
 
 use serde_json::{Map, Value, json};
 
@@ -29,7 +31,7 @@ pub(super) fn reply(report: &Report) -> Value {
         map.insert(
             "rendezvous".to_owned(),
             json!({ "active": s.active, "published": s.published, "calls": s.calls,
-                    "punched": s.punched, "served": s.served,
+                    "punched": s.punched, "served": s.served, "accepted": s.accepted,
                     "last_poll_unix": s.last_poll_unix }),
         );
     }
@@ -71,7 +73,8 @@ fn row_of(v: &Value) -> Result<Row, String> {
     })
 }
 
-/// The loop's standing, read back strictly: every key, each of its type.
+/// The loop's standing, read back strictly: every key, each of its type —
+/// the one post-21 key defaulted where absent.
 fn standing_of(v: &Value) -> Result<Standing, String> {
     let s = v.as_object().ok_or("doctor: rendezvous is not an object")?;
     Ok(Standing {
@@ -80,6 +83,7 @@ fn standing_of(v: &Value) -> Result<Standing, String> {
         calls: u64_of(s, "calls")?,
         punched: u64_of(s, "punched")?,
         served: u64_of(s, "served")?,
+        accepted: opt(s, "accepted", u64_of)?.unwrap_or(0),
         last_poll_unix: u64_of(s, "last_poll_unix")?,
     })
 }

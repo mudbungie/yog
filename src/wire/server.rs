@@ -201,16 +201,19 @@ impl Quiet {
 /// ([`peer`]). A socket that refuses the timeout is served without one: the
 /// engine having no bound is the behaviour it had before, never a reason to
 /// hang up on a peer that has done nothing wrong.
+///
+/// Answers whether the peer was **admitted** — `false` for a handshake or a
+/// preface that refused it, which the punch port's acceptor says (bl-5276).
 pub(crate) fn serve(
     tcp: TcpStream,
     config: &Arc<ServerConfig>,
     answerer: &dyn Answerer,
     presence: &Presence,
     quiet: Quiet,
-) {
+) -> bool {
     let _ = tcp.set_read_timeout(Some(quiet.read_timeout()));
     let Ok(conn) = ServerConnection::new(Arc::clone(config)) else {
-        return;
+        return false;
     };
     let mut tls = StreamOwned::new(conn, tcp);
     // The §3 version preface, stated and checked before any gesture (bl-a670).
@@ -219,8 +222,20 @@ pub(crate) fn serve(
     // below because that is where this connection's identity already lives.
     let Some(edition) = super::hello::admit(&mut tls) else {
         peer::hang_up(&mut tls);
-        return;
+        return false;
     };
+    converse(&mut tls, answerer, presence, quiet, edition);
+    true
+}
+
+/// An admitted connection's requests, answered until the peer goes away.
+fn converse(
+    tls: &mut StreamOwned<ServerConnection, TcpStream>,
+    answerer: &dyn Answerer,
+    presence: &Presence,
+    quiet: Quiet,
+    edition: u32,
+) {
     // **Presence is this scope** (REMOTE §5, bl-4e08): the guard is taken when
     // the connection first names its client and released when this function
     // leaves, however it leaves — a clean close, a refused frame, a peer that
@@ -233,12 +248,12 @@ pub(crate) fn serve(
     let mut live = None;
     let mut quiet_for = Duration::ZERO;
     loop {
-        let request = match frame::read_value(&mut tls) {
+        let request = match frame::read_value(tls) {
             Ok(Some(request)) => request,
             // A held connection's silence is pinged, one timeout at a time,
             // until the bound says the peer is gone; every other end is the
             // peer's own — an EOF, a refused frame, a vanished socket.
-            Err(e) if quiet.pings_at(quiet_for, &e) && peer::ping(&mut tls) => {
+            Err(e) if quiet.pings_at(quiet_for, &e) && peer::ping(tls) => {
                 quiet_for += quiet.read_timeout();
                 continue;
             }
@@ -257,11 +272,11 @@ pub(crate) fn serve(
         };
         let _ = live.get_or_insert_with(|| presence.enter(&peer.client, edition));
         for chunk in answerer.answer(&peer, request) {
-            if frame::write_value(&mut tls, &chunk).is_err() {
+            if frame::write_value(tls, &chunk).is_err() {
                 return;
             }
         }
-        if frame::write_end(&mut tls).is_err() {
+        if frame::write_end(tls).is_err() {
             return;
         }
     }

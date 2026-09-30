@@ -77,6 +77,11 @@
 //! `published`, `calls`, `punched`, `served` and `last_poll_unix`, all
 //! required when the object is present; absent from a process with no
 //! listener. A seat below 21 reads one optional key it ignores.
+//!
+//! **Edition 22 (bl-5276, REMOTE §13.3).** The doctor's `rendezvous` object
+//! gained `accepted` — the streams the punch port's standing acceptor served
+//! with no call's window toward them. A seat below 22 ignores it; a seat at
+//! 22 reads its absence from a 21 engine as `0`.
 
 // The constant itself is GENERATED, not declared: `build.rs` reads the
 // repo-root `PROTOCOL` file — the number's one file-shaped home, at the one

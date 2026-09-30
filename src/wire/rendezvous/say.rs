@@ -82,6 +82,29 @@ pub(crate) fn ended(nonce: u64) -> String {
     format!("{P} served stream for nonce {nonce} ended")
 }
 
+pub(crate) fn accepted(peer: Option<IpAddr>) -> String {
+    format!(
+        "{P} stream accepted on the punch port ({}) — served",
+        family(peer)
+    )
+}
+
+pub(crate) fn refused(peer: Option<IpAddr>) -> String {
+    format!(
+        "{P} stream on the punch port ({}) refused at the handshake — dropped",
+        family(peer)
+    )
+}
+
+/// One peer's family — the most a line may say of it.
+fn family(peer: Option<IpAddr>) -> &'static str {
+    match peer {
+        Some(IpAddr::V6(_)) => "v6",
+        Some(IpAddr::V4(_)) => "v4",
+        None => "family unknown",
+    }
+}
+
 /// How many of `ips` are of each family, v6 first — `1 v6, 2 v4`, or `none`.
 fn families(ips: &[IpAddr]) -> String {
     let v6 = ips.iter().filter(|ip| ip.is_ipv6()).count();

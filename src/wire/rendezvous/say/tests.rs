@@ -27,6 +27,8 @@ fn every_line_is_the_house_shape_and_names_no_address() {
         landed(7, &ips),
         expired(7, Duration::from_secs(20)),
         ended(7),
+        accepted(ips.first().copied()),
+        refused(ips.get(1).copied()),
     ];
     for line in &lines {
         assert!(line.starts_with("yog: rendezvous: "), "{line}");
@@ -49,6 +51,19 @@ fn families_count_v6_first_and_say_none_for_nothing() {
     assert_eq!(families(&[]), "none");
     assert_eq!(families(&[IpAddr::V6(Ipv6Addr::LOCALHOST)]), "1 v6");
     assert_eq!(families(&[IpAddr::V4(Ipv4Addr::LOCALHOST)]), "1 v4");
+}
+
+#[test]
+fn an_accepted_stream_says_its_family_only() {
+    let v6 = Some(IpAddr::V6(Ipv6Addr::LOCALHOST));
+    assert_eq!(
+        accepted(v6),
+        "yog: rendezvous: stream accepted on the punch port (v6) — served"
+    );
+    assert_eq!(
+        refused(None),
+        "yog: rendezvous: stream on the punch port (family unknown) refused at the handshake — dropped"
+    );
 }
 
 #[test]

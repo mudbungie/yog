@@ -26,8 +26,12 @@ pub(crate) struct Stats {
     pub(crate) calls: AtomicUsize,
     /// Punches that landed at least one stream.
     pub(crate) punched: AtomicUsize,
-    /// Streams a punch landed and handed to the serving code.
+    /// Streams handed to the serving code — a punch's and the acceptor's.
     pub(crate) served: AtomicUsize,
+    /// Of those, streams the punch port's acceptor took with no window
+    /// toward their peer (bl-5276): REMOTE §13.3 rung 3's re-punch, a plain
+    /// connect through a live mapping, a SYN that beat the engine's poll.
+    pub(crate) accepted: AtomicUsize,
     /// When the inbox was last read, answered or not; `0` is never.
     pub(crate) last_poll_unix: AtomicU64,
 }
@@ -45,6 +49,9 @@ pub struct Standing {
     pub punched: u64,
     /// Streams served.
     pub served: u64,
+    /// Of those, streams served with no call's window toward their peer —
+    /// absent from an engine before edition 22, and read as `0`.
+    pub accepted: u64,
     /// Unix seconds of the last inbox read; `0` is never.
     pub last_poll_unix: u64,
 }
@@ -59,6 +66,7 @@ impl Stats {
             calls: n(&self.calls),
             punched: n(&self.punched),
             served: n(&self.served),
+            accepted: n(&self.accepted),
             last_poll_unix: self.last_poll_unix.load(Ordering::Relaxed),
         }
     }

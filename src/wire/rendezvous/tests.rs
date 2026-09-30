@@ -5,11 +5,13 @@
 use super::item::Presence as Published;
 use super::*;
 use crate::dht::tests::fake::Mood;
+use crate::wire::server::Quiet;
 use bench::{bench, loopback, until};
 use std::net::SocketAddr;
 use std::sync::atomic::Ordering::Relaxed;
 use std::time::Duration;
 
+mod accept;
 mod bench;
 mod said;
 
@@ -72,7 +74,7 @@ fn a_call_in_the_inbox_is_punched_served_and_pinged() {
     let client = Punch::bind(0).expect("client port");
     assert!(b.write_inbox(1, b.call(7, client.port())) >= 1);
     b.clock.advance(Duration::from_secs(15));
-    let mut streams = client.punch(vec![loopback(b.port)], Duration::from_secs(5));
+    let mut streams = client.punch(vec![], Duration::from_secs(5));
     let stream = streams.pop().expect("punched");
     let mut tls = b.ask_over(stream);
     assert_eq!(

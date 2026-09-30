@@ -3,15 +3,18 @@
 //! Split from `cycle` at §12's budget on the seam the thread boundary already
 //! draws — the loop decides a call is new, this is everything after.
 
+use super::accept::Toward;
 use super::item::Call;
+use super::punch::LINGER;
 use super::{Punch, Say, Stats, say};
 use crate::registry::presence::Presence;
 use crate::wire::server::{Answerer, Quiet, serve};
 use rustls::ServerConfig;
-use std::net::SocketAddr;
+use std::net::{SocketAddr, TcpStream};
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
-use std::time::Duration;
+use std::sync::mpsc::{self, Sender};
+use std::time::{Duration, Instant};
 
 /// Everything a punch and its serving need, cloned per call.
 #[derive(Clone)]
@@ -24,6 +27,8 @@ pub(super) struct Answer {
     pub(super) quiet: Quiet,
     pub(super) stats: Arc<Stats>,
     pub(super) say: Say,
+    /// Where a window tells the port's acceptor whom it punches toward.
+    pub(super) hints: Sender<Toward>,
 }
 
 impl Answer {
@@ -32,7 +37,7 @@ impl Answer {
     /// and when each served stream ends. Only the peer's FAMILY is said.
     pub(super) fn spawn(self, call: Call) {
         std::thread::spawn(move || {
-            let streams = self.punch.punch(call.endpoints, self.window);
+            let streams = self.window(call.endpoints);
             if streams.is_empty() {
                 (self.say)(&say::expired(call.nonce, self.window));
                 return;
@@ -58,5 +63,21 @@ impl Answer {
                 });
             }
         });
+    }
+
+    /// The punch toward `endpoints`, told to the acceptor first so a stream
+    /// from one of their addresses is this window's. The hand-off channel
+    /// holds nothing (`sync_channel(0)`), so a stream is either taken here or
+    /// refused back to the acceptor when this ends — never buffered into a
+    /// receiver about to drop.
+    fn window(&self, endpoints: Vec<SocketAddr>) -> Vec<TcpStream> {
+        let (tx, rx) = mpsc::sync_channel(0);
+        let _ = self.hints.send(Toward {
+            ips: endpoints.iter().map(SocketAddr::ip).collect(),
+            until: Instant::now() + self.window + LINGER,
+            tx,
+        });
+        self.punch
+            .toward(endpoints, self.window, &|| rx.try_iter().collect())
     }
 }

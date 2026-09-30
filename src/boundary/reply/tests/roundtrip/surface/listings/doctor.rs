@@ -36,6 +36,7 @@ pub(super) fn doctor() -> Vec<Reply> {
                 calls: 5,
                 punched: 4,
                 served: 6,
+                accepted: 2,
                 last_poll_unix: 1_700_000_015,
             }),
         }),
