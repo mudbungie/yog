@@ -1,13 +1,15 @@
-//! **The punch port's one acceptor** (REMOTE §13.3 rung 3, bl-5276): every
-//! stream that lands on the engine's punch port, at any time, is served.
+//! **The punch port's one acceptor** (REMOTE §13.3's standing acceptor,
+//! bl-5276): every stream that lands on the engine's punch port, at any time,
+//! is served.
 //!
 //! A punch window used to be the only reader of its own listeners, so a
-//! client's re-punch from the port its call named — which the engine's NAT
-//! still maps — completed the TCP handshake in the kernel and was never read:
-//! a connected socket with no opening frame. Now one thread accepts for the
-//! whole run and hands every stream to the same `serve` a punch feeds. mTLS
-//! authenticates it there (REMOTE §5, fail-closed), so a stream nobody called
-//! for is exactly as safe as one the front door accepts.
+//! stream reaching the punch port through a still-live mapping (REMOTE §13.3:
+//! never a re-punch after the engine's mapping has expired) completed the TCP
+//! handshake in the kernel and was never read: a connected socket with no
+//! opening frame. Now one thread accepts for the whole run and hands every
+//! stream to the same `serve` a punch feeds. mTLS authenticates it there
+//! (REMOTE §5, fail-closed), so a stream nobody called for is exactly as
+//! safe as one the front door accepts.
 //!
 //! **One acceptor, with a hint** rather than two loops polling one socket.
 //! A live window tells this loop which addresses it punches toward

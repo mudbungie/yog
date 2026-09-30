@@ -13,9 +13,9 @@
 //! keeps in `sys.rs`).
 //!
 //! **The listeners have one acceptor, and it is not the punch** (bl-5276):
-//! `accept` beside this file serves whatever lands at any time (REMOTE §13.3
-//! rung 3) and hands a stream from a peer a live window punches toward to
-//! that window's `landed` feed. A window only sends SYNs and reads its feed.
+//! `accept` beside this file serves whatever lands at any time (REMOTE §13.3's
+//! standing acceptor) and hands a stream from a peer a live window punches
+//! toward to that window's `landed` feed. A window only sends SYNs and reads its feed.
 //!
 //! **Every stream that lands inside the window is handed back**, not the
 //! first alone. Two hosts that can both reach each other's listener form two

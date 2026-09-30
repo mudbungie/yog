@@ -6397,6 +6397,19 @@ measured, not hypothetical — the operator's carrier does exactly this for TCP,
 and the pair does not cross (§13.8's table). A UDP mapping is no evidence for
 the TCP one; the same carrier preserved the port for UDP.
 
+**The precondition is also why a one-sided re-punch cannot land (bl-278f).**
+A mapping is not a property of the port; it is state the NAT holds for a flow
+it has seen leave, and a home NAT drops a TCP flow's state soon after that
+flow ends. While a punch window is open the engine's own SYNs keep its
+mapping fresh; once the served stream has ended the engine sends nothing from
+the punch port, so its NAT holds no mapping a peer's SYN could arrive
+through, and a client that re-punches alone — from the very port its call
+named — is aiming at a port that maps nowhere. Measured (bl-65dc, §13.8): on
+Wi-Fi, ~36 s after the served stream ended, a re-punch from the landed port
+put SYNs on the wire for 35 s and not one reached the engine's kernel. A punch
+lands only while **both** ends are sending, and only a fresh call makes the
+engine send.
+
 Both ends bind their fixed punch port and TCP-simultaneous-open toward each
 other's observed endpoints — listen and connect from one port, SYNs retried
 across a bounded window, v6 tried first where both ends published it
@@ -6451,12 +6464,28 @@ the handshake. The punch port is chosen by the kernel once per run and
 published; a fixed number was a second file for a fact the presence item
 already carries.
 
+**The ladder a dial runs** (bl-278f; §13.4 says why each rung costs what it
+does): **the held line** — the live held connection, which costs nothing;
+**the direct address** — the entry's `address` where one exists (a LAN, a
+stable client, loopback); **the re-call** — with the engine's presence cached
+from the last rendezvous (its endpoints and punch port), the client writes a
+fresh call and punches, one DHT walk instead of two, about eight seconds
+cheaper than a full rendezvous; **the full rendezvous** — presence read, call
+written, punch. The re-call is what the retired rung — a client-only re-punch
+at the cached endpoints, "a NAT mapping that outlives the window" — was
+reaching for, and it is what every client already fell to after that rung
+failed; the paragraph above says why it failed. A call that expires
+unanswered invalidates the cached presence, so the next dial reads it fresh.
+
 **The engine serves what lands on its punch port at any time** (bl-5276) —
-rung 3's engine half. A re-punch from the port a call named reaches the
-engine through a NAT mapping that outlives the window, and the kernel
-completes that handshake whether anybody is reading; while a window was the
-only reader of the listeners, such a stream was a connected socket that never
-heard an opening frame. So the punch port has **one acceptor, for the whole
+the standing acceptor. A stream can reach the punch port outside any window:
+from a client whose own NAT-side mapping and the engine's are both still live,
+from any client that can reach the punch port directly, or as a SYN that beat
+the engine's poll — and the kernel completes that handshake whether anybody
+is reading; while a window was the only reader of the listeners, such a stream
+was a connected socket that never heard an opening frame. It does **not**
+rescue a one-sided re-punch through a mapping that has already expired
+(above); nothing on the engine can. So the punch port has **one acceptor, for the whole
 run**, on the loop's own thread family, and every stream it accepts goes to
 the same serve path a window feeds. mTLS authenticates it there (§5,
 fail-closed), which is why an unsolicited stream is exactly as safe as one the
@@ -6467,7 +6496,7 @@ holds nothing, so a stream is either taken or refused back, never buffered into
 a window that is ending. Everything else is served by the acceptor itself and
 counted `accepted`; the one acceptor is the point, since two loops polling one
 socket race for the same accepted stream. A client's guard (a bound on the
-preface, a spent re-punch falling to a fresh call) stays as its own safety.
+preface, a failed dial falling to the next rung) stays as its own safety.
 
 ### 13.4 Held connections — §10's criterion is met
 
@@ -6477,10 +6506,16 @@ milliseconds. First contact costs an inbox write, a poll period and a punch
 window — seconds — so the punched connection is **held and reused**, with
 idle ping frames at a 25-second cadence keeping both NATs' mappings alive
 (frames, again, because std exposes no keepalive and a frame is testable).
-The ladder a dial runs is now: the live held connection; the entry's direct
-`address` where one exists (a LAN, a stable client, loopback); a re-punch at
-the RAM-cached endpoints, which costs no DHT round trip; the full rendezvous.
-What worked stays RAM for the run — the runtime half of §8's `:0` discipline,
+**Those pings are the only thing that keeps a mapping alive** (bl-278f): once
+the held connection ends, the engine's NAT forgets the flow within seconds and
+no re-punch can reach it (§13.3), so keeping the held line up — not a faster
+way back after dropping it — is the fast-return path, and a client that can
+hold its line through a background spell should. The ladder a dial runs is
+§13.3's: the held line; the direct `address`; the re-call from cached
+presence, which spends one DHT walk instead of two; the full rendezvous. The
+engine's standing acceptor is not a rung — it is the engine end of whatever
+reaches the punch port, and it serves a client whose mapping is still live or
+that can reach the port directly. What worked stays RAM for the run — the runtime half of §8's `:0` discipline,
 never disk. Per-request identity is unchanged in the only sense that matters:
 the certificate is read at the handshake and the scope is spent per request,
 exactly the terms the follow lane already holds its connection on.
@@ -6528,10 +6563,11 @@ The same facts are asked for, not only said: `/doctor`'s reply carries a
 listener (all zero and `active: false` on a loopback-only box, which started
 no loop) and absent otherwise. It is an edition (21), not a bump (§3.2).
 `accepted` joined it at edition 22 (bl-5276): of the streams `served`, those
-the acceptor took with no window toward their peer — rung 3's re-punch, a
-plain connect through a live mapping, a SYN that beat the engine's poll — read
-as `0` from an engine that predates it. It is what makes rung 3 measurable
-live.
+the acceptor took with no window toward their peer — a re-punch through a
+still-live mapping, a plain connect to the punch port, a SYN that beat the
+engine's poll — read as `0` from an engine that predates it. It is what made
+the retired re-punch rung measurable live, and the measurement retired it
+(§13.8).
 
 ### 13.5 What it costs, named
 
@@ -6938,6 +6974,7 @@ direct address closed — and it supersedes the UDP optimism for TCP:
 | phone on the phone's carrier | **0 of 3** — both ends SYN'd together for ~20 s; no SYN-RECV at either end | the carrier maps one local TCP port to a **different random external port per destination** (TCP STUN, 12 probes, never preserved) — symmetric for TCP, though its UDP mapping preserved the port |
 | phone on the phone's carrier, over IPv6 | **no path** | the phone's internet APN is v4-only; its global v6 addresses belong to the carrier's IMS network, which apps cannot use — an engine with v6 would have nothing to aim at |
 | laptop using the engine's own box as its overlay exit node | **no punch possible** (the engine punched correctly) | the overlay exit-node trap, below |
+| phone on Wi-Fi, re-punching from its landed port on return to the foreground (bl-278f) | **0 of 2** — SYNs left the phone for 35 s; nothing reached the engine's kernel (no SYN-RECV, no row on the punch port) | ~36 s after the served stream ended the engine's home NAT held no mapping for it, and the engine sends no SYNs outside a call's window — a re-punch is one-sided, so §13.3 retires that rung for the re-call |
 
 So the risk pair is decided for this carrier: **the punch cannot cross it**,
 and §13.6's criterion has fired. Giving the engine routable IPv6 — named

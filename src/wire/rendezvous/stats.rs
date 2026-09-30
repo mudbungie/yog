@@ -29,7 +29,7 @@ pub(crate) struct Stats {
     /// Streams handed to the serving code — a punch's and the acceptor's.
     pub(crate) served: AtomicUsize,
     /// Of those, streams the punch port's acceptor took with no window
-    /// toward their peer (bl-5276): REMOTE §13.3 rung 3's re-punch, a plain
+    /// toward their peer (bl-5276): a re-punch through a still-live mapping, a plain
     /// connect through a live mapping, a SYN that beat the engine's poll.
     pub(crate) accepted: AtomicUsize,
     /// When the inbox was last read, answered or not; `0` is never.
