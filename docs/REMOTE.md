@@ -6114,11 +6114,18 @@ And DESIGN §11 — the UI structure — is **retired** by bl-7942, with a readi
 rule at its tombstone for the sentences elsewhere in that document that still
 describe a face.
 
-### 12.1 The phone is one more box (bl-15bd)
+### 12.1 The phone is one more box (bl-15bd; the name, bl-bc0e)
 
-**Operator ruling 2026-08-30:** the Android app is named **yog** and ships all
-three runnable components — the seat, the foot, and the server — each gated
-behind an explicit **bootstrap** rather than auto-started. The default
+**Operator ruling 2026-08-30, its NAME reversed 2026-10-08:** the Android app
+ships all three runnable components — the seat, the foot, and the server — each
+gated behind an explicit **bootstrap** rather than auto-started. **It is named
+lernie** (operator ruling 2026-10-08, bl-bc0e; yog-android bl-5331): the
+program an operator runs, on a desk or on a phone, is the user interface, that
+is the seat, and the seat is lernie wherever it runs — yog names the server.
+The 2026-08-30 ruling named the app yog, and that half is withdrawn here, in
+place, so the authority does not keep a sentence the consumer has left; the
+package id stays `dev.yog` on the consumer's own §9 reasoning (a release
+channel makes an id a one-way door), and nothing on the wire moves. The default
 bootstrap is mTLS client enrollment: a seat or a foot dialing a host engine on
 material provisioned out of channel (§1.4). Running the server *on the phone*
 is allowed, and is the deliberate non-default choice.
