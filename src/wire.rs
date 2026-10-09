@@ -48,6 +48,9 @@ pub mod material;
 /// The mint (REMOTE §1.4, §8; bl-ae05) — the one `openssl` recipe, spent by the
 /// engine's boot and by `yog wire-certs` alike.
 pub mod provision;
+/// The punched wire's engine end (REMOTE §13, bl-4263): presence, the inbox
+/// poll, the punch, and held-connection serving.
+pub mod rendezvous;
 pub mod server;
 pub mod tls;
 
@@ -107,15 +110,6 @@ pub fn listen(
     server::Listener::bind(&material, answerer, presence)
 }
 
-#[cfg(test)]
-mod tests;
-
-/// **Declared last, and out of order on purpose** — `registry.rs`'s reason
-/// exactly: adding a type above `mod tests;` shifted every byte below it, and
-/// llvm-cov then drew a phantom *uncovered* region onto this file's own `impl`
-/// header. Appended below every line that was here before, the phantom has
-/// nowhere to land.
-///
 /// **What this process's listener bound** (REMOTE §8, bl-28f4) — a handle, set
 /// once by the boot that bound it and read by the one gesture that asks whether
 /// this box is wired (`/doctor`).
@@ -131,8 +125,7 @@ mod tests;
 ///
 /// **It carries the punched wire's counters too** (REMOTE §13.4, bl-355c) —
 /// the second door's facts about this process, shared with the loop by handle
-/// for the same reason, and all zero where no loop started. Its two readers
-/// sit in `rendezvous::stats`, off this file for the phantom's reason above.
+/// for the same reason, and all zero where no loop started.
 #[derive(Clone, Default)]
 pub struct Listening {
     bound: Arc<std::sync::OnceLock<String>>,
@@ -151,12 +144,18 @@ impl Listening {
     pub fn address(&self) -> Option<String> {
         self.bound.get().cloned()
     }
+
+    /// The handle the rendezvous loop counts into.
+    pub(crate) fn rendezvous(&self) -> Arc<rendezvous::Stats> {
+        Arc::clone(&self.rendezvous)
+    }
+
+    /// The loop's standing as `/doctor` hands it over — `None` where nothing
+    /// bound, since only an engine has a loop to speak of.
+    pub(crate) fn standing(&self) -> Option<rendezvous::Standing> {
+        self.address().map(|_| self.rendezvous.standing())
+    }
 }
 
-/// The punched wire's engine end (REMOTE §13, bl-4263): presence, the inbox
-/// poll, the punch, and held-connection serving. Declared here, after
-/// everything that was in the file before it, for [`Listening`]'s own reason:
-/// declared above `mod tests;` it shifted every byte below and llvm-cov drew
-/// the phantom uncovered region onto `Listening`'s header (measured, one
-/// line, 99.99%).
-pub mod rendezvous;
+#[cfg(test)]
+mod tests;

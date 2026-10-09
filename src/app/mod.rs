@@ -20,9 +20,7 @@
 //!
 //! The impl is split for the 300-line budget: [`derive`] holds the worker's
 //! pass, [`focus`] the tab-bar / conversation / attention / seen-acknowledgement
-//! surface, [`view`] the read surface a frame paints. This root stays
-//! declaration-light so the `pub mod` list carries no coverable `impl` header
-//! (llvm-cov phantom).
+//! surface, [`view`] the read surface a frame paints.
 
 mod balls;
 /// **Founding the model, and the one signal it sends the worker** (§7.2) — the

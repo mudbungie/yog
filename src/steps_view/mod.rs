@@ -196,10 +196,7 @@ fn route_auth(workspace: &Path, agent_id: &str, steps: &mut [StepSummary]) {
 /// request verbatim). Absent or malformed bytes are `None`, like every other
 /// record read here.
 fn step_model(workspace: &Path, agent_id: &str, seq: &str) -> Option<String> {
-    // Bound rather than chained, like `summarize` above: tarpaulin's llvm engine
-    // mis-attributes a multi-line method chain's tail as uncovered.
-    let step = workspace.join(STEPS_DIR).join(agent_id).join(seq);
-    let bytes = std::fs::read(step.join(REQUEST_FILE)).ok()?;
+    let bytes = std::fs::read(step_dir(workspace, agent_id, seq).join(REQUEST_FILE)).ok()?;
     let request: Value = serde_json::from_slice(&bytes).ok()?;
     request.get("model")?.as_str().map(str::to_string)
 }

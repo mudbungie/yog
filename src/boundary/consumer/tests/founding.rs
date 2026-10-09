@@ -72,7 +72,7 @@ fn a_gesture_over_a_standing_workspace_seats_nothing() {
     let (root, data, bin) = (tempdir().unwrap(), tempdir().unwrap(), tempdir().unwrap());
     let ctx = provisioned(root.path(), data.path(), bin.path());
     assert_eq!(ctx.answer(&prepare("fleet"))["kind"], "prepared");
-    let window = crate::registry::window();
+    let window = crate::registry::Client::window();
     std::fs::remove_file(crate::registry::registrations(root.path(), &window).join("fleet"))
         .expect("the operator's own revocation");
 

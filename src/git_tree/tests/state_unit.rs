@@ -69,11 +69,10 @@ pub(super) fn refusal(
     lock: &dyn LockProbe,
     writer: &dyn WriterProbe,
 ) -> bool {
-    // Bound rather than chained: tarpaulin's llvm engine mis-attributes a
-    // multi-line method chain's tail as uncovered (the discipline `summarize`
-    // and `orphan::read` already keep).
-    let said = classify(dir, agent, lock, writer).failure;
-    said.as_deref().is_some_and(crate::login::auth::looks_auth)
+    classify(dir, agent, lock, writer)
+        .failure
+        .as_deref()
+        .is_some_and(crate::login::auth::looks_auth)
 }
 
 /// The failure sentence itself (bl-9b88): what the §11 row's tone and the §6

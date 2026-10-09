@@ -15,51 +15,13 @@
 #     wherever §12's cap happens to put it. Widening the path is not a new
 #     exception — it is the existing one addressed to the module it always
 #     named.
-#   - `src/git_tree/probe_cache.rs`: the macOS 2 s TTL cache's `Mutex` is
-#     single-thread interior mutability local to the probe stack (uncontended,
-#     never shared across threads), not the cross-thread shared state `state.rs`
-#     audits. Folding this generic, monomorphized decorator into `state.rs`
-#     breaks llvm-cov's per-line coverage on its `impl` headers (the phantom-
-#     region hazard `lib.rs` documents), making the chokepoint's 100% floor
-#     fragile to the very growth the rule invites — so the cache stays local,
-#     with its lock declared here as the one sanctioned exception.
-#   - `src/fs_watcher/hub.rs`: the process's single `notify` instance and its
-#     fan-out registry (bl-908c). Both are `OnceLock` singletons — created once,
-#     never dropped, never handed to anyone — so they are not the cross-thread
-#     *handoff* `state.rs` inventories (a handle passed between the frame, the
-#     worker and the bridge); they are a process-global kernel resource with a
-#     process-global owner. Folding them in costs the chokepoint its 100 %
-#     coverage floor for exactly the reason above: adding the types shifts
-#     `state.rs`'s byte offsets and llvm-cov mis-attributes phantom uncovered
-#     regions onto its `impl` headers and type aliases (measured at three lines,
-#     on a file otherwise at 100 %). Second sanctioned exception, same shape.
-#   - `src/registry/presence.rs`: the REMOTE §5 live-connection map (bl-4e08) —
-#     which client identities hold a wire connection right now, one refcount per
-#     identity. Third sanctioned exception, and the honest one to read closely:
-#     unlike the two above this IS cross-thread hand-off state, so `state.rs` is
-#     where the rule says it belongs, and that is where it was written first.
-#     It cannot stay there. Adding the `Arc<Mutex<BTreeMap<String, usize>>>`
-#     alias and its lock helper cost `state.rs` its 100 % coverage floor:
-#     llvm-cov attributed four phantom uncovered regions to unexecutable
-#     declaration lines there — `impl SearchCell {`, `impl DirtySet {`, and the
-#     `TailCell` and `PresenceCell` type aliases — on a file otherwise at 100 %,
-#     and moving the addition to the end of the file did not dissolve it (it is
-#     the new monomorphization, not the byte offsets). That is the same hazard
-#     measured a third time. The confinement exists for auditability, so it is
-#     bought back by naming this file here and by that module's own doc; what a
-#     third carve-out costs is the single reading of `state.rs`, and what it
-#     buys is the chokepoint keeping the coverage floor the whole gate rests on.
-#   - `src/registry/mailbox/slots.rs`: the REMOTE §5 invocation mailbox
-#     (bl-024b) — the queue per client and slot per invocation a routed tool
-#     call crosses through. Fourth sanctioned exception, and it is the third's
-#     map in every respect that matters: same lifetime, same client key, same
-#     connection rate of change, and RAM for the same reason (an invocation in
-#     flight is a fact about this process, not about the world). It sits beside
-#     `presence` rather than in the chokepoint because the measurement above
-#     already settled where a second `Arc<Mutex<…>>` alias costs `state.rs` its
-#     100 % floor, and a fifth phantom-region hunt buys nothing the fourth did
-#     not already pay for. Auditability is bought back the same way: named here,
-#     and its module doc says what it holds.
+#
+# There were four code carve-outs beside it — `git_tree/probe_cache.rs`,
+# `fs_watcher/hub.rs`, `registry/presence.rs`, `registry/mailbox/slots.rs` —
+# each justified by "phantom uncovered regions" a fold into `state.rs` drew.
+# Those were measured under tarpaulin's ptrace engine (the only engine that
+# ever ran until bl-d147), not llvm; under llvm the folds cover at 100 %, so
+# all four locks moved into `state.rs` (bl-0769) and the carve-outs went.
 #
 # Node kinds verified against ast-grep 0.44.1's Rust tree-sitter parser
 # (`--debug-query`): a bare `Mutex`/`RwLock` is a `type_identifier` in type
@@ -72,10 +34,6 @@ severity: error
 message: "Mutex/RwLock live only in src/state.rs, the crate lock chokepoint (see rules/locks-outside-state.yml)"
 ignores:
   - "**/state.rs"
-  - "**/git_tree/probe_cache.rs"
-  - "**/fs_watcher/hub.rs"
-  - "**/registry/presence.rs"
-  - "**/registry/mailbox/slots.rs"
   - "**/test_support.rs"
   - "**/test_support/**"
   - "**/tests/**"

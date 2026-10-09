@@ -25,30 +25,52 @@
 //! out-of-channel, by ruling (§1.4). There is no first-client flow, because the
 //! general path with an operator-seeded input is not a case of its own.
 //!
-//! **`local` is the reserved identity of every in-world caller** — the window,
-//! the `gestures/` deposit inbox, `yog gesture`. They carry no certificate and
-//! are not scoped (§3: each intake the religion of its domain), but they still
-//! need a name for their directory. [`Client::parse`] refuses
-//! `local` exactly as it refuses `.` and `..`: all three are names the layout
+//! **`local` is the reserved identity of every certificate-less in-world
+//! caller** (REMOTE §4.1) — the `gestures/` deposit inbox and `yog gesture`;
+//! the window presents a certificate and is [`WINDOW`]. They are not scoped
+//! (§3: each intake the religion of its domain), but they still need a name
+//! for their directory. [`Client::parse`] refuses `local` exactly as it refuses `.` and `..`: all three are names the layout
 //! has already spent, which is one rule rather than three special cases.
 
 use std::collections::BTreeSet;
 use std::io;
 use std::path::{Path, PathBuf};
 
+/// **Enrollment's two values** (REMOTE §1.4 as amended, §4.2; bl-f4e3) — what
+/// an operator asks for when a device joins, and what the engine answers with.
+pub mod enroll;
 /// The certificate leaf name → client identity fold (REMOTE §2).
 pub mod leaf;
+/// The engine-side invocation hand-off (REMOTE §5, bl-024b) — a queue per
+/// client and a slot per invocation, RAM beside [`presence`] for its reason.
+pub mod mailbox;
+/// **What a certificate authorizes** (REMOTE §4.2, bl-1dd3) — the grade its
+/// subject carries, and the [`Peer`] an intake answers as.
+pub mod peer;
 /// Which clients hold a live connection right now (REMOTE §5) — RAM, never a
 /// file, because presence changes with every network blip.
 pub mod presence;
 /// The workspace's registered clients joined with their presence and their
 /// advertised sets (REMOTE §5) — the one derivation both seats render.
 pub mod roster;
+/// **When each client last connected** (REMOTE §5 as amended, bl-d542) — the
+/// third durable fact a registration carries.
+pub mod seen;
 /// What a tool host advertises, and the document it lands in (REMOTE §5).
 pub mod tools;
 
-/// The reserved identity of the window and every other in-world caller.
+pub use peer::{Grade, Peer};
+
+/// The reserved identity of every certificate-less in-world caller (REMOTE
+/// §4.1) — the `gestures/` deposit inbox and `yog gesture`.
 pub const LOCAL: &str = "local";
+/// **The local window's own client identity** (REMOTE §1.2, §4.1; bl-ae05):
+/// `yog-window`, the subject common name yog's own mint puts on the window leaf
+/// ([`Role::Window`](crate::wire::material::Role::Window)) — and therefore the
+/// name the engine reads off the certificate the window presents, the directory
+/// its registrations live in, and the name a registration seats. One spelling,
+/// here, because an identity's home is the registry.
+pub const WINDOW: &str = "yog-window";
 /// The registry root's leaf under yog's state root.
 pub const CLIENTS: &str = "clients";
 /// The directory whose entries are one client's registrations.
@@ -72,9 +94,15 @@ impl Default for Client {
 }
 
 impl Client {
-    /// The in-world identity: the window, the deposit inbox, `yog gesture`.
+    /// The in-world identity: the deposit inbox and `yog gesture`.
     pub fn local() -> Self {
         Self(LOCAL.to_owned())
+    }
+
+    /// The window's identity — total, unlike [`Client::parse`], because the
+    /// name is yog's own const rather than a token read off a certificate.
+    pub fn window() -> Self {
+        Self(WINDOW.to_owned())
     }
 
     /// A wire client's identity, or the refusal naming the token. Refuses
@@ -146,61 +174,3 @@ pub fn register(state_root: &Path, client: &Client, workspace: &str) -> io::Resu
 
 #[cfg(test)]
 mod tests;
-
-/// The engine-side invocation hand-off (REMOTE §5, bl-024b) — a queue per
-/// client and a slot per invocation, RAM beside [`presence`] for its reason.
-///
-/// **Declared last, and out of order on purpose.** Every other `mod` sits at
-/// the top, and adding a fifth there shifted every byte below it — which cost
-/// this file its 100 % coverage floor, llvm-cov attributing a phantom
-/// uncovered region to `impl Client {`. That is the hazard
-/// `rules/locks-outside-state.yml` records twice over, met here by the remedy
-/// `state.rs` already uses: append below every line that was here before.
-pub mod mailbox;
-
-/// **The local window's own client identity** (REMOTE §1.2, §4.1; bl-ae05):
-/// `yog-window`, the subject common name yog's own mint puts on the window leaf
-/// ([`Role::Window`](crate::wire::material::Role::Window)) — and therefore the
-/// name the engine reads off the certificate the window presents, the directory
-/// its registrations live in, and the name a registration seats. One spelling,
-/// here, because an identity's home is the registry.
-///
-/// **The module doc and [`LOCAL`]'s own doc still say `local` is the
-/// window's**, and they are deliberately not edited — the reason [`mailbox`] is
-/// declared at the bottom of this file. Editing a byte above shifts every byte
-/// below it, and llvm-cov then mis-attributes a phantom *uncovered* region onto
-/// `impl Default for Client`, costing this file its 100 % floor (measured
-/// twice). **REMOTE §4.1 is the authority and it is narrower than those lines
-/// read: `local` is the certificate-less in-world callers — the `gestures/`
-/// deposit inbox and `yog gesture` — and the window is not among them.**
-pub const WINDOW: &str = "yog-window";
-
-/// The window's identity as a [`Client`] — total, unlike [`Client::parse`],
-/// because the name is yog's own const rather than a token read off a
-/// certificate. A free function rather than a second `impl Client` block, for
-/// the reason above: an added `impl` draws a phantom region onto itself
-/// besides, which is the same hazard `state.rs` meets the same way.
-pub fn window() -> Client {
-    Client(WINDOW.to_owned())
-}
-
-/// **What a certificate authorizes** (REMOTE §4.2, bl-1dd3) — the grade its
-/// subject carries, and the [`Peer`] an intake answers as.
-///
-/// Declared at the bottom beside [`mailbox`] and for its reason exactly:
-/// adding a `mod` at the top of this file shifts every byte below it, and
-/// llvm-cov then draws a phantom uncovered region onto `impl Client`.
-pub mod peer;
-
-pub use peer::{Grade, Peer};
-
-/// **Enrollment's two values** (REMOTE §1.4 as amended, §4.2; bl-f4e3) — what
-/// an operator asks for when a device joins, and what the engine answers with.
-///
-/// Declared at the bottom beside [`peer`] and [`mailbox`], for their reason.
-pub mod enroll;
-
-/// **When each client last connected** (REMOTE §5 as amended, bl-d542) — the
-/// third durable fact a registration carries, declared at the bottom beside
-/// [`enroll`] and for its reason.
-pub mod seen;

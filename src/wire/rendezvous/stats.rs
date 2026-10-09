@@ -8,8 +8,6 @@
 //! commons as `last_poll_unix` moving while `published` and `calls` do not,
 //! and the engine's stderr says each failure as it happens.
 
-use crate::wire::Listening;
-use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 
 /// The loop's counters, written by its thread and the punches it spawns.
@@ -69,20 +67,5 @@ impl Stats {
             accepted: n(&self.accepted),
             last_poll_unix: self.last_poll_unix.load(Ordering::Relaxed),
         }
-    }
-}
-
-/// `Listening`'s two rendezvous readers — here rather than beside it, since
-/// an addition to that `impl` draws llvm-cov's phantom onto its header.
-impl Listening {
-    /// The handle the rendezvous loop counts into.
-    pub(crate) fn rendezvous(&self) -> Arc<Stats> {
-        Arc::clone(&self.rendezvous)
-    }
-
-    /// The loop's standing as `/doctor` hands it over — `None` where nothing
-    /// bound, since only an engine has a loop to speak of.
-    pub(crate) fn standing(&self) -> Option<Standing> {
-        self.address().map(|_| self.rendezvous.standing())
     }
 }

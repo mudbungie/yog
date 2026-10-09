@@ -3,21 +3,13 @@
 //! per-file budget — [`super`] says what a routed invocation *is*, and this
 //! says where one waits.
 //!
-//! **The lock is here, and it is the fourth sanctioned carve-out** from
-//! AGENTS.md rule 7 (`rules/locks-outside-state.yml`). It is presence's
-//! carve-out for presence's measured reason: adding a second `Arc<Mutex<…>>`
-//! alias to `state.rs` cost that file its 100 % coverage floor once already —
-//! llvm-cov attributes phantom uncovered regions to its declaration lines when
-//! a new monomorphization lands there, and moving the addition to the end of
-//! the file did not dissolve it. This map is the presence map's sibling in
-//! every other way — same lifetime, same rate of change, same client key — so
-//! it sits beside it rather than in the chokepoint, and the confinement's
-//! *auditability* is bought back by naming the file in the rule and saying
-//! here what it holds.
+//! **The lock lives in [`state`](crate::state)** (AGENTS.md rule 7), beside
+//! presence's: [`MailCell`] and [`lock_mail`] there.
 
 use std::collections::{BTreeMap, BTreeSet};
-use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 use std::time::Duration;
+
+use crate::state::{MailCell, lock_mail};
 
 use super::doubt::{redelivered, unknown};
 use super::{Call, Capture, Invocation};
@@ -61,7 +53,7 @@ struct Slot {
 /// next id is minted from, and which identities are parked on a follow-class
 /// read right now.
 #[derive(Default)]
-struct Slots {
+pub(crate) struct Slots {
     live: BTreeMap<String, Slot>,
     seq: u64,
     /// **One reader per client identity** (REMOTE §5.1, bl-1462). Not a
@@ -69,15 +61,6 @@ struct Slots {
     /// is the pathology itself, where two holding one machine's *presence* is
     /// an operator with two seats.
     reading: BTreeSet<String>,
-}
-
-type MailCell = Arc<Mutex<Slots>>;
-
-/// Lock it, poison-immune. Kept on one line for `state.rs`'s own reason — a
-/// split isolates the never-taken recovery, which reads as uncovered under
-/// `ignore-panics`.
-fn lock_mail(cell: &MailCell) -> MutexGuard<'_, Slots> {
-    cell.lock().unwrap_or_else(PoisonError::into_inner)
 }
 
 /// The process's invocation mailbox, shared by handle exactly as

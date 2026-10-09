@@ -68,7 +68,7 @@ fn a_second_gesture_addresses_the_wall_the_first_founded() {
 fn the_windows_posted_receipt_addresses_the_wall_it_just_raised() {
     let (root, data, bin) = (tempdir().unwrap(), tempdir().unwrap(), tempdir().unwrap());
     let ctx = newborn_world(root.path(), data.path(), bin.path());
-    let window = crate::registry::window();
+    let window = crate::registry::Client::window();
     let seated = operator(window.clone());
     let born = ctx.answer_as(&seated, &prepare("home"));
     assert_eq!(born["kind"], "prepared", "{born}");
@@ -125,7 +125,7 @@ fn a_half_born_directory_is_resumed_not_wedged() {
 fn a_scoped_clients_prepare_never_joins_anothers_wall() {
     let (root, data, bin) = (tempdir().unwrap(), tempdir().unwrap(), tempdir().unwrap());
     let ctx = newborn_world(root.path(), data.path(), bin.path());
-    let window = crate::registry::window();
+    let window = crate::registry::Client::window();
     let seated = operator(window.clone());
     let born = ctx.answer_as(&seated, &prepare("home"));
     assert_eq!(born["kind"], "prepared", "{born}");

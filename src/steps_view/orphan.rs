@@ -166,11 +166,12 @@ pub(super) fn read(workspace: &Path, agent_id: &str, state: AgentState) -> Orpha
     if tail == Tail::ToolWindow && crate::control::hold::read(workspace, agent_id).is_some() {
         return Orphan::None;
     }
-    // Bound rather than chained, like `summarize` in `super`: tarpaulin's
-    // llvm engine mis-attributes a multi-line method chain's tail as
-    // uncovered.
-    let dir = workspace.join(super::STEPS_DIR).join(agent_id);
-    let captured = crate::opslog::detached::captured(&dir.join(super::records::DRIVER_LOG_FILE));
+    let captured = crate::opslog::detached::captured(
+        &workspace
+            .join(super::STEPS_DIR)
+            .join(agent_id)
+            .join(super::records::DRIVER_LOG_FILE),
+    );
     let words = crate::opslog::rows::stderr_tail(captured.trim());
     if words.is_empty() {
         Orphan::Mute(tail)

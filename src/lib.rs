@@ -22,13 +22,6 @@
 //! message/stop/scan/close/unclaim/create/update verb surface; [`delete`] the
 //! §3.6 unmaking; [`badge`] is what is left of the palette — the words a
 //! derived row says, never a colour.
-//!
-//! The crate root is deliberately declaration-only. A root carrying a
-//! coverable `impl` or `fn` accrues an llvm-cov phantom uncovered region on
-//! its header line each time the `pub mod` list above it grows and shifts
-//! byte offsets (this cost 99.90% coverage after the Y2/Y7/Y15 folds). With
-//! all coverable code in submodules, new `pub mod` lines have no root-level
-//! line to mis-attribute, so coverage stays at 100% as modules land.
 
 pub mod actions;
 pub mod app;

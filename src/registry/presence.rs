@@ -26,37 +26,14 @@
 //! that vanished, a panicking thread. There is no leave verb to forget to call,
 //! which is what makes "connected right now" true rather than aspirational.
 //!
-//! **The lock is here, and that is the third sanctioned carve-out** from
-//! AGENTS.md rule 7 (`rules/locks-outside-state.yml`, bl-4e08). It was written
-//! in `src/state.rs` first, which is where it belongs on the rule's own terms —
-//! this is genuine cross-thread hand-off state, unlike the two existing
-//! exceptions. It cannot stay there: adding the alias and its lock helper cost
-//! `state.rs` its 100% coverage floor, llvm-cov attributing four phantom
-//! uncovered regions to unexecutable declaration lines there — `impl SearchCell
-//! {`, `impl DirtySet {`, and the live tail's own cell alias beside
-//! `PresenceCell` (that one retired with the §7.2 follower, bl-73e7) — on a
-//! file otherwise at 100%. That is the exact hazard the rule's other two
-//! carve-outs already record, measured a third time. The confinement's *reason*
-//! is auditability, so the rule file names this file and the module doc says
-//! what it holds; what is lost is the single reading of `state.rs`, and what
-//! would have been lost is the coverage floor of the chokepoint itself.
+//! **The lock lives in [`state`](crate::state)** (AGENTS.md rule 7): this is
+//! genuine cross-thread hand-off state, so the map's cell and its poison-immune
+//! lock are [`PresenceCell`] and [`lock_presence`] there.
 
-use std::collections::{BTreeMap, BTreeSet};
-use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
+use std::collections::BTreeSet;
 
 use super::Client;
-
-/// Per live identity, one stated corpus edition per connection it holds,
-/// behind the crate's ordinary `unwrap_or_else(PoisonError::into_inner)`
-/// recovery: a panic while the guard was held leaves a map that is still a map.
-type PresenceCell = Arc<Mutex<BTreeMap<String, Vec<u32>>>>;
-
-/// Lock it, poison-immune. Kept on one line for `state.rs`'s own reason — a
-/// split isolates the never-taken recovery, which reads as uncovered under
-/// `ignore-panics`.
-fn lock_presence(cell: &PresenceCell) -> MutexGuard<'_, BTreeMap<String, Vec<u32>>> {
-    cell.lock().unwrap_or_else(PoisonError::into_inner)
-}
+use crate::state::{PresenceCell, lock_presence};
 
 /// The process's live-connection map, shared by handle: the wire server enters
 /// identities into it, and every answer reads them out of it. A default one is

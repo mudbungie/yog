@@ -150,11 +150,10 @@ pub(crate) fn admit<S: Read + Write>(s: &mut S) -> Option<u32> {
     if agreed(peer.protocol) {
         return Some(peer.edition);
     }
-    // The sentence is bound rather than nested, so this arm is one statement
-    // per line: a call rustfmt wraps gets a region per continuation, and the
-    // inner one reads uncovered on a path the suite does exercise.
-    let said = mismatch(peer.protocol);
-    let _ = frame::write_value(s, &crate::boundary::reply::refusal(&said));
+    let _ = frame::write_value(
+        s,
+        &crate::boundary::reply::refusal(&mismatch(peer.protocol)),
+    );
     let _ = frame::write_end(s);
     None
 }

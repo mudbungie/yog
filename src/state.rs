@@ -1,16 +1,11 @@
 //! The crate's lock chokepoint (Bootstrap rule 7): the cross-thread
 //! shared-mutable-state locks live in this one file, so the whole-crate
 //! shared-state inventory is auditable in one place.
-//! `rules/locks-outside-state.yml` enforces the confinement; the only carve-outs
-//! are test scaffolding and one documented exception,
-//! [`git_tree::probe_cache`](crate::git_tree) — the macOS TTL cache's `Mutex` is
-//! single-thread interior mutability local to the probe stack, not cross-thread
-//! shared state, and a generic decorator folded in here would break llvm-cov's
-//! per-line coverage (see that module's doc).
+//! `rules/locks-outside-state.yml` enforces the confinement, and its only
+//! carve-out is test scaffolding.
 //!
-//! **Four residents, and they are the whole inter-thread interface** (§7.2).
-//! Since bl-ee0a yog runs three threads — the frame, the derivation worker, and
-//! the watch bridge — so this file is the complete inventory of what they share:
+//! **The residents, and they are the whole inter-thread interface** (§7.2).
+//! This file is the complete inventory of what yog's threads share:
 //!
 //! - [`WatchSetHandle`] — the shared [`WatchSet`](crate::watch::WatchSet): the
 //!   worker reconciles it, the [`Bridge`](crate::watch::Bridge) drains it.
@@ -26,10 +21,23 @@
 //!   once per frame. The lock is held for exactly one pointer move on either
 //!   side, so "the frame never blocks on the worker" is true by construction —
 //!   there is no derivation inside this critical section to wait for.
+//! - [`PresenceCell`] — **the wire server → every answer**: which clients hold
+//!   a live connection (REMOTE §5, [`registry::presence`](crate::registry::presence)).
+//! - [`MailCell`] — **the invocation mailbox** (REMOTE §5): the queue per client
+//!   and slot per invocation a routed tool call crosses
+//!   ([`registry::mailbox`](crate::registry::mailbox)).
+//! - [`hub_slots`] / [`hub_backend`] — **the process's one `notify` instance**
+//!   and its fan-out registry (§7.1, [`fs_watcher`](crate::fs_watcher)): the
+//!   backend's event thread delivers through the registry every watcher arms.
+//! - `ProbeCacheCell` — the macOS 2 s liveness-probe TTL cache (§10), compiled
+//!   only where it is used (macOS, and tests).
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
+use std::sync::mpsc::Sender;
+use std::sync::{Arc, Mutex, MutexGuard, OnceLock, PoisonError};
+
+use notify::{Event, RecommendedWatcher};
 
 use crate::app::Snapshot;
 use crate::watch::{Mark, WatchSet};
@@ -128,4 +136,72 @@ impl DirtySet {
     pub fn is_empty(&self) -> bool {
         self.guard().is_empty()
     }
+}
+
+/// The live-connection map (REMOTE §5, bl-4e08): per identity, one stated
+/// corpus edition per connection it holds. The wire server writes it, every
+/// answer reads it; the map and every rule about it live with
+/// [`Presence`](crate::registry::presence::Presence).
+pub(crate) type PresenceCell = Arc<Mutex<BTreeMap<String, Vec<u32>>>>;
+
+/// Lock the presence map, poison-immune — [`lock_cell`]'s one-line discipline.
+pub(crate) fn lock_presence(cell: &PresenceCell) -> MutexGuard<'_, BTreeMap<String, Vec<u32>>> {
+    cell.lock().unwrap_or_else(PoisonError::into_inner)
+}
+
+/// The invocation mailbox (REMOTE §5, bl-024b), shared by handle exactly as
+/// [`PresenceCell`] is; its slots and rules live with
+/// [`Mailbox`](crate::registry::mailbox::Mailbox).
+pub(crate) type MailCell = Arc<Mutex<crate::registry::mailbox::slots::Slots>>;
+
+/// Lock the mailbox, poison-immune — [`lock_cell`]'s one-line discipline.
+pub(crate) fn lock_mail(cell: &MailCell) -> MutexGuard<'_, crate::registry::mailbox::slots::Slots> {
+    cell.lock().unwrap_or_else(PoisonError::into_inner)
+}
+
+/// One watch-hub subscriber (§7.1, bl-908c): a canonical watched root and the
+/// channel the watcher over it drains.
+pub(crate) type HubSlot = (PathBuf, Sender<notify::Result<Event>>);
+
+/// The hub's fan-out registry — a process singleton the backend's event thread
+/// delivers through, so its callback captures nothing.
+static HUB_SLOTS: OnceLock<Mutex<Vec<HubSlot>>> = OnceLock::new();
+
+/// The process's one `notify` backend, or `None` if it could not be created.
+static HUB_BACKEND: OnceLock<Option<Mutex<RecommendedWatcher>>> = OnceLock::new();
+
+/// The hub's registry, locked poison-immune.
+pub(crate) fn hub_slots() -> MutexGuard<'static, Vec<HubSlot>> {
+    HUB_SLOTS
+        .get_or_init(Mutex::default)
+        .lock()
+        .unwrap_or_else(PoisonError::into_inner)
+}
+
+/// The hub's backend, built by `build` on first use and locked poison-immune;
+/// `None` where it could not be built. The rule about never taking it while
+/// [`hub_slots`] is held lives with the hub (`fs_watcher::hub`).
+pub(crate) fn hub_backend(
+    build: fn() -> Option<RecommendedWatcher>,
+) -> Option<MutexGuard<'static, RecommendedWatcher>> {
+    let lock = HUB_BACKEND
+        .get_or_init(|| build().map(Mutex::new))
+        .as_ref()?;
+    Some(lock.lock().unwrap_or_else(PoisonError::into_inner))
+}
+
+/// The macOS liveness-probe TTL cache's map (§10): target path → when it was
+/// observed and what was seen. Single-thread in practice (the probe traits
+/// observe through `&self`); a resident here because every lock is.
+#[cfg(any(test, target_os = "macos"))]
+pub(crate) type ProbeCacheCell =
+    Mutex<std::collections::HashMap<PathBuf, (std::time::Instant, crate::git_tree::Probe)>>;
+
+/// Lock the probe cache, poison-immune — [`lock_cell`]'s one-line discipline.
+#[cfg(any(test, target_os = "macos"))]
+pub(crate) fn lock_probe_cache(
+    cell: &ProbeCacheCell,
+) -> MutexGuard<'_, std::collections::HashMap<PathBuf, (std::time::Instant, crate::git_tree::Probe)>>
+{
+    cell.lock().unwrap_or_else(PoisonError::into_inner)
 }

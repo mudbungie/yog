@@ -157,28 +157,17 @@ recorded verbatim in the rule — read it before assuming a rule is absolute.**
    always be exact and lockfile-fixed; a `path` dependency is never lawful.
 
 7. **`Mutex`/`RwLock` only in `src/state.rs`; no `Rc`/`RefCell` anywhere. yog
-   ADAPTATION:** the lock chokepoint (`state.rs`) has five sanctioned
-   carve-outs — `test_support`'s test-double interior mutability (a `FakeFs`'
+   ADAPTATION:** the lock chokepoint (`state.rs`) has one sanctioned
+   carve-out — `test_support`'s test-double interior mutability (a `FakeFs`'
    path→bytes map, a fake clock's shared instant; the `SPAWN_LOCK` this list
    used to name was measured out by bl-fd28, below, and `ENV_LOCK` is already
-   gone from the tree), `src/git_tree/probe_cache.rs` (a macOS 2 s TTL cache whose
-   `Mutex` is uncontended single-thread interior mutability),
-   `src/fs_watcher/hub.rs` (the process's one `notify` instance and its fan-out
-   registry, `OnceLock` singletons that are never dropped or handed out —
-   bl-908c), `src/registry/presence.rs` (REMOTE §5's live-connection map,
-   bl-4e08), and `src/registry/mailbox/slots.rs` (REMOTE §5's invocation
-   mailbox, bl-024b — the queue per client a routed tool call crosses through,
-   which is presence's map in every respect that matters: same lifetime, same
-   client key, same connection rate of change). All four code carve-outs share
-   one reason: folding them into `state.rs` breaks llvm-cov's per-line coverage
-   there, mis-attributing phantom uncovered regions onto its `impl` headers and
-   type aliases. The last two are the ones to read closely — both *are*
-   cross-thread hand-off state, so the rule says they belong in the chokepoint,
-   and the presence map was written there first; it moved out only because it
-   cost `state.rs` the 100% floor (four phantom lines, measured, and not
-   dissolved by moving the addition to the end of the file), and the mailbox
-   sits beside it rather than paying for a fifth measurement of the same
-   hazard. `Rc`/`RefCell` are banned everywhere, tests
+   gone from the tree). Every production lock — the presence map, the
+   invocation mailbox, the watch hub's two singletons and the macOS probe
+   cache included — is an alias or singleton in `state.rs`. Four of those were
+   once carve-outs, on the claim that folding them in drew "llvm-cov phantom"
+   uncovered regions onto `state.rs`; the measurement was tarpaulin's ptrace
+   engine (the only one that ran until bl-d147), and under llvm the folds
+   cover at 100 % (bl-0769). `Rc`/`RefCell` are banned everywhere, tests
    included (bare `Cell` counters are fine). Enforced:
    `rules/locks-outside-state.yml`, `rules/no-rc-refcell.yml`.
 

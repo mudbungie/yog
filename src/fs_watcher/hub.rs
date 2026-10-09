@@ -32,56 +32,30 @@
 //!   workspace watcher nested inside it. [`disarm`] re-arms every overlapping
 //!   live root instead of leaving a deaf watcher (§7.3).
 //!
-//! **Why the locks live here and not in `state.rs`** (Bootstrap rule 7's second
-//! sanctioned carve-out, declared in `rules/locks-outside-state.yml`): both are
-//! `OnceLock` process singletons that are never dropped and never handed out, so
-//! they are not the cross-thread handoff `state.rs` inventories — and folding
-//! them in costs the chokepoint its 100 % floor for the same llvm-cov reason
-//! `git_tree::probe_cache` records: adding types there shifts the file's byte
-//! offsets and llvm-cov mis-attributes phantom uncovered regions onto its `impl`
-//! headers and type aliases (measured: 3 lines, on a file that is otherwise 100 %).
+//! **Both locks live in [`state`](crate::state)** (AGENTS.md rule 7):
+//! [`hub_slots`] and [`hub_backend`] there are the registry and the backend.
 
 use super::WatchError;
+use crate::state::{hub_backend, hub_slots as slots};
 use notify::{Event, RecommendedWatcher, RecursiveMode, Watcher as NotifyWatcher};
 use std::path::{Path, PathBuf};
-use std::sync::mpsc::{self, Receiver, Sender};
-use std::sync::{Mutex, MutexGuard, OnceLock, PoisonError};
+use std::sync::MutexGuard;
+use std::sync::mpsc::{self, Receiver};
 
-/// One fan-out subscriber: a canonical watched root and the channel the
-/// [`Watcher`](super::Watcher) over it drains.
-type Slot = (PathBuf, Sender<notify::Result<Event>>);
-
-/// The registry the backend's event thread delivers through — named directly by
-/// the callback, which therefore captures nothing.
-static SLOTS: OnceLock<Mutex<Vec<Slot>>> = OnceLock::new();
-
-/// The process's one backend, or `None` if it could not be created at all (the
-/// budget was gone before the first arm) — every caller then degrades exactly as
-/// it did on a per-root arm failure.
-static BACKEND: OnceLock<Option<Mutex<RecommendedWatcher>>> = OnceLock::new();
-
-/// The registry, locked poison-immune (the one-line recovery discipline
-/// `state::lock_watchset` records: a split reads as uncovered under
-/// `ignore-panics`).
-fn slots() -> MutexGuard<'static, Vec<Slot>> {
-    SLOTS
-        .get_or_init(|| Mutex::new(Vec::new()))
-        .lock()
-        .unwrap_or_else(PoisonError::into_inner)
-}
-
-/// The backend, locked. Never taken while [`slots`] is held: the backend's own
-/// event loop runs the fan-out callback, so a thread holding the registry across
-/// a `watch()` call would deadlock against its own notification.
+/// The backend, locked — `None` if it could not be created at all (the budget
+/// was gone before the first arm), and every caller then degrades exactly as it
+/// did on a per-root arm failure. Never taken while [`slots`] is held: the
+/// backend's own event loop runs the fan-out callback, so a thread holding the
+/// registry across a `watch()` call would deadlock against its own
+/// notification.
 fn backend() -> Option<MutexGuard<'static, RecommendedWatcher>> {
-    let lock = BACKEND.get_or_init(build).as_ref()?;
-    Some(lock.lock().unwrap_or_else(PoisonError::into_inner))
+    hub_backend(build)
 }
 
-fn build() -> Option<Mutex<RecommendedWatcher>> {
-    notify::recommended_watcher(|res| deliver(&res))
-        .map(Mutex::new)
-        .ok()
+/// The one backend, whose callback names the registry directly and therefore
+/// captures nothing.
+fn build() -> Option<RecommendedWatcher> {
+    notify::recommended_watcher(|res| deliver(&res)).ok()
 }
 
 /// Fan one raw backend message out to every root it concerns.

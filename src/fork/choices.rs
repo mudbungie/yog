@@ -37,9 +37,7 @@ pub fn roles_at(workspace: &Path, refspec: &str) -> Vec<RoleModel> {
 /// litany's own `load_skill` tool resolves. Derived from the world layout, so
 /// yog's nested substrate (§16.2) and the pool it offers are one fact.
 pub fn skills_root(yog_data_root: &Path) -> PathBuf {
-    // Bound rather than chained: tarpaulin's llvm engine mis-attributes a
-    // multi-line method chain's tail as uncovered, and rustfmt's chain width
-    // will not keep this one on a single line.
-    let world = crate::world::layout_under(yog_data_root);
-    world.litany.join(SKILLS_DIR)
+    crate::world::layout_under(yog_data_root)
+        .litany
+        .join(SKILLS_DIR)
 }

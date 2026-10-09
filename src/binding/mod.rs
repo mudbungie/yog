@@ -164,8 +164,6 @@ fn is_birth_temp(dir: &Path) -> bool {
 /// One-level (flat) enumeration: direct children of `dir` that are workspaces,
 /// each tagged by `classify` over its leaf name. An absent `dir` contributes
 /// nothing. Sorted by path for a stable, determinism-derived roster (I9).
-/// `classify` is a bare `fn` (the call sites capture nothing) so the enumerator
-/// has one instantiation — no monomorphized-per-closure llvm-cov phantom (§12.1).
 fn enumerate_flat(dir: &Path, classify: fn(&str) -> WorkspaceKind, out: &mut Vec<Workspace>) {
     let Ok(entries) = std::fs::read_dir(dir) else {
         return;

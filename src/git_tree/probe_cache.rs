@@ -19,24 +19,19 @@
 //! [`PoisonError::into_inner`](std::sync::PoisonError::into_inner) — no panic
 //! path) because the probe traits observe through `&self`. yog derives on the
 //! single frame thread (§7.2), so the lock is uncontended and never actually
-//! shared across threads. This lock is the one deliberate exception to the
-//! `Mutex`-in-`state.rs` chokepoint (`rules/locks-outside-state.yml` ignores
-//! this file): it is single-thread interior mutability local to the probe
-//! stack, not the cross-thread shared state `state.rs` audits — and folding a
-//! generic, monomorphized decorator into `state.rs` breaks llvm-cov's
-//! per-line coverage on its `impl` headers (the phantom-region hazard `lib.rs`
-//! documents), which would make the chokepoint file's 100% floor fragile to
-//! the very growth the rule invites.
+//! shared across threads; like every lock it lives in [`state`](crate::state)
+//! ([`ProbeCacheCell`](crate::state::ProbeCacheCell), AGENTS.md rule 7).
 //!
 //! Linux never caches (its `/proc` probes are cheap and always definite, §10),
 //! so this module is compiled only under `cfg(test)` (for its coverage) and on
 //! macOS (its one production consumer) — see the gate in [`super`].
 
 use super::probe::{LockProbe, Probe, WriterProbe};
+use crate::state::{ProbeCacheCell, lock_probe_cache};
 use crate::ui_state::Clock;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::{Mutex, MutexGuard, PoisonError};
+use std::sync::MutexGuard;
 use std::time::{Duration, Instant};
 
 /// Freshness bound for a cached observation (DESIGN §10: "2 s TTL cache").
@@ -46,12 +41,12 @@ const TTL: Duration = Duration::from_secs(2);
 pub(super) struct TtlCache<P, C: Clock> {
     inner: P,
     clock: C,
-    cache: Mutex<HashMap<PathBuf, (Instant, Probe)>>,
+    cache: ProbeCacheCell,
 }
 
 impl<P, C: Clock> TtlCache<P, C> {
     pub(super) fn new(inner: P, clock: C) -> Self {
-        let cache = Mutex::new(HashMap::new());
+        let cache = ProbeCacheCell::default();
         Self {
             inner,
             clock,
@@ -61,7 +56,7 @@ impl<P, C: Clock> TtlCache<P, C> {
 
     /// The cache map, locked (poison-immune — no panic path).
     fn entries(&self) -> MutexGuard<'_, HashMap<PathBuf, (Instant, Probe)>> {
-        self.cache.lock().unwrap_or_else(PoisonError::into_inner)
+        lock_probe_cache(&self.cache)
     }
 
     /// A cached result for `target` younger than [`TTL`], else `compute` it and

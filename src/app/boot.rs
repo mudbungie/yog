@@ -5,9 +5,7 @@
 //! being and how it reaches the derivation thread. Both members are the same
 //! subject read from its two ends — [`AppModel::boot`] builds the [`Deriver`]
 //! and hands the caller the pair, and [`AppModel::mark_dirty`] is the frame's
-//! *only* outbound signal to it — so the root stays declaration-light and
-//! carries no coverable `impl` header (the llvm-cov phantom this module tree is
-//! arranged around).
+//! *only* outbound signal to it.
 
 use super::{AppModel, Deriver, Roots, Snapshot};
 use crate::projects::runner::BlRunner;
