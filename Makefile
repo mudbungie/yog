@@ -66,6 +66,7 @@ test:
 
 TARPAULIN_PIN := 0.35.2
 
+# The engine is set in tarpaulin.toml, which overrides a command-line --engine.
 coverage:
 	@have=$$(cargo tarpaulin --version 2>/dev/null | awk '{print $$NF}'); \
 	if [ "$$have" != "$(TARPAULIN_PIN)" ]; then \
@@ -73,7 +74,7 @@ coverage:
 	  echo "  cargo install cargo-tarpaulin --version $(TARPAULIN_PIN) --locked" >&2; \
 	  exit 1; \
 	fi
-	cargo tarpaulin --fail-under 100 --skip-clean --engine llvm --out Stdout
+	cargo tarpaulin --fail-under 100 --skip-clean --out Stdout
 
 # The complete static gate: the 300-line cap + clippy (reads Cargo.toml
 # [lints]) + the ast-grep rules audit + the cargo-deny supply-chain audit. All

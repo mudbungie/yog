@@ -1,5 +1,5 @@
 //! The std UDP transport on loopback: a datagram each way, a wait that
-//! elapses, and a destination this socket cannot reach.
+//! elapses, a destination this socket cannot reach, and what counts as elapsed.
 
 use super::*;
 
@@ -38,4 +38,14 @@ fn a_datagram_over_the_buffer_is_truncated() {
         .unwrap();
     let (_, bytes) = b.recv(Duration::from_secs(2)).unwrap().unwrap();
     assert_eq!(bytes.len(), DATAGRAM);
+}
+
+/// A wait running out is either of the two kinds a platform reports it as;
+/// every other error is the socket failing, which no loopback socket will
+/// produce on demand, so the classifier is read directly.
+#[test]
+fn only_a_wait_running_out_counts_as_elapsed() {
+    assert!(elapsed(&io::Error::from(io::ErrorKind::WouldBlock)));
+    assert!(elapsed(&io::Error::from(io::ErrorKind::TimedOut)));
+    assert!(!elapsed(&io::Error::from(io::ErrorKind::ConnectionRefused)));
 }

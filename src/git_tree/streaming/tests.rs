@@ -119,8 +119,8 @@ fn the_fold_says_nothing_when_the_response_is_absent() {
 
 #[test]
 fn latest_step_dir_skips_non_step_entries() {
-    // Stray file at the conv-id level (e.g. an editor backup) and a
-    // dir that doesn't match `<NNN>` shape must both be ignored.
+    // Stray file at the conv-id level (e.g. an editor backup), a dir that
+    // doesn't match `<NNN>` shape, and a step-shaped file are all ignored.
     let dir = tempdir().unwrap();
     let conv = "20260427T120000Z-cccc";
     let conv_steps = dir.path().join(STEPS_DIR).join(conv);
@@ -128,6 +128,8 @@ fn latest_step_dir_skips_non_step_entries() {
     std::fs::create_dir_all(conv_steps.join("notes")).unwrap();
     std::fs::write(conv_steps.join(".keep"), b"").unwrap();
     std::fs::write(conv_steps.join("01a"), b"").unwrap();
+    // Step-shaped, and newer, but a file: not a step.
+    std::fs::write(conv_steps.join("002"), b"").unwrap();
     let latest = latest_step_dir(&conv_steps).unwrap();
     assert!(latest.ends_with("001"));
 }

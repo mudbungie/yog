@@ -19,12 +19,21 @@
 # - `ignore-panics` excludes branches that only fire on programmer-error
 #   panics (e.g. `.expect(...)` on infallible operations).
 #
+# `engine = "Llvm"` is the one engine setting, and it lives here because 0.35.2
+# ignores `--engine` on the command line whenever this file exists: the merge
+# never copies it, so the Makefile's former `--engine llvm` ran ptrace (the
+# Linux default) silently, every run until bl-d147. ptrace resolves a
+# dependency's relative `src/<name>.rs` DWARF rows to OUR file of the same
+# name, so a non-code line of ours can read as uncovered — a phantom no glob
+# can exclude. llvm reads the profile's own paths and also counts untaken
+# branches ptrace never saw, which is a stricter floor, not a weaker one.
+#
 # Coverage runs serially (`args = ["--test-threads=1"]`): Y3's
-# `spawn_detached` (§8.1) forks `setsid` children that tarpaulin's
-# `--engine llvm` still follows under ptrace, and its state machine races
-# the parallel teardown of those detached processes ("Failed to find
-# process for pid: … → segfault" — the same failure litany's tarpaulin
-# pins around). Serial coverage sidesteps the race; the 100% floor is
+# `spawn_detached` (§8.1) forks `setsid` children that tarpaulin followed
+# under ptrace — the engine that actually ran until bl-d147 — and its state
+# machine raced the parallel teardown of those detached processes ("Failed
+# to find process for pid: … → segfault" — the same failure litany's
+# tarpaulin pins around). Serial coverage sidesteps the race; the 100% floor is
 # unchanged (coverage is the union of executed lines, order-independent).
 #
 # `cargo test` (i.e. `make test`) itself stays PARALLEL: the ETXTBSY fork race
@@ -36,6 +45,7 @@
 # yog's OWN worker threads forking beside the one test thread, which is how the
 # race reached a coverage run at all.
 [default]
+engine = "Llvm"
 exclude-files = ["src/main.rs"]
 ignore-panics = true
 timeout = "300s"

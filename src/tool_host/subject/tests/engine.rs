@@ -106,7 +106,13 @@ fn the_partition_leaves_the_engine_exactly_the_three_worktree_names() {
 /// engine's and a pool name is a sentence.
 #[test]
 fn a_consenting_machine_wins_and_the_engine_takes_what_is_left() {
-    let mixed = vec![row("laptop", "bash", false), row("tower", "bash", true)];
+    // `desk` consents too, but to another name: it is no advertiser of this
+    // one, so it neither competes nor makes the pick an ambiguity.
+    let mixed = vec![
+        row("laptop", "bash", false),
+        row("desk", "read_file", true),
+        row("tower", "bash", true),
+    ];
     match verdict(&mixed, "bash") {
         Lane::Machine(picked) => {
             assert_eq!(picked.client, "tower");

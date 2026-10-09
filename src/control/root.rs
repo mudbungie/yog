@@ -102,17 +102,17 @@ fn expand_home(operand: &str, home: &Path) -> PathBuf {
     }
 }
 
-/// Fold `.` and `..` textually. A `..` above the root simply drops, exactly as
-/// the kernel treats `/..`.
+/// Fold `..` textually. A `..` above the root simply drops, exactly as the
+/// kernel treats `/..`. There is no `.` arm: `components()` already drops every
+/// interior `.`, and the only one it keeps leads a RELATIVE path, which
+/// [`Root::resolve`] never hands here.
 fn normalize(p: &Path) -> PathBuf {
     let mut out = PathBuf::new();
     for part in p.components() {
-        match part {
-            Component::CurDir => {}
-            Component::ParentDir => {
-                out.pop();
-            }
-            other => out.push(other),
+        if part == Component::ParentDir {
+            out.pop();
+        } else {
+            out.push(part);
         }
     }
     out

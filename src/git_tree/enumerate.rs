@@ -46,10 +46,10 @@ pub(super) fn enumerate_agents(
     let text = String::from_utf8_lossy(&out);
     let marks = Marks::from_repo(git_dir)?;
     let mut agents = Vec::new();
+    // No blank-line skip: the format names three fields on every ref, and
+    // `lines()` yields nothing for an empty listing — a blank line would be a
+    // malformed row, and that is the LogFormat below, not a silent skip.
     for line in text.lines() {
-        if line.is_empty() {
-            continue;
-        }
         let mut parts = line.splitn(3, ' ');
         let branch_name = parts
             .next()

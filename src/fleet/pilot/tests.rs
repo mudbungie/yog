@@ -97,9 +97,12 @@ fn a_ready_ball_in_another_project_is_not_this_loops_work() {
 #[test]
 fn a_quiet_ball_past_its_lease_is_reaped_with_the_comparison_as_its_reason() {
     let quiet = agent("root-1", crate::git_tree::AgentState::Quiescent, NOW - 2820);
+    // Another ball's running drone in the same tree is not this ball's: it
+    // neither vetoes the reap nor freshens the idleness.
+    let elsewhere = agent("root-9", crate::git_tree::AgentState::Live, NOW);
     let rows = vec![row("bl-1", Column::Claimed, vec!["root-1"])];
     let one = plan(
-        &snap(vec![quiet]),
+        &snap(vec![quiet, elsewhere]),
         &facts(3, 1, Some(Duration::from_mins(30))),
         Path::new(fixture::WS),
         &rows,

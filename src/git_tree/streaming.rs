@@ -148,25 +148,26 @@ pub(super) fn latest_step_dir(conv_steps: &Path) -> Option<std::path::PathBuf> {
     let entries = std::fs::read_dir(conv_steps).ok()?;
     let mut best: Option<(u32, std::path::PathBuf)> = None;
     for entry in entries.flatten() {
-        let name = entry.file_name();
-        let Some(name_str) = name.to_str() else {
-            continue;
-        };
-        if name_str.len() != STEP_SEQ_WIDTH {
-            continue;
-        }
-        let Ok(seq) = name_str.parse::<u32>() else {
-            continue;
-        };
         let path = entry.path();
-        if !path.is_dir() {
+        // One rejection for every way an entry is not a step: a name that is
+        // not UTF-8, not `STEP_SEQ_WIDTH` wide, or not a number, or a
+        // step-shaped name on something other than a directory.
+        let Some(seq) = step_seq(&entry.file_name()).filter(|_| path.is_dir()) else {
             continue;
-        }
+        };
         if best.as_ref().is_none_or(|(s, _)| seq > *s) {
             best = Some((seq, path));
         }
     }
     best.map(|(_, p)| p)
+}
+
+/// The step number a `<NNN>` directory name spells, if it spells one.
+fn step_seq(name: &std::ffi::OsStr) -> Option<u32> {
+    name.to_str()
+        .filter(|n| n.len() == STEP_SEQ_WIDTH)?
+        .parse()
+        .ok()
 }
 
 /// Fold a JSONL `response.json` payload into its [`Stream`]. Each line is a

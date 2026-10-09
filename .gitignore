@@ -1,3 +1,8 @@
 /target
 /lcov.info
 __pycache__/
+# The llvm coverage engine's raw profiles (bl-d147): a test's child that runs
+# with a cleared environment loses LLVM_PROFILE_FILE and writes the default
+# name into its cwd. The gate keys its verdict on the tree after `git add -A`,
+# so an unignored one re-keys every run and no verdict ever matches.
+*.profraw

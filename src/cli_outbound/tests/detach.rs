@@ -5,8 +5,9 @@
 //! harness's ptrace reaping and `spawn_detached`'s own reaper thread, whose
 //! wait is the one that must be seen to work (and the child, in its own
 //! group, would ignore a terminal signal anyway). Under Linux coverage
-//! (tarpaulin's `--engine llvm`, which follows the detached child under
-//! ptrace) the child scripts fork no sub-process that would race that same
+//! (tarpaulin, whose engine was ptrace until bl-d147 — the Makefile's
+//! `--engine llvm` never took effect — and which followed the detached child
+//! under it) the child scripts fork no sub-process that would race that
 //! ptrace machine: the Linux drivers use only shell builtins (`read`,
 //! `printf`, `pwd`) and a `/proc` redirect. macOS CI runs plain `cargo
 //! test` (no tarpaulin, no ptrace), so its process-group driver may fork

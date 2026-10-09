@@ -224,18 +224,20 @@ pub(crate) fn serve(
         peer::hang_up(&mut tls);
         return false;
     };
-    converse(&mut tls, answerer, presence, quiet, edition);
+    let _ = converse(&mut tls, answerer, presence, quiet, edition);
     true
 }
 
 /// An admitted connection's requests, answered until the peer goes away.
+/// It returns only then, so its one answer is `None` — and every way the peer
+/// can be gone is a `?` onto it, rather than an exit apiece.
 fn converse(
     tls: &mut StreamOwned<ServerConnection, TcpStream>,
     answerer: &dyn Answerer,
     presence: &Presence,
     quiet: Quiet,
     edition: u32,
-) {
+) -> Option<std::convert::Infallible> {
     // **Presence is this scope** (REMOTE §5, bl-4e08): the guard is taken when
     // the connection first names its client and released when this function
     // leaves, however it leaves — a clean close, a refused frame, a peer that
@@ -257,7 +259,7 @@ fn converse(
                 quiet_for += quiet.read_timeout();
                 continue;
             }
-            _ => return,
+            _ => return None,
         };
         quiet_for = Duration::ZERO;
         // **The identity is derived per request, not held** (REMOTE §4,
@@ -267,18 +269,12 @@ fn converse(
         // carries no name yog can use is dropped without a reply, on exactly
         // the terms an unauthenticated peer is — a connection that cannot be
         // authorized gets nothing said to it.
-        let Some(peer) = peer_client(tls.conn.peer_certificates()) else {
-            return;
-        };
+        let peer = peer_client(tls.conn.peer_certificates())?;
         let _ = live.get_or_insert_with(|| presence.enter(&peer.client, edition));
         for chunk in answerer.answer(&peer, request) {
-            if frame::write_value(tls, &chunk).is_err() {
-                return;
-            }
+            frame::write_value(tls, &chunk).ok()?;
         }
-        if frame::write_end(tls).is_err() {
-            return;
-        }
+        frame::write_end(tls).ok()?;
     }
 }
 

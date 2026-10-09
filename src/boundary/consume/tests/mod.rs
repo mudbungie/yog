@@ -61,6 +61,24 @@ fn a_query_deposit_earns_its_reply_and_leaves_the_claimed_audit() {
     assert_eq!(consume(&d, &mut ui(), "T2", 100), 0, "nothing left");
 }
 
+/// A deposit another consumer is mid-claim on — its pending file already
+/// locked — is that consumer's to answer: this pass skips it, unanswered,
+/// rather than racing the winner (bl-d1f1).
+#[test]
+fn a_deposit_locked_by_another_consumer_is_skipped_unanswered() {
+    let root = tempdir().unwrap();
+    deposit::deposit(root.path(), "q-held", &json!({"op": "balls"})).unwrap();
+    let pending = deposit::gestures_dir(root.path()).join("q-held.json");
+    let rival = std::fs::File::open(&pending).unwrap();
+    rival.try_lock().unwrap();
+    assert_eq!(consume(&deps(root.path()), &mut ui(), "T1", 100), 0);
+    assert!(deposit::read_reply(root.path(), "q-held").is_none());
+    assert!(
+        pending.is_file(),
+        "the rival's deposit is left where it lay"
+    );
+}
+
 /// A query can refuse too (§8.5, bl-0164 — the §9 config family's reads ask
 /// the world, so they can fail exactly as their writes can): the deposit
 /// still answers, naming why, rather than wedging the inbox.
