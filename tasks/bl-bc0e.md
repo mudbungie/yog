@@ -1,7 +1,8 @@
 +++
 title = "REMOTE §12.1: the Android app is named lernie (operator ruling 2026-10-08); the 2026-08-30 naming half of bl-15bd is reversed in place"
 created = 1791513987
-updated = 1791513987
+updated = 1791513988
+claimant = "Derivative"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
