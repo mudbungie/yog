@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.77](https://github.com/mudbungie/yog/compare/v0.0.76...v0.0.77) - 2026-10-12
+
+### Changes
+
+- the sign-in child inherits no display from the engine's service, so bz's browser launch dies — discover the session's display from its sockets when the service has none [bl-bd71]
+
 ## [0.0.76](https://github.com/mudbungie/yog/compare/v0.0.75...v0.0.76) - 2026-10-08
 
 ### Changes
