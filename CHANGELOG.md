@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.76](https://github.com/mudbungie/yog/compare/v0.0.75...v0.0.76) - 2026-10-08
+
+### Changes
+
+- the 'llvm-cov phantom' carve-outs were measured under ptrace: re-test each under the llvm engine and drop the ones that no longer hold [bl-0769]
+- coverage runs on ptrace, not llvm: tarpaulin 0.35.2 ignores the Makefile's --engine llvm whenever tarpaulin.toml exists (Config::merge never copies engine); set engine = "Llvm" in the toml, delete the dead flag, cover what llvm sees [bl-d147]
+
 ## [0.0.75](https://github.com/mudbungie/yog/compare/v0.0.74...v0.0.75) - 2026-09-29
 
 ### Changes
