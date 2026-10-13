@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.78](https://github.com/mudbungie/yog/compare/v0.0.77...v0.0.78) - 2026-10-13
+
+### Changes
+
+- a turn that merely came to rest is not an ask — 'came to rest — your turn' with a 'seen' choice leaves every finished conversation on the queue, so the seat's ask box is almost always up and the waiting count never reaches zero; only a parked call, a flag, a failure or a question the model asked should queue [bl-778e]
+
 ## [0.0.77](https://github.com/mudbungie/yog/compare/v0.0.76...v0.0.77) - 2026-10-12
 
 ### Changes
