@@ -2,6 +2,7 @@
 title = "the sign-in child inherits no display from the engine's service, so bz's browser launch dies — discover the session's display from its sockets when the service has none"
 created = 1791865750
 updated = 1791865825
+claimant = "Surveying"
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["auth"]
