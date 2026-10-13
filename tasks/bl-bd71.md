@@ -1,9 +1,9 @@
 +++
-title = "sign-in from a seat opens a browser on the engine's box and dies without DISPLAY — prefer the device-code flow when the gesture comes over the wire"
+title = "the sign-in child inherits no display from the engine's service, so bz's browser launch dies — discover the session's display from its sockets when the service has none"
 created = 1791865750
-updated = 1791865750
+updated = 1791865825
 priority = 3
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["auth"]
 +++
-Observed 2026-10-12 on a seat box: a conversation stopped with 'token refresh failed for provider openai-chatgpt, and the ambient credential at ~/.codex/auth.json is absent or expired'. The window's /login (lernie login <ws> openai-chatgpt) runs the provider sign-in on the engine; the run's tail reads 'Error: no DISPLAY environment variable specified' because the yog user service carries no DISPLAY, so the browser-based authorize flow cannot start and the operator cannot recover from the seat. brazen's openai-chatgpt row declares a device flow (device = { url, style = codex }, 'the headless sign-in'). A sign-in asked for over the wire should use it, and print the URL and code into the login-tail the seat already paints; the browser flow is the right default only for bz run by hand on a box with a display.
+Operator ruling 2026-10-12: lernie's /login triggers the login and bz does it by launching a browser window; keep that flow. What breaks it: the yog user unit starts at default.target before the graphical session exports DISPLAY/WAYLAND_DISPLAY into the user manager, so the service — and every bz --login child it seats — has no display, and xdg-open dies with 'Error: no DISPLAY environment variable specified' into the login tail the seat paints. The service does have XDG_RUNTIME_DIR. Fix: when the engine seats the sign-in child and its own env names no display, derive one from the session's sockets — $XDG_RUNTIME_DIR/wayland-<n> → WAYLAND_DISPLAY, /tmp/.X11-unix/X<n> → DISPLAY=:<n> — and hand both to the child; a box with neither socket hands nothing and the device-code path stays what it is. Also seat the unit After=graphical-session.target where one exists? No: headless boxes have none; the discovery covers both.
