@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.79](https://github.com/mudbungie/yog/compare/v0.0.78...v0.0.79) - 2026-10-13
+
+### Changes
+
+- a model pick refused with 'use the Config editors': the sentence names no verb a seat can open, and a model written as a block value in providers.yaml cannot be picked at all — the pick should select the block's key and keep its options, and every refusal that names a remedy should name it as the seat's slash verb (/config) [bl-7ada]
+
 ## [0.0.78](https://github.com/mudbungie/yog/compare/v0.0.77...v0.0.78) - 2026-10-13
 
 ### Changes
