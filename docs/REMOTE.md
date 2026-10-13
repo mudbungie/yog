@@ -7018,11 +7018,17 @@ live from a laptop and from the phone, then walk the engine off the overlay.
 ## 14. Attention without a push path — the pocketed phone (bl-80d0)
 
 Attention is DESIGN §6's derived predicate — an unacked notify, a
-conversation at rest at a tip you have not seen, an exhausted budget, a
-conflict, mail nobody is driving, a held tool call — and on this wire it
+conversation that failed in a way the loop cannot mend at a tip you have not
+seen, an exhausted budget, a conflict, mail nobody is driving, a held tool
+call, a raised flag — and on this wire it
 exists only as an **answer**: `Reply::Attention`'s queue rows and the
 rollups inside `Query::Workspaces`, each computed per ask under the asker's
-scope (§9.7). The engine initiates nothing toward a client — §3's posture,
+scope (§9.7). **A turn that merely came to rest is not a member** (bl-778e):
+it is the row's `quiescent` state on `Query::Conversations`, never a queue row,
+and opening or messaging it is its seen. This is a membership change, not a
+shape change — no field, token or spelling moved and `stopped` still means *a
+rest that is your turn*, now only ever a wounded one — so it is neither an
+edition nor a bump: a reader that tolerated an empty `rows` is unaffected. The engine initiates nothing toward a client — §3's posture,
 restated by §13 as the punch: both ends arrange a connection, neither is
 dialled cold. So a phone seat learns its turn has come at its next read, and
 a phone in a pocket performs none: the platform ends a backgrounded app's

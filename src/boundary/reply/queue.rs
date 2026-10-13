@@ -63,10 +63,8 @@ fn queue_row(row: &QueueRow) -> Value {
         // a desktop notification belongs on the box the operator is looking
         // at. So the sentence crosses beside the tokens rather than being
         // re-worded at each seat, which is the drift §6 forbids. Derived at
-        // the encoder, never stored: the row's own home for it is the token
-        // plus the state, which since bl-511d is what tells a clean rest from
-        // a conversation that stopped without finishing.
-        "says": crate::attention::row_says(&row.signals, row.state),
+        // the encoder, never stored: the row's own home for it is the tokens.
+        "says": crate::attention::row_says(&row.signals),
         "preview": row.preview,
         "age_secs": row.age_secs,
         "pending": row.pending,

@@ -101,33 +101,18 @@ fn an_acked_refused_rest_still_stirs_nothing() {
     );
 }
 
-/// **Three conditions must not read as one row** (bl-511d). A conversation
-/// that finished, one that stopped without finishing and one parked on an
-/// answer all put your turn on the queue — rule 2 is unchanged and the tokens
-/// are unchanged — but the sentence has to tell them apart, and it did not: a
-/// birth that died in its first step said *"came to rest — your turn"*, which
-/// is the same words a clean turn-end says.
+/// **The rest that reaches a row is the wounded one** (bl-511d, bl-778e). A
+/// clean turn-end no longer queues, so rule 2's clause needs no `state` to
+/// tell the two apart: it says the true sentence on its own, and clauses join
+/// in signal order, one row, one sentence.
 #[test]
 fn a_wounded_rest_does_not_say_it_came_to_rest() {
-    let clean = crate::attention::row_says(&[AttentionKind::Stopped], AgentState::Quiescent);
-    let wounded = crate::attention::row_says(&[AttentionKind::Stopped], AgentState::Stopped);
-    assert_eq!(clean, "came to rest — your turn");
-    assert_eq!(wounded, "stopped without finishing — your turn");
-
-    // Every other clause is a fact about the signal alone and reads the same
-    // either way — the state refines rule 2's word and nothing else's.
-    for state in [AgentState::Quiescent, AgentState::Stopped] {
-        assert_eq!(
-            crate::attention::row_says(&[AttentionKind::Mail], state),
-            AttentionKind::Mail.says()
-        );
-    }
-    // And the clauses join in signal order, one row, one sentence.
     assert_eq!(
-        crate::attention::row_says(
-            &[AttentionKind::Stopped, AttentionKind::Held],
-            AgentState::Stopped
-        ),
+        crate::attention::row_says(&[AttentionKind::Stopped]),
+        "stopped without finishing — your turn"
+    );
+    assert_eq!(
+        crate::attention::row_says(&[AttentionKind::Stopped, AttentionKind::Held]),
         format!(
             "stopped without finishing — your turn; {}",
             AttentionKind::Held.says()

@@ -8,6 +8,9 @@
 /// chokepoint rather than this file's disk derivations.
 mod lineage;
 
+/// What `Query::Attention` answers over a laid world (bl-778e).
+mod attention;
+
 use super::*;
 use crate::fixture::roster;
 use tempfile::TempDir;

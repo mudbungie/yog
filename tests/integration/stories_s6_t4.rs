@@ -16,9 +16,10 @@ use tempfile::tempdir;
 use yog::ui_state::SystemClock;
 use yog::{AppModel, Roots};
 
-/// Stirs: an unacknowledged rest (§6 rule 2).
+/// Stirs: an unacknowledged wounded rest (§6 rule 2; a clean rest is no ask,
+/// bl-778e).
 fn stirring(id: &str) -> AgentFixture {
-    AgentFixture::new(id, "work\n").settled(true)
+    AgentFixture::new(id, "work\n").settled(false)
 }
 
 /// Quiet: the rest is abandoned, so rule 2 is suppressed.

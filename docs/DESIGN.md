@@ -2600,12 +2600,25 @@ no asymmetry to preserve, and re-adding one needs an act, not a key.
 `attention(agent)` is a derived predicate, true when any of:
 
 1. `refs/litany/notify/<id>` exists and its oid ≠ `seen[ws][agent].notify`.
-2. State **at rest** (Quiescent or Stopped), no `refs/litany/abandoned/<id>`,
-   **nobody dispatched it**, and tip oid ≠ `seen[ws][agent].stopped` — a
-   conversation waiting at a tip you have not seen. Rest is the general
-   condition; a stop is only the wounded way of coming to rest. The clean end
-   and the failed end differ in the state badge, never in whether your turn has
-   come *(widened bl-2194)*. Which way it came to rest is the *word* the signal
+2. A rest **the loop cannot mend** — state `Stopped`, or a turn cut off at its
+   output cap (`truncated`) — no `refs/litany/abandoned/<id>`, **nobody
+   dispatched it**, and tip oid ≠ `seen[ws][agent].stopped` — a conversation
+   that failed at a tip you have not seen.
+
+   **A turn that merely came to rest is not an ask** *(bl-778e, operator ruling
+   2026-10-13, reversing bl-2194's widening)*. bl-2194 made every rest a turn,
+   and the queue became a list of every finished conversation: the seat's ask
+   box was up on nearly every row and the waiting count never reached zero, so
+   the one number S6 step 1 spends to answer *does anything need me?* answered
+   yes forever. The queue carries only what needs a human — a parked tool call
+   (rule 6), a flag (rule 7), a failure the loop cannot mend (this rule), a
+   question put to the operator (rule 1's notify mark) — and the clean rest
+   stays where it always also was: the row's `quiescent` state, which every
+   seat paints. Opening or messaging the conversation is its seen; there is
+   nothing to acknowledge, so `attention::evidence` names no rest watermark for
+   it and the explicit `seen` act is unchanged for every row that still queues.
+   Truncation is named beside `Stopped` because it frames cleanly and so may
+   classify `Quiescent`, yet nothing was committed. Which way it came to rest is the *word* the signal
    wears, not a second signal: a rest whose latest response was refused at the
    provider rung says `refused` rather than `stopped` *(bl-b43b, below; the
    refusal is read off the failure sentence rather than a flag since bl-9b88)*,
@@ -2621,7 +2634,9 @@ no asymmetry to preserve, and re-adding one needs an act, not a key.
    `providers.yaml`, or a smaller ask, and the signal's own sentence names
    both.
 
-   **And a wounded rest does not say it came to rest** *(bl-511d)*. The word
+   **And a wounded rest does not say it came to rest** *(bl-511d; since
+   bl-778e the clean rest no longer queues, so `stopped`'s clause is this one
+   outright and no longer reads the row's `state`)*. The word
    was refined once, for the provider refusal, and the refinement stopped
    there: every other wounded rest — a birth that died in its first step, a
    killed driver, a step that never ran — still said *"came to rest — your
@@ -2633,8 +2648,9 @@ no asymmetry to preserve, and re-adding one needs an act, not a key.
 
    This is a **word, not a signal and not a token**: rule 2 still fires exactly
    as it did, the row's `signals` list is byte for byte what it was, and the
-   refinement is read off the `state` the row already carries beside the
-   sentence. Nothing on the wire moved, so `PROTOCOL` stands — which is also
+   refinement was read off the `state` the row already carries beside the
+   sentence (until bl-778e left only the wounded rest to say it). Nothing on
+   the wire moved, so `PROTOCOL` stands — which is also
    why the refinement is not a `refused`-shaped new kind: that one had a remedy
    of its own to name (*sign a provider in*) and earned a token; this one has
    the state's own badge already beside it and needs only to stop asserting

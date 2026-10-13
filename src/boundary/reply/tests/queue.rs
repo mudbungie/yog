@@ -111,7 +111,7 @@ fn a_row_with_no_park_spells_it_null() {
         workspace: "alba".into(),
         agent: "c-2".into(),
         display: "elk".into(),
-        state: AgentState::Quiescent,
+        state: AgentState::Stopped,
         uncertain: false,
         signals: vec![AttentionKind::Stopped],
         preview: String::new(),
@@ -124,7 +124,10 @@ fn a_row_with_no_park_spells_it_null() {
     let encoded = encode(&Reply::Attention(vec![row]));
     assert_eq!(encoded["rows"][0]["held"], serde_json::Value::Null);
     // One firing rule is one clause, with nothing to join it to.
-    assert_eq!(encoded["rows"][0]["says"], "came to rest — your turn");
+    assert_eq!(
+        encoded["rows"][0]["says"],
+        "stopped without finishing — your turn"
+    );
 }
 
 /// Nothing waiting is an ordinary answer, not an absence of one.

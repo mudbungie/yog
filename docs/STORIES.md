@@ -1300,11 +1300,11 @@ Tests:
   oid-bearing marks). Rule 5 self-clears when a driver takes the executor
   lock, which the test stages by holding the agent's inbox directory open —
   the very fd the §2.11 probe scans `/proc` for; rule 6 clears on an answer,
-  never on an acknowledgement. Rule 2 carries **two** fixtures since bl-2194 widened it to
-  rest: the wounded rest (a failed latest step → `Stopped`) and the **clean**
-  one (a complete `response.json` → `Quiescent`). Both stir, both clear on the
-  same tip watermark, and only the state badge tells them apart — a running
-  agent is the one that is not in the queue.
+  never on an acknowledgement. Rule 2 carries **two** fixtures: the wounded
+  rest (a failed latest step → `Stopped`), which stirs and clears on its tip
+  watermark, and the **clean** one (a complete `response.json` →
+  `Quiescent`), which does **not** stir — bl-778e narrowed bl-2194's widening:
+  a turn that merely ended is no ask, and the rest is the state badge alone.
 - **S6-T2 ack-converges** (`stories_s6_t2.rs`): two AppModels over one `ui.json`; acknowledging in
   A clears the signal in B after the adopt, and B's focus and scroll are
   unmoved (§13.1's line, tested from both sides).

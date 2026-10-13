@@ -48,24 +48,35 @@ fn each_marked_signal_fires_when_unseen() {
     }
 }
 
-/// Rule 2 fires on **rest**, not on the wound (ruled bl-2194): the clean end
-/// (`Quiescent`) and the failed end (`Stopped`) are one queue entry apiece, and
-/// a running agent is not in the queue at all.
+/// Rule 2 fires on a rest **the loop cannot mend** (bl-778e, narrowing
+/// bl-2194): a wounded rest and a cut-off turn queue; a turn that merely ended
+/// is the `Quiescent` badge and never a row; a running agent is not in the
+/// queue at all.
 #[test]
-fn rest_fires_however_the_conversation_came_to_rest() {
-    for state in [AgentState::Quiescent, AgentState::Stopped] {
-        let mut ag = agent("a");
-        ag.state = state;
-        let att = attention(&ag, &[], "ws", &nothing);
-        assert!(att.stopped, "{state:?} is a turn waiting on you");
-        assert_eq!(att.kinds(), vec![AttentionKind::Stopped]);
-        // The same tip, acknowledged, is silent forever — the muting mechanism
-        // the ruling needs none of.
-        assert!(!attention(&ag, &[], "ws", &acked(SeenKind::Stopped, "tip-a")).stopped);
-    }
+fn only_a_rest_the_loop_cannot_mend_fires() {
+    let mut ag = agent("a");
+    ag.state = AgentState::Quiescent;
+    assert!(
+        !attention(&ag, &[], "ws", &nothing).any(),
+        "a clean rest is no ask"
+    );
+    ag.truncated = true;
+    assert_eq!(
+        attention(&ag, &[], "ws", &nothing).kinds(),
+        vec![AttentionKind::Truncated],
+        "a turn cut off at its cap committed nothing — that is an ask"
+    );
+    let mut ag = agent("a");
+    ag.state = AgentState::Stopped;
+    let att = attention(&ag, &[], "ws", &nothing);
+    assert!(att.stopped, "a wounded rest is a turn waiting on you");
+    assert_eq!(att.kinds(), vec![AttentionKind::Stopped]);
+    // The same tip, acknowledged, is silent forever — the explicit seen.
+    assert!(!attention(&ag, &[], "ws", &acked(SeenKind::Stopped, "tip-a")).stopped);
     for state in [AgentState::Live, AgentState::InFlight] {
         let mut ag = agent("a");
         ag.state = state;
+        ag.truncated = true;
         assert!(
             !attention(&ag, &[], "ws", &nothing).stopped,
             "{state:?} is still running — nothing is waiting on you"
@@ -124,6 +135,8 @@ fn rest_evidence_is_the_tip_of_an_unabandoned_agent_at_rest() {
     let mut ag = agent("a");
     assert_eq!(rest_evidence(&ag), None, "Live: no rest evidence");
     ag.state = AgentState::Quiescent;
+    assert_eq!(rest_evidence(&ag), None, "a clean rest: nothing to see");
+    ag.state = AgentState::Stopped;
     assert_eq!(rest_evidence(&ag), Some("tip-a".to_string()));
     ag.abandoned_oid = Some("dead".into());
     assert_eq!(rest_evidence(&ag), None, "abandoned: no rest evidence");

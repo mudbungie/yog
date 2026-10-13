@@ -13,10 +13,11 @@ use crate::inboxview::{Deposit, InboxEntry};
 const ROOT: &str = "20260906T090000Z-r001";
 const CHILD: &str = "20260906T090000Z-r001-20260906T091000Z-c001";
 
-/// One agent at rest at a tip nobody has acknowledged — rule 2's firing shape.
+/// One agent at a wounded rest at a tip nobody has acknowledged — rule 2's
+/// firing shape since bl-778e (a clean rest does not fire at all).
 fn resting(id: &str) -> Agent {
     let mut a = agent(id);
-    a.state = AgentState::Quiescent;
+    a.state = AgentState::Stopped;
     a
 }
 

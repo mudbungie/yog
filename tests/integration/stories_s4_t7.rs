@@ -19,9 +19,9 @@ use yog::ui_state::SystemClock;
 use yog::{AppModel, Roots};
 
 /// A workspace whose single agent rests **unacknowledged** — one unit of §6
-/// attention (rule 2, bl-2194: a clean rest stirs too).
+/// attention (rule 2: a wounded rest — a clean one is no ask since bl-778e).
 fn stirring(id: &str) -> AgentFixture {
-    AgentFixture::new(id, "work\n").settled(true)
+    AgentFixture::new(id, "work\n").settled(false)
 }
 
 /// A workspace whose single agent rests **abandoned** — the will-not-retry

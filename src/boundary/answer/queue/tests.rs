@@ -73,7 +73,9 @@ fn the_queue_is_the_rosters_attention_bearing_subsequence_and_the_strips_count()
         vec![
             agent("c-1", AgentState::Live, 100),
             shouting("c-2", 90),
-            agent("c-3", AgentState::Quiescent, 80),
+            agent("c-3", AgentState::Stopped, 80),
+            // A turn that merely came to rest is no ask (bl-778e).
+            agent("c-4", AgentState::Quiescent, 75),
         ],
         vec![shouting("k-1", 70)],
     );

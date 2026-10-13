@@ -46,35 +46,17 @@ pub enum AttentionKind {
     Flagged,
 }
 
-/// **The sentence a queue ROW says** — every firing signal's clause, joined,
-/// with rule 2's clause refined by *which way* the conversation came to rest
-/// (bl-511d).
+/// **The sentence a queue ROW says** — every firing signal's clause, joined.
 ///
-/// Rule 2 fires on rest and never on the wound (ruled bl-2194), and that is
-/// unchanged: a clean turn-end and a failed one both put your turn on the
-/// queue. What bl-511d found is that they also **said the same sentence**, so
-/// a conversation that finished, one that died in its birth step and one
-/// parked on an answer only the operator can give were three conditions
-/// reading as one row — *"came to rest — your turn"* over a conversation that
-/// never got anywhere near rest.
-///
-/// The refinement is a WORD, not a signal and not a token: it stands where
-/// `Stopped`'s clause would, the way [`AttentionKind::Refused`] stands where
-/// the whole kind would (bl-b43b), and the row's `signals` list is byte for
-/// byte what it was. That is what keeps this off the wire version — the shape
-/// did not move, one derived string did — and it costs nothing at a seat,
-/// which reads the sentence it is handed.
-///
-/// **`state` is the fact, not a second flag.** `Stopped` is litany's own
-/// reading of a latest step that failed, was killed, or never ran
-/// ([`AgentState`]), and it is already on the row beside the sentence; asking
-/// it here rather than storing a `wounded` bool is why the two can never
-/// disagree. Round-trip is unharmed for the same reason: `says` is derived at
-/// the encoder from `signals` and `state`, and a decoded row carries both.
-pub(crate) fn row_says(kinds: &[AttentionKind], state: crate::git_tree::AgentState) -> String {
+/// Until bl-778e rule 2's clause was refined by the row's `state` (bl-511d),
+/// because a clean rest and a wounded one both queued and both said *"came to
+/// rest — your turn"*. A clean rest no longer queues, so the only rest that
+/// reaches a row is the wounded one and its clause needs no second input:
+/// [`AttentionKind::Stopped`] says the true sentence on its own.
+pub(crate) fn row_says(kinds: &[AttentionKind]) -> String {
     kinds
         .iter()
-        .map(|kind| kind.says_at(state))
+        .map(|kind| kind.says())
         .collect::<Vec<&str>>()
         .join("; ")
 }
@@ -99,7 +81,7 @@ impl AttentionKind {
     pub(crate) fn says(self) -> &'static str {
         match self {
             Self::Notify => "raised a notify mark",
-            Self::Stopped => "came to rest — your turn",
+            Self::Stopped => "stopped without finishing — your turn",
             Self::Budget => "exhausted its budget",
             Self::Conflicted => "has a conflicted branch",
             Self::Mail => "has mail queued and no driver taking it",
@@ -117,19 +99,6 @@ impl AttentionKind {
                  max_output_tokens in providers.yaml, or ask for less in one step"
             }
             Self::Flagged => "was flagged for a look, with a reason",
-        }
-    }
-
-    /// [`says`](Self::says), with rule 2's clause read against the state the
-    /// rest arrived in — see [`row_says`], which is the only caller and carries
-    /// the argument. Every other signal's clause is a fact about the signal
-    /// alone and passes straight through.
-    fn says_at(self, state: crate::git_tree::AgentState) -> &'static str {
-        match (self, state) {
-            (Self::Stopped, crate::git_tree::AgentState::Stopped) => {
-                "stopped without finishing — your turn"
-            }
-            _ => self.says(),
         }
     }
 }

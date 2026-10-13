@@ -114,21 +114,13 @@ fn s6_t1_every_rule_fires_and_only_the_answerable_ones_clear() {
         "the tip watermark clears it"
     );
 
-    // --- Rule 2b: the clean rest. … and here Quiescent — but BOTH stir, on the
-    // same evidence and the same watermark. A running agent is the one that is
-    // not in the queue; how it came to rest is the badge's business, not §6's.
+    // --- Rule 2b: the clean rest. … and here Quiescent, which does NOT stir
+    // (bl-778e, narrowing bl-2194): a turn that merely ended is no ask. The
+    // fact stays on the state badge, and there is no evidence to acknowledge.
     let clean = agent_named(&tree, "q-001");
     assert_eq!(clean.state, AgentState::Quiescent);
-    assert!(unacked(&clean).stopped, "a clean rest stirs too (bl-2194)");
-    assert!(
-        !fully_acked(&clean).stopped,
-        "and clears on the same watermark"
-    );
-    assert_eq!(
-        attention::rest_evidence(&wounded).is_some(),
-        attention::rest_evidence(&clean).is_some(),
-        "one evidence rule for both kinds of rest"
-    );
+    assert!(!unacked(&clean).any(), "a clean rest is not on the queue");
+    assert_eq!(attention::rest_evidence(&clean), None, "nothing to see");
 
     // --- Rule 3: budget.
     let budget = agent_named(&tree, "b-001");

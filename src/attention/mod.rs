@@ -14,12 +14,13 @@
 //! [`attention`] is true when any signal fires:
 //!
 //! 1. **notify** — `notify_oid` present and unseen.
-//! 2. **stopped** — the agent is **at rest** (`Quiescent | Stopped`), **not**
+//! 2. **stopped** — the agent came to rest in a way the loop **cannot mend**
+//!    (`Stopped`, or cut off at its output cap — [`rest_needs_you`]), **not**
 //!    abandoned (`abandoned_oid` absent), **nobody dispatched it**, and its
 //!    branch tip oid is unseen (the §6/§4.1 evidence for a rest is the branch
-//!    tip). Ruled bl-2194: the strip is a **turn queue**, so rule 2 fires on
-//!    rest, not on the wound — a clean turn-end and a failed one differ in the
-//!    state badge, never in whether your turn has come. The field, the
+//!    tip). Narrowed bl-778e, reversing bl-2194's widening: a turn that merely
+//!    ended is not an ask, so it is the `Quiescent` state badge and never a
+//!    queue row. The field, the
 //!    [`AttentionKind`] and the `ui.json` key keep the historical name
 //!    `stopped`; the watermark's identity is the tip oid, unchanged, which is
 //!    what makes the widening migration-free.
@@ -218,13 +219,24 @@ fn at_rest(state: AgentState) -> bool {
     matches!(state, AgentState::Quiescent | AgentState::Stopped)
 }
 
+/// **A rest the loop cannot mend** (§6 rule 2 as narrowed, bl-778e): it came
+/// to rest wounded (`Stopped` — failed, killed, never ran) or was cut off at
+/// its output cap. A turn that merely ended (`Quiescent`, whole) is not an
+/// ask: the fact stays on the row's `state`, and opening or messaging the
+/// conversation is its seen. Truncation is asked separately because it frames
+/// cleanly and so classifies `Quiescent` — yet nothing was committed.
+fn rest_needs_you(agent: &Agent) -> bool {
+    agent.state == AgentState::Stopped || (agent.truncated && at_rest(agent.state))
+}
+
 /// The §6 rule-2 evidence for `agent`: the branch tip oid it is resting at, or
-/// `None` when it is still running or has been abandoned (`refs/litany/abandoned`
-/// is the will-not-retry assertion that suppresses the rule). **The one home for
-/// rule 2's non-watermark gate** — the predicate here and the acknowledgement in
+/// `None` when it is still running, came to rest cleanly ([`rest_needs_you`]),
+/// or has been abandoned (`refs/litany/abandoned` is the will-not-retry
+/// assertion that suppresses the rule). **The one home for rule 2's
+/// non-watermark gate** — the predicate here and the acknowledgement in
 /// `app::focus` both call it, so the two can never drift into two answers.
 pub fn rest_evidence(agent: &Agent) -> Option<String> {
-    (at_rest(agent.state) && agent.abandoned_oid.is_none()).then(|| agent.tip_oid.clone())
+    (rest_needs_you(agent) && agent.abandoned_oid.is_none()).then(|| agent.tip_oid.clone())
 }
 
 /// The present acknowledgement evidence for one agent (§6): every signal oid
