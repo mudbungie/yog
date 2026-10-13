@@ -143,7 +143,13 @@ impl Runs {
         // what makes that structural rather than a convention.
         let wall = crate::world::wall::env(world, workspace);
         let flow = flow_of(&wall, provider);
-        let bz = self.bz.and_env(crate::world::wall::pairs_of(&wall));
+        // **The display the browser opens on** (bl-bd71): the service's own
+        // environment names none, so the child is handed what the session's
+        // sockets name — and nothing on a box that has no session.
+        let bz = self
+            .bz
+            .and_env(crate::world::wall::pairs_of(&wall))
+            .and_env(super::display::discover(&wall));
         let mut board = lock_runs(&self.cell);
         // The sweep, at the one moment the map can grow — and the replacement,
         // *before* the spawn, so the port a live flow holds is released rather
