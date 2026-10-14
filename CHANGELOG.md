@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.81](https://github.com/mudbungie/yog/compare/v0.0.80...v0.0.81) - 2026-10-14
+
+### Changes
+
+- cargo deny's advisory check is in the per-commit gate, so a RustSec advisory fails every tree the hour it publishes (twice: RUSTSEC-2026-0285, -0349): advisories move out of make check into a daily workflow that mends the lockfile itself and lands it through the one definition of green [bl-8702]
+
 ## [0.0.80](https://github.com/mudbungie/yog/compare/v0.0.79...v0.0.80) - 2026-10-14
 
 ### Changes
