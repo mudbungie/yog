@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.80](https://github.com/mudbungie/yog/compare/v0.0.79...v0.0.80) - 2026-10-14
+
+### Changes
+
+- update Cargo.lock dependencies
+
 ## [0.0.79](https://github.com/mudbungie/yog/compare/v0.0.78...v0.0.79) - 2026-10-13
 
 ### Changes
