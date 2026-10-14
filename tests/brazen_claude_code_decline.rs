@@ -190,7 +190,7 @@ fn yog_routes_brazens_own_decline_to_the_config_editor() {
     let remedy = yog::config_edit::fault::config_remedy(&line, &rows())
         .expect("a dialect decline has a way out of the banner");
     assert!(remedy.contains("declares no tools"), "{remedy}");
-    assert!(remedy.contains("config.toml"), "{remedy}");
+    assert!(remedy.contains("/config brazen"), "{remedy}");
     // The judgement is the column's, so an empty table classifies nothing —
     // a listing yog could not read must not become a refusal.
     assert_eq!(

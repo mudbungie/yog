@@ -81,8 +81,8 @@ impl Scoped {
         self.stranded.as_ref().map(|was| {
             format!(
                 "this conversation was dispatched through {was}, which brazen does not \
-                 have — {} is selected instead; add or rename the row in config.toml to \
-                 keep it",
+                 have — {} is selected instead; add or rename the row with /config \
+                 brazen to keep it",
                 self.row
             )
         })

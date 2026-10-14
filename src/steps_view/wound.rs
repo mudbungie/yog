@@ -114,8 +114,8 @@ const SPOKE: &str = "its stderr.log says:";
 /// request against the same ceiling is cut at the same byte.
 const CUT_OFF: &str = "the reply stops where the model's output budget ran out, so nothing \
      more is coming — and nothing was committed: no entry was written and no tool call \
-     was run. Nudge cannot resume it. Raise the role's max_output_tokens in \
-     providers.yaml, or send a message asking for less, to carry it on.";
+     was run. Nudge cannot resume it. Raise the role's max_output_tokens with \
+     /config, or send a message asking for less, to carry it on.";
 
 /// The §11 banner's leading mark. Never the only carrier — the sentence beside
 /// it states the fact in words (§11 glyph doctrine).

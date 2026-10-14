@@ -60,7 +60,7 @@ fn arm(
         Some((project, cap)) => arming::arm(&before, &key, &crate::nav::ws_key(project), cap)
             .ok_or_else(|| {
                 format!(
-                    "{}: fleet: carries an inline value; edit it by hand and try again",
+                    "{}: fleet: carries an inline value; edit it with /config cadence and try again",
                     crate::app::cadence::CADENCE_YAML
                 )
             })?,

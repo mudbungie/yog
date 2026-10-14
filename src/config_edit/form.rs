@@ -97,7 +97,7 @@ fn present(control: Control, raw: &str, provider_rows: &[String]) -> (String, Op
                 format!(
                     "brazen's table has no provider row `{raw}` — every dispatch \
                      through it dies with `unknown provider`; pick a live row, or \
-                     add the row in the brazen config editor"
+                     add the row with /config brazen"
                 )
             }),
         ),

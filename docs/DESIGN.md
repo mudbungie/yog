@@ -6662,10 +6662,17 @@ warned, and the warning was the dead end:
   refused instead of committed. A row the table does not carry is an unknown row,
   not an incapable one — there is no protocol to judge — so the gate needs no
   case of its own for it, and an unanswerable table gates nothing.
-- **`plan` refuses an id the block grammar cannot hold**
-  (`PickError::NotAnId` — blank, or carrying whitespace / `:` / `#`). Only the
-  custom entry can produce one; a listed candidate is a string brazen itself
-  printed.
+- **`plan` refuses an id that cannot stand as a plain YAML value on the
+  `model:` line** (`PickError::NotAnId` — blank, carrying whitespace, opening
+  with a YAML indicator, or ending in `:`). Only the custom entry can produce
+  one; a listed candidate is a string brazen itself printed. **A `:` inside an
+  id is not one of them** (bl-7ada): an Ollama tag is `<name>:<tag>`, YAML ends
+  a plain scalar only at `: ` or a trailing `:`, and the grammar's read splits
+  once at the field name's colon — so `qwen2.5:7b-instruct` is written as it
+  stands and read back whole. The rule used to refuse every colon, which
+  refused every tagged local model under a sentence that blamed the file's
+  shape and named "the Config editors", a pane no seat could open. The refusal
+  names `/config` now, the seat's verb onto the raw editor (REMOTE §9.25).
 
 **And one thing the same table does NOT say** (bl-671d, retired as a per-row
 caveat by bl-b6c9). A dialect can be tool-capable and still leave a fact the turn

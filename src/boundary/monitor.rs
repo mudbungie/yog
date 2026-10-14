@@ -57,7 +57,7 @@ fn arm(deps: &Deps, ts: &str, workspace: &Path, model: Option<&str>) -> Result<R
     let after = match model {
         Some(model) => arming::arm(&before, &key, model).ok_or_else(|| {
             format!(
-                "{}: monitor: carries an inline value; edit it by hand and try again",
+                "{}: monitor: carries an inline value; edit it with /config cadence and try again",
                 crate::app::cadence::CADENCE_YAML
             )
         })?,

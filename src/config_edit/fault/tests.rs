@@ -50,8 +50,8 @@ fn every_request_shape_decline_earns_the_config_route() {
         assert!(looks_config(line, &rows()), "{line}");
         let remedy = config_remedy(line, &rows()).expect("a dialect decline has a way out");
         assert!(remedy.contains("claude_code declares no tools"), "{remedy}");
-        assert!(remedy.contains("config.toml"), "{remedy}");
-        assert!(remedy.contains("model picker"), "{remedy}");
+        assert!(remedy.contains("/config brazen"), "{remedy}");
+        assert!(remedy.contains("/model"), "{remedy}");
     }
 }
 
@@ -97,7 +97,7 @@ fn the_failing_dispatch_of_bl_9b52_earns_a_remedy_that_names_its_row() {
     assert_eq!(failing_row(line).as_deref(), Some("openai-chatgpt"));
     let remedy = config_remedy(line, &rows()).expect("a config fault has a way out");
     assert!(remedy.contains("openai-chatgpt"), "{remedy}");
-    assert!(remedy.contains("config.toml"), "{remedy}");
+    assert!(remedy.contains("/config brazen"), "{remedy}");
 }
 
 /// The pinned litany names the row it routed to in its own wrapper (its
@@ -116,7 +116,7 @@ fn a_config_fault_with_no_row_still_names_the_file() {
     let line = "litany prompt: provider error (config): the table could not be read";
     assert_eq!(failing_row(line), None);
     let remedy = config_remedy(line, &rows()).expect("still config-shaped");
-    assert!(remedy.contains("config.toml"), "{remedy}");
+    assert!(remedy.contains("/config brazen"), "{remedy}");
     assert!(!remedy.contains("named"), "no row to name: {remedy}");
 }
 

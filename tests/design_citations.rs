@@ -104,9 +104,13 @@ const FOREIGN: &[&str] = &[
     // browse is the enumeration a selector needs. Cited "REMOTE §9.24" from
     // DESIGN §8.2's verb table and from the modules that carry it; DESIGN
     // §9.4 carries the engine-side half.
+    // §9.25 joins them (bl-7ada): a remedy is named by the seat's slash verb,
+    // never by a pane, an editor or a file — cited "REMOTE §9.25" from the
+    // pick gate's refusal and from DESIGN §9.4's account of it.
     // DESIGN §9 is "Config editing write paths" and stops at §9.6, which the
     // sibling test keeps honest.
     "9.7", "9.8", "9.9", "9.11", "9.14", "9.15", "9.19", "9.20", "9.21", "9.22", "9.23", "9.24",
+    "9.25",
     // REMOTE.md's §14 family — §14.1 (the attention lane, bl-09aa) — cited
     // prefixed ("REMOTE §14.1") like every other foreign key. DESIGN §14 is
     // "Rejections" and has no subsections at all, which the sibling test keeps

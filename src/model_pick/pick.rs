@@ -32,7 +32,7 @@ pub enum PickError {
     /// asked of the assignment already in the file.
     #[error(
         "brazen's table has no provider row `{provider}` — pick a live row here, \
-         or add the row to brazen's own config"
+         or add the row with /config brazen"
     )]
     UnknownProvider { provider: String },
     /// bl-3d22. The row EXISTS and still cannot serve the role: its protocol
@@ -47,12 +47,17 @@ pub enum PickError {
     /// same incapability differently.
     #[error("provider row `{provider}` cannot serve a role: {why} — pick a tool-capable row")]
     Incapable { provider: String, why: String },
-    /// The model id is not a plain block key, so the `roles:` block form
-    /// (§9.4's grammar) cannot hold it. Reachable only from the custom-id entry —
-    /// every listed candidate is a string brazen itself printed.
+    /// The model id cannot stand as a plain YAML value on the role's `model:`
+    /// line (bl-7ada), so the one write this gesture is would land a line
+    /// litany parses as something else — or not at all. Reachable only from the
+    /// custom-id entry: every listed candidate is a string brazen itself
+    /// printed. The remedy is the seat's verb, never a pane's name (REMOTE
+    /// §9.25): a seat turns `/config` into a door, and "the Config editors"
+    /// was a door no seat could open.
     #[error(
-        "`{model}` is not a plain model id — yog writes it as a block value in \
-         providers.yaml; use the Config editors for anything else"
+        "`{model}` cannot be written as a plain model id — it is blank, holds \
+         whitespace, opens with a YAML indicator or ends in `:`; write the role's \
+         `model:` line yourself with /config"
     )]
     NotAnId { model: String },
 }
@@ -78,11 +83,28 @@ pub fn role_fault(providers: &[String], role: &RoleModel) -> Option<String> {
     })
 }
 
-/// Whether a model id can be written as a `model:` value the anchored grammar
-/// reads back. Blank, or carrying whitespace / `:` / `#`, and it would emit a
-/// line it could not parse — so the pick is refused instead.
+/// Whether a model id stands as a plain YAML scalar on a `    model: <id>`
+/// line — read back as itself by this crate's anchored grammar AND by litany's
+/// YAML parser (bl-7ada).
+///
+/// **A `:` inside an id is not a fault.** An Ollama tag is `<name>:<tag>`
+/// (`qwen2.5:7b-instruct`), and YAML ends a plain scalar only at `: ` or a
+/// trailing `:` — never at a colon with a character after it — while the
+/// grammar's own read splits once, at the field name's colon. The old test
+/// refused every colon and so every tagged local model, under a sentence that
+/// blamed the file's shape for it. What actually cannot stand plain is
+/// narrower and has three faces: whitespace (which is how `: ` and ` #` arise
+/// at all), a leading indicator that makes the value a sequence, flow, alias,
+/// tag, block scalar, quote, comment or directive, and a trailing `:` that
+/// makes it a key.
 fn is_plain_id(model: &str) -> bool {
-    !model.is_empty() && !model.contains([' ', '\t', ':', '#'])
+    // A string, not a `char` slice: a bare `'"'` literal reads as a string's
+    // opening quote to the section-mark scanner (`tests/design_citations`).
+    const INDICATORS: &str = "-?:,[]{}#&*!|>'\"%@`";
+    !model.is_empty()
+        && !model.contains(char::is_whitespace)
+        && !model.starts_with(|c| INDICATORS.contains(c))
+        && !model.ends_with(':')
 }
 
 /// One operator choice: give `role` this `model` on this provider row.

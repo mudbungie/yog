@@ -96,7 +96,7 @@ fn dialect_remedy(text: &str, rows: &[ProviderRow]) -> Option<String> {
     let why = crate::config_edit::brazen::dialect_decline(text, rows)?;
     Some(format!(
         "{why} — the fix is the row and not a retry: give this role a \
-         tool-carrying row in the model picker, or author one in brazen's config.toml"
+         tool-carrying row with /model, or author one with /config brazen"
     ))
 }
 
@@ -115,11 +115,11 @@ pub fn config_remedy(text: &str, rows: &[ProviderRow]) -> Option<String> {
     }
     marker_hit(text).then(|| match failing_row(text) {
         Some(row) => format!(
-            "no provider row named {row} — add or rename it in brazen's config.toml, \
+            "no provider row named {row} — add or rename it with /config brazen, \
              then start the conversation again"
         ),
         None => "this is a configuration fault, not a credential one — the row a role \
-                 names has to exist in brazen's config.toml"
+                 names has to exist in brazen's table — add it with /config brazen"
             .to_owned(),
     })
 }

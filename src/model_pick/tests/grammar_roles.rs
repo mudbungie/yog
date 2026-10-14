@@ -132,7 +132,7 @@ fn set_role_model_declines_an_absent_or_flow_role() {
             entry: "auditor".into(),
         }
     );
-    assert!(err.to_string().contains("raw editor"));
+    assert!(err.to_string().contains("/config"));
     assert!(matches!(
         set_role_model("version: 1\n", "worker", "codex", "x"),
         Err(GrammarError::NoEntry { .. })

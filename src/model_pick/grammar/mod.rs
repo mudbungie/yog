@@ -18,8 +18,9 @@
 //! ```
 //!
 //! and **declines loudly** ([`GrammarError`], rendered in ichor per §7.3) on
-//! anything else, pointing at the §9.2 / §9.3 raw editors. Declining is not a
-//! dead end because those raw surfaces already exist: the picker is the fast
+//! anything else, naming `/config` — the seat's verb onto the §9.2 / §9.3 raw
+//! editors (bl-7ada). Declining is not a dead end because those raw surfaces
+//! already exist: the picker is the fast
 //! path over the shape litany itself writes, never a second authority on YAML.
 //!
 //! Every function here is pure text → text, so every arm is table-tested.
@@ -51,17 +52,17 @@ impl std::fmt::Display for GrammarError {
             Self::Inline { file, key } => write!(
                 f,
                 "{file}: {key}: carries an inline value; yog edits only the \
-                 block form litany writes — use the raw editor"
+                 block form litany writes — edit it with /config"
             ),
             Self::NoEntry { file, entry } => write!(
                 f,
                 "{file}: no `  {entry}:` block entry; yog edits only the block \
-                 form litany writes — use the raw editor"
+                 form litany writes — edit it with /config"
             ),
             Self::NoField { file, entry, field } => write!(
                 f,
                 "{file}: `  {entry}:` declares no `    {field}:` line; yog edits \
-                 only the block form litany writes — use the raw editor"
+                 only the block form litany writes — edit it with /config"
             ),
         }
     }

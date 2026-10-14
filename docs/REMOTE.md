@@ -5817,6 +5817,28 @@ the read is not a verb, because the fact already had a home — the governing
 answer is *which config governs*, and the mark is that question's second half.
 DESIGN §9.4 and §8.2's verb table carry the engine's side.
 
+### 9.25 A remedy is named by the seat's verb (bl-7ada)
+
+**No shape moved and `PROTOCOL` stands.** What is ruled is the words inside
+the `error` strings and notes every answer already carries: **an engine
+sentence that names the operator's next move names it as a slash verb — never
+as a pane, an editor, a file or a key to open by hand.** The seats turn a
+`/word` in an engine sentence into a door (the seat repository's bl-7a77), so
+`/login <row>`, `/model <role> <provider> <model-id>`, `/config brazen`,
+`/config cadence` and the bare `/config` are remedies an operator can click,
+while *"use the Config editors"* named a door no seat could open and no wire
+read could find. A file or a key may still be named as **what** to change —
+*raise the role's `max_output_tokens` with /config* — but never as **the way
+in**. Where the exact destination is spelled by `/config`'s own words
+(`brazen`, `cadence`, `models`), the sentence spells it; a lineage file, whose
+destination needs a lineage and a path the sentence does not know, gets the
+bare verb, which opens the pane on the two dropdowns that choose them.
+
+**What it does not cover.** An act no seat verb performs — removing a leaf the
+mint could not shred on the engine's own disk, carrying a certificate to
+another box — still says *by hand*, because naming a verb that does not do the
+act would be a door onto the wrong room.
+
 ## 10. Open questions (living)
 
 - ~~The follow/streaming frame shape~~ — settled by bl-b6fa (§3): every answer

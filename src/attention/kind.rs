@@ -93,10 +93,12 @@ impl AttentionKind {
             // the sentence — `held.tool` is already on the row, and one fact
             // does not get two homes.
             Self::Held => "parked a tool invocation for your answer — /answer pass|refuse",
-            Self::Refused => "was refused at the provider — sign a provider in on this workspace",
+            Self::Refused => {
+                "was refused at the provider — sign a provider in on this workspace with /login"
+            }
             Self::Truncated => {
                 "was cut off at its output cap — nothing was committed; raise the role's \
-                 max_output_tokens in providers.yaml, or ask for less in one step"
+                 max_output_tokens with /config, or ask for less in one step"
             }
             Self::Flagged => "was flagged for a look, with a reason",
         }

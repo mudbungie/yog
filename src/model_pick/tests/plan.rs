@@ -73,17 +73,51 @@ fn a_pick_on_a_row_brazen_lacks_is_refused_before_the_file_is_touched() {
     assert!(said.contains("pick a live row here"), "{said}");
 }
 
-/// bl-bd89. The custom-id entry lets the operator type a model brazen does not
-/// list, so `plan` is where an id that cannot be a block key is stopped —
-/// blank, or carrying whitespace / `:` / `#`. A listed candidate is a string
-/// brazen itself printed and never trips this.
+/// bl-7ada. The pick the operator was refused: an Ollama tag carries a `:`,
+/// and a colon with a character after it is part of a plain YAML scalar, so
+/// the id is written as it stands and read back as itself — by this grammar
+/// and by the role row the next read reports.
+#[test]
+fn a_tagged_model_id_is_picked_and_read_back_whole() {
+    for tagged in ["qwen2.5:7b-instruct", "hf.co/org/repo:Q4_K_M", "a#b"] {
+        let assigned = plan(TEMPLATE_PROVIDERS, &rows(), &pick(tagged)).unwrap();
+        assert!(
+            assigned.contains(&format!("    model: {tagged}\n")),
+            "{assigned}"
+        );
+        assert_eq!(
+            roles(&assigned)
+                .into_iter()
+                .find(|r| r.role == WORKER_ROLE)
+                .map(|r| r.model),
+            Some(tagged.to_string())
+        );
+    }
+}
+
+/// An id no row lists is still an id: the custom-id entry exists for it, and
+/// there is no declaration it could be missing from (bl-d9cb), so the pick
+/// lands like a listed one.
+#[test]
+fn an_id_the_provider_does_not_list_is_picked() {
+    let assigned = plan(TEMPLATE_PROVIDERS, &rows(), &pick("never-listed-7b")).unwrap();
+    assert!(
+        assigned.contains("    model: never-listed-7b\n"),
+        "{assigned}"
+    );
+}
+
+/// bl-bd89, narrowed by bl-7ada. What `plan` stops is what cannot stand as a
+/// plain value on the `model:` line: blank, whitespace (how `: ` and ` #`
+/// arise), a leading YAML indicator, or a trailing `:`. The refusal names the
+/// seat's verb as its remedy, never a pane.
 #[test]
 fn a_model_id_the_block_grammar_cannot_hold_is_refused() {
-    for bad in ["", "   ", "gpt 5", "gpt:5", "gpt#5", "a\tb"] {
-        let mut broken = pick(bad);
-        broken.model = bad.to_string();
+    for bad in [
+        "", "   ", "gpt 5", "gpt: 5", "gpt #5", "a\tb", "gpt:", "-x", "#x", "@cf/x", "'q'", "[a]",
+    ] {
         assert_eq!(
-            plan(TEMPLATE_PROVIDERS, &rows(), &broken),
+            plan(TEMPLATE_PROVIDERS, &rows(), &pick(bad)),
             Err(PickError::NotAnId {
                 model: bad.to_string(),
             }),
@@ -94,10 +128,12 @@ fn a_model_id_the_block_grammar_cannot_hold_is_refused() {
         model: "gpt 5".into(),
     }
     .to_string();
-    assert!(said.contains("not a plain model id"), "{said}");
-    // One file is named now, not two (bl-d9cb).
-    assert!(said.contains("providers.yaml"), "{said}");
-    assert!(!said.contains("models.yaml"), "{said}");
+    assert!(
+        said.contains("cannot be written as a plain model id"),
+        "{said}"
+    );
+    assert!(said.contains("/config"), "{said}");
+    assert!(!said.contains("editor"), "{said}");
 }
 
 /// An empty table is brazen unanswered, not brazen answering "none" — it gates
@@ -124,7 +160,7 @@ fn the_default_row_leaves_a_row_brazen_dropped_and_says_so() {
     let note = steered.strand_note().expect("a strand is named");
     assert!(note.contains("codex"), "{note}");
     assert!(note.contains("openai-chatgpt"), "{note}");
-    assert!(note.contains("config.toml"), "{note}");
+    assert!(note.contains("/config brazen"), "{note}");
 
     // A row brazen has is no strand, and neither is an unaskable table: both
     // stand on the role's own row, and neither has anything to report.

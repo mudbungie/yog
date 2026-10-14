@@ -59,7 +59,7 @@ pub const STANDING: &[HelpRow] = &[
                  a drone on it — the same start a ▶ Start click makes, through the same spend \
                  ceiling. It renders as facts on the board (how full, how often it looks, when \
                  it last acted) and every spawn and reap is a row on the trail. It never stops \
-                 anything that is running. Add a `lease_min` to its cadence.yaml entry and it \
+                 anything that is running. Add a `lease_min` to its entry with `/config cadence` and it \
                  will also release a claim whose conversations have gone quiet for that long, \
                  recording the comparison that decided it. `/disband` ends it.",
         surface: Surface::Control,
