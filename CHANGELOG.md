@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.82](https://github.com/mudbungie/yog/compare/v0.0.81...v0.0.82) - 2026-10-14
+
+### Changes
+
+- the queue's held row says which class parked the call only inside its reason sentence, so a seat offers 'pass for this conversation/workspace' on a secret or destructive call and the engine refuses it every time: the held row carries the scopes an answer may take [bl-0da6]
+
 ## [0.0.81](https://github.com/mudbungie/yog/compare/v0.0.80...v0.0.81) - 2026-10-14
 
 ### Changes
