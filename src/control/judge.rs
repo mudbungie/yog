@@ -128,11 +128,28 @@ impl Scope {
         }
     }
 
+    /// Every scope, narrowest first — the wire's order, which is the order a
+    /// held row offers them in and `of` reads them against.
+    pub const ALL: [Scope; 3] = [Scope::Call, Scope::Conversation, Scope::Workspace];
+
     /// The scope a word names, or `None` for anything else.
     pub fn of(word: &str) -> Option<Scope> {
-        [Scope::Call, Scope::Conversation, Scope::Workspace]
+        Scope::ALL.into_iter().find(|s| s.word() == word)
+    }
+
+    /// The scopes an answer to a hold of `effect` may take (bl-0da6): exactly
+    /// the ones [`permits`](Scope::permits) accepts, so the list a seat offers
+    /// and the judge that reads the answer cannot drift. A hold whose class
+    /// cannot be read (`None`) takes the call alone — the fail-closed rule the
+    /// answer gesture keeps for a sentence that names no class.
+    pub fn offered(effect: Option<Effect>) -> Vec<Scope> {
+        Scope::ALL
             .into_iter()
-            .find(|s| s.word() == word)
+            .filter(|scope| match effect {
+                Some(effect) => scope.permits(effect).is_ok(),
+                None => *scope == Scope::Call,
+            })
+            .collect()
     }
 
     /// What a decision at this scope covers, in the words a refusal hands the

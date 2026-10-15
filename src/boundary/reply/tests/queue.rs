@@ -41,7 +41,8 @@ fn a_queue_row_spells_every_signal_and_the_address_a_gesture_takes() {
         held: Some(crate::control::hold::Held {
             tool_use_id: "toolu_42".into(),
             tool: "bash".into(),
-            reason: "bash {\"command\":\"curl x\"} classified open-world".into(),
+            reason: "bash {\"command\":\"curl x\"} classified open-world (reaches the network)"
+                .into(),
         }),
         failure: Some("Unauthorized".into()),
         // The signal-out verb's own words (bl-6f2f), beside the class token
@@ -101,6 +102,48 @@ fn a_queue_row_spells_every_signal_and_the_address_a_gesture_takes() {
             .is_some_and(|r| r.contains("open-world")),
         "the control's own sentence rides the row"
     );
+    // …and the scopes an answer may take (bl-0da6), in the wire's order: an
+    // open-world park takes any of the three.
+    assert_eq!(
+        out["held"]["scopes"],
+        serde_json::json!(["call", "conversation", "workspace"])
+    );
+}
+
+/// A secret park offers the call alone (bl-0da6): the list is what
+/// `Scope::permits` will accept, so a seat that offers exactly these is never
+/// refused — and a sentence that names no class offers the call alone too.
+#[test]
+fn a_secret_park_offers_the_call_alone() {
+    let parked = |reason: &str| QueueRow {
+        workspace: "alba".into(),
+        agent: "c-3".into(),
+        display: "fox".into(),
+        state: AgentState::Stopped,
+        uncertain: false,
+        signals: vec![AttentionKind::Held],
+        preview: String::new(),
+        age_secs: 0,
+        pending: 0,
+        held: Some(crate::control::hold::Held {
+            tool_use_id: "toolu_7".into(),
+            tool: "bash".into(),
+            reason: reason.into(),
+        }),
+        failure: None,
+        flag: None,
+    };
+    for reason in [
+        "bash {\"command\":\"env\"} classified secret (prints the environment)",
+        "spend ceiling reached: 3 USD",
+    ] {
+        let encoded = encode(&Reply::Attention(vec![parked(reason)]));
+        assert_eq!(
+            encoded["rows"][0]["held"]["scopes"],
+            serde_json::json!(["call"]),
+            "{reason}"
+        );
+    }
 }
 
 /// A row nothing is holding says so outright — a reader never has to tell an

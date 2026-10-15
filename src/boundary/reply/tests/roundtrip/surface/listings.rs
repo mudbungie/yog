@@ -52,7 +52,10 @@ pub(super) fn queue() -> Vec<crate::boundary::answer::queue::QueueRow> {
             held: Some(crate::control::hold::Held {
                 tool_use_id: "toolu_1".into(),
                 tool: "Bash".into(),
-                reason: "writes".into(),
+                // A real sentence, so the corpus pins `scopes` the way a live
+                // row spells it (bl-0da6): a class the wide scopes stand over.
+                reason: "Bash {\"command\":\"curl x\"} classified open-world (reaches the network)"
+                    .into(),
             }),
             // The `refused` signal's words (bl-9b88): the corpus pins the
             // sentence beside the class, since a class alone is what the live

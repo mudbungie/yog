@@ -5839,6 +5839,36 @@ mint could not shred on the engine's own disk, carrying a certificate to
 another box — still says *by hand*, because naming a verb that does not do the
 act would be a door onto the wrong room.
 
+### 9.26 The held row says which scopes an answer may take (bl-0da6)
+
+**The §6 queue row's `held` object gained `scopes`** — the list of scope
+words an answer to that park may take, in the wire's order (`call`,
+`conversation`, `workspace`) — on `reply/attention` and `reply/acknowledged`.
+An addition, so `PROTOCOL` stands at 19 and the edition is 23.
+
+    "held": {"tool_use": "toolu_1", "tool": "Bash",
+             "reason": "Bash {\"command\":\"curl x\"} classified open-world (…)",
+             "scopes": ["call", "conversation", "workspace"]}
+
+Seen on a seat: a shell call parked as `secret`, the seat's ask offering pass
+at all three scopes, the operator choosing a wider one, and the engine
+answering *a secret call takes --scope call only* with the call still parked.
+The judge (`Scope::permits`) takes loss and credentials at the call alone and
+every other class at any scope, and the only place that class crossed was the
+reason sentence — which a seat may not parse: the classification rides the
+wire so a seat never re-derives it (§5.5's own words for the `scope` field:
+*the class the wide scopes stand over is derived at the engine*). So the
+engine says the list outright, and it
+is **computed by the same `permits` that will judge the answer** — the row and
+the ruling are one function, and cannot drift. A sentence that names no class
+(a ceiling park, or a mark yog did not write) offers `["call"]` alone: the
+same fail-closed rule the answer gesture already keeps for a hold that cannot
+say its class. **A seat offers exactly these.** Absent — an engine of an older
+edition — a seat may offer all three and be refused, which is the fact before
+the field existed and what §3.2's second obligation says a missing post-floor
+key reads as. Nothing is stored: the hold mark is still litany's three fields,
+and `scopes` is read off the sentence at the encoder.
+
 ## 10. Open questions (living)
 
 - ~~The follow/streaming frame shape~~ — settled by bl-b6fa (§3): every answer

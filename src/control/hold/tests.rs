@@ -23,6 +23,28 @@ fn a_mark_with_no_reason_is_still_a_park() {
     assert_eq!(held.reason, "");
 }
 
+/// What an answer may be scoped to is read off the sentence's class (bl-0da6):
+/// a secret park takes the call alone, an opaque one any scope, and a sentence
+/// with no class in it — a ceiling park — the call alone, fail-closed.
+#[test]
+fn a_mark_offers_the_scopes_its_class_permits() {
+    use crate::control::judge::Scope;
+    let mark = |reason: &str| Held {
+        tool_use_id: "t".to_owned(),
+        tool: "bash".to_owned(),
+        reason: reason.to_owned(),
+    };
+    assert_eq!(
+        mark("bash {\"command\":\"env\"} classified secret (prints the environment)").scopes(),
+        vec![Scope::Call]
+    );
+    assert_eq!(
+        mark("box2_service_status {} classified opaque (no command line)").scopes(),
+        Scope::ALL.to_vec()
+    );
+    assert_eq!(mark("spend ceiling reached: x").scopes(), vec![Scope::Call]);
+}
+
 #[test]
 fn anything_that_is_not_the_shape_is_no_park_at_all() {
     for blob in [

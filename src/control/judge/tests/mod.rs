@@ -79,6 +79,29 @@ fn every_other_class_takes_every_scope() {
     }
 }
 
+/// The list a held row offers a seat is the list `permits` will accept
+/// (bl-0da6) — one table over every class, so the two cannot drift: loss and
+/// credentials offer the call alone, every other class offers all three, and a
+/// hold that could not name its class offers the call alone, fail-closed.
+#[test]
+fn the_scopes_a_hold_offers_are_the_ones_permits_accepts() {
+    for effect in Effect::every() {
+        let offered = Scope::offered(Some(effect));
+        let accepted: Vec<Scope> = Scope::ALL
+            .into_iter()
+            .filter(|scope| scope.permits(effect).is_ok())
+            .collect();
+        assert_eq!(offered, accepted, "{effect:?}");
+        let narrow = matches!(effect, Effect::Destructive | Effect::Secret);
+        assert_eq!(offered.len() == 1, narrow, "{effect:?}");
+    }
+    assert_eq!(Scope::offered(None), vec![Scope::Call]);
+    assert_eq!(
+        Scope::ALL.map(Scope::word),
+        ["call", "conversation", "workspace"]
+    );
+}
+
 #[test]
 fn a_class_key_is_the_tool_and_its_reach() {
     assert_eq!(class_key("bash", Effect::Read), "bash@read");

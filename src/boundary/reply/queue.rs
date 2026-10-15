@@ -81,8 +81,13 @@ fn queue_row(row: &QueueRow) -> Value {
 /// The parked invocation, when the row carries one (§8.6): what is waiting, and
 /// the control's own sentence about it. A reader needs no other call to decide
 /// — which is the point of the reason carrying the input summary and the class.
+/// `scopes` is the list of scope words an answer may take for this hold
+/// (bl-0da6), in the wire's order, computed by the same `Scope::permits` that
+/// will judge the answer: a seat offers exactly these, and never reads the
+/// class out of the sentence to guess them.
 fn held(held: &crate::control::hold::Held) -> Value {
-    json!({ "tool_use": held.tool_use_id, "tool": held.tool, "reason": held.reason })
+    json!({ "tool_use": held.tool_use_id, "tool": held.tool, "reason": held.reason,
+            "scopes": held.scopes().iter().map(|s| s.word()).collect::<Vec<&str>>() })
 }
 
 /// The raised flag, when the row carries one (§6 rule 7): when it was raised

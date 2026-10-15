@@ -23,6 +23,8 @@ use std::path::Path;
 
 use serde_json::Value;
 
+use super::judge::Scope;
+
 /// Ref namespace for the mark (litany ARCH §3.3). The one spelling; the
 /// snapshot's enumeration and the single read below both name it from here.
 pub const HELD_PREFIX: &str = "refs/litany/held/";
@@ -40,6 +42,18 @@ pub struct Held {
     /// The control's stated reason: the tool, an input summary, the computed
     /// class and the evidence, in one sentence ([`super::reason`]).
     pub reason: String,
+}
+
+impl Held {
+    /// The scopes an answer to this park may take (bl-0da6): the class the
+    /// reason sentence names ([`super::reason::class_of`]), judged by the same
+    /// [`Scope::permits`] the answer gesture will apply — so a seat offers
+    /// exactly what the engine accepts and never re-derives the class from
+    /// prose. A sentence naming no class — a ceiling park, or a mark yog did
+    /// not write — offers the call alone.
+    pub fn scopes(&self) -> Vec<Scope> {
+        Scope::offered(super::reason::class_of(&self.reason))
+    }
 }
 
 /// Parse the mark's blob. `None` for anything that is not the three-field
