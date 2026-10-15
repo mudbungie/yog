@@ -1,7 +1,8 @@
 +++
 title = "the queue's held row says which class parked the call only inside its reason sentence, so a seat offers 'pass for this conversation/workspace' on a secret or destructive call and the engine refuses it every time: the held row carries the scopes an answer may take"
 created = 1792036117
-updated = 1792036117
+updated = 1792036125
+claimant = "Classing"
 priority = 1
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
