@@ -345,7 +345,7 @@ lint`) still work here; they are just not the gate.
   `make beat-audit` (milliseconds), then `make deploy-selftest`, then
   `make protocol-gate` (milliseconds), then `make leak-scan` (~5s), then
   `cargo clippy --all-targets -- -D warnings` (picks up the manifest
-  `[lints]`), then `make rules-audit`, then `cargo deny check`.
+  `[lints]`), then `make rules-audit`, then `cargo deny check bans licenses sources`.
 - `make line-cap` — the 300-line cap over every tracked non-exempt file. Prints
   every offender at once, and fails if it enumerates *nothing* (a broken
   pattern must not pass silently — the same two-direction discipline as
@@ -438,6 +438,14 @@ lint`) still work here; they are just not the gate.
   read**. `scripts/leak-scan.sh` is the mechanism; findings are truncated to 12
   characters, because a finding must LOCATE a leak, never reprint it into a
   terminal or a CI log.
+
+**Advisories are not in the gate** (ops bl-fb2c; lernie bl-9c29 holds the
+full reasoning). A RustSec advisory is a fact about the day, not the tree,
+so `make deny` judges bans, licences and sources, and
+`.github/workflows/advisories.yml` asks the day's question daily: on a
+finding it runs `make mend-advisories`, proves the lockfile move with
+`ci.yml` on a branch, fast-forwards `main` and re-judges the release. A
+gate failure on `deny` is about the tree, never about the calendar.
 
   **It reads index BLOBS, not the worktree.** `git checkout-index`
   materializes the index into a scratch tree and the scan reads that, so the

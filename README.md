@@ -397,7 +397,7 @@ config, so removing the space deletes config, not code.
 | `make build` / `make release` | Debug / release build |
 | `make test` | Run the test suite (parallel; see the Makefile note on spawn discipline) |
 | `make coverage` | Enforce the 100% coverage floor via pinned tarpaulin (see `tarpaulin.toml`) |
-| `make lint` / `make fmt` | Clippy `-D warnings` + ast-grep rules audit + `cargo deny check` / rustfmt |
+| `make lint` / `make fmt` | Clippy `-D warnings` + ast-grep rules audit + `cargo deny check bans licenses sources` (advisories: the daily `advisories.yml`) / rustfmt |
 | `make rules-audit` | Run the pinned ast-grep rules (`rules/`) over `src` and verify the `rules/fixtures` negatives still fire |
 | `make check` | fmt-check + lint + coverage — the complete gate CI and the pre-commit hook mirror |
 | `make drive` [`DRIVE_RUNS="…"`] | Drive the real-substrate ladder (`docs/STORIES.md`): release build, host preflight, one **scratch** world per run verb, a PASS/FAIL line and a `verdicts.jsonl` row per beat, and a pre-filled drive-log skeleton. Never the live world — an overlap with `$XDG_DATA_HOME` is refused |
