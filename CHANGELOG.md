@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.83](https://github.com/mudbungie/yog/compare/v0.0.82...v0.0.83) - 2026-10-18
+
+### Changes
+
+- REMOTE §2 noun ruling: engine → server, litany has no role noun, wall never crosses the wire [bl-3390]
+
 ## [0.0.82](https://github.com/mudbungie/yog/compare/v0.0.81...v0.0.82) - 2026-10-14
 
 ### Changes
