@@ -252,7 +252,7 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
         // carrying what was read and, when it fails, the act that fixes it. It
         // takes the name AND the path because its rows say both: the wall gate
         // reads the path, and the sentence names the workspace the operator
-        // typed. A doctor that named no workspace answers the engine's own
+        // typed. A doctor that named no workspace answers the server's own
         // checks alone, which is the state the box it exists for is in.
         Query::Doctor { workspace } => Reply::Doctor(crate::doctor::report(
             deps,

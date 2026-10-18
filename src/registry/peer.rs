@@ -60,16 +60,16 @@ pub const REFUSAL: &str = "this certificate is a foot: it may advertise its tool
 /// nobody founded earns. That is right about every OTHER client's workspaces
 /// and wrong about the caller's own registration, which is a fact about the
 /// caller: a seat registered nowhere got `{"rows": []}` with `ok: true`, which
-/// is indistinguishable from an engine that holds nothing at all — so a
+/// is indistinguishable from a server that holds nothing at all — so a
 /// first-time operator cannot tell their own missing enrolment from a broken
-/// engine, and the sentence they need is the one nobody was saying. Nothing
+/// server, and the sentence they need is the one nobody was saying. Nothing
 /// leaks: this says what THIS certificate may see, and names no workspace.
 pub fn unregistered(client: &Client) -> String {
     let name = client.name();
     format!(
-        "this certificate ({name:?}) is registered in no workspace on this engine, so every \
+        "this certificate ({name:?}) is registered in no workspace on this server, so every \
          read here would be empty and every name unknown — that is what this client may see, \
-         not what the engine holds. Enrol it where it should work: `/enroll {name}` from a seat \
+         not what the server holds. Enrol it where it should work: `/enroll {name}` from a seat \
          already in that workspace (add `{FOOT}` for a tool host), which adopts the leaf already \
          minted under that name rather than issuing a second one. A workspace this client \
          founds itself registers it too."

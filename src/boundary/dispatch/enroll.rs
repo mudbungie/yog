@@ -116,7 +116,7 @@ pub(super) fn enroll(deps: &Deps, ts: &str, request: &Request) -> Result<Reply, 
 /// nothing ([`provision::state`](crate::wire::provision)). The sentence said
 /// `FORCE=1` while that was the only spelling, and told an operator whose one
 /// complaint was a `:0` to distrust every leaf they had carried anywhere. The
-/// other half stands: the address is read at bind time, so the engine standing
+/// other half stands: the address is read at bind time, so the server standing
 /// on the `:0` listener keeps it until it is restarted, and the restart is
 /// named beside the act.
 ///
@@ -126,7 +126,7 @@ pub(super) fn enroll(deps: &Deps, ts: &str, request: &Request) -> Result<Reply, 
 fn dialable(dir: &Path, stated: Option<&str>) -> Result<String, String> {
     // **What the operator stated wins, and is judged by the same rule**
     // (bl-fec6). The device being enrolled is not this box, so the route it
-    // reaches this engine by need not be the one this box wrote for itself —
+    // reaches this server by need not be the one this box wrote for itself —
     // an emulator's host alias, a LAN address, an overlay name. A stated
     // endpoint still has to BE one, so it goes through `endpoint` exactly as
     // the file's own does; what it is not judged against is the server leaf's
@@ -169,9 +169,9 @@ fn endpoint(address: &str) -> Result<String, String> {
         _ => Err(format!(
             "{address} names no endpoint a device can dial: it wants a host and a port, and a \
              `:0` is a request the listener answers in RAM whose answer changes at every boot. \
-             State the engine's own — `WIRE_HOST=<host> WIRE_PORT=<port> yog {}`, which \
+             State the server's own — `WIRE_HOST=<host> WIRE_PORT=<port> yog {}`, which \
              re-issues the server leaf and writes the address over the CA already here and \
-             distrusts nothing, then restart the engine — or state the route THIS device will \
+             distrusts nothing, then restart the server — or state the route THIS device will \
              dial with `--at <host>:<port>`, which must be one the server leaf already answers \
              to",
             provision::verb::SUBCMD

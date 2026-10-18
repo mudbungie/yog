@@ -20,7 +20,7 @@
 //! **Every stream that lands inside the window is handed back**, not the
 //! first alone. Two hosts that can both reach each other's listener form two
 //! connections, and which one the peer keeps is the peer's choice — so the
-//! engine serves every stream it obtains and lets the ones nobody speaks on
+//! server serves every stream it obtains and lets the ones nobody speaks on
 //! die in the handshake, and a client keeps the first. The alternative, a
 //! negotiation over which to keep, is a protocol nobody needs.
 //!
@@ -69,7 +69,7 @@ impl Punch {
     }
 
     /// Every stream waiting on the listeners this instant, blocking again.
-    /// **One caller in the engine** — the port's acceptor (bl-5276) — so no
+    /// **One caller in the server** — the port's acceptor (bl-5276) — so no
     /// two loops race for the same accepted stream.
     pub(crate) fn accept(&self) -> Vec<TcpStream> {
         let accepted = self.listeners.iter().filter_map(|l| l.accept().ok());

@@ -193,7 +193,7 @@ fn the_answer_round_trips_and_absence_stays_absence() {
     assert_eq!(wire::view_of(o).expect("decodes"), whole);
 }
 
-/// The decoder is strict on every row field: each is a derivation the engine
+/// The decoder is strict on every row field: each is a derivation the server
 /// made in one pass and a seat cannot re-make, so a missing one is a codec that
 /// has drifted rather than a row to be guessed at.
 #[test]

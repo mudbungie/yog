@@ -31,8 +31,8 @@
 //! could replace it was `FORCE=1`, a rotation, which distrusts every leaf
 //! already carried to every other box in order to change one line of text.
 //! Stating where a server listens distrusts nothing, so the two facts a stated
-//! host is a statement about — what the engine binds, and what a client may
-//! verify it against — are written by one act, and the engine binds the new
+//! host is a statement about — what the server binds, and what a client may
+//! verify it against — are written by one act, and the server binds the new
 //! one when it is next started.
 //!
 //! **`WIRE_LEAF` is the fifth reading** (REMOTE §8.2, bl-64a7), and it selects
@@ -95,7 +95,7 @@ pub enum Act {
         /// Every host the box answers to, in `WIRE_HOST`'s own order. Empty is
         /// unstated, and the mint's address is then loopback.
         hosts: Vec<String>,
-        /// The port the engine binds and a seat dials — **`None` is unstated**
+        /// The port the server binds and a seat dials — **`None` is unstated**
         /// (bl-98ef), which is a different answer at each of the two acts a
         /// stated host can ask for. A founding mint takes [`PORT`], the stated
         /// endpoint another machine is told to dial; a statement over standing

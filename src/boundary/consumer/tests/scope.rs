@@ -177,7 +177,7 @@ fn a_raise_naming_something_that_is_not_a_plain_component_refuses() {
 /// **"Not enrolled" and "nothing here" stop being the same reply** (bl-2a84).
 /// A certificate the operator never seated completed the handshake, was
 /// answered `{"kind":"workspaces","ok":true,"rows":[]}` and could not tell that
-/// from an engine holding nothing — so a first-time operator reads their own
+/// from a server holding nothing — so a first-time operator reads their own
 /// missing enrolment as a broken server. The registration is a fact about the
 /// CALLER, so saying it leaks nothing: the sentence names no workspace.
 #[test]

@@ -7,7 +7,7 @@
 //! found*. bl-1be7 made `corpus/shapes.json` the third input of the build
 //! script and added it to the crate's package; the image's list was not
 //! touched, and four releases published no image while the reconciler on the
-//! engine box truthfully reported the last one that had.
+//! server's box truthfully reported the last one that had.
 //!
 //! The roster is derived, not restated: the inputs are exactly the paths
 //! `build.rs` names in its `rerun-if-changed` lines, a `{CONST}` in one

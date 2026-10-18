@@ -3,7 +3,7 @@
 //!
 //! Its own module on the seam every other family here is cut on, and for
 //! [`super::ball`]'s reasoning — three identical fields, and the only
-//! difference between the two gestures is what the engine does once the deposit
+//! difference between the two gestures is what the server does once the deposit
 //! has landed. Neither carries a `children` flag, because a deposit's subject is
 //! the conversation being talked to — and since bl-6efc no gesture anywhere
 //! carries a live one, litany's stop taking the subtree unconditionally, and

@@ -1,6 +1,6 @@
 //! **The §3.6 gates, fired at the chokepoint** (§8.5, bl-f17a) — the arm every
 //! seat crosses (`boundary::dispatch::delete_exec`), driven from where the
-//! engine stands.
+//! server stands.
 //!
 //! Both classes gate at FIRE time, off the published snapshot, never off the
 //! confirmation that offered the verb: a seat's dialog can be a frame old, and

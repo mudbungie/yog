@@ -28,7 +28,7 @@ fn one_query_spans_balls_workspaces_conversations_and_transcripts() {
     let found = run(&snap, "kraken", &always());
     let at: Vec<&Address> = found.hits.iter().map(|h| &h.at).collect();
     // Every address is a wire name (REMOTE §8.1, bl-764a): the §5.1 #1
-    // project name and the §3.1 workspace leaf, never an engine path.
+    // project name and the §3.1 workspace leaf, never a server path.
     assert!(at.contains(&&Address::Ball {
         project: "proj".to_owned(),
         id: "bl-kraken".to_owned()
@@ -128,7 +128,7 @@ fn unreadable_sources_are_named_and_the_rest_of_the_world_still_answers() {
         "workspace name + transcript: {found:?}"
     );
     // Gaps are named by wire address too (bl-764a): the workspace leaf and
-    // the conversation's `<workspace>/<agent>`, never the engine's path.
+    // the conversation's `<workspace>/<agent>`, never the server's path.
     assert!(
         found
             .unreadable

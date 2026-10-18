@@ -150,7 +150,7 @@ impl Cli {
     /// [`resolve_in_world`](Self::resolve_in_world) adds it.
     ///
     /// The self-exe half is [`self_exe`](super::self_exe), **not** a fresh
-    /// `current_exe()` (bl-f558): a live engine whose own file has been
+    /// `current_exe()` (bl-f558): a live server whose own file has been
     /// replaced under it must keep resolving the pathname it was born from,
     /// because `/proc/self/exe` from that instant reads `<path> (deleted)` and
     /// a resolution taken then is an impossible program. This function runs on

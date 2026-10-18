@@ -1,9 +1,9 @@
-//! The world's one-engine exclusion.
+//! The world's one-server exclusion.
 
 use super::{LOCK, take};
 use tempfile::tempdir;
 
-/// The first engine takes the world; a second on the same world is refused,
+/// The first server takes the world; a second on the same world is refused,
 /// naming the file and the invariant. This is the ordinary operator accident —
 /// a supervisor restart, a second terminal, a stale `nohup` — and before
 /// bl-1d9b it produced a second gesture consumer and a second `inv-N`
@@ -12,21 +12,21 @@ use tempfile::tempdir;
 fn a_second_engine_on_one_world_is_refused() {
     let dir = tempdir().expect("tmp");
     let state = dir.path().join("state").join("yog");
-    let first = take(&state).expect("the first engine takes the world");
+    let first = take(&state).expect("the first server takes the world");
     let refusal = take(&state).err().expect("the second is refused");
-    assert!(refusal.contains("one world has one engine"), "{refusal}");
+    assert!(refusal.contains("one world has one server"), "{refusal}");
     assert!(
         refusal.contains(LOCK),
         "the refusal names the file: {refusal}"
     );
     // The exclusion is the *held* descriptor, so releasing it frees the world
-    // for the next engine — a restart is a stop and a start, with nothing to
+    // for the next server — a restart is a stop and a start, with nothing to
     // reap in between.
     drop(first);
-    take(&state).expect("the world is free once its engine has gone");
+    take(&state).expect("the world is free once its server has gone");
 }
 
-/// Two worlds are two exclusions: an engine on a scratch world beside the
+/// Two worlds are two exclusions: a server on a scratch world beside the
 /// operator's own is exactly the arrangement every drive run uses, and the
 /// lock must not reach across data roots.
 #[test]

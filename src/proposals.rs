@@ -168,7 +168,7 @@ fn view(repo: &Path, id: Option<&str>) -> Result<ProposalView, GitTreeError> {
     Ok(ProposalView { rows, whole })
 }
 
-/// The listing, in `for-each-ref` order — which is the ids' own, so two engines
+/// The listing, in `for-each-ref` order — which is the ids' own, so two servers
 /// render one workspace identically without sharing ordering state (I9).
 fn rows(repo: &Path) -> Result<Vec<ProposalRow>, GitTreeError> {
     let listing = for_each_ref_proposals(repo)?;

@@ -9,7 +9,7 @@
 //!
 //! **`fresh` crosses even though it is derived from `lineages`.** A seat could
 //! read emptiness as staleness, but that is a rule, and the wire states a
-//! derivation so a seat need not own one (REMOTE §9.4). Only the engine can be
+//! derivation so a seat need not own one (REMOTE §9.4). Only the server can be
 //! sure the two were read in one pass — which is what makes the pair honest —
 //! so the decoder reads it back strictly rather than recomputing it.
 
@@ -50,7 +50,7 @@ fn row(row: &ProposalRow) -> Value {
 }
 
 /// Read the answer back. Strict on every row field, since each is a derivation
-/// the engine made and a seat cannot re-make; forgiving of `whole`'s absence,
+/// the server made and a seat cannot re-make; forgiving of `whole`'s absence,
 /// which is a reading.
 pub fn view_of(o: &Map<String, Value>) -> Result<ProposalView, String> {
     Ok(ProposalView {

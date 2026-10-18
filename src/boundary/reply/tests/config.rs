@@ -13,7 +13,7 @@ use crate::config_edit::brazen::ProviderRowView;
 fn the_config_family_says_what_landed_and_what_the_knob_now_reads() {
     // The receipt says that it landed and nothing else (REMOTE §8, bl-ccf7):
     // a destination determines its own location, so a path here would be the
-    // address the gesture just gave, respelled as the engine's home root.
+    // address the gesture just gave, respelled as the server's home root.
     let applied = encode(&Reply::Applied);
     assert_eq!(applied["ok"], true);
     assert_eq!(applied["kind"], "applied");

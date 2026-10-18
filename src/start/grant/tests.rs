@@ -133,7 +133,7 @@ fn a_name_the_pinned_engine_no_longer_ships_is_pruned() {
         .expect("the worker's grant");
     assert!(!granted.iter().any(|n| n == "multi_tool"), "{granted:?}");
     assert!(granted.iter().any(|n| n == clients::NAME), "{granted:?}");
-    // Every name the engine still ships survived the prune.
+    // Every name litany still ships survived the prune.
     for shipped in ::litany::cmd::BUILTIN_TOOLS {
         assert!(granted.iter().any(|n| n == shipped), "{granted:?}");
     }

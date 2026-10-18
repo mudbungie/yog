@@ -1,5 +1,5 @@
 //! **The writer**: a [`Recipe`] onto a scratch data root, through the same
-//! folds the engine reads it back with.
+//! folds the server reads it back with.
 //!
 //! What goes where is [`super::places`]; how a byte is written — and why none
 //! of it panics — is [`super::disk`]. This file is the middle: which of those
@@ -20,7 +20,7 @@ use crate::registry;
 use crate::wire::material::{LEAVES, Role};
 use std::path::{Path, PathBuf};
 
-/// litany's seeded marker (§16.6 W3): with it present the engine skips
+/// litany's seeded marker (§16.6 W3): with it present the server skips
 /// `litany prime`, which is the general path with the seed already there.
 const MODELS_YAML: &str = "models:\n  default:\n    provider: anthropic\n";
 

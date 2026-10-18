@@ -62,7 +62,7 @@ fn payload_headline_strips_the_identity_stamp_and_keeps_the_headline() {
 fn payload_headline_strips_the_path_preamble_and_names_the_operators_goal() {
     const BINDING: &str = "This is already your current directory: every tool call starts there and relative paths resolve there. Keep the work inside it.";
     let fired = |dir: &str, typed: &str| {
-        // Exactly what a seat fires: the prefill the engine composed, then the
+        // Exactly what a seat fires: the prefill the server composed, then the
         // operator's words, joined as `lernie start` joins them.
         format!("Working directory: {dir}\n{BINDING}\n\n{typed}")
     };

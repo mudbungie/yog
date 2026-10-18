@@ -21,7 +21,7 @@
 //! dies with the child we wait on. A fork of *this* process copies *this* fd
 //! table, which never held the descriptor. That answer generalized in bl-fd28 —
 //! the lib binary took it too, and its spawn lock, having nothing left to
-//! exclude, was measured out — and again in bl-e6c9, which found the ENGINE
+//! exclude, was measured out — and again in bl-e6c9, which found the SERVER
 //! still writing the world's shims in-process and exec'ing them
 //! (`src/git_env.rs`'s module doc carries every measurement).
 //!

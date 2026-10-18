@@ -48,7 +48,7 @@ mod exec;
 mod goal;
 /// **The §8.6 birth grant** (bl-0460, bl-d281): the one name yog's own roster
 /// tool needs in the worker's `providers.yaml` grant, and the prune of every
-/// name the pinned engine no longer ships, converged in the same pass as the
+/// name the pinned litany no longer ships, converged in the same pass as the
 /// control block and the instruction glob.
 ///
 /// `pub` for one reader: `tests/engine_grant.rs` holds the derived shipped set

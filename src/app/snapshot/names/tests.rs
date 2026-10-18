@@ -61,7 +61,7 @@ fn project_round_trips_through_its_name() {
 }
 
 /// An unknown name refuses naming the noun, the token **and what could have
-/// been typed instead** (bl-3377) — the engine never guesses at an address, and
+/// been typed instead** (bl-3377) — the server never guesses at an address, and
 /// never leaves the caller without one either.
 #[test]
 fn unknown_names_refuse_and_name_the_set() {
@@ -76,7 +76,7 @@ fn unknown_names_refuse_and_name_the_set() {
     );
 }
 
-/// **A wall born since the last derivation resolves** (bl-6c9e): the enumeration
+/// **A workspace born since the last derivation resolves** (bl-6c9e): the enumeration
 /// handed to [`addressable`] is the authority, so the name the reply that
 /// founded it made addressable is addressable on the very next call.
 #[test]
@@ -122,7 +122,7 @@ fn a_workspace_disk_no_longer_holds_stops_resolving() {
 }
 
 /// **The noun bl-6c9e left behind** (bl-3377). `yog bl prime` founds a project
-/// the way a raise founds a wall, and every ball gesture refused it — with a
+/// the way a raise founds a workspace, and every ball gesture refused it — with a
 /// sentence indistinguishable from a typo — until the next full sweep. The
 /// same barrier now covers it, and runs backwards the same way.
 #[test]

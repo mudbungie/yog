@@ -20,7 +20,7 @@
 //! repository, not of a box.** `git config user.email` without `--global` is
 //! ordinary and this repository's own suite depends on it — every fixture that
 //! commits sets a local identity precisely so the suite passes on a box with no
-//! global one. A door rung would therefore ask the *engine's* environment about
+//! global one. A door rung would therefore ask the *server's* environment about
 //! a commit some other repository will make, and answer confidently for boxes
 //! where the two disagree in both directions.
 //!

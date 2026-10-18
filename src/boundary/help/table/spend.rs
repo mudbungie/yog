@@ -6,7 +6,7 @@
 use super::super::{HelpRow, Surface};
 
 /// The reasoning paragraph every gesture help carries, said once for the
-/// family: what a rate is, what a row is, and what the engine deliberately
+/// family: what a rate is, what a row is, and what the server deliberately
 /// does not check.
 pub const SPEND: &[HelpRow] = &[
     HelpRow {
@@ -16,7 +16,7 @@ pub const SPEND: &[HelpRow] = &[
         detail: "Answers every priced (provider, model) row with its four rates in USD per \
                  million tokens, the ceiling in USD when one is set, and the whole world's \
                  priced spend — the ledger the ceiling is compared against. The table and the \
-                 ceiling are world facts: one `ui.json` on the engine, shared by every seat, \
+                 ceiling are world facts: one `ui.json` on the server, shared by every seat, \
                  addressed to no workspace. An empty table means no cost is answered anywhere \
                  and no ceiling can bind; a step whose row is unpriced is counted in \
                  `unpriced_tokens` beside the money, so a partial table reads as *at least*.",
@@ -34,8 +34,8 @@ pub const SPEND: &[HelpRow] = &[
                  is zero. `*` as the model prices every model that row serves and does not name, \
                  so a subscription is `/price <row> * 0 0`: priced, and pricing to $0.00, which \
                  is a different fact from unpriced. `off` in place of the rates deletes the row. \
-                 A negative or unreadable figure is refused. A provider row this workspace's \
-                 wall does not know is NOT refused — a row may be priced before it is \
+                 A negative or unreadable figure is refused. A provider row this workspace \
+                 does not know is NOT refused — a row may be priced before it is \
                  configured, and the name is the one `/providers` lists. The reply is the \
                  re-read table, never an echo.",
         surface: Surface::Control,

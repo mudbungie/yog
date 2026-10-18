@@ -4,12 +4,12 @@
 //!
 //! **Since bl-e598 the number is a MAJOR.** It moves only on a breaking
 //! change — a field removed or re-typed, a frame's meaning changed under a
-//! spelling still in use, a field the engine newly REQUIRES on a request —
+//! spelling still in use, a field the server newly REQUIRES on a request —
 //! and every additive change ships without it: a new field a reader may
 //! ignore, a new word in a vocabulary, a new op, a new reply kind. Those are
 //! **editions**, stamped per field path in `corpus/shapes.json` by
-//! `make corpus` and stated by the engine in its hello (REMOTE §3.2), so a
-//! seat discovers what an engine can spell instead of being refused for a
+//! `make corpus` and stated by the server in its hello (REMOTE §3.2), so a
+//! seat discovers what a server can spell instead of being refused for a
 //! field it would have ignored. The hello is still strict equality on THIS
 //! number, fail-closed, with no negotiation; what changed is what a bump is
 //! for. It was 13 → 18 in one week, and four of those five carried nothing
@@ -46,7 +46,7 @@
 //! to say — the preface's own — and under the old rule it bumps; under the
 //! new rule it is the one kind of change that still does. Taking 19 rather
 //! than re-reading 18 is the transition's safety: under bl-bca2's hold no
-//! engine speaking 19 publishes until every consumer main carries 19, and a
+//! server speaking 19 publishes until every consumer main carries 19, and a
 //! consumer carries 19 by the same ball that makes its reader grows-only. The
 //! migration that produced the per-path record stamped every path of a shape
 //! at that shape's last move — the finer history is [`exact`]'s prose — and
@@ -66,10 +66,10 @@
 //! record an edition earns is one paragraph and a ball id, not a bump.
 //!
 //! **Edition 20 (bl-9043, REMOTE §8.4, §13.2).** `reply/enrolled` gained
-//! `rendezvous_pub` and `pairing_salt` — the engine's rendezvous public key
+//! `rendezvous_pub` and `pairing_salt` — the server's rendezvous public key
 //! and the pairing salt, 32 bytes of hex each, present together on a box
 //! holding rendezvous material and absent together on a loopback-only one —
-//! so an enrolled device can find its engine off the stated address. A seat
+//! so an enrolled device can find its server off the stated address. A seat
 //! below 20 reads two optional keys it ignores.
 //!
 //! **Edition 21 (bl-355c, REMOTE §13.4).** `reply/doctor` gained
@@ -81,7 +81,7 @@
 //! **Edition 22 (bl-5276, REMOTE §13.3).** The doctor's `rendezvous` object
 //! gained `accepted` — the streams the punch port's standing acceptor served
 //! with no call's window toward them. A seat below 22 ignores it; a seat at
-//! 22 reads its absence from a 21 engine as `0`.
+//! 22 reads its absence from a 21 server as `0`.
 
 // The constant itself is GENERATED, not declared: `build.rs` reads the
 // repo-root `PROTOCOL` file — the number's one file-shaped home, at the one
@@ -106,7 +106,7 @@ pub(crate) mod exact;
 /// **How it moves.** A lane that raises `PROTOCOL` leaves this alone unless
 /// the number it is raising FROM has shipped; then it raises this to that
 /// number in the same edit. `18 → 19` here is `PROTOCOL_PUBLISHED = 17`,
-/// because 18 never shipped as an engine: v0.0.52 spoke 17.
+/// because 18 never shipped as a server: v0.0.52 spoke 17.
 ///
 /// **What it does not do.** It is not a compatibility window and the handshake
 /// never reads it: the wire is still fail-closed on `PROTOCOL` alone, with no

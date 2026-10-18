@@ -1,9 +1,9 @@
 //! **The §11 reads, asked the way a seat asks them** (REMOTE §9.7), split out
 //! per the 300-line cap.
 //!
-//! Every helper here is one shape: put a `boundary::Query` to the engine, take
+//! Every helper here is one shape: put a `boundary::Query` to the server, take
 //! the reply, and hand it to the same `nav::*` fold a seat renders from. The
-//! derivation is the engine's and the fold is the seat's, so a story asks the
+//! derivation is the server's and the fold is the seat's, so a story asks the
 //! boundary the question a seat asks it and cannot assert against a second
 //! derivation nobody renders.
 //!
@@ -14,7 +14,7 @@
 //!
 //! That is why they are a tier and not a fixture: `mod.rs` beside this one
 //! WRITES the world a story runs over (recorder binaries, workspaces on disk,
-//! a hand-driven clock), and these only READ what the engine says about it.
+//! a hand-driven clock), and these only READ what the server says about it.
 
 use std::collections::HashSet;
 
@@ -94,7 +94,7 @@ pub fn conversation_ball(
     yog::nav::convs::selection(&conversation_rows(model, workspace, now_unix), root_id).ball
 }
 
-/// **One act, run the way the engine runs it** — the model's own `Deps`, its
+/// **One act, run the way the server runs it** — the model's own `Deps`, its
 /// own `ui.json`, and `boundary::dispatch`. A story that used to reach into a
 /// frame's click-glue fires the gesture instead (REMOTE §1.2): there is one
 /// pipeline, and this is it.
@@ -110,7 +110,7 @@ pub fn act(
     yog::boundary::dispatch::dispatch(&deps, &mut ui, "0", action)
 }
 
-/// **One query, answered the way the engine answers it** — `ui.json` opened
+/// **One query, answered the way the server answers it** — `ui.json` opened
 /// per gesture, exactly as `ConsumerCtx::answer` opens it. That is not a
 /// detail: a durable UI fact an act just wrote (a `seen` watermark) is on disk,
 /// and a reader holding a stale in-RAM document would answer as if it were not.

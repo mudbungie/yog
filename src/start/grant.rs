@@ -1,5 +1,5 @@
 //! **The worker's grant converges on what this install can call** — `clients`
-//! asserted (DESIGN §8.6, bl-0460) and a name the pinned engine no longer
+//! asserted (DESIGN §8.6, bl-0460) and a name the pinned litany no longer
 //! ships pruned (bl-d281) — the third file of the one policy convergence
 //! [`execute_ensure_workspace`](super::execute_ensure_workspace) already runs.
 //!
@@ -52,7 +52,7 @@
 //! class at once"*). Narrowing removes names whose **effects** are distrusted,
 //! and what an invocation may do is still adjudicated per call by the §8.6
 //! control, exactly as before. The prune removes only names **no invocation of
-//! which can execute**: its floor is the engine's whole shipped pool plus
+//! which can execute**: its floor is litany's whole shipped pool plus
 //! anything the operator's own `capability.yaml` speaks for, so it can never
 //! take away a capability the model would otherwise have had. [`keep`] is the
 //! whole of that predicate and neither half is a list yog writes.
@@ -97,7 +97,7 @@ use crate::model_pick::grammar::{
 };
 use crate::tool_host::clients;
 
-/// Which names the grant may keep — the pinned engine's own set, and the
+/// Which names the grant may keep — the pinned litany's own set, and the
 /// operator's own statement about anything outside it.
 mod keep;
 
@@ -168,11 +168,11 @@ fn granted(text: &str) -> bool {
 ///
 /// **The prune is the second half of bl-d06c** (bl-d281). A grant is durable
 /// and a pin is not, so a workspace born before a retirement keeps naming what
-/// the engine no longer ships; every call of such a name classifies `opaque`,
+/// litany no longer ships; every call of such a name classifies `opaque`,
 /// the shipped table holds it, and the conversation parks with nothing said.
 /// Converging here rather than at the moment of the park is what makes an old
 /// workspace fix itself at its next start. `keep`'s own header carries why the
-/// floor is the engine's whole pool and why the operator's `rules:` row is the
+/// floor is litany's whole pool and why the operator's `rules:` row is the
 /// one thing that can widen it.
 ///
 /// **A worker that declares no `tools:` at all is left alone**, and that is the

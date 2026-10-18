@@ -1,7 +1,7 @@
 //! The writer, against real trees. Every assertion reads the disk back through
 //! the **production** derivations — `binding`, `git_tree`, `steps_view`,
 //! `registry` — because a fixture that only satisfies its own writer is a
-//! fixture that proves nothing about what an engine will serve.
+//! fixture that proves nothing about what a server will serve.
 
 /// The laid trunk driven by the §9.4 surfaces a seat tunes a world with
 /// (bl-59cf) — its own file because those beats spend the boundary's own
@@ -24,7 +24,7 @@ fn laid(state: &str, origin: i64) -> (TempDir, Places, Vec<PathBuf>) {
     (tmp, places, hold)
 }
 
-/// The busy state, read back by the enumerator and the derivation an engine
+/// The busy state, read back by the enumerator and the derivation a server
 /// runs: a **named** workspace (the kind that carries a claimant), and one
 /// agent per conversation in the recipe.
 #[test]
@@ -48,7 +48,7 @@ fn a_laid_state_enumerates_as_a_named_workspace_with_its_conversations() {
 /// whole reason to exist.
 ///
 /// Read through the **live** cadence's catch-up window (bl-776a), not around
-/// it: the engine states a no-response wound only once the step's own call
+/// it: the server states a no-response wound only once the step's own call
 /// start has outlived that window, so a recipe whose `request.json` was left at
 /// "now" would answer no wound at all and the state would be a promise it
 /// cannot keep. Judged from this box's clock, which is what a harness reading

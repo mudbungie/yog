@@ -6,7 +6,7 @@
 //!
 //! Two seats wanted the same thing and each was asking `AppModel` for it: the
 //! §3.6 delete gate (which conversations die, and is any of them live) and the
-//! §3.3 mint (which names are taken). Both folded the engine's own agent set on
+//! §3.3 mint (which names are taken). Both folded the server's own agent set on
 //! the paint thread; both are answered by rows this window already holds.
 //!
 //! **Depth is the containment**, exactly as it is the parentage in
@@ -18,7 +18,7 @@ use super::{ConvRow, Conversation, running};
 
 /// **The same, off an answered forest** (REMOTE §9.7, bl-b4b5) — [`liveness`]'s
 /// seat-side twin, and the same kind of thing [`visible`] and [`selection`] are:
-/// a pure fold over `Query::Conversations`' rows rather than over the engine's
+/// a pure fold over `Query::Conversations`' rows rather than over the server's
 /// agent set.
 ///
 /// The answer is pre-order and every member carries its own §3.5 state and §10

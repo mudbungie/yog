@@ -17,7 +17,7 @@ use std::sync::Arc;
 
 impl AppModel {
     /// Build the model **and** the worker's [`Deriver`], taking the first
-    /// derivation synchronously so the engine answers real content from its
+    /// derivation synchronously so the server answers real content from its
     /// first gesture rather than an empty snapshot.
     ///
     /// Returned as a pair rather than spawned here: the thread is the caller's

@@ -252,7 +252,7 @@ fn the_enrollment_round_trips_at_both_grades() {
 
     // **`--at` is the address the DEVICE will dial** (bl-fec6): it round-trips
     // beside the grade, it is absent when unstated — a spelled default would be
-    // a second statement of the engine's own address — and a flag this verb
+    // a second statement of the server's own address — and a flag this verb
     // does not read is refused rather than dropped.
     rt(Gesture::Act(Action::Enroll(
         crate::registry::enroll::Request {

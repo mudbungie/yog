@@ -6,7 +6,7 @@
 //! reading, and a log that *is* there crosses the boundary whole, at the
 //! bounded-file cap every other reading surface uses rather than a tail. What
 //! a seat then does with the two (its picker's derived row set, and where the
-//! seat sits) went with the window (bl-7942); the READS are the engine's.
+//! seat sits) went with the window (bl-7942); the READS are the server's.
 
 use super::{AGENT, write_file};
 use crate::files_view::Preview;

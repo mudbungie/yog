@@ -116,7 +116,7 @@ fn a_box_with_an_anchor_and_no_ca_key_is_left_alone() {
 /// The address a box already names is kept, and the leaf is minted for it —
 /// which is the whole of "wider listening is the operator's statement of
 /// intent" (REMOTE §8). Loopback rides the server leaf regardless, so the
-/// window can always reach its own engine.
+/// window can always reach its own server.
 #[test]
 fn an_existing_address_is_kept_and_the_server_leaf_names_it() {
     let tmp = TempDir::new().expect("tmp");

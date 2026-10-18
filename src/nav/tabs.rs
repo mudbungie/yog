@@ -1,9 +1,9 @@
 //! The workspace tab-bar view-model (DESIGN §11 altitude 0, §15 Z9).
 //!
-//! Workspaces are regime walls — almost invisible: one tab per **named**
+//! Workspaces are regime boundaries — almost invisible: one tab per **named**
 //! workspace under the top right, pinned first (in pin order), then name
 //! order. Foreign and replay workspaces are real but not regimes, so they
-//! live behind the overflow menu rather than widening the wall row; pinning
+//! live behind the overflow menu rather than widening the tab row; pinning
 //! hoists one into the tabs. Pure over injected facts; the shell paints the
 //! [`TabBar`] and the `new` name form beside it.
 //!
@@ -15,7 +15,7 @@
 //! seat's. It is the shape bl-7407 named as the one thing left between this bar
 //! and the wire, and the reason it was refused until now was the join it would
 //! have cost: painting off a reply while resolving each name back through the
-//! engine's own table is two sources for one fact. Nothing here resolves
+//! server's own table is two sources for one fact. Nothing here resolves
 //! anything — a row arrives named, classified, counted and ranked.
 
 use crate::binding::WorkspaceKind;
@@ -105,7 +105,7 @@ impl Tab {
     }
 }
 
-/// The full derived tab bar (§11): the wall-row `tabs` (pinned hoists + named
+/// The full derived tab bar (§11): the tab-row `tabs` (pinned hoists + named
 /// workspaces) and the `overflow` menu entries (**every** foreign + replay
 /// workspace, pinned or not).
 #[derive(Debug, Clone, PartialEq, Eq, Default)]

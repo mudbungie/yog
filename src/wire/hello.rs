@@ -9,8 +9,8 @@
 //!
 //! - **Both ends state, and either end may refuse.** Each writes its preface
 //!   before it reads the peer's, so neither waits on the other and a mismatch
-//!   is nameable from whichever side notices first. An engine refusing a seat
-//!   and a seat refusing an engine are one rule with one sentence, not two
+//!   is nameable from whichever side notices first. A server refusing a seat
+//!   and a seat refusing a server are one rule with one sentence, not two
 //!   halves that can disagree.
 //! - **No negotiation.** No version list, no capability probe, no compat shim:
 //!   a mismatch is fail-closed and the sentence — which names *both* versions —
@@ -29,11 +29,11 @@
 //! compiled in by `build.rs` as [`EDITION`] — and it decides nothing: an
 //! addition ships without a bump, so two ends of one major routinely differ
 //! here and are meant to. What it buys is that the difference is *sayable*. A
-//! seat that vendors the ledger reads the engine's edition and knows which of
-//! two things an absent field is: a fact the engine chose not to state, or a
-//! field this engine cannot spell at all — which it then renders as exactly
+//! seat that vendors the ledger reads the server's edition and knows which of
+//! two things an absent field is: a fact the server chose not to state, or a
+//! field this server cannot spell at all — which it then renders as exactly
 //! that, rather than as the reassuring default. A peer that states no edition
-//! is read as speaking the [`FLOOR`], because every engine of this major
+//! is read as speaking the [`FLOOR`], because every server of this major
 //! writes every path stamped at or below it; that is the right reading of
 //! every build that predates the key.
 //!
@@ -92,7 +92,7 @@ struct Preface {
     /// to the one answer a reader can act on.
     protocol: Option<u64>,
     /// The corpus edition. **Absent reads as [`FLOOR`]**, and so does anything
-    /// that is not a stamp: every engine of this major writes every path
+    /// that is not a stamp: every server of this major writes every path
     /// stamped at or below the floor, so the floor is what a peer that says
     /// nothing has already promised. It is the reading that is right for a
     /// build older than bl-1be7, which is every build there is.
@@ -129,7 +129,7 @@ fn mismatch(peer: Option<u64>) -> String {
     )
 }
 
-/// **The engine's half**: state, read, and either admit the peer or refuse it
+/// **The server's half**: state, read, and either admit the peer or refuse it
 /// in band on the connection it opened.
 ///
 /// `None` is the whole of the refusal — the caller drops the connection and
@@ -158,7 +158,7 @@ pub(crate) fn admit<S: Read + Write>(s: &mut S) -> Option<u32> {
     None
 }
 
-/// **The seat's half**: read the engine's preface and refuse a mismatch to the
+/// **The seat's half**: read the server's preface and refuse a mismatch to the
 /// caller, as one `Err(String)`.
 ///
 /// `cfg(test)` since bl-7942: no seat ships in this crate any more, and the one

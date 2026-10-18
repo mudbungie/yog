@@ -56,7 +56,7 @@ pub use self::derive::worker::Worker;
 pub use self::drift::stale_label;
 pub use self::roots::Roots;
 /// The §3.1 enumeration standing in for the derivation's cached copy at the
-/// boundary's intake (bl-6c9e) — re-exported here because the engine builds a
+/// boundary's intake (bl-6c9e) — re-exported here because the server builds a
 /// gesture's environment with it and this module owns the derivation.
 pub(crate) use self::snapshot::addressable;
 pub use self::snapshot::growth_label;

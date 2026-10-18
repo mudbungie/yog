@@ -12,7 +12,7 @@
 //! model-discovery §5.5, 0.0.9), and litany's own `window_percent` compaction
 //! trigger divides by exactly that number off the same record. A window yog
 //! declared on its own would be a second representation of one fact that the
-//! engine compacting the context could not see — the percentage here and the
+//! litany compacting the context could not see — the percentage here and the
 //! compaction one layer down would disagree about one context. So there is no
 //! declaration: a row that states no window renders no figure, and the seat to
 //! state one is upstream, on brazen's provider row, where for Ollama it is

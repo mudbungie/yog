@@ -26,7 +26,7 @@ use super::{Action, Deps};
 /// **Since bl-6c9e that is a statement about SCOPE and nothing else.** The
 /// enumeration the intake hands over is now the live one
 /// ([`addressable`](crate::app::addressable)), so "exists but is not in my set"
-/// no longer includes *a wall this very caller founded a millisecond ago* — the
+/// no longer includes *a workspace this very caller founded a millisecond ago* — the
 /// case that made a second `Prepare` refuse, and that made every non-`Prepare`
 /// gesture naming the newborn refuse with it.
 ///

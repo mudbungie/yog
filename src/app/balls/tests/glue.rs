@@ -1,5 +1,5 @@
 //! The boundary glue a frame's gestures land in (§8.5), driven from where the
-//! **engine** stands ([`crate::test_support::engine::act`]) — since bl-1747 the
+//! **server** stands ([`crate::test_support::engine::act`]) — since bl-1747 the
 //! window posts every act over the wire and holds no dispatch of its own, so
 //! these read the chokepoint the wire's listener reaches, over a `ui.json`
 //! opened fresh per gesture. Shares [`super::world`]'s hermetic fixture; spawns

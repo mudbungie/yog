@@ -12,7 +12,7 @@
 //! than an absent key on `follows`' own precedent: the encoder always writes
 //! the key, and a reader that has never heard of it reads the answer it
 //! always read. The decoder accepts absence too (REMOTE §3.2: a post-floor
-//! key an older engine never wrote defaults), and reads a present object
+//! key an older server never wrote defaults), and reads a present object
 //! strictly — every token named, a mistyped one refused by name.
 
 use serde_json::{Map, Value, json};

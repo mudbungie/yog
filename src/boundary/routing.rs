@@ -1,4 +1,4 @@
-//! **The routing leg's engine half** (REMOTE §3, §5, §9 step 7; bl-024b): the
+//! **The routing leg's server half** (REMOTE §3, §5, §9 step 7; bl-024b): the
 //! four arms that put an invocation into a tool host's mailbox and bring its
 //! capture back.
 //!
@@ -9,7 +9,7 @@
 //! mutate/populate would put half of one hand-off in each of two files and
 //! leave nowhere to state the invariant that binds them.
 //!
-//! **The ask never inverts** (REMOTE §3): the engine speaks only when spoken
+//! **The ask never inverts** (REMOTE §3): the server speaks only when spoken
 //! to, at both ends. A driver asks it to queue a call and asks again for the
 //! capture; a tool host asks for its next work and posts what it got. Nothing
 //! here writes down a connection, and nothing here waits on the intake that

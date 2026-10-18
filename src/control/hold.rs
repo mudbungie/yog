@@ -48,7 +48,7 @@ impl Held {
     /// The scopes an answer to this park may take (bl-0da6): the class the
     /// reason sentence names ([`super::reason::class_of`]), judged by the same
     /// [`Scope::permits`] the answer gesture will apply — so a seat offers
-    /// exactly what the engine accepts and never re-derives the class from
+    /// exactly what the server accepts and never re-derives the class from
     /// prose. A sentence naming no class — a ceiling park, or a mark yog did
     /// not write — offers the call alone.
     pub fn scopes(&self) -> Vec<Scope> {

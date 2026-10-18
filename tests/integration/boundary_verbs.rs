@@ -204,7 +204,7 @@ fn a_deposited_message_converges_to_the_same_spawn_and_a_reply() {
 /// §3.1, bl-1cf4): the line is the boundary's *seat-side* serialization, read
 /// by `sugar::argv` before a deposit is ever written, so an intake that
 /// re-read it would be a second parser and a client's `/stop` would silently
-/// mean two things. The engine spawns the deposit, verbatim, and no stop fires.
+/// mean two things. The server spawns the deposit, verbatim, and no stop fires.
 #[test]
 fn a_deposited_slash_line_is_content_and_never_the_stop_gesture() {
     let bin = tempdir().unwrap();

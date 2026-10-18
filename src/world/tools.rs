@@ -191,7 +191,7 @@ pub fn shim_script(namespace: &str, exec_words: &[String]) -> String {
 /// than seeding an adjudicator that cannot run.
 ///
 /// **The write itself is a child's** ([`crate::git_env::write_exec`], bl-e6c9).
-/// This is the engine's own ETXTBSY window and not a test's: yog seeds a shim
+/// This is the server's own ETXTBSY window and not a test's: yog seeds a shim
 /// and then execs it, and yog forks from every thread, so an `fs::write` here
 /// held a descriptor any peer fork could copy into the exec that follows —
 /// measured at 7 failures over 1,120 runs of bl-fd28's stress filter with these

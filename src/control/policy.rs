@@ -15,7 +15,7 @@
 //! revocation — so the read is `config/default:capability.yaml` at its head.
 //! That argument was once a **deviation** from litany's fork-is-the-freeze law
 //! and had to be justified as one; since the follow-the-tip ruling (upstream
-//! bl-403b; yog bl-e654) the engine resolves its own control the same way, and
+//! bl-403b; yog bl-e654) litany resolves its own control the same way, and
 //! this read is the ordinary case rather than an exception to state.
 //!
 //! The grammar is four keys, flat and line-oriented — deliberately not a YAML

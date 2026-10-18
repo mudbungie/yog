@@ -10,11 +10,11 @@
 //! the third, and it is the act §5's next paragraph describes; `unload` is its
 //! symmetric fourth ([`edit`], REMOTE §5.2 as amended by bl-3455).
 //!
-//! **Only three ops need the engine.** `list`, `get` and `load` all resolve
+//! **Only three ops need the server.** `list`, `get` and `load` all resolve
 //! against the roster read at this instant, so each asks for it where it needs
 //! it. `unload` resolves against this agent's own document and nothing else, so
 //! it never deposits a gesture — the set can be subtracted from on a box whose
-//! engine is down, which is the same reason §5.2 gives for declaring touching
+//! server is down, which is the same reason §5.2 gives for declaring touching
 //! nothing but disk.
 //!
 //! **One tool, and its subject is the roster — not a multiplexer.** Loaded
@@ -28,7 +28,7 @@
 //! **Every answer is dated and appended, and every refusal is in band.** A
 //! reply carries the instant it was observed because presence is true only at
 //! that instant; an unknown client, an unadvertised tool and an unreachable
-//! engine are all non-zero results the model reads and steps on, never a prefix
+//! server are all non-zero results the model reads and steps on, never a prefix
 //! change and never a hang.
 
 use serde_json::{Value, json};
@@ -151,7 +151,7 @@ fn tools_opt(input: &Value) -> Result<Option<Vec<String>>, String> {
 }
 
 /// Answer one invocation. Each arm asks for exactly what it needs: the three
-/// ops whose subject is the roster read it from the engine at this moment
+/// ops whose subject is the roster read it from the server at this moment
 /// ([`super::ask::roster`]), and the one whose subject is this agent's own
 /// document does not.
 pub fn answer(site: &Site, input: &Value, stop: &AtomicBool) -> Result<String, String> {
@@ -175,7 +175,7 @@ pub fn answer(site: &Site, input: &Value, stop: &AtomicBool) -> Result<String, S
     }
 }
 
-/// The workspace's roster, as the engine answers it right now.
+/// The workspace's roster, as the server answers it right now.
 fn asked(site: &Site, stop: &AtomicBool) -> Result<Vec<ClientRow>, String> {
     super::ask::roster(&site.state_root, &site.workspace, site.budget, stop)
 }

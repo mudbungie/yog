@@ -82,7 +82,7 @@ pub(super) fn queries(verb: &str, tail: &str, ctx: &Context) -> Result<Gesture, 
         // workspace, who is live, and what each advertises. Scoped by the seat
         // exactly as `/providers` is.
         // **The doctor** (bl-28f4): the seat's workspace when it has one, and
-        // the engine alone when it has not — the one read that must answer on a
+        // the server alone when it has not — the one read that must answer on a
         // box that cannot yet do anything else.
         "doctor" => {
             args::none(tail, verb)?;

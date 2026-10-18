@@ -5,10 +5,10 @@
 //! it to the fail-closed routed lane, whose answer for an input carrying no
 //! command line is `opaque` — which the shipped table **holds**. That is the
 //! right answer for a tool on a machine this control cannot see into, and the
-//! wrong one for a built-in the engine grants every worker: the conversation
+//! wrong one for a built-in litany grants every worker: the conversation
 //! parks on every single call, the operator sees a question with tool calls and
 //! no reply, and the remedy the hold offers (a `rules:` row naming a class) is
-//! an operator statement about a tool the engine itself ships.
+//! an operator statement about a tool litany itself ships.
 //!
 //! That is not hypothetical, it is what bl-d06c filed. litany's `multi_tool`
 //! envelope stood in the shipped worker grant with no row here, so a question
@@ -17,12 +17,12 @@
 //! §5 — the program is the envelope now), which settles that instance and
 //! nothing about the class: the next name added to litany's pool, or a pin bump
 //! that brings one, parks conversations exactly the same way. So the pinned
-//! engine's own grant is read here — out of a workspace `yog litany new` really
+//! litany's own grant is read here — out of a workspace `yog litany new` really
 //! authors, never a copy of it in this tree — and every name in it must
-//! classify on the engine leg.
+//! classify on the server leg.
 //!
 //! Three sources, because a granted name has three origins and only one of them
-//! is litany's file: the shipped `worker` grant, yog's own engine acts
+//! is litany's file: the shipped `worker` grant, yog's own server acts
 //! ([`engine_act::NAMES`], which carries the compactor's injected pair — never
 //! in any `providers.yaml`), and the roster tool yog adds to a workspace's grant
 //! ([`clients::NAME`]).
@@ -31,7 +31,7 @@
 //! non-empty list holding a name we know — a parse that quietly finds nothing
 //! must not pass as green — and a name the map does not hold must still answer
 //! [`Leg::Routed`]. The fail-closed lane is not softened by any of this; it is
-//! only kept off the names the engine grants.
+//! only kept off the names litany grants.
 // The fixture helpers of an integration-test crate unwrap freely like any test.
 #![allow(clippy::unwrap_used)]
 
@@ -73,7 +73,7 @@ fn yog(home: &Path, args: &[&str]) -> i32 {
         .unwrap_or(-1)
 }
 
-/// `providers.yaml` as the pinned engine authors it, read off the first config
+/// `providers.yaml` as the pinned litany authors it, read off the first config
 /// commit of a workspace this test just minted. `git_env::git()` rather than a
 /// bare `Command`, so the read inherits the same scrub every child of this
 /// crate does.
@@ -94,7 +94,7 @@ fn shipped_providers(repo: &Path) -> String {
 
 /// The `tools:` list one role declares. Textual on purpose: yog links no YAML
 /// parser, and the shape being read is one inline sequence on one line of a
-/// file the engine ships — a shape that changing would fail this parse loudly
+/// file litany ships — a shape that changing would fail this parse loudly
 /// rather than answering an empty grant.
 fn grant(providers: &str, role: &str) -> Vec<String> {
     providers
@@ -119,7 +119,7 @@ fn every_name_a_granted_invocation_can_carry_has_an_intrinsic_row() {
     let providers = shipped_providers(&minted(home.path()));
     let granted = grant(&providers, ROLE);
 
-    // The parse found the engine's own grant, not an empty list it could then
+    // The parse found litany's own grant, not an empty list it could then
     // iterate zero times over.
     assert!(
         granted.len() > 3 && granted.iter().any(|n| n == "bash"),
@@ -142,7 +142,7 @@ fn every_name_a_granted_invocation_can_carry_has_an_intrinsic_row() {
         );
     }
 
-    // The other direction: nothing here widened the map. A name no engine grants
+    // The other direction: nothing here widened the map. A name litany never grants
     // is still the routed lane's, `multi_tool` — the retired envelope this ball
     // came from — included.
     for name in ["multi_tool", "box2_shell", "no_such_tool"] {
@@ -150,14 +150,14 @@ fn every_name_a_granted_invocation_can_carry_has_an_intrinsic_row() {
     }
 }
 
-/// **The birth fold's prune never touches a name the pinned engine ships**
+/// **The birth fold's prune never touches a name the pinned litany ships**
 /// (bl-d281). `start::grant` converges an existing workspace's `worker` grant
 /// on what this install can actually call, because a grant is durable and a
 /// pin is not — a lineage born before litany retired `multi_tool` kept naming
 /// it, and every call then classified opaque and parked the conversation. The
 /// set it prunes against is derived (`litany::cmd::BUILTIN_TOOLS` plus yog's
-/// engine acts and `clients`), and this is the direction that catches the
-/// derivation drifting from the engine's own file: the grant litany itself
+/// server acts and `clients`), and this is the direction that catches the
+/// derivation drifting from litany's own file: the grant litany itself
 /// authors must come back whole, gaining `clients` and losing nothing.
 #[test]
 fn the_birth_fold_prunes_no_name_the_pinned_engine_grants() {
@@ -175,7 +175,7 @@ fn the_birth_fold_prunes_no_name_the_pinned_engine_grants() {
     for name in &before {
         assert!(
             after.contains(name),
-            "`{name}` is in the engine's own grant and the birth fold pruned it:              `start::grant::keep::ships` has drifted from what litany 0.0.13 ships"
+            "`{name}` is in litany's own grant and the birth fold pruned it:              `start::grant::keep::ships` has drifted from what litany 0.0.13 ships"
         );
     }
     assert!(after.contains(&clients::NAME.to_owned()), "{after:?}");

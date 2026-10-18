@@ -95,7 +95,7 @@ fn temps_in(dir: &Path) -> Vec<(PathBuf, i64)> {
 /// Sweep `dirs`: best-effort delete of every I3 temp in them untouched for
 /// over 24 h (§2 I3, §5.2's startup sweep). Returns what was decided stale, in
 /// the order the directories were given. The wall clock is the caller's — the
-/// engine's injected [`Clock`](crate::ui_state::Clock) — keeping the decision
+/// server's injected [`Clock`](crate::ui_state::Clock) — keeping the decision
 /// ([`stale`]) pure.
 pub fn sweep(dirs: &[PathBuf], now_secs: i64) -> Vec<PathBuf> {
     let mut swept = Vec::new();

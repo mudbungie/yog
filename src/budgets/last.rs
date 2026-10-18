@@ -10,7 +10,7 @@
 //! model-discovery §5.5), which is the number litany's own `window_percent`
 //! compaction trigger divides by; yog reads the same one off the same record
 //! and keeps no table of windows (bl-9c8a — the declaration it once kept was a
-//! second representation of this fact, one the engine could not see).
+//! second representation of this fact, one the server could not see).
 
 use super::{BudgetSpend, counter, counters, usage_events};
 

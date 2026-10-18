@@ -1,5 +1,5 @@
 //! **Enrollment** (REMOTE §1.4 as amended, §4.2, §8.2; bl-f4e3): what an
-//! operator asks for when a new device joins, and the whole of what the engine
+//! operator asks for when a new device joins, and the whole of what the server
 //! answers with.
 //!
 //! **§1.4 is not lifted and this is not a pairing flow.** The device performs
@@ -8,7 +8,7 @@
 //! authenticated channel, and the material the answer carries then travels to
 //! the device **out of channel**: a QR on a screen is a scp shaped like a
 //! photograph, and the operator is standing in front of both machines. That is
-//! the same class as the engine-boot mint (`wire::provision`, bl-ae05) — the
+//! the same class as the server-boot mint (`wire::provision`, bl-ae05) — the
 //! operator's own tooling, reached through the boundary because REMOTE §3
 //! forbids a capability that exists on the wire and nowhere else.
 //!
@@ -47,10 +47,10 @@ pub struct Request {
     /// operator's own CA, which is the only thing entitled to write it.
     pub grade: Grade,
     /// **The address the DEVICE will dial** (bl-fec6), or `None` for the one
-    /// this engine wrote for itself.
+    /// this server wrote for itself.
     ///
     /// The device being enrolled is by definition not this box, so the route it
-    /// reaches this engine by is not necessarily the one this box wrote in
+    /// reaches this server by is not necessarily the one this box wrote in
     /// `wire/address`: an emulator reaches its host only through the emulator's
     /// own alias, a phone reaches it on the LAN, an overlay peer by a name. The
     /// envelope carried `wire/address` verbatim, so a scan was correct only for
@@ -58,7 +58,7 @@ pub struct Request {
     /// be hand-edited afterwards on any device you could reach a shell on.
     ///
     /// It is a field of the REQUEST rather than a setting, because it is a fact
-    /// about the device being enrolled and not about this engine: two devices
+    /// about the device being enrolled and not about this server: two devices
     /// enrolled a minute apart can rightly need two different routes. The mint
     /// already understands this — `WIRE_HOST` is a list, and every entry rides
     /// the server leaf — so what an operator states here should be one of the
@@ -71,7 +71,7 @@ pub struct Request {
 /// What one enrollment answers with — the whole of what a new device needs and
 /// nothing else.
 ///
-/// **The private key is here and nowhere else.** The engine mints the pair,
+/// **The private key is here and nowhere else.** The server mints the pair,
 /// reads it, hands it over and **shreds the key** before the answer leaves;
 /// what stays on disk is the certificate, which is public material and whose
 /// presence is what refuses a second enrollment under the same name
@@ -91,7 +91,7 @@ pub struct Enrolled {
     pub grade: Grade,
     /// The common name the certificate carries — the device's identity.
     pub name: String,
-    /// **The engine's own wire address, as clients dial it** (§8): the one the
+    /// **The server's own wire address, as clients dial it** (§8): the one the
     /// boot recorded in `wire/address`, never the port a `:0` request became.
     /// A runtime port changes on the next boot, so a QR carrying one would be
     /// stale before it was scanned.
@@ -103,10 +103,10 @@ pub struct Enrolled {
     /// Its private key, PEM — held by nothing on this box once this value is
     /// built.
     pub key: String,
-    /// **The rendezvous hand-off** (REMOTE §8.4, §13.2; bl-9043): the engine's
+    /// **The rendezvous hand-off** (REMOTE §8.4, §13.2; bl-9043): the server's
     /// public rendezvous key and the pairing salt, so a device can find this
-    /// engine off its stated address. `None` on a box that minted none — a
-    /// loopback-only engine has nothing to rendezvous for — and then the
+    /// server off its stated address. `None` on a box that minted none — a
+    /// loopback-only server has nothing to rendezvous for — and then the
     /// envelope omits both keys.
     pub rendezvous: Option<Handoff>,
 }

@@ -33,7 +33,7 @@ use crate::fan::Fire;
 #[derive(Debug, Clone)]
 pub(super) struct Layout {
     /// The composed world, because balls' two roots below are a function of the
-    /// **project** and not of the engine (§16.2's one-store-per-project
+    /// **project** and not of the server (§16.2's one-store-per-project
     /// invariant, bl-262a): an operator's own checkout folds them off their own
     /// state home, a world-owned directory off the world's.
     world: crate::xdg::Env,

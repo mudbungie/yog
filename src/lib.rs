@@ -1,8 +1,8 @@
-//! **The yog server** — the standalone engine of the four-component split
+//! **The yog server** — the server of the four-component split
 //! (REMOTE §12): holder of the world, the balls and the conversations, with no
 //! UI and no local execution.
 //!
-//! One world, one engine. The binary boots [`engine::Engine`], which derives
+//! One world, one server. The binary boots [`engine::Engine`], which derives
 //! every workspace from disk, answers the §8.5 control [`boundary`] over the
 //! REMOTE §9.5 [`wire`], and drives `litany`/`bl`/`bz` as children of the
 //! nested [`world`]. Every seat — the `lernie` window, an android client, a
@@ -106,7 +106,7 @@ pub mod tool_host;
 pub mod transcript;
 pub mod ui_state;
 pub mod watch;
-/// The client/server wire (REMOTE §9.5, bl-b6fa) — the engine's mTLS listener,
+/// The client/server wire (REMOTE §9.5, bl-b6fa) — the server's mTLS listener,
 /// a seat's transport, and the framing between them.
 pub mod wire;
 pub mod workdiff;

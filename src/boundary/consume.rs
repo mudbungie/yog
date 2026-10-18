@@ -57,7 +57,7 @@ pub fn consume(deps: &Deps, ui: &mut UiState, ts: &str, now_unix: i64) -> usize 
                 Origin::World,
                 // yog's own failure to answer, not the depositor's act
                 // (bl-e59e): the gesture had an author and this row does not
-                // report one, because this row is about the engine.
+                // report one, because this row is about the server.
                 crate::registry::Client::local(),
             );
         }
@@ -66,14 +66,14 @@ pub fn consume(deps: &Deps, ui: &mut UiState, ts: &str, now_unix: i64) -> usize 
     consumed
 }
 
-/// Answer the debris a dead engine left (§8.5, bl-d1f1): a claimed gesture
+/// Answer the debris a dead server left (§8.5, bl-d1f1): a claimed gesture
 /// nobody holds the lock on and whose reply never parsed is a crash between
 /// claim and reply. "Claimed, never ran" and "ran, reply lost" are on-disk
 /// identical, so the only honest terminal answer is **in doubt** — the sweep
 /// writes the reply slot a refusal saying so rather than re-running (a
 /// gesture is not idempotent, REMOTE §9.8), and the depositor's poll
 /// terminates with the sentence instead of waiting forever. Runs once at
-/// engine boot ([`super::consumer::Consumer::spawn`]), the same startup
+/// server boot ([`super::consumer::Consumer::spawn`]), the same startup
 /// convergence the dotfile-temp debris already gets (§7.3).
 pub fn sweep(state_root: &Path, ts: &str) -> usize {
     let mut answered = 0;
@@ -82,7 +82,7 @@ pub fn sweep(state_root: &Path, ts: &str) -> usize {
             continue;
         }
         let refusal = reply::refusal(&format!(
-            "gesture {id:?} was claimed and its engine died before replying; \
+            "gesture {id:?} was claimed and its server died before replying; \
              the effect is in doubt — read the world (the ops trail, the \
              transcript, the roster) before acting again: a re-send is a \
              second act, not a retry"

@@ -4,7 +4,7 @@
 //! **This is where a path becomes a name and back again, and it is one place.**
 //! The frame holds paths — a focused workspace, a selected project — and spells
 //! [`ws_name`](Snapshot::ws_name) / [`project_name`](Snapshot::project_name) at
-//! the seam where a seat's selection becomes a gesture. The engine holds the
+//! the seam where a seat's selection becomes a gesture. The server holds the
 //! gesture and spells [`ws_path`](Snapshot::ws_path) /
 //! [`project_path`](Snapshot::project_path) at the dispatch chokepoint. Both
 //! read the *same enumerated sets off the same snapshot*, so the two directions
@@ -84,7 +84,7 @@ impl Snapshot {
 /// names over the cached set refused the very name the reply it had just sent
 /// made addressable: the documented `/prepare` → `/prompt` flow could not
 /// compose two processes deep, and the window's own posted receipt earned
-/// `unknown workspace` for the wall its previous act had founded. **Birth is a
+/// `unknown workspace` for the workspace its previous act had founded. **Birth is a
 /// barrier because existence is a query** — and no claim is held anywhere to
 /// make it one, which keeps the rule ("the derivation, never the §7.2 fold")
 /// intact: this is disk answering, not optimism.
@@ -102,7 +102,7 @@ impl Snapshot {
 /// authority is cheap enough to ask per gesture. The *derived*
 /// per-workspace facts — trees, bills, the §3.5 join — stay as published,
 /// because those are the walks that are not cheap, and every read of them is
-/// aimed by the path this resolution produced. A newborn wall therefore answers
+/// aimed by the path this resolution produced. A newborn workspace therefore answers
 /// with the zeros it honestly has ([`workspace_stats`](crate::boundary::answer::workspace_stats)
 /// over a tree no derivation holds yet), exactly as the raise claim's own fold
 /// does one frontend up.

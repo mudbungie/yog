@@ -36,8 +36,8 @@ pub struct QueueRow {
     /// bl-f5f6, regression bl-22ab). It is the token
     /// [`Action::MarkSeen`](crate::boundary::Action) and every other
     /// conversation gesture takes, so a row's address copies straight into the
-    /// next gesture; an engine-local path could not be resolved by the seat
-    /// that read it and disclosed the engine's home root besides.
+    /// next gesture; a server-local path could not be resolved by the seat
+    /// that read it and disclosed the server's home root besides.
     pub workspace: String,
     pub agent: String,
     /// The §3.3 display ladder's answer for this agent — the one naming rule

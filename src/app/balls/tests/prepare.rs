@@ -5,7 +5,7 @@
 //! §3.4 focus adoption rode `prepare_start`'s synchronous `Ok`; the act crossed
 //! the wire at bl-1747 and the adoption hung off the receipt, and with the
 //! window gone the whole notion of a focus is the seat's (REMOTE §7). What this
-//! file pins is the half that was always the engine's: the raise founds a wall
+//! file pins is the half that was always the server's: the raise founds a workspace
 //! under the operator's own §3.1 name, and the reply names it — so a seat has
 //! something to adopt, and a *failed* prepare answers no `Prepared` and there
 //! is nothing to adopt.
@@ -41,7 +41,7 @@ fn fake_litany(dir: &Path, body: &str) -> Cli {
 }
 
 /// The prepare as a start rung fires it (bl-1747): `Action::Prepare` carrying
-/// §3.4's two axes, through the engine's own chokepoint, answering the
+/// §3.4's two axes, through the server's own chokepoint, answering the
 /// composer's [`Prepared`](crate::start::Prepared) or the refusal.
 fn staged(
     m: &mut crate::AppModel,
@@ -63,7 +63,7 @@ fn staged(
 /// The §3.4 inputs a start rung hands the prepare, built from the model's own
 /// roots. It was three `AppModel` constructors (`new_workspace_inputs`,
 /// `start_bare_inputs`, `new_ball_inputs`) while a composer called them; those
-/// were the seat's rungs and went with it (bl-7942), and what the ENGINE has
+/// were the seat's rungs and went with it (bl-7942), and what the SERVER has
 /// always taken is this struct.
 fn inputs(
     w: &super::World,
@@ -104,12 +104,15 @@ fn a_raise_founds_the_wall_the_reply_names() {
         prepared.workspace, "ops",
         "the operator's own name (§3.1) — the address and the stamp are one"
     );
-    // The wall the raise just made: a name resolves against the *published*
+    // The workspace the raise just made: a name resolves against the *published*
     // set, and this snapshot predates the `litany new` that founded it.
     let raised = crate::binding::workspace_path(&w.roots.yog_data, &prepared.workspace);
-    assert_ne!(raised, w.ws_cobalt, "the raise always raises a fresh wall");
+    assert_ne!(
+        raised, w.ws_cobalt,
+        "the raise always raises a fresh workspace"
+    );
     assert!(raised.join("repo.git").is_dir(), "`litany new` ran");
-    // The reply names the wall by its §3.1 NAME, which is what a seat adopts
+    // The reply names the workspace by its §3.1 NAME, which is what a seat adopts
     // and what the next gesture addresses (bl-7407): the raise's whole product.
     assert_eq!(crate::naming::leaf(&raised), prepared.workspace);
 }

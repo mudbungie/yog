@@ -45,7 +45,7 @@ fn an_unwired_box_fails_every_check_and_names_an_act_for_each() {
     let deps = deps(&tmp, Caller::default());
     let rows = examine(&deps, None);
 
-    assert_eq!(rows.len(), 4, "the engine's own four: {rows:?}");
+    assert_eq!(rows.len(), 4, "the server's own four: {rows:?}");
     for row in &rows {
         assert!(!row.ok, "{row:?}");
         let remedy = row.remedy.as_deref().unwrap_or_default();
@@ -176,7 +176,7 @@ fn a_named_workspace_adds_its_wall_and_its_roster() {
     let ws = tmp.path().join("names").join("alba");
     let rows = examine(&deps, Some(("alba", &ws)));
 
-    assert_eq!(rows.len(), 6, "four engine rows and two workspace ones");
+    assert_eq!(rows.len(), 6, "four server rows and two workspace ones");
     assert!(row(&rows, "clients").ok, "informational, and it passes");
     assert!(row(&rows, "clients").fact.contains("0 registered"));
     // The wall row's verdict depends on what brazen answers on this box: an

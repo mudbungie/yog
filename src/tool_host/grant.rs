@@ -10,7 +10,7 @@
 //! litany's own template and whose deletion-only confinement its
 //! `docs/PRINCIPLES.md` states as a guarantee, had `bash` refused correctly by
 //! that gate, then called `clients {"op":"load"}` and made thirty arbitrary
-//! shell calls on an enrolled machine, inside the engine's own git worktrees.
+//! shell calls on an enrolled machine, inside the server's own git worktrees.
 //!
 //! **The ruling: a grant is a grant.** `clients` is part of it, not injected
 //! beside it — so a role that is not granted `clients` is declared nothing at
@@ -81,7 +81,7 @@ pub fn of(workspace: &Path, agent: &str) -> Vec<String> {
 /// exactly one commit per branch carries it, so `-n 1` is the whole answer.
 /// litany's own reader is `prompt::role::derive`, which is private to a crate
 /// that exposes only `cmd` — so the pattern crosses as text, exactly as the
-/// engine-act names do.
+/// server-act names do.
 fn role(workspace: &Path, agent: &str, branch: &str) -> String {
     let repo = workspace.join(REPO_DIR);
     let pattern = format!("^dispatch: .+ \\[{agent}\\]$");

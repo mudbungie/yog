@@ -82,7 +82,7 @@ impl Read {
     /// **`Option`, and that is the honest signature rather than a special case
     /// at the table.** Four members name a workspace outright; [`File`](Self::File)
     /// names a *destination* whose workspace is nested and itself optional
-    /// (a §9 file may be the engine's own), which
+    /// (a §9 file may be the server's own), which
     /// [`ConfigFile::workspace_slot`] already answers that way. Widening the
     /// carrier to match it keeps one rule where there would otherwise be a
     /// table arm that knows about one member.

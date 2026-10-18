@@ -26,7 +26,7 @@
 //! operands — a command line, then a `url` — and answers
 //! [`Opaque`](Effect::Opaque) where there are none. The arm this replaced read
 //! `other => OpenWorld`, and open-world passes: a foot's `box2_shell` running
-//! `rm -rf` was therefore passed unread while the engine's own `bash` refused
+//! `rm -rf` was therefore passed unread while the server's own `bash` refused
 //! the same line. Falling off a match into the most permissive class is the one
 //! answer nobody chose, and it is now unrepresentable rather than merely fixed.
 
@@ -190,7 +190,7 @@ pub fn checkpoint(name: &str) -> bool {
     )
 }
 
-/// **Which leg an invocation runs on** (bl-1772). The engine's own tools run on
+/// **Which leg an invocation runs on** (bl-1772). The server's own tools run on
 /// the machine the operator is sitting at; every other name is a tool a
 /// registered machine advertises, executed on that machine (REMOTE §5). The
 /// classifier already folds the two apart, and the *judgment* needs the same
@@ -199,7 +199,7 @@ pub fn checkpoint(name: &str) -> bool {
 /// [`Ruling::for_the_operator`](super::judge::Ruling::for_the_operator)).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Leg {
-    /// The engine's own machine: an intrinsic name, adjudicated in band.
+    /// The server's own machine: an intrinsic name, adjudicated in band.
     Engine,
     /// A machine a foot administers: everything else.
     Routed,

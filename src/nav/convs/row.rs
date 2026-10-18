@@ -113,7 +113,7 @@ pub(super) fn row(
         age_secs: (now_unix - last_active).max(0),
         // …and spent a third time, unsubtracted (bl-b7d9): a roster that can
         // only say a distance cannot stamp a row, and a client subtracting its
-        // own clock would say a different time than the engine's.
+        // own clock would say a different time than the server's.
         last_active_unix: last_active,
         flight: flight(&members),
         attention: attention_count,

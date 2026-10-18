@@ -98,7 +98,7 @@ fn control(control: Control) -> Value {
 /// field, a mistyped value and an unknown `kind` each refuse naming the
 /// offender. A `number` whose bounds are absent refuses too rather than
 /// defaulting: a control that invented its own range would judge input by a
-/// rule the engine never stated, which is the drift this answer exists to end.
+/// rule the server never stated, which is the drift this answer exists to end.
 fn decode(v: &Value) -> Result<Row, String> {
     let o = v.as_object().ok_or("setting: not an object")?;
     Ok(Row {

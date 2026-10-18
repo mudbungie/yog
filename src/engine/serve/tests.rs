@@ -20,7 +20,7 @@ use tempfile::tempdir;
 /// `yog serve`, stopped. Catch the signal, run the handler as the kernel would
 /// (see `sys::on_term` on why this is a call and not a delivered signal), then
 /// boot every thread a running yog has and watch the face see the flag, return
-/// from its loop, and drop the engine — stopping and joining all of them.
+/// from its loop, and drop the server — stopping and joining all of them.
 ///
 /// Before bl-269a this function's loop had no exit at all, which is why the
 /// face lived in the coverage-excluded entry file and no test could reach it.
@@ -41,7 +41,7 @@ fn serve_returns_once_a_stop_is_asked_for() {
     assert_eq!(
         Engine::serve(&ambient, &[]),
         0,
-        "an engine that booted and stopped exits clean (bl-1d9b)"
+        "a server that booted and stopped exits clean (bl-1d9b)"
     );
     assert!(
         started.elapsed() < Duration::from_secs(30),
@@ -68,14 +68,14 @@ fn serve_returns_once_a_stop_is_asked_for() {
 fn a_face_that_cannot_take_the_world_exits_no_engine() {
     let root = tempdir().unwrap();
     let ambient = world_under(root.path());
-    // Another engine holds this world: the lock, taken exactly as a boot takes
+    // Another server holds this world: the lock, taken exactly as a boot takes
     // it, and held across the call.
     let world = crate::world::compose(&ambient);
-    let _held = crate::engine::sole::take(&world.yog_state_root()).expect("the first engine");
+    let _held = crate::engine::sole::take(&world.yog_state_root()).expect("the first server");
     assert_eq!(
         Engine::serve(&ambient, &[]),
         super::NO_ENGINE,
-        "a second yog on one world is not an engine"
+        "a second yog on one world is not a server"
     );
     // `serve` catches the signal before it boots, so hand the disposition back
     // even though this face never parked.

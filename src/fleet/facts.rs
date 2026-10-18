@@ -42,7 +42,7 @@ pub struct Facts {
     /// The workspace's **§3.1 name**, never its path (REMOTE §8.1, bl-ef16).
     /// This row crosses on `Reply::Board` under the key every gesture takes, so
     /// a path here was the bl-22ab shape one reply over: a value a seat cannot
-    /// feed back to the act its key names, and the engine's layout disclosed
+    /// feed back to the act its key names, and the server's layout disclosed
     /// besides. The pilot resolves it at the one seam that owns the round trip
     /// ([`Snapshot::armed_path`](crate::app::Snapshot::armed_path)).
     pub workspace: String,

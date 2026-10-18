@@ -1,7 +1,7 @@
 //! **The worktree lane** (REMOTE §5.4 as amended by bl-77be): what a granted,
 //! unqualified name does when the model calls it.
 //!
-//! A name that is not the `clients` tool, not an engine act and not a loaded
+//! A name that is not the `clients` tool, not a server act and not a loaded
 //! host-qualified instance is a **workspace-subject attempt** — `bash`,
 //! `read_file`, `apply_patch`, or any pool tool an operator granted. Its
 //! subject is the conversation's working tree, the worktree lives on the
@@ -21,22 +21,22 @@
 //! landed. The consenting box is normally §5.4's co-located thrall — the
 //! normal install, because it actually holds the server's worktrees.
 //!
-//! **When no machine consents, the engine performs its own built-in**
+//! **When no machine consents, the server performs litany's own built-in**
 //! ([`performs`], REMOTE §5.4 as amended by bl-5710, operator ruling
 //! 2026-08-31: *ship some basic tools — a default install must be able to
 //! write a file*). The lane is a ladder, ordered by how explicit the
 //! operator's intent is: a consenting machine is an enrollment plus a
 //! `subject_cwd` key, so it wins; with no consenting machine the executing
 //! box is the one subject-locality already named — the server's own, which
-//! holds the worktree — and the act is performed at the engine's own front
+//! holds the worktree — and the act is performed at litany's own front
 //! door ([`super::engine_act::perform`]), the same `<driver_target> tool
 //! <name>` re-entry the compactor pair takes, at the conversation's resolved
 //! cwd with the caller identity on the child's environment. yog restates none
-//! of what the three names *do*: the definitions are the engine's built-ins
+//! of what the three names *do*: the definitions are litany's built-ins
 //! and the front door is the one way in.
 //!
 //! **Every remaining miss is an in-band refusal that names the way out — and
-//! only a way out that is one** (bl-68e1). A name the engine does not
+//! only a way out that is one** (bl-68e1). A name litany does not
 //! implement and no machine consents to: the sentence names the operator's
 //! config edit, the only act that puts the work where its subject is, and
 //! says outright that loading a machine's tool is not that act, because a
@@ -44,7 +44,7 @@
 //! inherited one (`refusal::NOT_A_REMEDY`, which carries that drive's
 //! evidence). More than one consenting machine: a config ambiguity, refused
 //! naming every claimant — one adjudication must stand for exactly one
-//! execution on one machine (REMOTE §5, no broadcast). The engine
+//! execution on one machine (REMOTE §5, no broadcast). The server
 //! unreachable: the transport sentence every other ask already renders.
 //!
 //! **The sentences live one level down** (`subject/refusal.rs`): [`verdict`]
@@ -54,7 +54,7 @@
 //! **Front-door-only holds; ship-inert now stops short of the worktree.** The
 //! lane is still the same adjudicate → mailbox → execute → capture pipeline
 //! for a routed call, and the server still executes nothing **in its own
-//! process** — a [`performs`] name crosses the engine's front door as a child, which
+//! process** — a [`performs`] name crosses litany's front door as a child, which
 //! is what §12's invariant asks. What changed is the posture's reach: a
 //! server that refuses every act on its own worktrees is not inert, it is
 //! dead, and the operator ruled that a default install writes a file.
@@ -68,21 +68,21 @@ use super::{Site, capture, loaded, remote};
 use crate::registry::roster::ClientRow;
 
 /// **The lane's last rung, derived and not restated** (bl-5710, deduped
-/// bl-e654): whether `name` is a worktree name the engine itself implements,
+/// bl-e654): whether `name` is a worktree name litany itself implements,
 /// and so is performed at its own front door when no machine consents.
 ///
 /// It is one subtraction over two closed sets yog does not own halves of:
 ///
 /// > `litany::cmd::BUILTIN_TOOLS` — the names `litany tool <name>` answers to,
-/// > exported by the engine since litany 0.0.5 for exactly this reader — MINUS
+/// > exported by litany since 0.0.5 for exactly this reader — MINUS
 /// > [`super::engine_act::NAMES`], the acts whose subject is the *conversation*
 /// > rather than its working tree.
 ///
 /// The subtraction is total, and that is the claim worth attacking: a name the
-/// engine implements is performed by the engine either way, and the only
-/// question yog answers is **which lane reaches it** — an engine act never
+/// litany implements is performed by litany either way, and the only
+/// question yog answers is **which lane reaches it** — a server act never
 /// consults the roster, a worktree name always does. So there is no third
-/// class to fall through to, and a built-in the engine adds lands on the
+/// class to fall through to, and a built-in litany adds lands on the
 /// worktree lane by default, where a consenting machine still outranks it.
 /// Classifying one as conversation-subject is the deliberate act, and its
 /// home is `engine_act`'s own enumerated set. `engine_act` is the wider of the
@@ -90,7 +90,7 @@ use crate::registry::roster::ClientRow;
 /// which is no built-in at all; subtracting those from a set that never held
 /// them costs nothing.
 ///
-/// Until 0.0.5 the engine kept these names crate-private and this was three
+/// Until 0.0.5 litany kept these names crate-private and this was three
 /// string literals — a second spelling of somebody else's closed set, which is
 /// the drift the export exists to end. What the literals still pin is the
 /// **audit**, in `subject/tests/engine.rs`: the partition's three members by
@@ -102,11 +102,11 @@ pub fn performs(name: &str) -> bool {
 
 /// Where one workspace-subject attempt is executed, once the roster has been
 /// read. Three outcomes because the lane has three: a machine the operator
-/// enrolled and consented, the engine's own front door, or a sentence.
+/// enrolled and consented, litany's own front door, or a sentence.
 enum Lane {
     /// Route to this machine, with the conversation's cwd on the invocation.
     Machine(Box<loaded::Entry>),
-    /// Perform it here, at the engine's front door ([`performs`]).
+    /// Perform it here, at litany's front door ([`performs`]).
     Engine,
     /// Nothing can run it; this is what the model reads instead.
     Refused(String),
@@ -114,7 +114,7 @@ enum Lane {
 
 /// Answer one workspace-subject attempt: route it to the workspace's one
 /// consenting advertiser with the conversation's cwd on the invocation,
-/// perform it at the engine's own front door when the engine implements it
+/// perform it at litany's own front door when litany implements it
 /// and no machine consents, or render the refusal that names the way out.
 pub fn answer(
     driver_target: &Path,
@@ -135,8 +135,8 @@ pub fn answer(
 }
 
 /// The lane's selection, pure over the roster so every rung is reachable
-/// without an engine: exactly one consenting advertiser is that machine, no
-/// consenting advertiser is the engine's front door for a name it implements
+/// without a server: exactly one consenting advertiser is that machine, no
+/// consenting advertiser is litany's front door for a name it implements
 /// and a sentence for one it does not, and more than one is an ambiguity.
 fn verdict(roster: &[ClientRow], name: &str) -> Lane {
     let mut consenting: Vec<loaded::Entry> = Vec::new();

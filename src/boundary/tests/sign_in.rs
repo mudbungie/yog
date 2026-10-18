@@ -180,7 +180,7 @@ fn a_role_naming_an_unsigned_keyed_row_is_still_refused() {
 /// **The sighting** (bl-58e7): a wall carrying a credential on a row the roles
 /// do NOT name readied the wall under the old fold, the fire went through, and
 /// the conversation was born dead on the row the roles do name — one model call
-/// spent to learn a fact the engine held before it fired. The gate asks about
+/// spent to learn a fact the server held before it fired. The gate asks about
 /// the role's own row now, and names the role.
 #[test]
 fn a_credential_on_a_row_no_role_names_readies_nothing() {

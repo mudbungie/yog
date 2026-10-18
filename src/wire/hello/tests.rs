@@ -97,7 +97,7 @@ fn a_peer_of_this_version_is_admitted_and_told_ours() {
 /// (REMOTE §3.2): a peer of this major that states an edition NEWER than this
 /// build's is admitted, and its edition is what comes back — an addition ships
 /// without a bump, so this is the ordinary posture of a seat one release ahead
-/// of the engine, not a skew.
+/// of the server, not a skew.
 #[test]
 fn a_peer_of_a_later_edition_is_admitted_and_its_edition_read() {
     let later = EDITION + 1;
@@ -108,7 +108,7 @@ fn a_peer_of_a_later_edition_is_admitted_and_its_edition_read() {
 
 /// **A peer that states no edition speaks the floor.** Every build older than
 /// bl-1be7 is this peer, and reading it as the floor is not a guess: every
-/// engine of this major writes every path stamped at or below it. A stamp that
+/// server of this major writes every path stamped at or below it. A stamp that
 /// is not one — a string, a number no `u32` can hold — is the same silence,
 /// because there is no third thing a reader could do with it.
 #[test]
@@ -192,7 +192,7 @@ fn the_seat_confirms_or_refuses_on_the_same_sentence() {
     assert!(said.contains(&format!("version {PROTOCOL}")), "{said}");
     assert!(said.contains("the peer speaks 99"), "{said}");
 
-    let said = confirm(&mut Gone).expect_err("a silent engine refuses");
+    let said = confirm(&mut Gone).expect_err("a silent server refuses");
     assert!(said.contains("the peer speaks no version"), "{said}");
 }
 

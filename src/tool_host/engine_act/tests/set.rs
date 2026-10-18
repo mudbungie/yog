@@ -1,6 +1,6 @@
 //! **The closed set, and the two facts that keep a machine out of it**
 //! (bl-fe43, bl-81cc): the enumeration itself, an enrolled thrall that
-//! advertises an engine act and still never hears about the call, and the
+//! advertises a server act and still never hears about the call, and the
 //! invocation id every spawn carries.
 
 use super::*;
@@ -36,14 +36,14 @@ fn the_ten_names_are_engine_acts_and_nothing_else_is() {
     );
     assert!(NAMES.iter().copied().all(is));
     for machine_work in ["bash", "read_file", "apply_patch", "Bash", "Python"] {
-        assert!(!is(machine_work), "{machine_work} is not an engine act");
+        assert!(!is(machine_work), "{machine_work} is not a server act");
     }
     assert!(!is("write_summary_2"));
 }
 
 /// **Compaction never reaches a thrall's mailbox**, even with one enrolled and
 /// its tools loaded: the pair's subject is the conversation, so no invocation
-/// is queued at the engine at all. The loaded set is present precisely so the
+/// is queued at the server at all. The loaded set is present precisely so the
 /// beat can say the router had a machine to route to and did not use it.
 #[test]
 fn an_engine_act_never_reaches_an_enrolled_thralls_mailbox() {
@@ -75,14 +75,14 @@ fn an_engine_act_never_reaches_an_enrolled_thralls_mailbox() {
     assert_eq!(capture.stdout, b"marked");
     assert!(
         deposit::pending(root.path()).is_empty(),
-        "an engine act queues nothing at the engine"
+        "a server act queues nothing at the server"
     );
 }
 
 /// **A foot never sees `python`, `remember` or `search_history`** (bl-fe43,
 /// bl-81cc, bl-ebef), and a
 /// thrall that advertises them by those very names does not change it: each
-/// one is performed at the engine's own front door, and the engine is asked
+/// one is performed at litany's own front door, and the server is asked
 /// **nothing** — not the roster read the worktree lane opens with, and not the
 /// invoke gesture a routing leg would queue. That is the whole difference the
 /// three rows buy. Routed, `python` would compose its inner invocations against
@@ -133,11 +133,11 @@ fn a_foot_never_sees_python_remember_or_search_history() {
         assert_eq!(
             String::from_utf8_lossy(&capture.stdout),
             format!("tool|{name}"),
-            "{name} is performed at the engine's own front door"
+            "{name} is performed at litany's own front door"
         );
         assert!(
             deposit::pending(root.path()).is_empty(),
-            "{name} queued something at the engine"
+            "{name} queued something at the server"
         );
     }
 }

@@ -4,7 +4,7 @@
 //! `Action::Price`). It was read-only — *no setter, no editor, no verb* — on
 //! the argument that a hand edit is live within a tick through the fs
 //! watcher's whole-file `adopt` (§4.1, I5); that was true while the window ran
-//! in the engine's process on the engine's box, and since REMOTE §12 the seat
+//! in the server's process on the server's box, and since REMOTE §12 the seat
 //! is another machine and `ui.json` is on the server, so the empty table was
 //! the default nobody could leave. The write is the same write-through every
 //! `ui.json` mutation takes (`set_pinned`'s shape); the file stays the one

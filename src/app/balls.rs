@@ -107,7 +107,7 @@ impl AppModel {
     /// over the wire from bl-1747, leaving only the §8.5 line's *query* arm
     /// here; bl-7942 then deleted the window and that arm with it. What is left
     /// is the acceptance world's stand-in for the transport — a story asking
-    /// the engine's own environment for a `Deps` because no seat lives in this
+    /// the server's own environment for a `Deps` because no seat lives in this
     /// process to post through.
     ///
     /// **So it asks disk for the addressable sets, exactly as the intake does**
@@ -115,10 +115,10 @@ impl AppModel {
     /// [`ConsumerCtx::deps`](crate::boundary::consumer::ConsumerCtx)). It was
     /// the one caller deliberately left on the cached derivation by bl-6c9e —
     /// lawfully, while its caller was inside the render pass and a frame does
-    /// no IO (§7.2) — so a query naming a wall born this instant refused for
+    /// no IO (§7.2) — so a query naming a workspace born this instant refused for
     /// one pass. There is no render pass any more: every caller of this door
     /// stands where the intake stands, and a stand-in that resolves names over
-    /// a *different* set than the engine is a fixture asserting against a
+    /// a *different* set than the server is a fixture asserting against a
     /// world production never builds. The residual dissolved with the frame;
     /// what remains is the alignment.
     ///

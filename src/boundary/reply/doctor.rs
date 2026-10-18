@@ -3,9 +3,9 @@
 //! cut off the roster on `prices`' seam once the answer grew a key of its own.
 //!
 //! `rendezvous` is **absent, never null**, for its two readings: the answering
-//! process has no listener and so no loop to speak of, or the engine predates
+//! process has no listener and so no loop to speak of, or the server predates
 //! edition 21. Present, every one of its six edition-21 keys is required;
-//! `accepted` (edition 22, bl-5276) is read as `0` where an older engine
+//! `accepted` (edition 22, bl-5276) is read as `0` where an older server
 //! leaves it out, and typed where it is said.
 
 use serde_json::{Map, Value, json};

@@ -67,7 +67,7 @@ impl ConfigFile {
     /// gesture's workspace, and this family's is nested one level down, inside
     /// `target`. Until this row existed a config act aimed at a workspace held
     /// on another box under a local rename resolved to no entry, fell through
-    /// to the local engine, and edited the local wall's file.
+    /// to the local server, and edited the local wall's file.
     pub(crate) fn workspace_slot(&mut self) -> Option<&mut String> {
         match self {
             ConfigFile::Brazen { workspace } | ConfigFile::Branch { workspace, .. } => {

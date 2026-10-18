@@ -8,18 +8,18 @@
 //! dropped a tool it still declares.
 //!
 //! Every act here is driven through [`answer`] on an **impatient** site, whose
-//! engine ask gives up at once. That is the assertion, not a shortcut: an
-//! unload that asked the engine would fail on every one of these.
+//! server ask gives up at once. That is the assertion, not a shortcut: an
+//! unload that asked the server would fail on every one of these.
 
 use super::*;
 
-/// The site every test here spends: impatient, so any engine ask would refuse.
+/// The site every test here spends: impatient, so any server ask would refuse.
 fn offline(root: &Path) -> Site {
     site(root, impatient())
 }
 
 /// Put `take` into the agent's set through the real load act, against a
-/// stand-in engine advertising `advertised`.
+/// stand-in server advertising `advertised`.
 fn load_from(root: &Path, client: &str, advertised: Vec<Tool>, take: &[&str]) {
     against(
         root,
@@ -176,8 +176,8 @@ fn a_load_after_an_unload_declares_it_again() {
     assert_eq!(back[0].tool, tool("Bash"), "the definition is frozen whole");
 }
 
-/// An unload never asks the engine: its subject is a file on this box, so a
-/// finished host can be dropped with the engine down and no gesture is
+/// An unload never asks the server: its subject is a file on this box, so a
+/// finished host can be dropped with the server down and no gesture is
 /// deposited.
 #[test]
 fn an_unload_never_reaches_the_engine() {

@@ -26,7 +26,7 @@ fn wire(dir: &std::path::Path) -> Row {
             "wire",
             format!("{} holds no wire material", dir.display()),
             format!(
-                "`{REMEDY}` mints it, and the engine's own boot mints it for a box that has none"
+                "`{REMEDY}` mints it, and the server's own boot mints it for a box that has none"
             ),
         ),
         Err(half) => Row::bad(
@@ -40,7 +40,7 @@ fn wire(dir: &std::path::Path) -> Row {
     }
 }
 
-/// The endpoint the engine binds and a seat dials. A `:0` is the request a
+/// The endpoint the server binds and a seat dials. A `:0` is the request a
 /// self-provisioning boot writes, and it is the one address nothing downstream
 /// can use: no seat can dial it and no enrolment can put it in a QR.
 fn address(dir: &std::path::Path) -> Row {
@@ -69,7 +69,7 @@ fn address(dir: &std::path::Path) -> Row {
         },
         format!(
             "`WIRE_HOST=<host> WIRE_PORT=<port> {REMEDY}` states it over the CA already here, \
-             distrusting nothing — then restart the engine"
+             distrusting nothing — then restart the server"
         ),
     )
 }
@@ -82,7 +82,7 @@ fn listener(deps: &Deps) -> Row {
         Some(bound) => Row::ok("listener", format!("listening on {bound}")),
         None => Row::bad(
             "listener",
-            "this answer did not come from a listening engine".to_owned(),
+            "this answer did not come from a listening server".to_owned(),
             "start `yog` — its boot says what it bound on stderr, and says there too when \
              another process won the port"
                 .to_owned(),

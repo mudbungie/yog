@@ -38,7 +38,7 @@ fn remedy(row: &ProviderRow) -> String {
     if row.login_blocked().is_none() {
         format!("/login {}", row.name)
     } else {
-        "write its key into this wall with /config brazen".to_owned()
+        "write its key into this workspace with /config brazen".to_owned()
     }
 }
 
@@ -48,7 +48,7 @@ fn uncredentialed(row: &ProviderRow, role: &str) -> String {
     let (provider, act) = (&row.name, remedy(row));
     format!(
         "sign in first: `{role}` resolves provider `{provider}`, which holds no credential in \
-         this workspace's wall, so a conversation begun here would reach no model — {act}"
+         this workspace, so a conversation begun here would reach no model — {act}"
     )
 }
 
@@ -57,8 +57,8 @@ fn uncredentialed(row: &ProviderRow, role: &str) -> String {
 /// is to point the role at one that is here.
 fn undeclared(provider: &str, rows: &[ProviderRow], role: &str) -> String {
     format!(
-        "`{role}` resolves provider `{provider}`, and this workspace's wall declares no \
-         such row, so a conversation begun here would reach no model — a wall holds brazen's \
+        "`{role}` resolves provider `{provider}`, and this workspace declares no such \
+         row, so a conversation begun here would reach no model — a workspace holds brazen's \
          built-in rows plus its own config.toml and nothing else, so add the row with \
          /config brazen, or point the role at one that is here with \
          /model {role} <provider> <model-id> (rows here: {})",
@@ -141,7 +141,7 @@ fn wall(rows: &[ProviderRow]) -> String {
         .map(|(act, names)| format!("{}: {}", phrase(act), names.join(", ")))
         .collect();
     format!(
-        "sign in first: no provider in this workspace's wall holds a credential, so a \
+        "sign in first: no provider in this workspace holds a credential, so a \
          conversation begun here would reach no model — {}",
         offers.join("; ")
     )

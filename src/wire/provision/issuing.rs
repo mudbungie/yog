@@ -132,7 +132,7 @@ fn founded(dir: &Path) -> Result<(), String> {
     ))
 }
 
-/// **State the address this engine binds** (REMOTE §8 as amended, bl-98ef) —
+/// **State the address this server binds** (REMOTE §8 as amended, bl-98ef) —
 /// the third act over a trust root that already exists, and the smallest: one
 /// line of text, no signature, nothing distrusted.
 ///

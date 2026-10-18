@@ -219,7 +219,7 @@ fn listing(kind: &str, o: &Map<String, Value>) -> Option<Result<Reply, String>> 
 }
 
 /// The altitude-0 chrome, read back (bl-b4b5): the rows, and the two §7.2
-/// notes when the engine had one to say.
+/// notes when the server had one to say.
 fn workspaces(o: &Map<String, Value>) -> Result<Reply, String> {
     Ok(Reply::Workspaces(crate::boundary::reply::Workspaces {
         rows: rows_of(o, ws_row)?,

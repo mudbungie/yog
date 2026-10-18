@@ -1,4 +1,4 @@
-//! **The §9.4 workflow mark at the engine's chokepoint** (bl-b680), driven
+//! **The §9.4 workflow mark at the server's chokepoint** (bl-b680), driven
 //! against a recorder `litany`: what reaches the substrate is the
 //! workspace-bound `litany workflow <ws> <agent> --config <name>` or `--clear`
 //! — asserted off the §4.2 trail, which records the argv actually spawned —

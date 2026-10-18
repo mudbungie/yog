@@ -90,7 +90,7 @@ fn every_derivation_is_deterministic_and_distinct() {
     assert_ne!(
         pairing.keypair().expect("k").public(),
         pairing.inbox_keypair().expect("k").public(),
-        "the inbox key is derived from the salt, never the engine's own"
+        "the inbox key is derived from the salt, never the server's own"
     );
     let other = Pairing {
         seed: [1u8; 32],

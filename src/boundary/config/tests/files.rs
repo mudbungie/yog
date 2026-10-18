@@ -41,7 +41,7 @@ fn a_brazen_apply_lands_only_what_bz_accepts() {
 /// directory, so `/config brazen` on a freshly-prepared workspace answered
 /// `No such file or directory (os error 2)`: the one act that can give a new
 /// sphere a provider row brazen does not ship could never land, and on a remote
-/// engine no gesture makes a directory. The write makes the leaf now, exactly
+/// server no gesture makes a directory. The write makes the leaf now, exactly
 /// as brazen's own credential store and model cache already do.
 #[test]
 fn a_brazen_apply_founds_the_wall_it_writes_into() {

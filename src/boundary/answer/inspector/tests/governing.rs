@@ -55,7 +55,7 @@ fn an_unnamed_commit_is_the_agents_own_tip() {
 /// carried). yog reads that record field-by-field and asks for neither yet, so
 /// per-step provenance is available to a reader that wants it and this layer
 /// is unchanged — what it answers is still the followed lineage's head, and
-/// asserting the old freeze here would pin a fact the engine stopped
+/// asserting the old freeze here would pin a fact the server stopped
 /// producing.
 #[test]
 fn a_named_commit_is_the_one_the_walk_starts_from() {
@@ -85,7 +85,7 @@ fn a_named_commit_is_the_one_the_walk_starts_from() {
 
 /// It **refuses** where its siblings answer absent: an agent the snapshot does
 /// not carry has no tip, and "this conversation has no policy" is never a
-/// reading. The engine's own sentence is what the seat paints.
+/// reading. The server's own sentence is what the seat paints.
 #[test]
 fn an_agent_the_snapshot_does_not_carry_refuses_rather_than_answering_absent() {
     let (fx, snap) = world();

@@ -8,7 +8,7 @@
 //! driver's side either: `invoke` and `capture` are boundary gestures every
 //! face gains.
 //!
-//! **Two gestures rather than one, and that is the whole shape.** The engine's
+//! **Two gestures rather than one, and that is the whole shape.** The server's
 //! intake is one thread for the world, so a gesture that waited for a tool to
 //! finish would stop every other deposit converging for as long as the tool
 //! ran. `invoke` therefore queues and answers immediately, and the *waiting* is
@@ -24,7 +24,7 @@
 //! how long it waited.
 //!
 //! **One stop check, and it is [`ask`]'s** (bl-3a88). Two waits nest here — the
-//! poll loop below and, inside each of its round trips, the wait on the engine —
+//! poll loop below and, inside each of its round trips, the wait on the server —
 //! so a stop flag read in both places is one fact with two answers, and *which*
 //! answer a caller gets is decided by where the flag happened to land. That is
 //! not a race a test can synchronize on: the interval between reading the reply
@@ -79,7 +79,7 @@ pub fn invoke(
 
 /// One `Reply::Routed` round trip: the handle, and the capture if there is one
 /// yet. A refusal envelope and an envelope of another kind are the same class
-/// of answer — the engine did not say what was asked — and both name what came
+/// of answer — the server did not say what was asked — and both name what came
 /// back, exactly as [`ask::roster`] does.
 ///
 /// **A wait that ended on the stop flag is named with `client` here**, because
@@ -106,16 +106,16 @@ fn routed(
             capture,
         })) => Ok((invocation, capture)),
         Ok(Ok(other)) => Err(format!(
-            "engine answered {other:?}, not a routed invocation"
+            "server answered {other:?}, not a routed invocation"
         )),
         Ok(Err(refusal)) => Err(refusal),
-        Err(e) => Err(format!("undecodable engine reply: {e}")),
+        Err(e) => Err(format!("undecodable server reply: {e}")),
     }
 }
 
-/// How long a driver waits on a *tool* — as against on the engine
+/// How long a driver waits on a *tool* — as against on the server
 /// ([`Budget::default`], which bounds one deposit round trip). Two bounds
-/// because they measure two different things: an engine that has not answered
+/// because they measure two different things: a server that has not answered
 /// in ten seconds is down, and a tool that has not answered in ten seconds is
 /// working.
 pub fn patience() -> Budget {

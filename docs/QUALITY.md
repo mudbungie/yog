@@ -77,7 +77,7 @@ What a dispatched model does, start to finish:
    beat, so what the run *established* is machine-readable rather than re-read
    out of the scroll.
 4. **Score.** Every beat gets pass / fail with its own reply and the world it
-   left behind as witness. Judge what the engine answered, not the intent.
+   left behind as witness. Judge what the server answered, not the intent.
 5. **File.** One ball per failure: title states the symptom, body cites the
    beat, the reply and the reproduction gesture. Search
    `bl list <needle> --all` first — a recurrence of a closed ball is filed as
@@ -97,7 +97,7 @@ What a dispatched model does, start to finish:
 
    **A run that produced no beats still gets a log** (bl-d0a0). A red run is
    exactly when a report is wanted, and the reddest run of all is one that died
-   before its first assertion — an engine that never came up, a harness refused
+   before its first assertion — a server that never came up, a harness refused
    at source time. The skeleton then carries the stage table (`drive.sh` writes one
    `stages.tsv` row per verb it drives, verb and exit code) and the sentence
    **NO VERDICTS PRODUCED** in place of a beat table, so the document says what

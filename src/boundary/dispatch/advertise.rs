@@ -52,7 +52,7 @@ pub(super) fn advertise(deps: &Deps, tools: &[Tool]) -> Result<Reply, String> {
 /// **An advertisement into nothing is told so** (REMOTE §5.1, bl-6b14). A set
 /// is presented into the workspaces its client is registered in, so a client
 /// registered in NONE presents it to nobody — and that was answered `ok`, with
-/// the set stored, no line on the engine's stderr, no row on the ops trail and
+/// the set stored, no line on the server's stderr, no row on the ops trail and
 /// no row in any roster (a roster is per workspace, and this client is in
 /// none). The documented way to provision a second machine produced exactly
 /// that state: `wire-certs WIRE_LEAF=` mints a leaf and registers nothing, so
@@ -70,7 +70,7 @@ fn presented(deps: &Deps) -> Result<(), String> {
         return Ok(());
     }
     Err(format!(
-        "advertise: {:?} is registered in no workspace on this engine, so this set would be \
+        "advertise: {:?} is registered in no workspace on this server, so this set would be \
          presented to nobody — an advertisement reaches the workspaces its client is registered \
          in, and that set is empty. Enrol this name in the workspace it should serve: `/enroll \
          {} foot` from a seat there, which ADOPTS the leaf already minted for it rather than \
@@ -87,7 +87,7 @@ fn presented(deps: &Deps) -> Result<(), String> {
 /// so the host that is running never learns it was disarmed. The only symptom
 /// was invocations refused for a tool that plainly exists.
 ///
-/// The seam is drawn at the one moment the engine can tell the two apart: a
+/// The seam is drawn at the one moment the server can tell the two apart: a
 /// **parked follow-class read** is a machine that is serving right now, and a
 /// set that **differs** from the one in force is a second party disagreeing
 /// with it. A host re-presenting an unchanged set on reconnect writes nothing
@@ -101,7 +101,7 @@ fn superseding(deps: &Deps, tools: &[Tool]) -> Result<(), String> {
         return Ok(());
     }
     Err(format!(
-        "advertise: {:?} is holding this engine's follow-class read and this is not the \
+        "advertise: {:?} is holding this server's follow-class read and this is not the \
          set in force — a second connection may not replace a serving machine's tools, \
          because the machine that is serving would never learn it was disarmed. \
          Re-present the set in force, or stop the connection that is serving",

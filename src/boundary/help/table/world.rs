@@ -129,7 +129,7 @@ pub const WORLD: &[HelpRow] = &[
         summary: "is this box wired up: every check a first conversation needs, and the act \
                   that fixes each",
         detail: "One row per check, each carrying the fact it read and — when it fails — the \
-                 act that fixes it. The engine's own four always answer, because the box this \
+                 act that fixes it. The server's own four always answer, because the box this \
                  gesture is for may hold no workspace at all: the wire material, the endpoint \
                  `wire/address` names (a `127.0.0.1:0` is a request only the listener learns \
                  the answer to, and no seat can dial it), what this process actually BOUND — \

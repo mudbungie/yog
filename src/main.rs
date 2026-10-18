@@ -6,7 +6,7 @@ use yog::engine::Engine;
 use yog::world::hatch;
 use yog::xdg::Env;
 
-/// **The yog server** (REMOTE §12, bl-7942). Bare `yog` boots the engine and
+/// **The yog server** (REMOTE §12, bl-7942). Bare `yog` boots the server and
 /// parks until a §8.5 stop — what `yog serve` used to be, and the whole binary
 /// now that the window is the seat crate's. Everything above that arm is an
 /// edge-bound multi-call face: the `$EDITOR` shim, the §16.7 namespace
@@ -110,7 +110,7 @@ fn main() {
         }
         // `yog fixture <state>` (bl-8741): lay a named, deterministic world
         // state under a scratch root and print what a harness needs to dial an
-        // engine booted on it. A development door, beside the mint above and
+        // server booted on it. A development door, beside the mint above and
         // for its reason — every consumer is in another repository, and an
         // installed binary has no script to find.
         Some(yog::fixture::verb::SUBCMD) => {
@@ -125,10 +125,10 @@ fn main() {
     // It stands ABOVE the seat guard so a version read is never refused: it
     // asks the binary about itself and touches no world.
     let Args {} = Args::parse();
-    // §16.4 (bl-3ff4, retargeted bl-7942): booting the engine is the operator's
+    // §16.4 (bl-3ff4, retargeted bl-7942): booting the server is the operator's
     // own act. The world seeds a `yog` shim so an agent's bash can drive the
     // §8.5 boundary, and that shim passes argv through verbatim — so a bare
-    // `yog` from inside an agent would found a SECOND engine on this world,
+    // `yog` from inside an agent would found a SECOND server on this world,
     // which is the instance-coordination shape DESIGN §14 rejects. It stands
     // below every namespace arm, hatch and `tool-control`, so it judges only
     // argv that would really have booted.
@@ -165,7 +165,7 @@ fn fixture(ambient: &Env, tail: &[String]) -> ! {
 }
 
 /// `yog wire-certs` (REMOTE §8, §8.2; bl-ae05, bl-64a7): the operator's explicit
-/// mint — the recipe the engine's boot performs, reached by a verb — or, under
+/// mint — the recipe the server's boot performs, reached by a verb — or, under
 /// `WIRE_LEAF`, one extra client leaf, at `WIRE_FOOT`'s grade. The six
 /// environment readings happen here because the process edge is where every
 /// environment read in this crate happens (the xdg discipline); they fold into

@@ -1,12 +1,12 @@
 //! **What the loop has done, and what a seat may read of it** (REMOTE §13.4,
 //! bl-355c). [`Stats`] is the loop's own tally, shared by handle with the
-//! engine's [`Listening`](crate::wire::Listening) so `/doctor` reads this
+//! server's [`Listening`](crate::wire::Listening) so `/doctor` reads this
 //! instant's counters rather than a copy; [`Standing`] is the part of it that
 //! crosses the wire, on `reply/doctor` as its `rendezvous` object.
 //!
 //! The failure counters stay here and off the wire: a seat reads a failing
 //! commons as `last_poll_unix` moving while `published` and `calls` do not,
-//! and the engine's stderr says each failure as it happens.
+//! and the server's stderr says each failure as it happens.
 
 use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 
@@ -28,7 +28,7 @@ pub(crate) struct Stats {
     pub(crate) served: AtomicUsize,
     /// Of those, streams the punch port's acceptor took with no window
     /// toward their peer (bl-5276): a re-punch through a still-live mapping, a plain
-    /// connect through a live mapping, a SYN that beat the engine's poll.
+    /// connect through a live mapping, a SYN that beat the server's poll.
     pub(crate) accepted: AtomicUsize,
     /// When the inbox was last read, answered or not; `0` is never.
     pub(crate) last_poll_unix: AtomicU64,
@@ -37,7 +37,7 @@ pub(crate) struct Stats {
 /// The loop's standing as a seat reads it — `reply/doctor`'s `rendezvous`.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Standing {
-    /// A loop is running in the answering engine.
+    /// A loop is running in the answering server.
     pub active: bool,
     /// Presence publishes that stored somewhere.
     pub published: u64,
@@ -48,7 +48,7 @@ pub struct Standing {
     /// Streams served.
     pub served: u64,
     /// Of those, streams served with no call's window toward their peer —
-    /// absent from an engine before edition 22, and read as `0`.
+    /// absent from a server before edition 22, and read as `0`.
     pub accepted: u64,
     /// Unix seconds of the last inbox read; `0` is never.
     pub last_poll_unix: u64,

@@ -37,10 +37,10 @@ const FOREIGN: &[&str] = &[
     // litany ARCH coordinates, cited bare. §2.5 is caller-supplied pinned
     // documents — the mechanism DESIGN §3.7's instruction freeze rides.
     // §2.7 is litany's compactor toolset — the `write_summary` /
-    // `mark_for_deletion` pair REMOTE §5.4 rules an engine act (bl-dfce).
+    // `mark_for_deletion` pair REMOTE §5.4 rules a server act (bl-dfce).
     // §2.8 is litany's `docs/DESIGN_CODE_EXECUTION.md` — the `python` built-in's
     // generated `litany_tools` stubs, each a `<driver_target> invoke` of the
-    // engine's front door (bl-fe43). Cited with its doc prefix, foreign here
+    // litany's front door (bl-fe43). Cited with its doc prefix, foreign here
     // because the scanner is deliberately prefix-blind.
     "2.2", "2.3", "2.4", "2.5", "2.6", "2.7", "2.8", "2.9", "2.10", "2.11", "4.3", "4.4", "5.5",
     // VISION.md's §4.5 (spend attribution's join discipline, bl-afc4), §4.8
@@ -97,13 +97,13 @@ const FOREIGN: &[&str] = &[
     // number.
     // §9.22 joins them (bl-dd88): the learning loop made reachable — the two
     // new ops and the one new reply kind, and why none of them moves the
-    // protocol version. DESIGN's own §9.6 carries the engine-side half, so a
+    // protocol version. DESIGN's own §9.6 carries the server-side half, so a
     // reader following either prefix lands where the argument is.
     // §9.24 joins them (bl-b680): the workflow mark made reachable — the mark
     // grown onto `reply/governing`, the set/clear pair, and why the lineage
     // browse is the enumeration a selector needs. Cited "REMOTE §9.24" from
     // DESIGN §8.2's verb table and from the modules that carry it; DESIGN
-    // §9.4 carries the engine-side half.
+    // §9.4 carries the server-side half.
     // §9.25 joins them (bl-7ada): a remedy is named by the seat's slash verb,
     // never by a pane, an editor or a file — cited "REMOTE §9.25" from the
     // pick gate's refusal and from DESIGN §9.4's account of it.
@@ -118,7 +118,7 @@ const FOREIGN: &[&str] = &[
     "14.1",
     // REMOTE.md's §5.4 — the thrall and the local execution corpus, and since
     // bl-dfce the home of the ruling that the compactor's procedure pair is an
-    // engine act yog answers itself. Cited "REMOTE §5.4" like the rest; DESIGN
+    // server act yog answers itself. Cited "REMOTE §5.4" like the rest; DESIGN
     // §5 has no subsections, which the sibling test keeps honest.
     // §5.6 joins it (bl-8016): the bounded lease, the exhausted one answered
     // in doubt, and the swallowed capture re-posted. Cited "REMOTE §5.6"

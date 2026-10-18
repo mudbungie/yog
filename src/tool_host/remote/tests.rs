@@ -19,7 +19,7 @@ fn quiet() -> AtomicBool {
 }
 
 /// The production patience is a real bound and a *different* one from the
-/// engine budget — an engine that has not answered is down, a tool that has
+/// server budget — a server that has not answered is down, a tool that has
 /// not answered is working.
 #[test]
 fn the_tool_bound_is_longer_than_the_engine_bound() {
@@ -47,7 +47,7 @@ fn the_poll_waits_for_a_capture_that_is_not_there_yet() {
         tick: Duration::from_millis(1),
     };
     let got = invoke(&s, &entry(), &json!({"command": "ls"}), None, &quiet());
-    handle.join().expect("engine");
+    handle.join().expect("server");
     assert_eq!(
         got,
         Ok(Capture {
@@ -78,12 +78,12 @@ fn a_machine_that_never_answers_runs_out_and_says_so() {
         tick: Duration::ZERO,
     };
     let e = invoke(&s, &entry(), &json!({}), None, &quiet()).expect_err("nothing answered");
-    handle.join().expect("engine");
+    handle.join().expect("server");
     assert!(e.contains("inv-7") && e.contains("laptop"), "{e}");
 }
 
 /// A stop landing mid-run ends the wait, which is the router obligation litany
-/// states and cannot enforce. The flag is raised by the stand-in engine
+/// states and cannot enforce. The flag is raised by the stand-in server
 /// **before** it writes the answer the driver is waiting on — the hostile
 /// order, and the one this test used to be flaky on (bl-3a88): the driver may
 /// read the flag inside that window, or read the reply and come back around to
@@ -133,7 +133,7 @@ fn a_stop_ends_the_wait_on_the_tool() {
     );
 }
 
-/// Three ways an engine can answer something other than an invocation, each
+/// Three ways a server can answer something other than an invocation, each
 /// naming what came back rather than guessing at it.
 #[test]
 fn an_answer_that_is_not_a_routed_invocation_names_itself() {
@@ -152,12 +152,12 @@ fn an_answer_that_is_not_a_routed_invocation_names_itself() {
             &quiet(),
         )
         .expect_err("not an invocation");
-        handle.join().expect("engine");
+        handle.join().expect("server");
         assert!(e.contains(needle), "{e}");
     }
 }
 
-/// No engine at all is the same class of answer, at the first round trip.
+/// No server at all is the same class of answer, at the first round trip.
 #[test]
 fn no_engine_is_a_sentence_at_the_first_ask() {
     let root = TempDir::new().expect("tmp");
@@ -169,5 +169,5 @@ fn no_engine_is_a_sentence_at_the_first_ask() {
         &quiet(),
     )
     .expect_err("no consumer");
-    assert!(e.contains("no engine answered"), "{e}");
+    assert!(e.contains("no server answered"), "{e}");
 }

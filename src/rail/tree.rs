@@ -5,7 +5,7 @@
 //! `ls-tree -r -l` for the listing, `git show <commit>:<path>` for one file's
 //! bytes — through the env-scrubbed `git_tree::cmd` doorway, and never per
 //! frame: since bl-13f9 the seat asks `Query::Files` with the commit as its
-//! `at`, so this runs at the engine once per ask period rather than per paint,
+//! `at`, so this runs at the server once per ask period rather than per paint,
 //! which is the cost STORIES §S7 point 3 declined to pay per-frame ("the
 //! per-frame git read this repo already removed once").
 //!

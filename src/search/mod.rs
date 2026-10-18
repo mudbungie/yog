@@ -76,7 +76,7 @@ impl Field {
 /// — so a seat feeds a hit straight back as an address
 /// ([`Query::Transcript`](crate::boundary::Query::Transcript),
 /// [`Agent`](crate::boundary::Query::Agent)) instead of deriving a leaf from
-/// an engine-local path it should never have been shown.
+/// a server-local path it should never have been shown.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Address {
     /// A ball in a project (§3.5) — what every `bl` verb takes.

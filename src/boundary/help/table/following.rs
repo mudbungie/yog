@@ -48,7 +48,7 @@ pub const FOLLOWING: &[HelpRow] = &[
         usage: "/invocations",
         summary: "a tool host's next work: wait for what this machine has been asked to run",
         detail: "The routing leg's follow-class read. It does not answer until this machine has \
-                 an invocation or the engine's hold expires — thirty seconds — so a tool host \
+                 an invocation or the server's hold expires — thirty seconds — so a tool host \
                  waits here rather than polling, and asks again the moment it is answered. It \
                  names nothing: the queue it drains is the one addressed to the certificate this \
                  connection presented, which is why a caller inside the world (`yog gesture`, \

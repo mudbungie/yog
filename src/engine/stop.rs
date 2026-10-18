@@ -2,10 +2,10 @@
 //! mechanism, consulted by both faces.
 //!
 //! A stop here is *"stop taking new work, finish what is running, drop the
-//! engine"* — and it is almost entirely a subtraction, because dropping the
-//! engine is already the whole of it. Every thread [`Engine::boot`] spawns
+//! server"* — and it is almost entirely a subtraction, because dropping the
+//! server is already the whole of it. Every thread [`Engine::boot`] spawns
 //! owns the §7.2 shutdown shape (stop flag, park loop, a [`Drop`] that unparks
-//! and joins), so an engine dropped at the end of a consumer pass is an engine
+//! and joins), so a server dropped at the end of a consumer pass is a server
 //! that refused the next deposit and completed the last one; and every child
 //! yog holds a pipe on is behind a [`Stream`](crate::cli_outbound::Stream)
 //! whose own drop posts a polite `SIGTERM`, waits a grace, then escalates.
@@ -36,7 +36,7 @@
 //! that consults it, exactly as they already differ in a repaint hook: the
 //! windowless face's loop is [`Engine::park_until_stopped`] below, and the
 //! window's is eframe's, which asks [`requested`] each frame and closes its
-//! viewport — the same close a human's click makes, so the engine drops down
+//! viewport — the same close a human's click makes, so the server drops down
 //! the same path either way. Neither face adds a verb, a flag or a config
 //! key: the signal is the signal.
 
@@ -54,8 +54,8 @@ const LOOK: Duration = Duration::from_millis(250);
 
 /// Point `SIGTERM` at the flag instead of at process death. Called once per
 /// face at the process edge (`main.rs`), above eframe and beside the other
-/// edge-bound arms — and *only* by the two faces that boot an engine, never by
-/// `yog env`/`exec`/`tool-control`, which have no engine to drop and for which
+/// edge-bound arms — and *only* by the two faces that boot a server, never by
+/// `yog env`/`exec`/`tool-control`, which have no server to drop and for which
 /// dying on the spot is the right answer.
 pub fn catch() {
     sys::term_disposition(true);
@@ -69,8 +69,8 @@ pub fn requested() -> bool {
 
 impl Engine {
     /// **The windowless face's whole loop** — park until a stop is asked for,
-    /// then drop the engine. Takes `self` by value so that returning from it
-    /// and stopping the engine are the same act: there is no way to park
+    /// then drop the server. Takes `self` by value so that returning from it
+    /// and stopping the server are the same act: there is no way to park
     /// without the drop, which is exactly the defect this closes.
     pub fn park_until_stopped(self) {
         park_until(sys::term_flag());

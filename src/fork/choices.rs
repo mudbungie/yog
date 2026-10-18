@@ -21,7 +21,7 @@ const PROVIDERS: &str = "providers.yaml";
 /// The roles the config a ref resolves declares (`providers.yaml`'s `roles:`
 /// block), each with its provider row and model id. Reuses §9.4's own grammar
 /// reader — and the same which-config-governs derivation every other surface
-/// asks — so the picker, the fork composer and the engine can never disagree
+/// asks — so the picker, the fork composer and the server can never disagree
 /// about what a config file says.
 pub fn roles_at(workspace: &Path, refspec: &str) -> Vec<RoleModel> {
     let Ok(gov) = governing_config(workspace, refspec) else {

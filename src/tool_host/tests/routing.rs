@@ -4,7 +4,7 @@
 use super::*;
 
 /// **The leg, end to end through the injection** (REMOTE §9 step 7, bl-024b):
-/// a loaded name is owned, queued at the engine, polled for, and the far
+/// a loaded name is owned, queued at the server, polled for, and the far
 /// machine's own capture comes back **verbatim** — a non-zero verdict and text
 /// on stderr included, because a routed tool must be indistinguishable from a
 /// local one.
@@ -34,7 +34,7 @@ fn a_loaded_remote_name_is_routed_and_its_capture_comes_back() {
     let stop = AtomicBool::new(false);
     let capture =
         at(root.path(), PathBuf::new(), budget()).route(call!("laptop_Bash", &input, &stop));
-    handle.join().expect("engine");
+    handle.join().expect("server");
 
     assert_eq!(capture.exit_code, 3, "the far machine's verdict, verbatim");
     assert_eq!(capture.stdout, b"a\nb\n");
@@ -73,5 +73,5 @@ fn an_engine_that_never_answers_refuses_in_band() {
     assert_eq!(capture.exit_code, 1);
     let said = String::from_utf8_lossy(&capture.stderr).into_owned();
     assert!(said.starts_with("laptop_Bash: "), "{said}");
-    assert!(said.contains("no engine answered"), "{said}");
+    assert!(said.contains("no server answered"), "{said}");
 }

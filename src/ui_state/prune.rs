@@ -19,7 +19,7 @@ impl UiState {
     /// **One document since bl-f936** (REMOTE §7 as amended): `seen` and
     /// `pinned` are world facts, and the `ws:<path>` collapse override the
     /// prune used to drop beside them is a seat's own glass fact that this
-    /// engine never stored. A seat's stale override is inert where it lives —
+    /// server never stored. A seat's stale override is inert where it lives —
     /// a section that no longer renders costs nothing.
     pub fn prune_workspace(&mut self, key: &str) {
         if let Some(Value::Object(seen)) = self.world.root.get_mut("seen") {

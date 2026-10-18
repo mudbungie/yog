@@ -2,7 +2,7 @@
 //! world shim** — the one chain no in-process test can reach.
 //!
 //! The defect: a worker with the shipped `bash` grant and no foot enrolled
-//! takes REMOTE §5.4's third rung, the engine's own front door. It writes a
+//! takes REMOTE §5.4's third rung, litany's own front door. It writes a
 //! script, exports it as `$EDITOR`, and types `litany config <workspace>` —
 //! which the world's `PATH` resolves to yog's own shim (DESIGN §16.4). The
 //! lineage advanced: `souls/*.md`, `providers.yaml`'s model and grant rows,

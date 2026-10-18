@@ -1,9 +1,9 @@
 //! STORIES **S4-T1** new-workspace-verb: the explicit New workspace verb
-//! (§3.4/§11) raises a sphere wall under the **operator's own typed name** —
+//! (§3.4/§11) raises a workspace under the **operator's own typed name** —
 //! validated first (§3.1: shape, ≤32 bytes, the reserved `unknown`, and a leaf
 //! collision under any of the three roots), then `litany new <names-root>/<name>`
 //! through the same start planner. A refused name spawns nothing at all: yog
-//! never reaches the planner, so there is no half-raised wall to converge away
+//! never reaches the planner, so there is no half-raised workspace to converge away
 //! (DESIGN §3.1/§3.4/§8.1).
 
 #![allow(clippy::unwrap_used)]
@@ -68,7 +68,7 @@ fn new_workspace(
 fn s4_t1_new_workspace_takes_the_operators_typed_name() {
     let (yog, litany_data) = (tempdir().unwrap(), tempdir().unwrap());
 
-    // A lawful name raises the wall: seed first (§8.1 order), then `litany new`
+    // A lawful name raises the workspace: seed first (§8.1 order), then `litany new`
     // at the typed leaf — the pinned template already grants the worker role's
     // whole tool pool, so nothing runs after (§8.1, bl-7fc8).
     let (name, argv) = new_workspace(&yog, &litany_data, "  ops  ").unwrap();

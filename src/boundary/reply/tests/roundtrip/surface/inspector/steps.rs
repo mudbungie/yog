@@ -71,7 +71,7 @@ pub(super) fn steps() -> StepsView {
                 ..base.clone()
             },
             // The bl-ab53 arm: the step being written right now. Its tail is
-            // byte-for-byte a cut one's, so the word is the engine's judgement
+            // byte-for-byte a cut one's, so the word is the server's judgement
             // and has to cross — `ended_at` is absent for both.
             StepSummary {
                 seq: "007".into(),

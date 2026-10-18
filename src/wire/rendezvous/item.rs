@@ -1,12 +1,12 @@
 //! The two items the rendezvous writes to the commons (REMOTE §13.2,
 //! bl-4263), and the seal that makes them opaque bytes there.
 //!
-//! **Presence** is the engine's: the endpoints it punches from. **The call**
+//! **Presence** is the server's: the endpoints it punches from. **The call**
 //! is a client's inbox item: the endpoints it punches from, and a nonce the
-//! engine remembers so one call draws one punch. Both are sealed under the
+//! server remembers so one call draws one punch. Both are sealed under the
 //! pairing's AEAD key before they are signed and filed, so a DHT node — or
-//! anyone walking the keyspace — learns neither that this is an engine nor
-//! where either end lives; and an item the engine cannot open never draws a
+//! anyone walking the keyspace — learns neither that this is a server nor
+//! where either end lives; and an item the server cannot open never draws a
 //! SYN, which is the disclosure the commons invites and REMOTE §13.2 closes.
 //!
 //! **The wire format is bytes, not JSON, and it is the client's to mirror.**
@@ -19,7 +19,7 @@
 use ring::aead::{Aad, CHACHA20_POLY1305, LessSafeKey, Nonce, UnboundKey};
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 
-/// The engine's published half: where it can be punched.
+/// The server's published half: where it can be punched.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct Presence {
     pub(crate) endpoints: Vec<SocketAddr>,

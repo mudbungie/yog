@@ -7,7 +7,7 @@ use super::{banner, model, world};
 use crate::AppModel;
 use crate::opslog::{self, Origin};
 
-/// The §8.5 ack — the act a seat fires, run where the engine runs it. It was
+/// The §8.5 ack — the act a seat fires, run where the server runs it. It was
 /// an `AppModel` method while a frame's ops pane called one (bl-7942 took the
 /// pane); the body it called is `opslog::ack`, which the boundary's own arm
 /// has always reached.

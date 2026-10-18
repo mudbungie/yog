@@ -1,9 +1,9 @@
-//! **The first thing to say about a wall that would reach no model is what to
+//! **The first thing to say about a workspace that would reach no model is what to
 //! do about it** (DESIGN §8.1, bl-1fd0) — the rung, at the one door every fire
 //! passes (bl-2291), asking about the row the fire will actually resolve
 //! (bl-58e7).
 //!
-//! The ruling was that a goal typed into an unsigned wall works zero percent of
+//! The ruling was that a goal typed into an unsigned workspace works zero percent of
 //! the time: the conversation is born, dies on no-models, and the operator
 //! learns it from a dead row. bl-7cc8 deleted the callerless fold that judged
 //! it and left the predicate in the doc, honourable by any seat that asked
@@ -23,7 +23,7 @@
 //! row the roles do not name satisfied the old predicate and readied nothing:
 //! reproduced on two fresh workspaces, where a wall carrying exactly one
 //! operator-written row let the start through and the conversation was dead on
-//! arrival, having spent a model call to learn a fact the engine held before it
+//! arrival, having spent a model call to learn a fact the server held before it
 //! fired. In a multi-seat workspace the operator who finds the corpse is not
 //! the one who started it.
 //!
@@ -46,7 +46,7 @@
 //! The other declared roles are not the fire's question and refusing on
 //! one would be the conservatism §8.1 warns about: litany's shipped template
 //! declares a `reviewer` **unbound** — nothing dispatches it until a workflow
-//! binds it — so a wall that would run for hours would be refused for a role
+//! binds it — so a workspace that would run for hours would be refused for a role
 //! that never fires. A `compactor` pointing at a dead row does fail, later, at
 //! its own moment and through the §8.3 step failure and the row's `failure`
 //! clause; that is a corpse with a cause, which is what those surfaces are for,

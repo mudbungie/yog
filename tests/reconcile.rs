@@ -1,7 +1,7 @@
 //! **The unattended reconciler's own regression suite** (bl-4e3c). Each beat
 //! drives the REAL `scripts/deploy/reconcile.sh` — and, through it, the real
 //! `scripts/deploy/verify.sh` — over a throwaway box whose `curl`, `docker` and
-//! `systemctl` are shims. No live box, no registry, no engine.
+//! `systemctl` are shims. No live box, no registry, no server.
 //!
 //! The three things a reconciler can get wrong are the three things a human
 //! upgrade cannot, so they are what is proved here:
@@ -9,7 +9,7 @@
 //!   * **it acts when it should not** — on a dev tag, on a downgrade, on a tag
 //!     already refused, or while a turn is in flight;
 //!   * **it acts blind** — on a boundary that did not answer, or on a reading
-//!     the engine itself has labelled stale;
+//!     the server itself has labelled stale;
 //!   * **it leaves the box worse** — a release that does not serve must end
 //!     with the box back on the tag that did, and never re-attempted.
 //!
@@ -146,7 +146,7 @@ fn an_in_flight_turn_defers_the_upgrade() {
 
 #[test]
 fn a_stale_derivation_defers_the_upgrade() {
-    // The engine is saying its own `running` bits may be behind the world. A
+    // The server is saying its own `running` bits may be behind the world. A
     // reading labelled stale is not a reading of "idle".
     let dir = box_at("yog:0.0.8-abc1234");
     registry(&dir, &["0.0.9"]);
@@ -192,7 +192,7 @@ fn a_release_that_does_not_serve_is_rolled_back_and_refused() {
 #[test]
 fn a_refused_tag_is_never_attempted_a_second_time() {
     // The bound, and it is an invariant rather than a counter: without it a bad
-    // release restarts the engine every fifteen minutes forever.
+    // release restarts the server every fifteen minutes forever.
     let dir = box_at("yog:0.0.8-abc1234");
     registry(&dir, &["0.0.9"]);
     boundary_says(&dir, IDLE);

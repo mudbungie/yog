@@ -104,7 +104,7 @@ fn overlaps(root: &std::path::Path, live: &std::path::Path) -> Option<String> {
         "yog {SUBCMD}: refusing to lay a fixture over the LIVE world.\n  \
          fixture: {}\n  live:    {}\n  \
          A lay wipes its root before it writes, so the two may never overlap. \
-         Point {} somewhere else; the live world is the engine's.",
+         Point {} somewhere else; the live world is the server's.",
         root.display(),
         live.display(),
         READS[0]
@@ -123,7 +123,7 @@ fn with_slash(path: &std::path::Path) -> String {
 }
 
 /// A port nothing is listening on, asked of the kernel and handed straight
-/// back. The engine cannot answer this question for us: `127.0.0.1:0` in the
+/// back. The server cannot answer this question for us: `127.0.0.1:0` in the
 /// material is a *request*, and only the listener ever learns what it became —
 /// which is in its RAM and not on any surface a harness can read.
 ///
@@ -210,7 +210,7 @@ pub fn perform_lay(state: &str, root: &PathBuf, address: &str) -> Result<Laid, S
 
 /// The second every offset in a recipe is measured back from. The one clock
 /// reading this module makes, reported in the answer so a harness can compute
-/// exactly what the engine will derive.
+/// exactly what the server will derive.
 fn now_unix() -> i64 {
     unix_of(std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH))
 }

@@ -81,7 +81,7 @@ impl Write {
     /// The workspace slot REMOTE §8.2's name→path rewrite borrows — [`Read`'s
     /// own](super::Read::workspace_slot) shape and `Option` for its reason:
     /// [`Apply`](Self::Apply) names a *destination* whose workspace is nested
-    /// and itself optional (a §9 file may be the engine's own), and widening the
+    /// and itself optional (a §9 file may be the server's own), and widening the
     /// carrier to match keeps one rule where there would otherwise be a table
     /// arm that knows about one member.
     pub(crate) fn workspace_slot(&mut self) -> Option<&mut String> {

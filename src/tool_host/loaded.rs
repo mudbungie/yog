@@ -20,7 +20,7 @@
 //! **The definition is frozen at the load act, not re-read at assembly.** The
 //! file carries the whole advertised element — name, description, JSON Schema —
 //! as it stood when the agent loaded it, so [`crate::tool_host::Injection::tools`]
-//! is a pure local file read that needs no engine and cannot fail. That is the
+//! is a pure local file read that needs no server and cannot fail. That is the
 //! REMOTE §5 rule (bl-bc7c) rather than a shortcut: *"definitions frozen in the
 //! prefix, presence answered at invocation"*. A prefix that changed when a
 //! client reconnected would put a connectivity-rate fact inside the model's

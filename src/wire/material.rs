@@ -5,7 +5,7 @@
 //! performs on the boxes, out-of-channel by ruling — so this module only ever
 //! *reads*, and the three answers it can give are the whole trust bootstrap:
 //!
-//! - **Nothing provisioned** — `Ok(None)`. The wire is simply off: the engine
+//! - **Nothing provisioned** — `Ok(None)`. The wire is simply off: the server
 //!   listens on nothing and a seat has nowhere to dial. Removing the directory
 //!   deletes config, not code (the severability test), which is why absence is
 //!   an answer and not an error.
@@ -41,7 +41,7 @@ use std::path::{Path, PathBuf};
 pub const DIR: &str = "wire";
 /// The operator CA both ends verify against — one anchor set, both directions.
 pub const ANCHORS: &str = "ca.pem";
-/// The file naming the address the engine binds and a seat dials.
+/// The file naming the address the server binds and a seat dials.
 pub const ADDRESS: &str = "address";
 
 /// The directory a **client** box files one host's material under, inside its
@@ -71,7 +71,7 @@ pub const ENTRY: &str = "<workspace>";
 ///
 /// **The verb, never the make target** (bl-a0dd). It said `make wire-certs`,
 /// which is a wrapper over `cargo run` and so wants a checkout: a deployed
-/// engine is an installed binary or the OCI image (DESIGN §10.1) and has
+/// server is an installed binary or the OCI image (DESIGN §10.1) and has
 /// neither. That is REMOTE §8's own argument for retiring `wire-certs.sh` —
 /// *"an installed binary has no repository to find a script in"* — and it
 /// condemns a Makefile exactly as far as it condemned a script. The one
@@ -117,7 +117,7 @@ impl Role {
     }
 
     /// The subject common name this role's certificate carries — which **is**
-    /// the client identity the engine reads off it (REMOTE §2,
+    /// the client identity the server reads off it (REMOTE §2,
     /// [`leaf::common_name`](crate::registry::leaf::common_name)). Spelled here
     /// so the mint and the identity that seats a registration are one fact: the
     /// window's is [`registry::WINDOW`](crate::registry::WINDOW), because a
@@ -140,7 +140,7 @@ pub struct Material {
     pub chain: PathBuf,
     /// This end's private key, PEM.
     pub key: PathBuf,
-    /// `host:port` — bound by the engine, dialled by a seat.
+    /// `host:port` — bound by the server, dialled by a seat.
     pub address: String,
 }
 

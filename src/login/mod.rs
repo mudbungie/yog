@@ -48,7 +48,7 @@ use crate::opslog::{self, OpEntry, Origin};
 pub mod auth;
 /// The display a sign-in's browser opens on, where the service names none.
 mod display;
-/// The engine's live-run holder (REMOTE §8.3, bl-c285): one `bz --login` child
+/// The server's live-run holder (REMOTE §8.3, bl-c285): one `bz --login` child
 /// per workspace × provider, read by lanes and settled by a thread of its own.
 pub mod runs;
 /// The standing's one JSON spelling, both directions — beside its own type.
@@ -70,7 +70,7 @@ const BROWSER_FLAG: &str = "--browser";
 pub enum Flow {
     /// The loopback browser flow (RFC 8252), selected by `--browser`. The floor
     /// every oauth row can serve, and the flow whose redirect only completes
-    /// where a browser can reach the engine's own loopback.
+    /// where a browser can reach the server's own loopback.
     Browser,
     /// bz's default headless device-code flow — no flag at all, because bz
     /// selects it by the row's `device` block and the style declared there.

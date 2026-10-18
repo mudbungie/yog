@@ -27,7 +27,7 @@ pub(super) const HOLD_TICK: Duration = Duration::from_millis(125);
 /// redelivery bl-e658 bought, which is the at-least-once leg and is kept; the
 /// third separates a blip from a poison invocation. A fourth would be a loop
 /// only the hour sweep ends, so at the read that would hand it again the
-/// engine writes the slot's capture itself ([`in_doubt`]).
+/// server writes the slot's capture itself ([`in_doubt`]).
 pub(super) const HAND_OFFS: u32 = 3;
 
 impl Mailbox {
@@ -76,7 +76,7 @@ impl Mailbox {
     pub(crate) fn reading(&self, client: &str) -> Result<Reading, String> {
         if !lock_mail(&self.cell).reading.insert(client.to_owned()) {
             return Err(format!(
-                "invocations: {client:?} is already holding this engine's follow-class \
+                "invocations: {client:?} is already holding this server's follow-class \
                  read — one machine's queue has one reader, because a second would take \
                  work the first is parked for and neither end would learn it. Something \
                  else is presenting this certificate: stop it, or stop this"
@@ -98,7 +98,7 @@ impl Mailbox {
     /// One look at `client`'s queue, handing over what it finds and counting
     /// each hand-off. `ack` is the read's first look and carries **the
     /// acknowledgement** (bl-e658, REMOTE §5.3): a slot this client already
-    /// holds and this engine has no capture for goes out again, because the
+    /// holds and this server has no capture for goes out again, because the
     /// hand-off mark is a lease and not a latch — a parked read cannot learn
     /// its peer went away, so treating the drain as the delivery loses
     /// whatever was posted into a dead one. Later looks in the same hold see
@@ -106,7 +106,7 @@ impl Mailbox {
     /// `taken` flag said.
     ///
     /// **The lease is bounded** (REMOTE §5.6, ruling 2): a slot already handed
-    /// [`HAND_OFFS`] times is not handed a fourth, and the engine writes its
+    /// [`HAND_OFFS`] times is not handed a fourth, and the server writes its
     /// capture in doubt instead. From there it is a capture like any other —
     /// never offered again, and collected by the driver's ordinary poll.
     fn drain(&self, client: &str, ack: bool) -> Vec<Invocation> {

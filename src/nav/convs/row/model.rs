@@ -46,8 +46,8 @@ pub struct ConvRow {
     /// **When** that subtree last acted, in unix epoch seconds (REMOTE §9.9,
     /// bl-b7d9) — the same one recency fact [`age_secs`](ConvRow::age_secs) is
     /// the distance to. Both ride because they are not one statement: the age
-    /// is relative to the *engine's* clock at answer time and is the only
-    /// carrier of it, the stamp is absolute, and a seat wanting the engine's
+    /// is relative to the *server's* clock at answer time and is the only
+    /// carrier of it, the stamp is absolute, and a seat wanting the server's
     /// `now` adds them. Carried rather than subtracted at the seat, so a phone
     /// with a drifting clock and a headless reader say the same time.
     pub last_active_unix: i64,
@@ -109,7 +109,7 @@ pub struct ConvRow {
     /// **Why this conversation's latest model call failed**, in one clause
     /// (bl-9b88) — the words behind [`Tone::Bad`], so a roster of red rows says
     /// what is wrong with them instead of asking the operator to open each one.
-    /// The engine has always held the sentence; until bl-9b88 no row carried
+    /// The server has always held the sentence; until bl-9b88 no row carried
     /// it, and a workspace whose provider row had no credential painted as a
     /// list of conversations that simply never answer.
     ///

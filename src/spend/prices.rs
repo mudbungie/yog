@@ -19,7 +19,7 @@
 //! document in the pre-bl-53d1 model-keyed shape reads as *empty* under the
 //! forgiving read — its rates are not objects where this shape wants a model
 //! map — because it was never seeded and existed only where an operator wrote
-//! it by hand on the engine's own box, and the boundary's `/price` is how it
+//! it by hand on the server's own box, and the boundary's `/price` is how it
 //! comes back.
 //!
 //! **No crate below yog learns a price** (§3.5): brazen counts tokens, litany

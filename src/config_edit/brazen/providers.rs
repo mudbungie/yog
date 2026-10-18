@@ -140,12 +140,12 @@ impl ProviderRow {
         }
     }
 
-    /// **Can this row be signed in with no browser on the engine's box?** (§8.3
+    /// **Can this row be signed in with no browser on the server's box?** (§8.3
     /// rule 1 as amended by bl-61bf.) The [`device`](Self::device) column alone:
     /// a row declaring a device endpoint serves the seat-independent flow — bz
     /// binds nothing and streams the verification URL and user code to whichever
     /// seat asked — while a row declaring none can only serve the loopback
-    /// browser flow, which completes where the browser reaches the engine.
+    /// browser flow, which completes where the browser reaches the server.
     ///
     /// **One column, deliberately not two.** It does not re-ask
     /// [`login_blocked`](Self::login_blocked): brazen carries `device` inside the

@@ -71,7 +71,7 @@ fn ask(deps: &Deps, provider: &str) -> LoginView {
     }
 }
 
-/// Wait for the engine's own reader thread to settle the run, asking through
+/// Wait for the server's own reader thread to settle the run, asking through
 /// the real chokepoint each look. Running out panics rather than handing back
 /// an unsettled view, for `runs::tests::settled`'s reason exactly.
 fn settle(deps: &Deps, provider: &str) -> LoginView {
@@ -82,7 +82,7 @@ fn settle(deps: &Deps, provider: &str) -> LoginView {
         }
         std::thread::sleep(Duration::from_millis(5));
     }
-    panic!("the engine never settled {provider}'s run");
+    panic!("the server never settled {provider}'s run");
 }
 
 /// A run wired to a channel — no child, so every lane arm is deterministic.
@@ -128,7 +128,7 @@ fn the_act_starts_the_run_answers_its_standing_and_the_read_says_the_rest() {
     };
     assert_eq!(receipt.outcome, None, "the act never waits for the run");
 
-    // The rest of the run reaches the same read, on the engine's own thread.
+    // The rest of the run reaches the same read, on the server's own thread.
     let settled = settle(&deps, "openai");
     assert_eq!(settled.outcome, Some(0));
     assert_eq!(

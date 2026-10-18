@@ -59,7 +59,7 @@ fn a_gained_field_is_stamped_the_next_edition_and_needs_no_bump() {
 }
 
 /// A **new** shape is an addition like any other: every path of it is the
-/// next edition, so a seat can grey an op the engine it dialled has not got.
+/// next edition, so a seat can grey an op the server it dialled has not got.
 #[test]
 fn a_new_shape_is_stamped_the_next_edition() {
     let fresh = Shape {

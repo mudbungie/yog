@@ -68,7 +68,7 @@ pub struct Deps {
 /// own rule (REMOTE §8, bl-f5f6): `workspace` is the **name**, re-resolved when
 /// the deferred [`Prompt`](crate::boundary::Action::Prompt) lands. `binding` is
 /// the one path left, and it is not an identity — it is litany's `--cwd`, a
-/// filesystem fact the engine minted and the engine consumes, carried back
+/// filesystem fact the server minted and the server consumes, carried back
 /// verbatim by a seat that never reads it.
 ///
 /// It carried a separate `name` — the §3.2 `--as`/`YOG_NAME` stamp — until

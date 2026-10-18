@@ -10,7 +10,7 @@
 //! simply not yet converged (I0): the next consumer pass takes it, whichever
 //! yog process that is. A claim is additionally held under an OS file lock for
 //! as long as its claimant lives (bl-d1f1), so a crash between claim and reply
-//! leaves the claimed file **unlocked** — debris the next engine boot answers
+//! leaves the claimed file **unlocked** — debris the next server boot answers
 //! with an in-doubt refusal on the reply slot ([`super::consume::sweep`]). The
 //! effect may or may not have landed and no artifact can say which, so the
 //! recovery is to read the world, never to re-send: a gesture is not

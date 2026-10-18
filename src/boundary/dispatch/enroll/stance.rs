@@ -102,7 +102,7 @@ fn remint(dir: &Path, state_root: &Path, cert: &Path, request: &Request) -> Resu
              two live certificates under one identity. The device is registered where it was \
              enrolled; to seat it in another workspace, write the registration on this box — \
              `mkdir -p <state-root>/{}/{}/{} && touch …/{}` — no gesture manages registrations, \
-             on this engine or any other. State another common name to enrol a second device",
+             on this server or any other. State another common name to enrol a second device",
             request.name,
             crate::registry::CLIENTS,
             request.name,

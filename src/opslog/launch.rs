@@ -40,7 +40,7 @@
 //! got was `ok:true` from the fire, `stopped` in the roster, an ops row saying
 //! `-2` with an empty `stderr`, and the refusal itself only in
 //! `state/yog/detached/<ts>-<ws>.err`, which no gesture reads. On a remote
-//! engine — the shape REMOTE describes — there is no reach to that file at
+//! server — the shape REMOTE describes — there is no reach to that file at
 //! all.
 //!
 //! The fix is to ask what the launch was fired to **produce**. A branch is not
@@ -64,7 +64,7 @@
 //! anything, and the rising edge of a healthy start is indistinguishable from a
 //! death until yog has looked again (bl-18e8). A workspace with no derived tree
 //! is **no verdict** rather than a death — §10's rule against a false definite,
-//! and the reason a start into a wall yog has not enumerated yet is silent.
+//! and the reason a start into a workspace yog has not enumerated yet is silent.
 
 use std::collections::HashMap;
 use std::path::PathBuf;

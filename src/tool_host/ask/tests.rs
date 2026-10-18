@@ -19,7 +19,7 @@ fn the_default_budget_is_a_bounded_wait() {
     assert_eq!(b.tick * b.waits, Duration::from_secs(10));
 }
 
-/// The happy path: deposit, the engine answers, the envelope comes back whole.
+/// The happy path: deposit, the server answers, the envelope comes back whole.
 #[test]
 fn a_deposit_earns_the_engine_s_own_envelope() {
     let root = TempDir::new().expect("tmp");
@@ -32,12 +32,12 @@ fn a_deposit_earns_the_engine_s_own_envelope() {
         &quiet(),
     )
     .expect("answered");
-    handle.join().expect("engine");
+    handle.join().expect("server");
     assert_eq!(got, answer);
     assert_eq!(seen.recv().expect("request")["op"], "clients");
 }
 
-/// No engine is a sentence, not a hang — the router's own deadline
+/// No server is a sentence, not a hang — the router's own deadline
 /// (`docs/DESIGN_TOOL_INJECTION.md` §3.3).
 #[test]
 fn no_engine_gives_up_and_says_so() {
@@ -49,7 +49,7 @@ fn no_engine_gives_up_and_says_so() {
         &quiet(),
     )
     .expect_err("no consumer");
-    assert!(e.contains("no engine answered"), "{e}");
+    assert!(e.contains("no server answered"), "{e}");
 }
 
 /// A stop landing mid-wait ends the wait, so a torn-down drive is not held up
@@ -115,7 +115,7 @@ fn the_roster_is_the_landed_clients_query() {
     let answer = crate::boundary::reply::encode(&Reply::Clients(rows.clone()));
     let (handle, seen) = engine(root.path(), &answer);
     let got = roster(root.path(), "home", budget(), &quiet()).expect("rows");
-    handle.join().expect("engine");
+    handle.join().expect("server");
     assert_eq!(got, rows);
     assert_eq!(
         seen.recv().expect("request"),
@@ -123,7 +123,7 @@ fn the_roster_is_the_landed_clients_query() {
     );
 }
 
-/// Three ways the engine can fail to give a roster, each named rather than
+/// Three ways the server can fail to give a roster, each named rather than
 /// swallowed: a refusal, an answer of another kind, and bytes no decoder reads.
 #[test]
 fn an_answer_that_is_not_a_roster_is_named() {
@@ -142,7 +142,7 @@ fn an_answer_that_is_not_a_roster_is_named() {
     for (answer, said) in cases {
         let (handle, _seen) = engine(root.path(), &answer);
         let e = roster(root.path(), "home", budget(), &quiet()).expect_err("not a roster");
-        handle.join().expect("engine");
+        handle.join().expect("server");
         assert!(e.contains(said), "{e}");
     }
 }

@@ -140,7 +140,7 @@ fn the_only_unlisted_command_is_the_machine_seam() {
 /// — this one and the retired `serve` verb's (bl-7942) — and the beat existed
 /// because they had drifted: `serve`'s said the listener was up *"only where an
 /// operator has provisioned certificates … and silently absent otherwise"* long
-/// after bl-ae05 moved the trigger into the engine's own boot
+/// after bl-ae05 moved the trigger into the server's own boot
 /// ([`ensure`](crate::wire::provision::ensure), aimed at
 /// [`LOOPBACK`](crate::wire::provision::LOOPBACK)). With one page the drift has
 /// nowhere to happen, and what is still worth holding is that the page states

@@ -52,7 +52,7 @@ pub struct Recorder {
     new_arm: bool,
 }
 
-/// litany's own `template/providers.yaml` (the pinned engine): the whole
+/// litany's own `template/providers.yaml` (the pinned litany): the whole
 /// worker tool pool, `message` + `dispatch` included — yog grants nothing on
 /// top (§8.1, bl-7fc8).
 pub const TEMPLATE_PROVIDERS: &str = "roles:\n  worker:\n    provider: anthropic\n    \

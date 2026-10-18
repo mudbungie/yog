@@ -22,10 +22,10 @@
 //! management happens in yog.
 //!
 //! **litany defines what the pair does; yog only decides where.** The acts
-//! themselves are the engine's (its `ARCH §2.7` compactor toolset: the summary
+//! themselves are litany's (its `ARCH §2.7` compactor toolset: the summary
 //! numbering, the refusal to nominate the dispatch entry, the staged `git rm`),
 //! and none of it is restated here. yog performs them by re-entering the
-//! engine's own front door — `<driver_target> tool <name>`, the third hop
+//! litany's own front door — `<driver_target> tool <name>`, the third hop
 //! litany's own resolution addressed before the inversion, with the caller
 //! identity on the child's environment and the `tool_use` input on its stdin.
 //! The child is yog, re-executed under the `litany` namespace by the world's
@@ -34,13 +34,13 @@
 //!
 //! **The invocation's own id rides the child's environment** (litany's §3.3
 //! stdio contract as amended by upstream bl-e8d7): `LITANY_TOOL_ID` is the
-//! `tool_use.id` the engine is recording this call under, so the id the child
+//! `tool_use.id` litany is recording this call under, so the id the child
 //! reads and the `steps/<agent-id>/<NNN>/tools/<tool-id>/` directory it writes
 //! beside cannot disagree. A routing host is handed that id on the call and
 //! owes it on any spawn it makes, exactly as it already owes the caller
 //! identity and the cwd — and `python` is the first act that cannot work
 //! without it, because naming its own record directory is how it puts each
-//! inner invocation's record where the engine expects one. **The routed leg
+//! inner invocation's record where litany expects one. **The routed leg
 //! owes nothing here**: the spawn a machine makes is the foot's own, and the
 //! id addresses a directory on the server's disk that no foot holds.
 //!
@@ -59,7 +59,7 @@ use ::litany::cmd::{RoutedCall, RoutedCapture};
 
 use crate::cli_outbound::{Chunk, Cli, StreamPoll};
 
-/// **The engine-act name set, closed and enumerated here and nowhere else.**
+/// **The server-act name set, closed and enumerated here and nowhere else.**
 /// Ten rows since bl-9ced, in three families, each admitted by the
 /// subject-locality invariant (REMOTE §5: *"a tool executes where its subject
 /// lives"*) and by nothing else:
@@ -111,11 +111,11 @@ use crate::cli_outbound::{Chunk, Cli, StreamPoll};
 /// ([`super::subject`]) and reach a consenting machine when the operator
 /// enrolled one. The lane's last rung calls [`perform`] below on them
 /// ([`super::subject::performs`], bl-5710), so the mechanism is shared and
-/// the *ordering* is what separates the two sets: an engine act never
+/// the *ordering* is what separates the two sets: a server act never
 /// consults the roster, a worktree name always does. An eleventh row is a
 /// deliberate act with this audit's question asked again — never a prefix
 /// test or a name shape, which is how a closed set stops being closed. The
-/// strings are yog's own spelling: the engine keeps its constants
+/// strings are yog's own spelling: litany keeps its constants
 /// crate-private, so the names cross as text exactly as they do in the
 /// model's `tool_use` block.
 pub const NAMES: [&str; 10] = [
@@ -148,12 +148,12 @@ const TOOL_ID: &str = "LITANY_TOOL_ID";
 /// on the act.
 const POLL: Duration = Duration::from_millis(20);
 
-/// Whether `name` is one of the engine acts this module performs.
+/// Whether `name` is one of the server acts this module performs.
 pub fn is(name: &str) -> bool {
     NAMES.contains(&name)
 }
 
-/// Perform one engine act and answer what it captured, or the sentence saying
+/// Perform one server act and answer what it captured, or the sentence saying
 /// why nothing did. A failure is the in-band non-zero refusal every other
 /// answer on this seam is — the model reads it and steps on.
 pub fn perform(driver_target: &Path, deadline: Duration, call: &RoutedCall<'_>) -> RoutedCapture {
@@ -209,10 +209,10 @@ fn run(
             }
             StreamPoll::Pending => {
                 if call.stop.load(Ordering::Relaxed) {
-                    return Err("stopped while the engine was working".to_owned());
+                    return Err("stopped while the server was working".to_owned());
                 }
                 if started.elapsed() >= deadline {
-                    return Err(format!("the engine did not answer within {deadline:?}"));
+                    return Err(format!("the server did not answer within {deadline:?}"));
                 }
                 std::thread::sleep(POLL);
             }

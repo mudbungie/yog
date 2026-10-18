@@ -4,7 +4,7 @@
 //! The defect these reproduce is not a slow derivation — it is a *cache* read
 //! where the authority was one readdir away. The cell in every test here holds
 //! the empty snapshot the context was built over and no worker ever runs, which
-//! is exactly the engine's state in the milliseconds after a birth: the wall is
+//! is exactly the server's state in the milliseconds after a birth: the wall is
 //! on disk, and the derivation has not read it.
 
 use super::*;
@@ -82,7 +82,7 @@ fn the_windows_posted_receipt_addresses_the_wall_it_just_raised() {
     );
     assert_eq!(listed["kind"], "conversations", "{listed}");
     // Scope still decides, and it decides on registration rather than on what
-    // disk holds: the very same wall is absent to a certificate seated
+    // disk holds: the very same workspace is absent to a certificate seated
     // elsewhere. (A certificate seated NOWHERE is told that instead — bl-2a84.)
     let stranger = seat("stranger");
     crate::registry::register(root.path(), &stranger.client, "elsewhere").expect("seated");
@@ -120,7 +120,7 @@ fn a_half_born_directory_is_resumed_not_wedged() {
 
 /// The scope half stands (REMOTE §4): a directory that IS a workspace and is
 /// not in the caller's scope still refuses with the resolver's sentence — the
-/// raise can found or resume, never join another client's wall.
+/// raise can found or resume, never join another client's workspace.
 #[test]
 fn a_scoped_clients_prepare_never_joins_anothers_wall() {
     let (root, data, bin) = (tempdir().unwrap(), tempdir().unwrap(), tempdir().unwrap());
@@ -162,7 +162,7 @@ fn a_gesture_addresses_a_project_primed_since_the_last_derivation() {
 
     // `bl prime` lays exactly this down: one percent-encoded clone dir under
     // the world's balls state. Nothing re-derives the snapshot afterwards,
-    // which is the engine's state in the milliseconds after a prime.
+    // which is the server's state in the milliseconds after a prime.
     let clones = world.balls_clones_dir();
     std::fs::create_dir_all(clones.join("%2Fd%2Fproj")).expect("a primed project");
 

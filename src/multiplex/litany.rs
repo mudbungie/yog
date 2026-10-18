@@ -95,7 +95,7 @@ pub(super) fn run(args: &[String]) -> i32 {
     // **yog's tool injection** (REMOTE §5, bl-c907), built here for the same
     // reason `$EDITOR` is: the state root is a process fact, read at the
     // binding and never inside the surface. It resolves to the very directory
-    // the engine writes — the world hands `XDG_STATE_HOME` down to every child
+    // the server writes — the world hands `XDG_STATE_HOME` down to every child
     // (§16.2), so parent and child fold to one `<world>/state/yog`.
     // The driver target rides in as well as standing on the `Fx`: since the
     // seam inverted, the router answers the compactor's procedure pair itself

@@ -55,7 +55,7 @@ fn a_usable_value_omits_the_fault_key() {
 
 /// Strict on every half: the object, the kind word, and a number's bounds —
 /// which are refused rather than defaulted, since a control that invented its
-/// own range would judge input by a rule the engine never stated.
+/// own range would judge input by a rule the server never stated.
 #[test]
 fn an_unreadable_setting_refuses_by_name() {
     let mut frame = setting(&row(Control::Text, None));

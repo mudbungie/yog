@@ -7,7 +7,7 @@
 //! name, never a path — so answering a row is copying two values, never
 //! translating between an answer's vocabulary and a question's. That second
 //! half was the defect bl-22ab closed: the key matched and the value did not,
-//! so a copied address earned `unknown workspace` from the very engine that
+//! so a copied address earned `unknown workspace` from the very server that
 //! had just answered it.
 
 use crate::attention::AttentionKind;

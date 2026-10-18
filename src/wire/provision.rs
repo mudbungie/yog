@@ -6,7 +6,7 @@
 //! §1.4 forbids an *in-channel* bootstrap — no enrollment, pairing or account
 //! protocol, ever — and §8 already blessed this exact act as operator tooling
 //! (`make wire-certs`, shelling to `openssl`). The operator ruling 2026-08-14
-//! moved the trigger and nothing else: the engine's own boot performs the act
+//! moved the trigger and nothing else: the server's own boot performs the act
 //! on the operator's own box, before anything has been dialled, so no byte
 //! crosses a wire unauthenticated and nothing about the channel changed. yog
 //! still links no certificate library (AGENTS.md rule 6: no `rcgen`, no new
@@ -26,7 +26,7 @@
 //! else.** Self-provisioning writes `127.0.0.1:0` — loopback on a kernel-chosen
 //! port, which is the safe default twice over: material yog minted itself
 //! grants exactly the window that minted it, and a port nobody names is a port
-//! no two engines contend for (I0 — two yog instances side-by-side, whether
+//! no two servers contend for (I0 — two yog instances side-by-side, whether
 //! two worlds or two windows on one, each get their own wire; a process-global
 //! number contradicts that, bl-dc14). The `:0` is a REQUEST: only the listener
 //! knows what it became, and the one seat that needs the answer — the window —
@@ -73,7 +73,7 @@ pub const LOOPBACK: &str = "127.0.0.1";
 /// The port the operator's explicit mint ([`verb`], `yog wire-certs`) defaults
 /// to — a *stated* endpoint another machine can be told to dial. Never the
 /// boot's: an implicit mint requests `:0` ([`ensure`]), because a
-/// process-global number makes two engines on one box contend for one port
+/// process-global number makes two servers on one box contend for one port
 /// (bl-dc14), and only a stated address has a consumer who needs it fixed.
 pub const PORT: &str = "7737";
 /// How long a minted certificate is good for.
@@ -86,7 +86,7 @@ pub(super) const CURVE: &str = "ec_paramgen_curve:P-256";
 /// boot's call, and idempotent by construction. A box provisioned by an
 /// operator gains only the leaves it lacks; a box with nothing gains the lot,
 /// aimed at loopback on a kernel-chosen port: `127.0.0.1:0` is a request the
-/// listener answers with whatever was free, so no two engines — two worlds, or
+/// listener answers with whatever was free, so no two servers — two worlds, or
 /// two windows on one — ever contend for a process-global number (I0,
 /// bl-dc14). The window is told what the `:0` became in RAM
 /// ([`crate::wire::loopback`]); a seat on another machine wants a *stated*
@@ -102,7 +102,7 @@ pub fn ensure(dir: &Path) -> Result<(), String> {
 ///
 /// `also` is **every further host the server leaf answers to** (bl-52f4). The
 /// address and the SAN are two facts, not one twice: the address is the single
-/// endpoint the engine binds and a local seat dials, while the SAN is the set
+/// endpoint the server binds and a local seat dials, while the SAN is the set
 /// of spellings a client may verify what it dialled against — so the address's
 /// own host leads the list and each further one is stated beside it. `&[]` is
 /// the box that is reachable exactly one way, which is every caller but the
@@ -143,7 +143,7 @@ pub fn mint(dir: &Path, address: &str, also: &[String], force: bool) -> Result<(
 /// nothing to rendezvous for and must start no thread, so the ed25519 seed
 /// and the pairing salt are minted exactly when the address names another
 /// machine's way in, and only on the box that founded the trust root: a
-/// client box holds the engine's public key, not a seed of its own. Called
+/// client box holds the server's public key, not a seed of its own. Called
 /// from every act that writes the address, so the two facts cannot drift.
 pub(crate) fn rendezvous_for(dir: &Path, address: &str) -> Result<(), String> {
     if host_of(address) == LOOPBACK || !dir.join(CA_KEY).is_file() {
@@ -182,7 +182,7 @@ fn address_at(dir: &Path) -> Option<String> {
 ///
 /// **A `:0` is not a port to keep.** It is the request a self-provisioning boot
 /// writes — the kernel's answer, known only to the listener that took it — so
-/// an operator stating where this engine listens is stating the endpoint a `:0`
+/// an operator stating where this server listens is stating the endpoint a `:0`
 /// never was. Every other port is theirs and is kept: a box that binds 7752 and
 /// gains a way in states the new host alone, and its endpoint must not move to
 /// the default underneath it.

@@ -4,7 +4,7 @@
 //!
 //! **[`Advertise`](super::Action::Advertise)** is a tool host presenting its
 //! set (REMOTE §5, bl-4e08): the three facts per element — name, description,
-//! JSON Schema verbatim — which the engine writes into that client's
+//! JSON Schema verbatim — which the server writes into that client's
 //! registration when they differ from what is stored
 //! ([`registry::tools`](crate::registry::tools)).
 //!
@@ -23,7 +23,7 @@
 //! the ruling and the §4.2 grade a foot is refused it by.
 //!
 //! **[`Login`](super::Action::Login)** is the sign-in, as an act (REMOTE §8.3;
-//! DESIGN §8.3 as amended by bl-61bf): start `bz --login` on the ENGINE inside
+//! DESIGN §8.3 as amended by bl-61bf): start `bz --login` on the SERVER inside
 //! the named workspace's wall, so the credential lands where that workspace's
 //! agents read it whichever box the seat is on. It never waits for the run and
 //! its receipt is that run's standing, re-read —

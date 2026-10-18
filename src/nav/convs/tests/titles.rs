@@ -6,7 +6,7 @@ use super::*;
 use crate::nav::convs::Titles;
 
 /// The table is the ladder: a named agent reads its name, a nameless one its
-/// payload line, and both agree with the slice-side lookup every engine seat
+/// payload line, and both agree with the slice-side lookup every server-side seat
 /// uses — one ladder, two lookups.
 #[test]
 fn a_title_is_the_same_answer_the_agent_lookup_gives() {

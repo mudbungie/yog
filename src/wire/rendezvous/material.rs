@@ -15,30 +15,30 @@
 //! **One salt, four derivations, all HKDF** — so the commons stores nothing
 //! that names the pairing: the DHT salt each item is filed under, the
 //! keypair the inbox is signed with (derived, so a client needs no keypair of
-//! its own to write it and the engine needs no client key to poll it), and
+//! its own to write it and the server needs no client key to poll it), and
 //! the AEAD key both items are sealed under. Deriving the inbox key from the
 //! pairing salt is what "a key derived from the pairing salt" means literally,
-//! and it dissolves a per-client key the engine would otherwise have to hold.
+//! and it dissolves a per-client key the server would otherwise have to hold.
 
 use crate::dht::Keypair;
 use ring::hkdf::{HKDF_SHA256, Salt};
 use std::path::Path;
 
-/// The ed25519 seed the engine publishes presence under, hex.
+/// The ed25519 seed the server publishes presence under, hex.
 pub const KEY: &str = "rendezvous.key";
-/// The pairing salt, hex — the secret a client and this engine share.
+/// The pairing salt, hex — the secret a client and this server share.
 pub const SALT: &str = "pairing.salt";
 /// The public half of [`KEY`], hex — what a client verifies presence under.
 /// Derived from the seed, so it is re-derived wherever it is absent and never
 /// a second draw; the names are the ones a seat reads (REMOTE §13.2).
 pub const PUBLIC: &str = "rendezvous.pub";
 
-/// What a client is handed beside its leaf: the engine's public rendezvous key
+/// What a client is handed beside its leaf: the server's public rendezvous key
 /// and the pairing salt, each 32 bytes of lowercase hex, exactly as [`PUBLIC`]
 /// and [`SALT`] hold them (REMOTE §8.4, §13.2).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Handoff {
-    /// The engine's rendezvous public key.
+    /// The server's rendezvous public key.
     pub public: String,
     /// The pairing salt.
     pub salt: String,
@@ -52,7 +52,7 @@ pub(crate) struct Pairing {
 }
 
 impl Pairing {
-    /// The engine's rendezvous keypair — presence is signed under it.
+    /// The server's rendezvous keypair — presence is signed under it.
     pub(crate) fn keypair(&self) -> Result<Keypair, String> {
         Keypair::from_seed(self.seed)
     }
@@ -120,8 +120,8 @@ pub(crate) fn read_dir(dir: &Path) -> Result<Option<Pairing>, String> {
 }
 
 /// Mint whatever of the two `dir` lacks. Idempotent like the rest of the mint:
-/// a file already there is never rewritten, because a re-keyed engine is an
-/// engine no client can find.
+/// a file already there is never rewritten, because a re-keyed server is an
+/// server no client can find.
 pub(crate) fn mint(dir: &Path) -> Result<(), String> {
     for name in [KEY, SALT] {
         let path = dir.join(name);

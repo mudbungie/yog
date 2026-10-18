@@ -22,14 +22,14 @@
 //!   injection at all: litany injects it from the calling role's own procedure,
 //!   and since the seam inverted it reaches this router like every other name.
 //!   Its subject is the conversation, which yog holds, so yog answers it
-//!   itself, at the engine's own front door (REMOTE §5.4, bl-dfce).
+//!   itself, at litany's own front door (REMOTE §5.4, bl-dfce).
 //!
 //! **It runs in the driver, and the driver is a child process.** Presence is
-//! engine RAM by ruling (REMOTE §5), so the roster is asked for through the
+//! server RAM by ruling (REMOTE §5), so the roster is asked for through the
 //! deposit inbox REMOTE §3 reserves for the world's own residents ([`ask`]) —
 //! no new verb, no new transport, and the same `Query::Clients` every seat
 //! reads. [`Injection::tools`], by contrast, touches nothing but disk: a prefix
-//! that changed when an engine was slow would be a connectivity-rate fact
+//! that changed when a server was slow would be a connectivity-rate fact
 //! inside the model's cached context, which is what REMOTE §5 was amended to
 //! exclude.
 //!
@@ -39,7 +39,7 @@
 //! tree — routed to the ONE registered machine that both advertises the name
 //! and consents to workspace-cwd execution, with the conversation's resolved
 //! cwd on the invocation. Where no machine consents, the lane's last rung is
-//! the engine's own front door for the three names the engine implements
+//! litany's own front door for the three names litany implements
 //! ([`subject::performs`]), so a default install writes a file with nothing
 //! enrolled; every other name is refused in band, naming the way out.
 //!
@@ -60,7 +60,7 @@
 //!
 //! **A loaded remote name runs where it lives** (REMOTE §9 step 7, bl-024b).
 //! [`remote`] is the driver's end of the routing leg: two ordinary gestures
-//! through the same inbox door — one that queues the call in the engine's
+//! through the same inbox door — one that queues the call in the server's
 //! mailbox and one that polls for what came back — and the far machine's own
 //! stdout, stderr and exit code passed through untouched, so the model cannot
 //! tell a routed tool from a local one. Only a *transport* failure is a
@@ -75,11 +75,11 @@ use ::litany::cmd::{InjectedTool, RoutedCall, RoutedCapture, ToolInjection};
 
 use crate::ui_state::{Clock, iso8601_extended};
 
-/// The deposit round trip a driver asks its engine through.
+/// The deposit round trip a driver asks its server through.
 pub mod ask;
 /// The `clients` tool: the roster, and the act that loads from it.
 pub mod clients;
-/// The compactor's procedure pair, performed as engine acts.
+/// The compactor's procedure pair, performed as server acts.
 pub mod engine_act;
 /// The calling role's `providers.yaml` grant — the gate on this whole
 /// injection since bl-52b7.
@@ -108,10 +108,10 @@ pub struct Site {
     pub workspace: String,
     /// The calling agent's id (§2.3).
     pub agent: String,
-    /// How long an engine ask may take.
+    /// How long a server ask may take.
     pub budget: ask::Budget,
     /// How long a *tool* on another machine may take (REMOTE §5, bl-024b) — a
-    /// second bound because it measures a second thing: an engine that has not
+    /// second bound because it measures a second thing: a server that has not
     /// answered is down, a tool that has not answered is working.
     pub patience: ask::Budget,
     /// The observation stamp's source.
@@ -133,7 +133,7 @@ pub struct Injection {
     /// The path litany's own third hop addresses as `<driver_target> tool
     /// <name>` — the world's `litany` shim, which re-executes yog under that
     /// namespace. [`engine_act`] performs the compactor pair through it, so the
-    /// acts stay the engine's own and yog restates none of their semantics.
+    /// acts stay litany's own and yog restates none of their semantics.
     driver_target: PathBuf,
     budget: ask::Budget,
     patience: ask::Budget,
@@ -142,7 +142,7 @@ pub struct Injection {
 
 impl Injection {
     /// Install an injection for a driver process. Two bounds, because they
-    /// measure two things: `budget` is how long the engine may take to answer
+    /// measure two things: `budget` is how long the server may take to answer
     /// one deposit, `patience` how long a tool on another machine may take to
     /// run ([`remote::patience`]).
     pub fn new(
@@ -222,7 +222,7 @@ fn routed(site: &Site, entry: &loaded::Entry, call: &RoutedCall<'_>) -> RoutedCa
 impl ToolInjection for Injection {
     /// The `clients` tool plus this agent's loaded set, for a role whose
     /// grant names `clients` (bl-52b7) — and nothing at all for one whose does
-    /// not. Read off disk, so assembly never waits on an engine and never
+    /// not. Read off disk, so assembly never waits on a server and never
     /// varies with one.
     ///
     /// **The driven agent is the seam's own fact since litany bl-ddaa**
@@ -258,7 +258,7 @@ impl ToolInjection for Injection {
     }
 
     /// Answer every name, because the router is total (litany's inverted
-    /// seam): the `clients` tool, the six engine acts, every loaded remote
+    /// seam): the `clients` tool, the six server acts, every loaded remote
     /// name — and, for everything else, the **worktree lane** (REMOTE §5.4,
     /// bl-77be): a granted, unqualified name is a workspace-subject attempt,
     /// routed to the workspace's one consenting machine with the

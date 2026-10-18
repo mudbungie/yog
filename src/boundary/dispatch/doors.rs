@@ -48,7 +48,7 @@ pub fn prepare(
         // §8.1 worktree formula folds off is resolved here, once, for that
         // repo — the operator's own territory for the operator's own checkout,
         // the world's for a directory the world owns. It cannot be a fact of
-        // the engine: two projects on one box can sit in two bundles.
+        // the server: two projects on one box can sit in two bundles.
         balls_state_root: deps.world.balls_state_root_for(repo),
     };
     let start_deps = start::Deps {

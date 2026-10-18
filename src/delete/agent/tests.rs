@@ -86,9 +86,9 @@ fn an_absent_root_is_the_general_path_with_empty_inputs() {
 
 /// **The seat's own projection of the same gate** (REMOTE §9.7, bl-b4b5): the
 /// §11 danger row and the dialog fold `Query::Conversations`' answered forest
-/// rather than the engine's agent set, and the two must say the same thing —
+/// rather than the server's agent set, and the two must say the same thing —
 /// the chokepoint's re-derivation at fire is what actually decides, so a
-/// painted affordance that disagreed would offer a verb the engine refuses.
+/// painted affordance that disagreed would offer a verb the server refuses.
 #[test]
 fn the_seat_reads_the_same_gate_off_an_answered_forest() {
     let kid = agent(CHILD, AgentState::InFlight, 2);
@@ -117,7 +117,7 @@ fn the_seat_reads_the_same_gate_off_an_answered_forest() {
         "one gate, two projections"
     );
     assert!(seat.refused(), "the §10 uncertainty still counts as live");
-    // A root the answer does not carry is the same empty-input arm the engine's
+    // A root the answer does not carry is the same empty-input arm the server's
     // own miss takes: its id for a name, nothing live.
     let absent = confirmation_of_rows(&rows, "gone-id");
     assert_eq!(absent, confirmation("gone-id", &[]));

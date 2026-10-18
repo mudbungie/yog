@@ -148,9 +148,9 @@ clap = { version = "4", features = ["derive"] }
 # published latest.
 #
 # **The name moved at a version fence (REMOTE §12, bl-9905).** This crate — the
-# agent-loop engine — shipped as `lernie` through 0.0.11 and continues its line
+# agent loop — shipped as `lernie` through 0.0.11 and continues its line
 # as `litany` from 0.0.1; the `lernie` name passes to the seat, whose line
-# begins at 0.1.0. So a `lernie 0.0.x` in the notes below is THIS engine at that
+# begins at 0.1.0. So a `lernie 0.0.x` in the notes below is THIS crate at that
 # release, and every version citation in yog's tree reads against that one rule.
 # 0.0.6 gives the role assignment **two tuning knobs**, both resolved
 # follow-the-tip at every step boundary like every other control fact.
@@ -163,8 +163,8 @@ clap = { version = "4", features = ["derive"] }
 # **checkbox, not a tri-state** — `false` and omitted are one fact upstream, so
 # yog's `off` removes the line rather than writing a second spelling of absence.
 # This pin is the gate on yog's own two gestures (bl-23bd): litany's serde
-# ignores an unknown role key in silence, so writing either field against an
-# engine that does not read it is the bl-d9cb trap — a write that reached
+# ignores an unknown role key in silence, so writing either field against a
+# litany that does not read it is the bl-d9cb trap — a write that reached
 # nothing — and an exact pin at or above this release is what dissolves it.
 # 0.0.5 **inverts the config default** (upstream bl-403b, its
 # `docs/DESIGN_CONFIG_FOLLOW.md`, operator ruling 2026-09-01): fork settles only
@@ -187,8 +187,8 @@ clap = { version = "4", features = ["derive"] }
 # the above as the deliberate way to hold ONE agent out of a lineage-wide
 # change — the seeded `workflows/basic-agentic-loop.yaml` so the named default
 # exists as an authoring source (bl-fcd8), and `cmd::BUILTIN_TOOLS` (bl-4cbb):
-# the engine's closed built-in name set, exported so a host with a total
-# injection derives which names this engine can perform instead of restating
+# litany's closed built-in name set, exported so a host with a total
+# injection derives which names this litany can perform instead of restating
 # them. yog's `tool_host` consumes it (`subject::performs`), and the partition
 # it draws over that set — conversation-subject acts to `engine_act`, everything
 # else to the worktree lane — is now the only thing yog states.
@@ -197,14 +197,14 @@ clap = { version = "4", features = ["derive"] }
 # for: `ToolInjection::route` returns a `RoutedCapture` outright rather than an
 # `Option`, and while an injection is installed it answers EVERY invocation the
 # agent makes — the §3.3 three-hop binary resolution stands behind it for no
-# name at all, so the engine's driver keeps no local executor. Two consequences
+# name at all, so litany's driver keeps no local executor. Two consequences
 # land in yog's own router (`src/tool_host`, bl-dfce). A name yog does not own
 # is a refusal yog *renders*, not a hand-back, which is what makes REMOTE §12's
 # ship-inert posture literal. And litany's second source of injected
 # definitions — the calling role's own procedure, today exactly the compactor's
 # `write_summary` / `mark_for_deletion` — now reaches the router too; those two
-# are engine acts on the conversation rather than tools on a machine, so yog
-# answers them itself by re-entering the engine's front door (REMOTE §5.4).
+# are server acts on the conversation rather than tools on a machine, so yog
+# answers them itself by re-entering litany's front door (REMOTE §5.4).
 # Atop that, 0.0.1 is 0.0.11 plus the rename itself — crate, binary, `LITANY_HOME`, the XDG
 # harness subdir and the `refs/litany/*` mark namespace, with no compatibility
 # shim (upstream bl-2f58, its `docs/DESIGN_ENGINE_RENAME.md`) — plus upstream
@@ -287,7 +287,7 @@ clap = { version = "4", features = ["derive"] }
 # 0.0.8 moves the tool pool under yog's router (bl-fe43, bl-81cc). Two built-ins
 # arrive — `python`, one round trip that runs a model-authored program which
 # composes the agent's own tools through `litany invoke`, and `search_history`,
-# a pickaxe over the workspace's `agents/*` refs — and both are engine acts, so
+# a pickaxe over the workspace's `agents/*` refs — and both are server acts, so
 # `engine_act::NAMES` grows to eight in the same change or the router ships them
 # to a foot that holds neither a step record nor a repository. One name LEAVES:
 # `multi_tool` retires (upstream bl-99bb), a program being what the envelope was
@@ -316,7 +316,7 @@ clap = { version = "4", features = ["derive"] }
 # `read_tool_output` is a new built-in — the page read that makes the bounded
 # projection's cut middle recoverable out of the agent's own
 # `steps/**/tools/<id>/output.json` — so `BUILTIN_TOOLS` grew and yog classified
-# it: an ENGINE ACT (its subject is the agent's record, REMOTE §5.4) and an
+# it: a SERVER ACT (its subject is the agent's record, REMOTE §5.4) and an
 # intrinsic `Read` row in the capability control, without which it would fall to
 # the routed lane and be held Opaque on every call. `litany prompt --role` /
 # `litany retarget --role` resolve a root's soul, provider row and grant as any

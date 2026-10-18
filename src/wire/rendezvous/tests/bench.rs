@@ -1,5 +1,5 @@
 //! The bench every loop test stands on: a fake DHT node on loopback, minted
-//! material, a fake clock, and the engine's loop over them — plus the
+//! material, a fake clock, and the server's loop over them — plus the
 //! client's half of the contract, which the suite is the mirror of.
 
 use super::super::item::Call;

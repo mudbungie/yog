@@ -72,7 +72,7 @@ impl AttentionKind {
     /// [`boundary::reply`](crate::boundary::reply)): the announcing is a
     /// seat's — a desktop notification belongs on the box the operator is
     /// looking at — so the sentence crosses the §8.5 boundary beside the
-    /// signal tokens rather than being re-worded at each seat. The engine-side
+    /// signal tokens rather than being re-worded at each seat. The server-side
     /// `notify-send` fold that used to spend it went with the frame.
     ///
     /// `pub(crate)` per AGENTS.md rule 2: an internal accessor is demoted

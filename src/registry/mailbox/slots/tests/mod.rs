@@ -170,16 +170,16 @@ fn work_landing_mid_hold_ends_it() {
     );
 }
 
-/// A handle this engine does not hold refuses **naming it**, at both readers:
+/// A handle this server does not hold refuses **naming it**, at both readers:
 /// the completion that quotes it and the poll that waits on it.
 ///
 /// **And the sentence names the restart** (REMOTE §5.6, ruling 3). The mailbox
 /// is RAM across a restart and stays RAM — the durable home of a tool result
-/// is litany's step record — so a driver that outlived this engine polls a
+/// is litany's step record — so a driver that outlived this server polls a
 /// handle the new one never minted. Two causes were named and the true third
 /// was not, which left that driver reading "answered already" about work
 /// nobody has any record of; it gains the gesture lane's own instruction,
-/// because the engine cannot know whether the box ran it.
+/// because the server cannot know whether the box ran it.
 #[test]
 fn the_spent_handle_sentence_names_the_restart_at_both_readers() {
     let mail = quick();
@@ -190,7 +190,7 @@ fn the_spent_handle_sentence_names_the_restart_at_both_readers() {
     assert!(said.contains("answered already"), "{said}");
     assert!(said.contains("it expired"), "{said}");
     assert!(
-        said.contains("this engine restarted since it was posted"),
+        said.contains("this server restarted since it was posted"),
         "{said}"
     );
     assert!(

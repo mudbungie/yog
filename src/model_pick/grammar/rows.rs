@@ -5,10 +5,10 @@
 //! fullness figure divided by, authored by a Declare control and edited by
 //! §9.5 typed rows. bl-9c8a deleted the table and everything over it. The
 //! window is the provider's fact, and brazen now states it in band on every
-//! `Usage` event the engine already records per step (its model-discovery
+//! `Usage` event litany already records per step (its model-discovery
 //! §5.5), which is the number litany's own `window_percent` compaction trigger
 //! divides by; a window yog declared on its own was a second representation of
-//! that fact, one the engine compacting the context could never see. The
+//! that fact, one litany compacting the context could never see. The
 //! figure reads the window off the step record (`budgets::context_window`), a
 //! row that states none renders no figure, and the seat to state one is
 //! upstream on brazen's provider row — where for Ollama it is already the

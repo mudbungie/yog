@@ -127,7 +127,7 @@ fn a_colliding_name_declines_and_leaves_the_stored_set_alone() {
 /// **A serving machine's set may not be replaced under it** (bl-1462). The
 /// store was last-writer-wins on the identity, so a second connection bearing
 /// the same certificate could present the empty set and disarm a healthy host
-/// — engine-side every later invoke was refused for a tool that plainly
+/// — server-side every later invoke was refused for a tool that plainly
 /// existed, and neither end was told.
 #[test]
 fn a_second_connection_may_not_blank_a_serving_machines_set() {

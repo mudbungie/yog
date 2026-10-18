@@ -42,7 +42,7 @@ pub use exec::{DELETE_STEP, DeleteError, execute};
 /// A name rather than the `bl` cwd since bl-b4b5, for the reason the join row
 /// it is copied off carries one (REMOTE §8.1): a confirmation is what a *seat*
 /// states, and a seat holding an answer must be able to build the same object
-/// the engine gates on. [`plan`] resolves it back to the clone the verb runs
+/// the server gates on. [`plan`] resolves it back to the clone the verb runs
 /// in, at the one seam that owns the round trip.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Claim {
@@ -56,7 +56,7 @@ pub struct Claim {
 ///
 /// **It no longer carries the workspace's path** (bl-b4b5). The path was the
 /// address the gesture had already named, spelled a second time as an
-/// engine-side directory — §8.1's own test — and it made the object
+/// server-side directory — §8.1's own test — and it made the object
 /// unbuildable by a seat that reads over a wire. [`plan`] takes the path from
 /// the caller that resolved the address, which is where it already was.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -102,7 +102,7 @@ impl Confirmation {
 ///
 /// It is [`confirmation`] with its two inputs read from the other end, and it
 /// answers the *same type*: one `armed`, one `refused`, one `ball_ids`,
-/// whichever side asks. The engine's own re-derivation at fire is unmoved and
+/// whichever side asks. The server's own re-derivation at fire is unmoved and
 /// stays authoritative (§9.8, bl-1747) — this is the painted affordance, which
 /// may land an ask period late and may never be the thing that decides.
 pub fn confirmation_of_rows(

@@ -138,7 +138,7 @@ fn converge(
 /// else. That debris **is** a workspace by §3.1's definition, so it is
 /// enumerated, so a scoped client that never got a registration out of the
 /// failed reply can neither address it (`unknown workspace`, REMOTE §4) nor
-/// found past it (the raise refuses to join another client's wall), and
+/// found past it (the raise refuses to join another client's workspace), and
 /// `workspaces` answers an empty list about a name that is now unusable
 /// forever. The state that causes it is invisible to every read the interface
 /// offers, and `rm -rf` on the directory is the only exit. bl-c9d2's raise

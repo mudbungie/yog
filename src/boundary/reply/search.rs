@@ -2,7 +2,7 @@
 //! [`board`](super::board)): one hit, its three possible address shapes
 //! flattened onto the keys the gestures already take — and, since bl-764a,
 //! onto the **values** they take too: the §3.1 workspace leaf and the §5.1 #1
-//! project name, never an engine-local path (REMOTE §8.1).
+//! project name, never a server-local path (REMOTE §8.1).
 
 use serde_json::{Map, Value, json};
 

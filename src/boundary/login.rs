@@ -4,7 +4,7 @@
 //!
 //! The act is [`Action::Login`](super::Action::Login) and it does exactly two
 //! things — start `bz --login --provider <row>`, in the flow that row's own
-//! `device` column declares (§8.3 rule 1 as amended by bl-61bf), on the ENGINE
+//! `device` column declares (§8.3 rule 1 as amended by bl-61bf), on the SERVER
 //! inside the *named* workspace's wall, and answer that run's standing. It never
 //! waits: a sign-in is minutes of a human's attention and the intake is
 //! one thread for the whole world (REMOTE §3), so an act that waited it out

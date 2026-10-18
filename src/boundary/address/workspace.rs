@@ -153,7 +153,7 @@ impl Query {
             // The sign-in lane, addressed at the wall its run belongs to.
             | Query::LoginTail { workspace, .. } => Some(workspace),
             // The doctor names one only when a seat had one selected (bl-28f4):
-            // a box with no workspace still has an engine to examine, and the
+            // a box with no workspace still has a server to examine, and the
             // resolution above skips a `None` exactly as it skips a read that
             // names no workspace at all.
             Query::Doctor { workspace } => workspace.as_mut(),

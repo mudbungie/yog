@@ -63,7 +63,7 @@ pub fn strip_identity_stamp(goal: &str) -> String {
 /// target workspace's living agents wear, each agent's
 /// [`crate::git_tree::Agent::name_fact`] (the litany-stored blob, with this
 /// module's legacy stamp parse as fallback while pre-0.0.4 roots live). No
-/// cross-workspace enumeration: workspaces are isolation walls, so global
+/// cross-workspace enumeration: workspaces are isolation boundaries, so global
 /// uniqueness would buy nothing.
 pub(super) fn mint_conversation(occupied: &[String], rng: &dyn Rng) -> Result<String, MintError> {
     litany::mint::mint(rng, &occupied.iter().cloned().collect())

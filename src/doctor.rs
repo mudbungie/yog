@@ -32,7 +32,7 @@ use std::path::Path;
 
 use crate::boundary::dispatch::Deps;
 
-/// The engine-wide checks — wire material, the endpoint, the listener, the
+/// The server-wide checks — wire material, the endpoint, the listener, the
 /// identity every substrate spawn signs with.
 mod engine;
 /// The per-workspace checks — the wall the first conversation needs, and who is
@@ -88,12 +88,12 @@ pub struct Report {
     /// One row per check.
     pub rows: Vec<Row>,
     /// The rendezvous loop's standing — `None` from a process with no
-    /// listener, which has no loop to speak of (and from an engine older
+    /// listener, which has no loop to speak of (and from a server older
     /// than edition 21, which cannot say).
     pub rendezvous: Option<crate::wire::rendezvous::Standing>,
 }
 
-/// [`examine`], with the engine's own counters beside it.
+/// [`examine`], with the server's own counters beside it.
 pub fn report(deps: &Deps, workspace: Option<(&str, &Path)>) -> Report {
     Report {
         rows: examine(deps, workspace),
@@ -103,7 +103,7 @@ pub fn report(deps: &Deps, workspace: Option<(&str, &Path)>) -> Report {
 
 /// Examine this box, and — when the gesture named one — the workspace with it.
 ///
-/// The engine rows always answer, because the questions they ask are the ones a
+/// The server rows always answer, because the questions they ask are the ones a
 /// box with no workspace at all still has; the workspace rows ride only when a
 /// workspace was named, since a seat with none selected is asking about the
 /// box.

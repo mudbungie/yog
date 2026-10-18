@@ -19,7 +19,7 @@
 //!   carry a fixed class.
 //! - **the compactor's procedure pair** (`write_summary`, `mark_for_deletion`)
 //!   — litany injects them from the calling role's own procedure and yog
-//!   performs them at the engine's front door (REMOTE §5.4), so the control
+//!   performs them at litany's front door (REMOTE §5.4), so the control
 //!   sees them like any other name.
 //! - **yog's own roster tool** (`clients`, REMOTE §5).
 //!

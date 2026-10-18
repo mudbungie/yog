@@ -27,7 +27,7 @@ mod device;
 pub(crate) use device::{ENROLL, LOGIN, grade_of};
 /// The two **depositing** envelopes (bl-a33d), one family file on the seam
 /// every other family here is cut on: a plain send and send-and-interrupt carry
-/// the same three fields, and the only difference is what the engine does once
+/// the same three fields, and the only difference is what the server does once
 /// the deposit lands.
 mod deposit;
 mod fan;

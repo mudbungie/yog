@@ -57,7 +57,7 @@ pub(super) fn ca(dir: &Path) -> Result<(), String> {
 
 /// One of the three roles' leaves: [`Role`] derives the basename it is written
 /// under, the common name it carries — which **is** the client identity the
-/// engine reads back off the presented certificate (REMOTE §2) — and the two
+/// server reads back off the presented certificate (REMOTE §2) — and the two
 /// X.509 facts below. `hosts` is every way in the server answers to; a client
 /// leaf ignores it, because nothing dials a client.
 pub(super) fn leaf(dir: &Path, role: Role, hosts: &[String]) -> Result<(), String> {
@@ -203,7 +203,7 @@ fn issue(dir: &Path, name: &str, subject: &str, san: &str, eku: &str) -> Result<
 /// front door — so a server certificate that only named an operator's public
 /// host would refuse the one seat that is certain to be there. It costs one
 /// SAN entry and removes a whole class of "the window cannot reach its own
-/// engine". It is appended, and the whole list is de-duplicated as it is built,
+/// server". It is appended, and the whole list is de-duplicated as it is built,
 /// so a box stated as loopback says it once.
 pub(super) fn san(role: Role, hosts: &[String]) -> String {
     match role {

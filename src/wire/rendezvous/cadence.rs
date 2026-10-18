@@ -8,7 +8,7 @@ use std::time::Duration;
 
 /// The mainline DHT's bootstrap nodes — the caller's fact, resolved on the
 /// loop's own thread (a name lookup is a network act and boot is not). The
-/// four standard long-lived routers, because from the deployed engine box
+/// four standard long-lived routers, because from the deployed server box
 /// only one of the first two answered at all (REMOTE §13.7 ruling 3,
 /// bl-9408): a silent router should cost a quarter of the roster, not half.
 pub(crate) fn mainline() -> Vec<String> {

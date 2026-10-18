@@ -1,7 +1,7 @@
 //! Tables for the census folds ([`super`], bl-b4b5): the §3.6 gate and the §3.3
 //! occupied set, read off an answered forest.
 //!
-//! The *parity* half — that these say what the engine's own
+//! The *parity* half — that these say what the server's own
 //! [`liveness`](crate::nav::convs::liveness) and
 //! [`names_in`](crate::boundary::answer::names_in) say — is asserted here for
 //! liveness (both take the same agent set, one through `forest_rows`) and in
@@ -40,7 +40,7 @@ fn the_gate_reads_each_conversations_own_subtree_and_fails_closed() {
     let rows = forest(&agents);
     let seat = liveness_of_rows(&rows);
     assert_eq!(seat.len(), 2, "one entry per root, never per member");
-    // Two projections of one derivation: the engine folds the agent set, the
+    // Two projections of one derivation: the server folds the agent set, the
     // seat folds the rows answered from it, and they may not disagree about
     // *what* is live. They do differ in order, and lawfully: the answer is
     // sorted by recency (§11) while the agent set is in §2.3 descent order, so

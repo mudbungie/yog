@@ -215,7 +215,7 @@ still sums nothing new.
   the money.
 - **The table and the ceiling are read and set through the boundary.** They
   were *"read-only, hand-edited, live within a tick"* when the window and the
-  engine were one process on one box; since the four-component split (REMOTE
+  server were one process on one box; since the four-component split (REMOTE
   §12) `ui.json` lives on the server and the seat is another machine, so the
   ruling's premise is gone. `ui.json` stays the one home and stays severable
   (delete the key, lose the column); what is added is the door.
@@ -680,7 +680,7 @@ mediation.
    them" — was an answer nobody chose and it reached the wrong leg. Open-world
    passes (item 6), and a name outside the intrinsic map is not a `litany-tool-*`
    binary any more: it is a **routed** tool on a machine a foot administers
-   (REMOTE §5). So the engine's own `bash` refused `rm -rf` in band while the
+   (REMOTE §5). So the server's own `bash` refused `rm -rf` in band while the
    identical line sent as `box2_shell {"command": …}` was passed without a
    word — strictest about the machine the operator is sitting at, blind about
    the boxes whose blast radius the operator cannot see. **Ruling 2 of the
@@ -688,7 +688,7 @@ mediation.
    enough on its own:
 
    - **A routed tool whose input carries a command line is classified by that
-     command line, exactly as the engine's own `bash` is.** A foot's shell is a
+     command line, exactly as the server's own `bash` is.** A foot's shell is a
      shell. Operands resolve against the *local* writable root, so a path on
      the far machine is outside it and classifies to the wider class — the
      honest direction on a leg the adjudicator cannot see into (REMOTE §5).
@@ -714,7 +714,7 @@ mediation.
    - **The command line is read whole, and the writable root is not on the
      other machine** (bl-1772). The evasion above was not cleverness, it was an
      operand test that meant nothing on a foot: a relative operand resolved
-     against the agent's own cwd, which is the engine's worktree and inside the
+     against the agent's own cwd, which is the server's worktree and inside the
      root, so a bare `*` after a `cd` read as a target write while the absolute
      spelling of the same act read as loss. The special case was the root
      itself — **this control vouches for no path on a machine it cannot see**,
@@ -738,7 +738,7 @@ mediation.
      deleted. The class is the **operator's own statement** of what that
      tool on that box reaches — informed by what `thrall mcp pin` printed of
      the server's annotations and by nothing the wire carries, since an
-     advertisement states no effect (REMOTE §5.1) and the engine infers none
+     advertisement states no effect (REMOTE §5.1) and the server infers none
      from one; it is a **class**, so the invocation is still adjudicated per
      call by the same table, never a name allowed; and it is consulted only
      where there is **no command line to read**, so a row on `box2_shell`
@@ -775,7 +775,7 @@ mediation.
      is the row, which outranks this reading — the operator states what they
      know and this control cannot see.
 
-   - **An envelope is never a subject — and reading one is the engine's job,
+   - **An envelope is never a subject — and reading one is the server's job,
      not this control's** (bl-d06c). A tool whose whole act is to carry other
      invocations (litany's `multi_tool`: `{execution: parallel, invocations:
      [...]}`) has no reach of its own, so the classes that matter are its
@@ -806,16 +806,16 @@ mediation.
      machines this control cannot see into — and held on every call; the
      operator saw a question with tool calls and no reply. The instance is gone
      with the name, and the **class** is now guarded rather than fixed
-     (`tests/engine_grant.rs`): every name the pinned engine's own grant
+     (`tests/engine_grant.rs`): every name the pinned litany's own grant
      carries, read out of a workspace `litany new` really authors, must
-     classify on the engine leg.
+     classify on the server leg.
 
      **And the envelope row stays unwritten, because the retirement is real**
      (bl-d281, verified against litany 0.0.13 rather than against a doc). The
-     pinned engine answers to eleven built-in names and `multi_tool` is not
+     pinned litany answers to eleven built-in names and `multi_tool` is not
      among them: `litany tool multi_tool` replies *unknown built-in tool*, no
      module, schema or skill ships for it, and `tool_host::subject::performs`
-     — which is `BUILTIN_TOOLS` minus the engine acts — does not hold it
+     — which is `BUILTIN_TOOLS` minus the server acts — does not hold it
      either. So a workspace whose grant still names it does not execute an
      envelope when the operator passes the hold; it gets an in-band refusal
      from the worktree lane. There is nothing for a fold to judge, and the
@@ -849,9 +849,9 @@ mediation.
    narrowing returns nowhere, because the workhorse tool (`bash`) is every
    class at once and only per-invocation adjudication can tell them apart.
    (DESIGN §8.6's birth **prune** is not that returning, bl-d281: it removes a
-   name the pinned engine cannot execute at all — a retirement the grant
+   name the pinned litany cannot execute at all — a retirement the grant
    outlived — never a name whose effects are distrusted, and its floor is the
-   engine's whole shipped pool.)
+   litany's whole shipped pool.)
 
 3. **The writable root is §4.10's answer, restated:** the bound attempt
    worktree plus the agent's own worktree. Inside it, writing is the job

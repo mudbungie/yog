@@ -189,7 +189,7 @@ pub const ACTIONS: &[HelpRow] = &[
         usage: "/invoke <client> <tool> <json input>",
         summary: "route one tool call to the machine that advertised it",
         detail: "Queues one call in a tool host's mailbox and answers the handle it is known \
-                 by. It does NOT wait: the engine's intake is one thread for the whole world, \
+                 by. It does NOT wait: the server's intake is one thread for the whole world, \
                  so what a tool takes is waited out by the caller, with `/capture <handle>` \
                  until an answer lands. The client must advertise that tool right now, or this \
                  refuses saying so — the same correction a machine that dropped a tool earns. \

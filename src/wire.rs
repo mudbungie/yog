@@ -3,7 +3,7 @@
 //!
 //! REMOTE §1.2 rules that the UI operates entirely via RPC and that even the
 //! local, single-machine arrangement does the hard split. This module is the
-//! channel that makes that possible: [`server`] is the engine's listener,
+//! channel that makes that possible: [`server`] is the server's listener,
 //! [`client`] is a seat's transport, [`frame`] is what they say to each other,
 //! [`material`] is the operator-provisioned trust the whole thing rests on, and
 //! [`seat`] is the first shipped consumer — the terminal seat, `yog seat`.
@@ -16,20 +16,20 @@
 //! chokepoints**, exactly as the gestures inbox is, and the inbox remains for
 //! the world's own residents (REMOTE §3).
 //!
-//! **The listener rides the engine, not one face** (bl-b6fa). Both faces run
+//! **The listener rides the server, not one face** (bl-b6fa). Both faces run
 //! the deposit consumer so a deposit converges whichever face is up (§8.5, I0);
 //! a seat wants the identical guarantee, so the listener boots in
 //! [`Engine::boot`](crate::engine::Engine::boot) beside it. That is also what
-//! keeps **one engine per world**: a windowed yog serves the wire it would
-//! otherwise have to start a second engine to reach, and `yog serve` is the
-//! same engine with no window.
+//! keeps **one server per world**: a windowed yog serves the wire it would
+//! otherwise have to start a second server to reach, and `yog serve` is the
+//! same server with no window.
 //!
 //! **Absence WAS the off switch, and is not since bl-ae05.** REMOTE §1.2's
 //! window is a client of this listener now, so a box with no material would be
 //! a window that paints nothing — and REMOTE §8 had already rejected both ways
 //! around that. A boot therefore founds its own loopback trust root
 //! ([`provision`]), which is the operator's own out-of-channel act performed on
-//! the operator's own box — aimed at `127.0.0.1:0`, so no two engines contend
+//! the operator's own box — aimed at `127.0.0.1:0`, so no two servers contend
 //! for a process-global port (I0, bl-dc14). A *half*-provisioned wire the mint
 //! cannot heal still refuses, because silently degrading to no encryption is
 //! the one failure this design exists to exclude — and the refusal is a
@@ -46,9 +46,9 @@ pub mod hello;
 pub mod intake;
 pub mod material;
 /// The mint (REMOTE §1.4, §8; bl-ae05) — the one `openssl` recipe, spent by the
-/// engine's boot and by `yog wire-certs` alike.
+/// server's boot and by `yog wire-certs` alike.
 pub mod provision;
-/// The punched wire's engine end (REMOTE §13, bl-4263): presence, the inbox
+/// The punched wire's server end (REMOTE §13, bl-4263): presence, the inbox
 /// poll, the punch, and held-connection serving.
 pub mod rendezvous;
 pub mod server;
@@ -62,14 +62,14 @@ pub mod tls;
 /// bl-776a: the §7.3 wound grace is the sum of every leg a fact crosses before
 /// a seat can see it
 /// ([`Cadence::wound_grace`](crate::app::Cadence::wound_grace)), and the last
-/// of those legs is the ask. The engine **spends** that grace itself now — a
+/// of those legs is the ask. The server **spends** that grace itself now — a
 /// wound crosses already-judged — so this constant is load-bearing in the
 /// stronger sense: a server that did not know the seat's own poll period could
 /// not compute the window it waits out, and would raise the alarm the grace
 /// exists to prevent.
 pub const ASK_PERIOD: std::time::Duration = std::time::Duration::from_millis(500);
 
-/// Bring the engine's listener up, or explain why there is none.
+/// Bring the server's listener up, or explain why there is none.
 ///
 /// **It founds its own trust root first** (REMOTE §8 as amended, bl-ae05).
 /// Absence of material used to be the off switch; it cannot be any more,
@@ -81,12 +81,12 @@ pub const ASK_PERIOD: std::time::Duration = std::time::Duration::from_millis(500
 /// a host that is not loopback into it.
 ///
 /// A refusal is *returned* rather than said here, and the caller owns both the
-/// saying and the consequence (bl-dc14): the engine's boot hands it up, and
+/// saying and the consequence (bl-dc14): the server's boot hands it up, and
 /// `Engine::serve` prints it and **exits non-zero** (bl-1d9b). It used not to
-/// be fatal — a box with no `openssl` got the engine yog had always been — on
+/// be fatal — a box with no `openssl` got the server yog had always been — on
 /// the argument that only a seat was shut out; the window that made that true
 /// left with bl-7942, so a yog with no listener answers nobody while still
-/// draining the world's gesture inbox, which is the half-engine bl-1d9b is
+/// draining the world's gesture inbox, which is the half-server bl-1d9b is
 /// about.
 pub fn listen(
     world: &Env,
@@ -118,10 +118,10 @@ pub fn listen(
 /// home and it holds a *request*; a `:0` there is answered by the kernel, and
 /// only the listener ever learns the answer. §8 says that answer is "said once,
 /// on stderr, by the boot that bound it" — which is true and is also why an
-/// operator whose engine is under a supervisor cannot get it back. This is the
+/// operator whose server is under a supervisor cannot get it back. This is the
 /// same sentence, kept in RAM so it can be *asked for*: never written, never
 /// derived from, and empty in every process that did not bind (a test, the §4.3
-/// pilot, an engine whose bind was refused), which is the honest reading.
+/// pilot, a server whose bind was refused), which is the honest reading.
 ///
 /// **It carries the punched wire's counters too** (REMOTE §13.4, bl-355c) —
 /// the second door's facts about this process, shared with the loop by handle
@@ -151,7 +151,7 @@ impl Listening {
     }
 
     /// The loop's standing as `/doctor` hands it over — `None` where nothing
-    /// bound, since only an engine has a loop to speak of.
+    /// bound, since only a server has a loop to speak of.
     pub(crate) fn standing(&self) -> Option<rendezvous::Standing> {
         self.address().map(|_| self.rendezvous.standing())
     }

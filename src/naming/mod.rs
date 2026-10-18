@@ -2,10 +2,10 @@
 //! addressed when a path may not cross the boundary.
 //!
 //! A boundary gesture used to carry an absolute `PathBuf`. Across machines that
-//! is meaningless — the client's filesystem is not the engine's — and it is a
+//! is meaningless — the client's filesystem is not the server's — and it is a
 //! disclosure besides: an operator's home root in every envelope, every deposit
 //! file and every reply a seat can read. The wire spelling is the **name**, and
-//! the engine resolves it to a path at the one chokepoint that already holds
+//! the server resolves it to a path at the one chokepoint that already holds
 //! the world ([`dispatch`](crate::boundary::dispatch::dispatch) /
 //! [`answer`](crate::boundary::answer::answer)).
 //!
@@ -29,7 +29,7 @@
 //!
 //! **It is the same mapping read in both directions.** The frame holds paths
 //! and spells the forward reads where a seat's selection becomes a gesture; the
-//! engine spells the resolvers where a gesture becomes an act. Nothing is
+//! server spells the resolvers where a gesture becomes an act. Nothing is
 //! stored: a name is derived from the live enumeration exactly as the §3.5
 //! binding and the §11 roster label are.
 //!

@@ -81,7 +81,7 @@ impl Ruling {
     ///
     /// A refusal is a sentence handed to the model as a tool result marked
     /// ERROR, and the model is then the only party deciding whether to try
-    /// again differently. On the engine's own machine that is the right answer:
+    /// again differently. On the server's own machine that is the right answer:
     /// the operator is sitting at it, the blast radius is in front of them, and
     /// an in-band decline costs no park. On a **routed** leg it is not an answer
     /// at all — the drive that filed this had a bare `rm -f <dir>/*` refused

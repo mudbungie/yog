@@ -1,5 +1,5 @@
 //! **The stand-in substrate** (REMOTE §5, bl-c907): what the tool-host beats
-//! drive against instead of a live engine.
+//! drive against instead of a live server.
 //!
 //! Every fixture here holds up exactly one contract — the deposit consumer's,
 //! *claim then reply* — because that contract is the whole of what the driver's
@@ -8,7 +8,7 @@
 
 use super::*;
 
-/// A stand-in engine: answer the first deposit that lands with `reply`, hand
+/// A stand-in server: answer the first deposit that lands with `reply`, hand
 /// the request back over a channel, and stop. It is the deposit consumer's
 /// contract and nothing else — claim, then reply — because that contract is
 /// the whole of what the driver's ask depends on.
@@ -37,7 +37,7 @@ pub(in crate::tool_host) fn engine(
     (handle, rx)
 }
 
-/// A budget that answers fast when an engine is there and gives up fast when
+/// A budget that answers fast when a server is there and gives up fast when
 /// it is not.
 pub(in crate::tool_host) fn budget() -> ask::Budget {
     ask::Budget {
@@ -46,7 +46,7 @@ pub(in crate::tool_host) fn budget() -> ask::Budget {
     }
 }
 
-/// A budget with no patience at all — the "no engine" path, without the wait.
+/// A budget with no patience at all — the "no server" path, without the wait.
 pub(in crate::tool_host) fn impatient() -> ask::Budget {
     ask::Budget {
         waits: 1,
@@ -54,7 +54,7 @@ pub(in crate::tool_host) fn impatient() -> ask::Budget {
     }
 }
 
-/// A stand-in for the engine's own front door — the path litany's third hop
+/// A stand-in for litany's own front door — the path litany's third hop
 /// addresses as `<driver_target> tool <name>`, which in production is the
 /// world's `litany` shim. `body` is the whole of the script, so a beat states
 /// what the front door does and nothing else. Never on `PATH`: it is named by
@@ -85,7 +85,7 @@ pub(in crate::tool_host) fn site(root: &Path, budget: ask::Budget) -> Site {
     }
 }
 
-/// A stand-in engine that answers `replies` in order, one per deposit — the
+/// A stand-in server that answers `replies` in order, one per deposit — the
 /// routing leg needs two round trips (queue, then poll) and [`engine`] answers
 /// exactly one. Hands every request back over the channel.
 pub(in crate::tool_host) fn scripted(

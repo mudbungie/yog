@@ -35,11 +35,11 @@ fn row(client: &str, present: bool, tools: Vec<Tool>) -> ClientRow {
     }
 }
 
-/// Answer one op against a stand-in engine holding `rows`.
+/// Answer one op against a stand-in server holding `rows`.
 fn against(root: &Path, rows: Vec<ClientRow>, input: &Value) -> Result<String, String> {
     let (handle, _seen) = engine(root, &reply::encode(&Reply::Clients(rows)));
     let answered = answer(&site(root, budget()), input, &quiet());
-    handle.join().expect("engine");
+    handle.join().expect("server");
     answered
 }
 
@@ -203,7 +203,7 @@ fn an_unregistered_client_is_absent() {
     assert!(e.contains("the 1 there are"), "{e}");
 }
 
-/// A malformed invocation is declined **before** the engine is asked: the
+/// A malformed invocation is declined **before** the server is asked: the
 /// refusal belongs to the caller, not to a round trip.
 #[test]
 fn a_declined_invocation_never_reaches_the_engine() {
@@ -221,7 +221,7 @@ fn a_declined_invocation_never_reaches_the_engine() {
     );
 }
 
-/// An engine that does not answer is the ask's own sentence, in band.
+/// A server that does not answer is the ask's own sentence, in band.
 #[test]
 fn an_unreachable_engine_is_said_in_band() {
     let root = TempDir::new().expect("tmp");
@@ -230,6 +230,6 @@ fn an_unreachable_engine_is_said_in_band() {
         &json!({"op": "list"}),
         &quiet(),
     )
-    .expect_err("no engine");
-    assert!(e.contains("no engine answered"), "{e}");
+    .expect_err("no server");
+    assert!(e.contains("no server answered"), "{e}");
 }

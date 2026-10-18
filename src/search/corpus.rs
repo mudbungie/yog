@@ -114,9 +114,9 @@ pub(super) fn read_conversation(
     let mut fields: Fields = Vec::new();
     match std::fs::read(&goal) {
         Ok(bytes) => fields.push((Field::Summary, String::from_utf8_lossy(&bytes).into_owned())),
-        // Named by wire address, not engine path (REMOTE §8.1, bl-764a): the
+        // Named by wire address, not server path (REMOTE §8.1, bl-764a): the
         // gap crosses the wire beside the hits, and a remote seat can spend a
-        // name where a path under the engine's home is only a disclosure.
+        // name where a path under the server's home is only a disclosure.
         Err(e) if goal.exists() => {
             unreadable.push(format!("{}/{agent}: goal.md: {e}", leaf_name(workspace)));
         }

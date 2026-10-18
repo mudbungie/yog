@@ -140,7 +140,7 @@ fn the_top_level_answers_help_in_every_spelling() {
 /// the mint, and every namespace a human is meant to type — each named by the
 /// const its dispatcher routes on, so the page cannot drift from what runs.
 /// The two plugin binaries are not advertised: balls' own chain spawns them,
-/// and no operator types one. **The engine itself is not a word** since
+/// and no operator types one. **The server itself is not a word** since
 /// bl-7942: a bare `yog` IS it, so there is nothing to list.
 #[test]
 fn the_top_level_page_states_the_whole_surface() {

@@ -8,8 +8,8 @@
 //! both is the same:
 //!
 //! 1. **An input carrying a command line is classified by that command line,
-//!    exactly as the engine's own `bash` is.** A foot's shell is a shell. The
-//!    field is `command` — the one the engine's `bash` reads and the one every
+//!    exactly as the server's own `bash` is.** A foot's shell is a shell. The
+//!    field is `command` — the one the server's `bash` reads and the one every
 //!    thrall tool schema of that shape declares — so the two spellings have one
 //!    home and cannot drift.
 //! 2. **Else the class the operator STATED for that name.**
@@ -51,7 +51,7 @@
 //! **Why the old answer was backwards.** The arm this replaces was
 //! `other => OpenWorld`, and the shipped table passes open-world — so
 //! `box2_shell {"command": "find /srv/data/blobs -delete"}` was passed without
-//! a word while the identical line through the engine's own `bash` classified
+//! a word while the identical line through the server's own `bash` classified
 //! destructive and was refused. The control was strictest about the machine
 //! the operator is sitting at and blind about the remote boxes a foot exists
 //! to administer, which is the leg whose blast radius the operator cannot see.
@@ -60,7 +60,7 @@
 //! point.** A `ByRoot` row resolves its operands against the agent's own
 //! worktree, which is on the server; a path on the foot's machine is not in it
 //! and classifies to the wider class. Ruling 2 says a routed shell is
-//! classified by its command line *exactly as* the engine's bash is, and this
+//! classified by its command line *exactly as* the server's bash is, and this
 //! is what that costs and what it buys: the same table, and a bias toward the
 //! wider class on the leg the adjudicator cannot see into (REMOTE §5's honesty
 //! clause).
@@ -92,7 +92,7 @@ pub(super) fn classify(request: &Request, root: &Root, policy: &Policy) -> Class
 ///
 /// The doc above has always said a path on the foot classifies to the wider
 /// class, and for an *absolute* operand it did. A **relative** one did not: the
-/// lexer resolves it against the agent's own cwd, which is the engine's
+/// lexer resolves it against the agent's own cwd, which is the server's
 /// worktree and inside the root — so `cd /srv/data/blobs && rm -f -- *` read as
 /// `rm` on a bare `*` inside the writable root and classified target write,
 /// while the identical `rm -f /srv/data/blobs/*` classified destructive. The

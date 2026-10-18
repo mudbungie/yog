@@ -42,7 +42,7 @@ pub enum Query {
     /// world's whole binding table, this answers the one workspace a seat is
     /// looking at — which is what every §11 balls surface actually paints, and
     /// what a seat holding a §3.1 name could not select out of the table
-    /// without the engine-side join bl-7407 refused.
+    /// without the server-side join bl-7407 refused.
     ///
     /// **The figure rides the row rather than earning a query.** A ball's spend
     /// is a filter over the same `Snapshot::bills` walk the listing is made
@@ -230,7 +230,7 @@ pub enum Query {
     ///
     /// The seventh member of the conversation-addressed family, and the one
     /// that made the other six paintable by a face holding no world: the §11
-    /// centre pane derived all of this on the frame thread out of the engine's
+    /// centre pane derived all of this on the frame thread out of the server's
     /// agent set, which is not a thing a wire can carry. Every field is a fold
     /// the boundary already owned; only the spelling is new.
     Agent { workspace: String, agent: String },
@@ -251,14 +251,14 @@ pub enum Query {
     ///
     /// **The workspace is optional, and that is the point.** The box a doctor
     /// is for is the box that cannot start a conversation yet, and it may hold
-    /// no workspace at all — so the engine's own checks answer with none named,
+    /// no workspace at all — so the server's own checks answer with none named,
     /// and naming one adds the two that are a workspace's (its wall, its
     /// roster). Every other read that names a workspace requires it, because
     /// every other read is *about* one.
     Doctor { workspace: Option<String> },
     /// **A tool host's next work** (REMOTE §3, §5; bl-024b) — *the*
     /// follow-class read, and the first with a consumer. The answer stays
-    /// pending until this client has an invocation or the engine's hold
+    /// pending until this client has an invocation or the server's hold
     /// expires, which is why it is a read and not a poll: a machine waiting on
     /// a machine is the ask rate REMOTE §10 set as the criterion for minting
     /// one.
@@ -273,7 +273,7 @@ pub enum Query {
     Invocations,
     /// **What one routed invocation captured** (REMOTE §5): the asking side's
     /// poll, answered `null` while the far machine still runs it. Bounded by
-    /// the *asker's* patience rather than the engine's — a vanished client is
+    /// the *asker's* patience rather than the server's — a vanished client is
     /// this read answering nothing until its caller gives up and says so, which
     /// is the visible in-band refusal §5 asks for and never a hang.
     Capture { invocation: String },

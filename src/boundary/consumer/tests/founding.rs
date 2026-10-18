@@ -105,7 +105,7 @@ fn a_box_with_no_material_seats_no_one() {
 }
 
 /// **The doctor answers through the chokepoint** (bl-28f4), with a workspace
-/// and without: the engine's own four always, its wall and its roster when one
+/// and without: the server's own four always, its wall and its roster when one
 /// is named. The gesture is the one workspace-addressed read that may name
 /// none, because the box it exists for may hold none.
 #[test]

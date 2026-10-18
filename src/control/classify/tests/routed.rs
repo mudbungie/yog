@@ -1,5 +1,5 @@
 //! The **fail-closed lane** (bl-72bd, bl-1772): a routed tool's command line,
-//! read exactly as the engine's own `bash` is and against a machine none of
+//! read exactly as the server's own `bash` is and against a machine none of
 //! whose paths this control vouches for.
 
 use super::super::Effect;
@@ -7,7 +7,7 @@ use super::{effect, judged};
 use serde_json::json;
 
 /// Ruling 2 of the round-1 triage, first half: a routed tool whose input
-/// carries a command line is classified by that line exactly as the engine's
+/// carries a command line is classified by that line exactly as the server's
 /// own `bash` is. The drive that filed bl-72bd deleted 180 MB through the
 /// first of these and was not asked a question.
 #[test]
@@ -31,7 +31,7 @@ fn a_routed_shell_is_classified_by_its_command_line() {
         effect("box2_shell", json!({"command": "ls -la"})),
         Effect::Read
     );
-    // The engine's own bash answers identically — that is what "exactly as"
+    // The server's own bash answers identically — that is what "exactly as"
     // means, and the two are one call into one ruleset.
     assert_eq!(
         judged(
@@ -67,7 +67,7 @@ fn a_tool_this_control_cannot_read_is_opaque_and_never_a_passing_class() {
 }
 
 /// bl-1772: the `cd` the drive found. A relative operand used to resolve
-/// against the agent's own cwd — on the engine, inside the writable root — so
+/// against the agent's own cwd — on the server, inside the writable root — so
 /// `cd <dir> && rm -f -- *` read as a target write while the identical
 /// `rm -f <dir>/*` read as loss. This control vouches for no path on a foot, so
 /// the routed leg's writable set is empty and the two spellings are one act.
@@ -80,13 +80,13 @@ fn a_cd_into_the_target_classifies_as_the_direct_form_does() {
         json!({"command": "cd /srv/data/blobs && rm -f -- *"}),
     );
     assert_eq!(chained.effect, Effect::Destructive, "{}", chained.why);
-    // A path inside the ENGINE's writable root is on the other machine too, and
+    // A path inside the SERVER's writable root is on the other machine too, and
     // is judged by that: nothing routed lands in the root by spelling.
     assert_eq!(
         effect("box2_shell", json!({"command": "rm -rf /w/agent/build"})),
         Effect::Destructive
     );
-    // The engine's own bash is untouched — its root is the one this control can
+    // The server's own bash is untouched — its root is the one this control can
     // actually vouch for, and work inside it is still the job.
     assert_eq!(
         effect("bash", json!({"command": "rm -rf /w/agent/build"})),

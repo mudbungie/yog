@@ -37,11 +37,11 @@ use std::io;
 use std::path::{Path, PathBuf};
 
 /// **Enrollment's two values** (REMOTE §1.4 as amended, §4.2; bl-f4e3) — what
-/// an operator asks for when a device joins, and what the engine answers with.
+/// an operator asks for when a device joins, and what the server answers with.
 pub mod enroll;
 /// The certificate leaf name → client identity fold (REMOTE §2).
 pub mod leaf;
-/// The engine-side invocation hand-off (REMOTE §5, bl-024b) — a queue per
+/// The server-side invocation hand-off (REMOTE §5, bl-024b) — a queue per
 /// client and a slot per invocation, RAM beside [`presence`] for its reason.
 pub mod mailbox;
 /// **What a certificate authorizes** (REMOTE §4.2, bl-1dd3) — the grade its
@@ -67,7 +67,7 @@ pub const LOCAL: &str = "local";
 /// **The local window's own client identity** (REMOTE §1.2, §4.1; bl-ae05):
 /// `yog-window`, the subject common name yog's own mint puts on the window leaf
 /// ([`Role::Window`](crate::wire::material::Role::Window)) — and therefore the
-/// name the engine reads off the certificate the window presents, the directory
+/// name the server reads off the certificate the window presents, the directory
 /// its registrations live in, and the name a registration seats. One spelling,
 /// here, because an identity's home is the registry.
 pub const WINDOW: &str = "yog-window";

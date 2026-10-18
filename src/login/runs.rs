@@ -1,5 +1,5 @@
 //! **Where a sign-in lives while it runs** (REMOTE §8.3, DESIGN §8.3 as
-//! amended by bl-61bf; bl-c285): the engine's map of live `bz --login`
+//! amended by bl-61bf; bl-c285): the server's map of live `bz --login`
 //! children, **one per workspace × provider**.
 //!
 //! The flow is a boundary act now, not a pane's own spawn, and that moves two
@@ -85,13 +85,13 @@ pub(crate) struct Board {
     seq: u64,
 }
 
-/// The engine's sign-in runs, shared by handle exactly as
+/// The server's sign-in runs, shared by handle exactly as
 /// [`Mailbox`](crate::registry::mailbox::Mailbox) and
 /// [`Presence`](crate::registry::presence::Presence) are.
 ///
 /// A default one runs whatever `bz` the ambient environment resolves and holds
 /// nothing — the posture of a face that builds its own `Deps` (the §4.3 pilot),
-/// which fires no sign-in. The engine's is [`of`](Self::of), over the world-
+/// which fires no sign-in. The server's is [`of`](Self::of), over the world-
 /// nested `bz` every other substrate spawn goes through.
 #[derive(Clone)]
 pub struct Runs {
@@ -107,7 +107,7 @@ impl Default for Runs {
 }
 
 impl Runs {
-    /// The holder that spawns `bz` — the engine's world-nested one at boot, a
+    /// The holder that spawns `bz` — the server's world-nested one at boot, a
     /// fake script's under test.
     pub fn of(bz: Cli) -> Self {
         Self {

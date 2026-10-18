@@ -147,7 +147,7 @@ pub struct InboxEntry {
 /// roster — the same one function the conversation list's title, the centre
 /// header, the composer's target line and the transcript's speaker read. Since
 /// bl-1eb0 the roster it reads is [`Titles`], the id→title table, rather than
-/// the engine's agent set: a name a seat paints must be one the wire can carry
+/// the server's agent set: a name a seat paints must be one the wire can carry
 /// it (REMOTE §9.4). This
 /// seat called [`id_floor`](crate::nav::convs::id_floor) *directly* until then
 /// — the ladder's FLOOR as if it were the ladder — so a deposit from a named

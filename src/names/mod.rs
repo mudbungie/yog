@@ -54,7 +54,7 @@ pub enum NameError {
 /// How a typed name is **read** (§3.1, §3.6): surrounding whitespace forgiven,
 /// nothing else. One reading, shared by creation's [`validate`] and deletion's
 /// typed-name arming ([`crate::delete::Confirmation::armed`]) — so what the
-/// operator may type to raise a sphere wall is exactly what they must type to
+/// operator may type to raise a workspace is exactly what they must type to
 /// take it down.
 pub fn normalize(typed: &str) -> String {
     typed.trim().to_owned()

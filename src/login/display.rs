@@ -1,7 +1,7 @@
 //! **The display a sign-in's browser opens on** (bl-bd71).
 //!
 //! `bz --login` finishes a browser flow by launching one (`xdg-open`), which
-//! needs a display in its environment. The engine runs as a user service
+//! needs a display in its environment. The server runs as a user service
 //! that starts at `default.target`, before the graphical session has exported
 //! `DISPLAY` and `WAYLAND_DISPLAY` into the user manager — so the service,
 //! and every child it seats, has neither, and the launch dies with *no
@@ -9,10 +9,10 @@
 //! paints. The service does carry `XDG_RUNTIME_DIR`, and a session that has
 //! a display has left a socket: `$XDG_RUNTIME_DIR/wayland-<n>` and
 //! `/tmp/.X11-unix/X<n>`. So the child is handed the display the sockets
-//! name, where the engine's own environment names none.
+//! name, where the server's own environment names none.
 //!
 //! **A box with neither socket is handed nothing**, which is the headless
-//! engine's case and is not an error: the browser flow fails there as it
+//! server's case and is not an error: the browser flow fails there as it
 //! always did, and the device-code flow is the one that fits. Ordering the
 //! unit after the graphical session would have been the other fix, and it is
 //! the wrong one: a headless box has no such target to order after.
@@ -59,7 +59,7 @@ fn first(dir: &Path, prefix: &str) -> Option<String> {
     names.into_iter().next().map(|(_, name)| name)
 }
 
-/// [`pairs`] over the box this engine runs on: the runtime dir the
+/// [`pairs`] over the box this server runs on: the runtime dir the
 /// environment names, and X11's own socket directory.
 pub(crate) fn discover(env: &Env) -> Vec<(String, String)> {
     let runtime = env.var("XDG_RUNTIME_DIR");
@@ -105,7 +105,7 @@ mod tests {
     }
 
     /// **A display already named is left alone, and a box with no sockets
-    /// is handed nothing** — the headless engine's case.
+    /// is handed nothing** — the headless server's case.
     #[test]
     fn a_named_display_is_kept_and_a_bare_box_gets_nothing() {
         let tmp = tempfile::tempdir().expect("a tempdir");

@@ -181,8 +181,8 @@ pub fn registry_answers(dir: &TempDir, status: &str) {
     fs::write(dir.path().join("tags-status"), status).unwrap();
 }
 
-/// The engine's answer to `{"op":"workspaces"}`, as `yog gesture` prints it:
-/// one compact JSON line. Omit the call entirely to model an engine that does
+/// The server's answer to `{"op":"workspaces"}`, as `yog gesture` prints it:
+/// one compact JSON line. Omit the call entirely to model a server that does
 /// not answer at all.
 pub fn boundary_says(dir: &TempDir, body: &str) {
     fs::write(dir.path().join("workspaces.json"), format!("{body}\n")).unwrap();

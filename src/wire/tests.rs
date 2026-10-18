@@ -1,4 +1,4 @@
-//! Whether an engine has a wire at all.
+//! Whether a server has a wire at all.
 
 use super::*;
 use crate::registry::presence::Presence;
@@ -56,7 +56,7 @@ fn an_unprovisioned_box_founds_its_own_loopback_wire() {
 /// for a process-global one. Two listeners on ONE world is spelled here because
 /// it is the harder case for this property (one address file, two live
 /// listeners, two distinct ports) and **not** because it is a lawful
-/// arrangement: two engines on one world is refused a rung up, by the world's
+/// arrangement: two servers on one world is refused a rung up, by the world's
 /// own lock (`engine::sole`, bl-1d9b), which exists precisely because this
 /// property means the bind can never be that exclusion.
 #[test]
@@ -73,7 +73,7 @@ fn two_listeners_on_one_box_each_get_their_own_port() {
 }
 
 /// A *stated* port another process holds is a refusal that names the bind
-/// (bl-dc14): an operator-written address is intent, so the engine does not
+/// (bl-dc14): an operator-written address is intent, so the server does not
 /// slide to another port behind it — it says exactly what could not be had,
 /// and the window paints that sentence rather than opening inert.
 #[test]
@@ -95,8 +95,8 @@ fn a_stated_port_another_process_holds_is_a_refusal_that_names_it() {
 /// A box whose material directory cannot even be MADE is told why, in a
 /// sentence naming the cause: the mint is a capability, and a box without
 /// `openssl` or without a writable data root cannot have a wire. What the
-/// engine then does with that sentence is `Engine::boot`'s — since bl-1d9b it
-/// refuses and exits, a yog with no listener being no engine at all.
+/// server then does with that sentence is `Engine::boot`'s — since bl-1d9b it
+/// refuses and exits, a yog with no listener being no server at all.
 #[test]
 fn a_box_the_mint_cannot_provision_is_told_why() {
     let tmp = TempDir::new().expect("tmp");

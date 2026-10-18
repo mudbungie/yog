@@ -1,7 +1,7 @@
 //! **The lane's last rung** (bl-5710, operator ruling 2026-08-31: *ship some
 //! basic tools — a default install must be able to write a file*): with no
-//! machine consenting, the three names the engine implements are performed at
-//! the engine's own front door, and everything else still earns the sentence.
+//! machine consenting, the three names litany implements are performed at
+//! litany's own front door, and everything else still earns the sentence.
 
 use ::litany::cmd::{RoutedCall, ToolInjection as _};
 
@@ -50,13 +50,13 @@ fn row(client: &str, name: &str, subject_cwd: bool) -> ClientRow {
 
 /// **The audit of a partition yog derives rather than restates** (bl-e654).
 /// `performs` is `litany::cmd::BUILTIN_TOOLS` minus the conversation-subject
-/// engine acts, so nothing in production spells these names; the literals live
+/// server acts, so nothing in production spells these names; the literals live
 /// here, where a set that moves upstream reddens a test instead of quietly
 /// changing which lane a name takes. Three members today, each a worktree name
-/// the engine implements — and the engine grew two built-ins at litany 0.0.8,
+/// litany implements — and litany grew two built-ins at 0.0.8,
 /// a third at 0.0.11 and a fourth at 0.0.12 without growing this side, because
 /// `python`, `search_history`, `remember` and now `read_tool_output` were
-/// classified as engine acts in the same breath (bl-fe43, bl-81cc, bl-ebef,
+/// classified as server acts in the same breath (bl-fe43, bl-81cc, bl-ebef,
 /// bl-9ced), which is exactly the deliberate act this audit exists to force.
 /// What is deliberately outside: the **eight** built-ins whose subject is the
 /// conversation (they are `engine_act`'s and never reach the lane), the
@@ -85,13 +85,13 @@ fn the_partition_leaves_the_engine_exactly_the_three_worktree_names() {
     ] {
         assert!(
             !performs(elsewhere),
-            "{elsewhere} is not the engine's to perform on the lane"
+            "{elsewhere} is not the server's to perform on the lane"
         );
     }
-    // The subtraction is total in the other direction too: every built-in the
-    // engine ships is either an engine act or a performed worktree name, so no
+    // The subtraction is total in the other direction too: every built-in
+    // litany ships is either a server act or a performed worktree name, so no
     // built-in falls through to a refusal that would tell the operator to
-    // enroll a machine for work the engine can already do.
+    // enroll a machine for work the server can already do.
     for name in ::litany::cmd::BUILTIN_TOOLS {
         assert!(
             performs(name) || crate::tool_host::engine_act::is(name),
@@ -102,8 +102,8 @@ fn the_partition_leaves_the_engine_exactly_the_three_worktree_names() {
 
 /// **The ladder's order, proved pure over the roster.** A consenting machine
 /// is an enrollment plus a `subject_cwd` key, so it wins even for a name the
-/// engine implements; with nothing consenting, a performed name is the
-/// engine's and a pool name is a sentence.
+/// litany implements; with nothing consenting, a performed name is the
+/// server's and a pool name is a sentence.
 #[test]
 fn a_consenting_machine_wins_and_the_engine_takes_what_is_left() {
     // `desk` consents too, but to another name: it is no advertiser of this
@@ -121,12 +121,12 @@ fn a_consenting_machine_wins_and_the_engine_takes_what_is_left() {
         _ => panic!("one consenting machine is that machine's"),
     }
     // The same roster, and a name it advertises without consent anywhere:
-    // the engine implements it, so the engine performs it.
+    // litany implements it, so the server performs it.
     let unconsented = vec![row("laptop", "bash", false)];
     assert!(matches!(verdict(&unconsented, "bash"), Lane::Engine));
     assert!(matches!(verdict(&[], "apply_patch"), Lane::Engine));
     assert!(matches!(verdict(&[], "read_file"), Lane::Engine));
-    // And a pool name the engine cannot perform keeps the operator's remedy —
+    // And a pool name litany does not implement keeps the operator's remedy —
     // the only one that puts the work where its subject is (bl-68e1). The
     // load the model could take unaided is named as what it is NOT, so a
     // refusal can never again be the step that sends a deliverable to a
@@ -134,7 +134,7 @@ fn a_consenting_machine_wins_and_the_engine_takes_what_is_left() {
     match verdict(&[], "deploy") {
         Lane::Refused(said) => {
             assert!(
-                said.contains("this engine does not implement deploy"),
+                said.contains("this server does not implement deploy"),
                 "{said}"
             );
             assert!(
@@ -157,7 +157,7 @@ fn a_consenting_machine_wins_and_the_engine_takes_what_is_left() {
 
 /// **A default install writes a file**, end to end through the injection: no
 /// client is registered, the roster comes back empty, and `apply_patch`
-/// reaches the engine's own front door — the `tool` verb, the caller identity
+/// reaches litany's own front door — the `tool` verb, the caller identity
 /// on the child's environment, the `tool_use` input on its stdin, and the
 /// child's product back untouched, at the conversation's own working
 /// directory.
@@ -184,7 +184,7 @@ fn an_empty_roster_performs_a_worktree_name_at_the_front_door() {
         FakeClock::new().arc(),
     )
     .route(act!("apply_patch", &cwd, &input, &stop));
-    handle.join().expect("engine");
+    handle.join().expect("server");
 
     assert_eq!(capture.exit_code, 0);
     assert!(capture.stderr.is_empty());
@@ -202,7 +202,7 @@ fn an_empty_roster_performs_a_worktree_name_at_the_front_door() {
     );
 }
 
-/// A pool name the engine does not implement is unchanged by the rung: the
+/// A pool name litany does not implement is unchanged by the rung: the
 /// empty roster still earns the sentence that names the enrollment, and no
 /// child is spawned (the front door here does not exist, so a spawn would
 /// surface as a different sentence entirely).
@@ -223,7 +223,7 @@ fn an_empty_roster_still_refuses_a_name_the_engine_cannot_perform() {
         FakeClock::new().arc(),
     )
     .route(act!("deploy", root.path(), &input, &stop));
-    handle.join().expect("engine");
+    handle.join().expect("server");
 
     assert_eq!(capture.exit_code, 1);
     let said = String::from_utf8_lossy(&capture.stderr).into_owned();

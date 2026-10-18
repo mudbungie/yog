@@ -85,12 +85,12 @@ pub struct Selection {
     /// query, never a flag (§7.2's faded-send ruling), so nothing says it twice.
     ///
     /// Like [`ball`](Self::ball) it has **no `AgentView` twin, deliberately**:
-    /// the engine answers about conversations the world carries, and this one is
+    /// the server answers about conversations the world carries, and this one is
     /// not the world's. bl-adcb's ruling is that a seat's optimism reaches
     /// whatever that seat reads and crosses no wire, so a twin would be the
-    /// engine claiming a fact it cannot hold.
+    /// server claiming a fact it cannot hold.
     ///
-    /// Two seats read it. The inspector asks the engine **nothing** about a
+    /// Two seats read it. The inspector asks the server **nothing** about a
     /// conversation with no branch — every question refuses, and five ichor
     /// refusal sentences on the glass for the whole of a healthy start window
     /// is the window reported as broken. And §8.2's `Stop` is not offered on

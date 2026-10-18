@@ -1,4 +1,4 @@
-//! **The rendezvous loop** (REMOTE §13.2–§13.4, bl-4263): the engine's end of
+//! **The rendezvous loop** (REMOTE §13.2–§13.4, bl-4263): the server's end of
 //! the punched wire. It publishes presence hourly, polls the inbox every
 //! fifteen seconds, verifies and unseals before it ever emits a SYN, punches
 //! from one fixed port, and serves every stream that lands on that port — in
@@ -6,9 +6,9 @@
 //! serves what it accepts: two threads, one `Drop` that joins both, the
 //! [`Listener`] shape ([`server`](super::server)).
 //!
-//! **Severable by material** (REMOTE §13.4). An engine whose wire root holds no
+//! **Severable by material** (REMOTE §13.4). A server whose wire root holds no
 //! [`material`] punches nothing, polls nothing and starts no thread: [`start`]
-//! answers `None` and the engine is today's listener byte for byte. The mint
+//! answers `None` and the server is today's listener byte for byte. The mint
 //! grows the material only for a box whose `address` is not loopback, so a
 //! box only its own seat dials never chatters on the commons at all.
 //!
@@ -77,7 +77,7 @@ pub(crate) struct Ctx {
 
 /// The loop's two threads — the cycle and the punch port's acceptor
 /// (`accept`, bl-5276). Owns their join handles and one stop flag; [`Drop`]
-/// signals stop and joins both, the engine's own shutdown shape (§7.2).
+/// signals stop and joins both, the server's own shutdown shape (§7.2).
 pub(crate) struct Rendezvous {
     stats: Arc<Stats>,
     stop: Arc<AtomicBool>,
@@ -126,7 +126,7 @@ impl Drop for Rendezvous {
     }
 }
 
-/// The engine's composition: the loop over `dir`'s material at the default
+/// The server's composition: the loop over `dir`'s material at the default
 /// cadence, counting into `stats` and saying each event on stderr — or `None`
 /// where `dir` holds no rendezvous material (REMOTE §13.4).
 pub(crate) fn start(

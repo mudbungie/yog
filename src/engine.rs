@@ -1,4 +1,4 @@
-//! **The engine both faces run** (VISION §5 V5.1, DESIGN §8.5): the model, the
+//! **The server both faces run** (VISION §5 V5.1, DESIGN §8.5): the model, the
 //! derivation worker, the watch bridge and the gesture consumer, assembled
 //! once from a composed world.
 //!
@@ -15,19 +15,19 @@
 //! headless seat already answers in place and off-frame), and the §5.3 RAM
 //! surfaces a pointer needs.
 //!
-//! The engine spawns five threads and **no frame** — which is the §7.2
+//! The server spawns five threads and **no frame** — which is the §7.2
 //! invariant stated from the other side: everything yog does other than paint
 //! happens here, so nothing that runs long has a frame to block.
 
 /// **The windowless face, whole** (§8.5) — `yog serve`, which left `main.rs`
 /// for that file's own coverage reason once bl-269a gave its loop an exit.
 pub mod serve;
-/// **One world has one engine** (§8.5, bl-1d9b): the exclusion a boot takes
+/// **One world has one server** (§8.5, bl-1d9b): the exclusion a boot takes
 /// before it consumes anything, and why it is a lock rather than the bind.
 pub mod sole;
 /// **What a SIGTERM means to a running yog** (§8.5, bl-269a): the catch, the
 /// flag both faces consult, and the windowless face's loop — which ends by
-/// dropping this engine, since the drop already IS the stop.
+/// dropping this server, since the drop already IS the stop.
 pub mod stop;
 
 use crate::AppModel;
@@ -46,7 +46,7 @@ use std::sync::Arc;
 
 /// What one running yog *is*, minus its face. The model is public because a
 /// face renders it; the three threads are held only so they live as long as
-/// the engine and are stopped and joined when it drops (each owns that shape
+/// the server and are stopped and joined when it drops (each owns that shape
 /// itself — §7.2).
 pub struct Engine {
     pub model: AppModel,
@@ -54,39 +54,39 @@ pub struct Engine {
     _worker: Worker,
     _consumer: Consumer,
     /// The REMOTE §9.5 wire listener (bl-b6fa). **Not an `Option` since
-    /// bl-1d9b**: a yog that cannot listen is not an engine — the window that
+    /// bl-1d9b**: a yog that cannot listen is not a server — the window that
     /// used to justify carrying on without one left with bl-7942, so the only
-    /// thing a wire-less engine could still do was drain the world's gesture
-    /// inbox, which is the half-engine that ball is about. A refusal is fatal
-    /// and names the address. Held so it lives as long as the engine and stops
+    /// thing a wire-less server could still do was drain the world's gesture
+    /// inbox, which is the half-server that ball is about. A refusal is fatal
+    /// and names the address. Held so it lives as long as the server and stops
     /// when it drops.
     _wire: crate::wire::server::Listener,
     _rendezvous: Option<crate::wire::rendezvous::Rendezvous>,
     _sentry: Sentry,
     _pilot: Pilot,
-    /// **The world's one-engine exclusion** ([`sole`], bl-1d9b), declared last
+    /// **The world's one-server exclusion** ([`sole`], bl-1d9b), declared last
     /// so it is dropped last: the lock is released only once every thread above
-    /// has stopped and joined, so the next engine never overlaps this one.
+    /// has stopped and joined, so the next server never overlaps this one.
     _sole: sole::Sole,
 }
 
 impl Engine {
-    /// Boot the engine into `world` (already composed, §16.2) with `overrides`
+    /// Boot the server into `world` (already composed, §16.2) with `overrides`
     /// standing on every child spawn — **or refuse, in one sentence the caller
     /// prints and exits on** (bl-1d9b).
     ///
     /// Two refusals, and each is the same statement from a different side.
-    /// [`sole::take`] is *one world has one engine*: it is taken first, before
+    /// [`sole::take`] is *one world has one server*: it is taken first, before
     /// a single gesture is consumed, so a second `yog` on a held world is
     /// refused rather than becoming a second consumer of one inbox with a
     /// second `inv-N` namespace behind it. [`wire::listen`](crate::wire::listen)
-    /// is *an engine listens*: since bl-7942 there is no window, so every read
+    /// is *a server listens*: since bl-7942 there is no window, so every read
     /// and every act crosses that wire (REMOTE §1.2) and a yog without one
     /// answers no seat at all. It is asked **before** the consumer is spawned,
     /// so a boot that will refuse has taken nothing out of the world's inbox.
     ///
     /// The §5.2 startup sweep runs here rather than at either caller: dropping
-    /// stale scratch is the *engine's* housekeeping, and its wall clock is the
+    /// stale scratch is the *server's* housekeeping, and its wall clock is the
     /// injected [`Clock`] every other timestamp already comes from — so a test
     /// advances it like anything else. It is **both** of §5.2's transient
     /// artifacts off one clock read: the scripted-editor staging dirs, and
@@ -153,30 +153,30 @@ impl Engine {
             // top of it, so the credential lands in that sphere (§16.2).
             logins: crate::login::runs::Runs::of(Cli::resolve_in_world(Binary::Bz, overrides)),
             // Empty until the bind below succeeds (bl-28f4): what the listener
-            // bound is a fact only the listener has, and the engine is the one
+            // bound is a fact only the listener has, and the server is the one
             // process that can put it where a read can ask for it.
             listening: listening.clone(),
         });
         // The REMOTE §9.5 wire listener (bl-b6fa), ahead of the consumer and
         // for the reason bl-1d9b names: a seat must reach whichever face is up,
-        // so the channel rides the ENGINE and not a face. It is the same intake
+        // so the channel rides the SERVER and not a face. It is the same intake
         // — the context above, handed to a connection instead of to a poll — so
         // the wire adds no verb and no second dispatch.
         //
         // **A refusal is fatal, and it is fatal here so nothing has been
         // consumed yet** (bl-1d9b). It used to be said on stderr while the
-        // engine ran on without a wire, on the argument that every deposit
+        // server ran on without a wire, on the argument that every deposit
         // still converges through the inbox and only a seat is shut out. That
         // argument died with the window (bl-7942): the seat IS the face, so a
         // wire-less yog is a process that answers nobody and drains the world's
-        // gesture inbox while looking healthy — which is worse than no engine,
+        // gesture inbox while looking healthy — which is worse than no server,
         // because the operator cannot see it. The refusal is returned rather
         // than printed, since one caller owns the saying and the exit code.
         let answerer = Arc::new(crate::wire::intake::Intake::new(Arc::clone(&intake)))
             as Arc<dyn crate::wire::server::Answerer>;
         let wire = crate::wire::listen(world, Arc::clone(&answerer), presence.clone())
             .map_err(|reason| format!("wire: {reason}"))?;
-        // The punched wire's engine end (REMOTE §13, bl-4263): a second door
+        // The punched wire's server end (REMOTE §13, bl-4263): a second door
         // into the same answerer, started only where the mint grew rendezvous
         // material — a loopback-only box starts no thread (REMOTE §13.4).
         let rendezvous = crate::wire::rendezvous::start(
@@ -188,7 +188,7 @@ impl Engine {
             listening.rendezvous(),
         )
         .map_err(|reason| format!("wire: {reason}"))?;
-        // **The engine says what it bound** (REMOTE §8, bl-e058). A `:0` in
+        // **The server says what it bound** (REMOTE §8, bl-e058). A `:0` in
         // `address` is a request the kernel answers in RAM, and the in-process
         // consumer that used to be told the answer was the window, which left
         // with bl-7942 — so on a self-provisioned box the bound port was
@@ -209,7 +209,7 @@ impl Engine {
         // The VISION §4.9 alignment monitor's level trigger. Spawned
         // unconditionally and free when unarmed: with no `cadence.yaml` monitor
         // entry a tick finds no workspace to check and makes no call. It rides
-        // the engine rather than a face for the same reason the consumer does —
+        // the server rather than a face for the same reason the consumer does —
         // arming is a fact of the world, not of the seat.
         let pilot_clock = Arc::clone(&clock);
         let sentry = Sentry::spawn(SentryCtx {
@@ -222,7 +222,7 @@ impl Engine {
         // free for the same reason: with no `cadence.yaml` fleet entry a tick
         // reads the published snapshot, finds nothing armed and returns before
         // it builds a board or opens a file. Arming is a fact of the world, not
-        // of the seat, so it rides the engine and both faces run it.
+        // of the seat, so it rides the server and both faces run it.
         let pilot = Pilot::spawn(PilotCtx {
             deps: Deps {
                 litany: Cli::resolve_in_world(Binary::Litany, overrides),

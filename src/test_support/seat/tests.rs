@@ -38,7 +38,7 @@ fn an_unverifiable_address_refuses() {
 }
 
 /// A seat is built from material and remembers what it dials — no connection
-/// is made, because a seat is a fact about this machine, not about an engine.
+/// is made, because a seat is a fact about this machine, not about a server.
 #[test]
 fn opening_a_seat_dials_nothing() {
     let tmp = TempDir::new().expect("tmp");

@@ -7,7 +7,7 @@
 //! "invoke"])` with a `{id, name, input}` block on stdin. The driver target is
 //! the shim yog converges into `<world>/tools/litany` — a `/bin/sh` re-exec of
 //! yog under the `litany` namespace — so a program's inner invocation reaches
-//! the engine's front door only if that shim answers the verb. It does, because
+//! litany's front door only if that shim answers the verb. It does, because
 //! the arm is litany's thin binding and builds one `Fx` for every verb: the
 //! injection the router lives behind is installed for `invoke` exactly as it is
 //! for `advance` and `tool`, with no verb table of yog's own to fall out of

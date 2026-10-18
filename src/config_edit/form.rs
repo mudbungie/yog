@@ -37,7 +37,7 @@ pub use schema::{CADENCE_SCHEMA, Control, FieldSpec, ROLES_SCHEMA, Schema, schem
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Row {
     /// The block entry this setting hangs under — a model id, a role name. A
-    /// seat groups the flat list by it; the engine keeps no second shape for
+    /// seat groups the flat list by it; the server keeps no second shape for
     /// that, because a grouping IS this field read twice.
     pub entry: String,
     pub name: String,

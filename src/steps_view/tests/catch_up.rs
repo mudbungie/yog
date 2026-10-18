@@ -1,5 +1,5 @@
-//! The §7.2 **catch-up window** the engine waits out before it states a
-//! no-response wound (bl-90bf/bl-18e8, judged on the engine by bl-776a).
+//! The §7.2 **catch-up window** the server waits out before it states a
+//! no-response wound (bl-90bf/bl-18e8, judged on the server by bl-776a).
 //!
 //! The wound's liveness half rides the last published snapshot and a driver
 //! taking its flock announces nothing, so a freshly-started call reads as a

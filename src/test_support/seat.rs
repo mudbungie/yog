@@ -7,7 +7,7 @@
 //! prove the re-implementation — and it lives under `test_support` rather than
 //! in `wire` because it is not a face yog ships and must not read as one.
 //!
-//! What a client of the engine holds, and the only thing it holds:
+//! What a client of the server holds, and the only thing it holds:
 //!
 //! A client owns its key material and RAM, nothing else (REMOTE §6) — so this
 //! is a configuration and an address, and every ask is its own TCP connection
@@ -51,7 +51,7 @@ pub(crate) struct Seat {
 impl Seat {
     /// Build the seat from provisioned material. Nothing is dialled here: a
     /// seat is a fact about what this machine may say, not about whether an
-    /// engine happens to be up.
+    /// server happens to be up.
     pub(crate) fn open(m: &Material) -> Result<Self, String> {
         Ok(Self {
             config: crate::wire::tls::client_config(m)?,
@@ -86,8 +86,8 @@ impl Seat {
     /// difference is that the caller is given the frames instead of the list.
     ///
     /// `on_frame` answers whether to stay: `false` ends the read, which is how
-    /// a lane whose subject moved stops without a word to the engine (dropping
-    /// the connection is the word). `Ok(())` is the engine terminating the
+    /// a lane whose subject moved stops without a word to the server (dropping
+    /// the connection is the word). `Ok(())` is the server terminating the
     /// stream — the ordinary end, not an event.
     pub(crate) fn followed(
         &self,
@@ -105,7 +105,7 @@ impl Seat {
 
     /// Connect, handshake and send `request` — the half both spellings share.
     /// The TLS handshake happens inside the first write, and the one frame read
-    /// here is the engine's version preface (bl-a670), so what this hands back
+    /// here is the server's version preface (bl-a670), so what this hands back
     /// is a socket with an envelope on it and no *answer* yet read.
     fn dial(&self, request: &Value) -> Result<StreamOwned<ClientConnection, TcpStream>, String> {
         let tcp = TcpStream::connect(&self.address)
@@ -117,7 +117,7 @@ impl Seat {
         let mut tls = StreamOwned::new(conn, tcp);
         // **Both ends state a protocol version before either reads** (REMOTE
         // §3, bl-a670). The request goes out in the same breath as the
-        // preface, so confirming the engine's costs no round trip — and a
+        // preface, so confirming the server's costs no round trip — and a
         // mismatch refuses here, before a frame of the answer is decoded.
         crate::wire::hello::state(&mut tls).map_err(|e| format!("send: {e}"))?;
         frame::write_value(&mut tls, request).map_err(|e| format!("send: {e}"))?;
@@ -137,7 +137,7 @@ fn server_name(address: &str) -> Result<ServerName<'static>, String> {
 }
 
 /// **Loopback at the port the listener really bound**, whatever the `address`
-/// file says the engine answers to off the box.
+/// file says the server answers to off the box.
 ///
 /// A local client is a client of `127.0.0.1` and of nothing else, which is why
 /// [`provision`](crate::wire::provision) always puts loopback on the server

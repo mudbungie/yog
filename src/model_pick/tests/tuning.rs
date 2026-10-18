@@ -68,9 +68,9 @@ fn a_level_on_a_role_that_had_one_is_moved_not_duplicated() {
     assert!(out.contains("    priority: true\n"), "{out}");
 }
 
-/// **Off is the absent line.** Not `effort: off`, which the engine would read
+/// **Off is the absent line.** Not `effort: off`, which litany would read
 /// as an unknown value, and not `effort: none`, which would be a second
-/// spelling of an absence the engine already has one spelling for.
+/// spelling of an absence litany already has one spelling for.
 #[test]
 fn off_removes_the_line_rather_than_writing_a_word_for_absence() {
     let out = plan(&tuned(), &effort("worker", None)).expect("planned");

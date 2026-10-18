@@ -93,7 +93,7 @@ fn a_role_naming_a_keyless_row_readies_the_wall() {
 /// is `worker`, because this door births roots and roots are workers. A
 /// `compactor` or a `reviewer` pointing at a row that is not here does not
 /// refuse the fire: litany's shipped template declares the reviewer unbound,
-/// so refusing on it would refuse a wall that runs for hours over a role
+/// so refusing on it would refuse a workspace that runs for hours over a role
 /// nothing dispatches. Those fail at their own moment, with a cause.
 #[test]
 fn only_the_fired_role_gates_the_fire() {

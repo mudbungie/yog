@@ -112,7 +112,7 @@ fn the_overflow_badge_counts_only_what_is_still_folded_away() {
 
 #[test]
 fn an_empty_answer_is_an_empty_bar_and_a_quiet_strip() {
-    // The honest resting state of a frame the engine has not answered — no
+    // The honest resting state of a frame the server has not answered — no
     // tabs, no overflow, nothing stirring — reached by the general path with
     // no rows rather than by a branch (REMOTE §9.7's collapsed-pane rule).
     let bar = build(&[], Some("alba-koi"));

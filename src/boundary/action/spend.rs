@@ -6,8 +6,8 @@
 //! table — `(provider row, model)` → the four rates — or, with no rates,
 //! deletes it. **The table and the ceiling are read and set through the
 //! boundary** (DESIGN §3.5, VISION §4.5): §4.1 ruled them *read-only — no
-//! setter, no editor, no verb* because a hand edit on the engine's box was
-//! live within a tick, which was true while the window ran in the engine's
+//! setter, no editor, no verb* because a hand edit on the server's box was
+//! live within a tick, which was true while the window ran in the server's
 //! process; since REMOTE §12 the seat is another machine and `ui.json` is on
 //! the server, so the ruling's premise is gone and the empty table was the
 //! default nobody could leave. `ui.json` stays the one home and the
@@ -16,7 +16,7 @@
 //! [`Pin`](super::Action::Pin) shape, and the receipt is the **re-derived**
 //! `prices` reply rather than an echo (the `marks` precedent).
 //!
-//! **A row is priced before it is configured, on purpose.** The engine does
+//! **A row is priced before it is configured, on purpose.** The server does
 //! not refuse a provider row the workspace's wall roster does not know:
 //! a table is world config keyed by the row name litany will hand `bz
 //! --provider`, and an operator pricing `anthropic` ahead of signing in to it

@@ -36,7 +36,7 @@ pub struct OpEntry {
     /// *whose* act it was, so a workspace two seats share could not say who
     /// said what — and unlike every other fact here that is unrecoverable
     /// afterwards, since no later derivation can reconstruct the author of a
-    /// line nobody attributed. The engine knew the name at every one of those
+    /// line nobody attributed. The server knew the name at every one of those
     /// acts: it reads the common name off the presented leaf, narrows the whole
     /// published derivation by it and prints it in the client roster.
     ///

@@ -42,7 +42,7 @@ pub struct WsRow {
     /// reads that document anyway. It rides as a **rank** rather than a flag
     /// because the tab bar hoists pinned tabs *in pin order*, and a seat given
     /// only a boolean would have to re-read the pin list to sort them — which
-    /// is the seat joining an answer back against the engine's own document,
+    /// is the seat joining an answer back against the server's own document,
     /// the exact shape bl-7407 refused for the workspace path.
     pub pinned: Option<usize>,
     /// **The §2.2 config-lineage tip** (§9.4, bl-1eb0's named residual; closed

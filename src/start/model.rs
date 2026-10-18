@@ -113,7 +113,7 @@ pub struct StartInputs {
     /// The occupied set for the **conversation** mint (§3.3): the stamped names of
     /// the target workspace's live roots, read back from the goals the §11
     /// conversation list already parses. Per-workspace and nothing wider —
-    /// workspaces are isolation walls, so two spheres never need distinct names.
+    /// workspaces are isolation boundaries, so two spheres never need distinct names.
     /// Empty for a workspace that does not exist yet: the general path with no
     /// inputs, not a bootstrap case.
     pub conversation_names: Vec<String>,

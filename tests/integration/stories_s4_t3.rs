@@ -65,10 +65,10 @@ fn s4_t3_balls_section_groups_all_bound_balls_under_their_workspace() {
         None,
     );
 
-    // Both named workspaces are wall tabs (§11), in name order.
+    // Both named workspaces are tabs (§11), in name order.
     let bar = crate::support::tab_bar(&m, Some("cobalt"));
     let names: Vec<&str> = bar.tabs.iter().map(|t| t.name.as_str()).collect();
-    assert_eq!(names, ["cobalt", "spare"], "named workspaces tab the wall");
+    assert_eq!(names, ["cobalt", "spare"], "named workspaces are the tabs");
 
     // cobalt groups BOTH its bound balls — the multi-ball fix (§3.5); each Bound
     // needs no badge.

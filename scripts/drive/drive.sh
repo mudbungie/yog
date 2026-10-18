@@ -46,14 +46,14 @@ live=${XDG_DATA_HOME:-$HOME/.local/share}
 # own `$XDG_DATA_HOME` would delete their workspaces, conversations and world
 # without a prompt. The check is a two-directional path-prefix test rather than
 # an equality test, because containment either way is the same accident.
-# The live world is the operator's engine's (bl-6260);
+# The live world is the operator's server's (bl-6260);
 # nothing in this family ever is.
 refuse() {
   echo "drive.sh: refusing to drive the LIVE world." >&2
   echo "  scratch: $1" >&2
   echo "  live:    $live" >&2
   echo "A run wipes its world before it starts, so the two may never overlap." >&2
-  echo "Point DRIVE_ROOT somewhere else; the live world is the engine's." >&2
+  echo "Point DRIVE_ROOT somewhere else; the live world is the server's." >&2
   exit 1
 }
 guard() {

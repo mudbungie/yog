@@ -16,10 +16,10 @@
 //! and neither is acceptable.
 //!
 //! **Each resolves against a different authority, which is the whole of the
-//! asymmetry between them.** Load's is the roster, so it needs the engine and
+//! asymmetry between them.** Load's is the roster, so it needs the server and
 //! carries the observation's date. Unload's is a file on this box, so it needs
 //! nothing and cannot fail for being offline — an agent finished with a machine
-//! can say so even when the machine, or the engine, has gone.
+//! can say so even when the machine, or the server, has gone.
 //!
 //! **Neither costs a prefix rebuild at a moment nobody chose.** The
 //! subtraction lands in the document now and is spent at the next assembly,

@@ -177,7 +177,7 @@ impl Env {
 
     /// Yog **cache** root: `$XDG_CACHE_HOME/yog` else `~/.cache/yog`. Nothing
     /// yog derives lives here — it is where a *throwaway* tree goes, so a
-    /// caller that needs scratch space outside every root the engine reads has
+    /// caller that needs scratch space outside every root the server reads has
     /// one fold to ask rather than an ambient `TMPDIR` read of its own (the
     /// module rule: [`Env::from_env`] is the crate's one environment read).
     /// `scripts/drive/drive.sh` already defaults its evidence root the same

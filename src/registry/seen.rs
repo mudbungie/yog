@@ -6,7 +6,7 @@
 //! is a name, a `present` bool and an advertised set: `present` is `false` for
 //! a machine that spoke ten seconds ago and for one that never once connected,
 //! and on a terminal seat it is `false` for everything, because every verb
-//! opens and closes its own connection. So a long-lived engine's roster becomes
+//! opens and closes its own connection. So a long-lived server's roster becomes
 //! a list of names — and the operator's own `rm` (§4.1: no gesture manages
 //! registrations) is unusable, because no row says which is safe to delete.
 //!
@@ -27,7 +27,7 @@
 //! time, whatever it is registered in.
 //!
 //! **Absence is "never", and it is the answer that matters.** A client with no
-//! file has not connected since the engine learned to write one, which is the
+//! file has not connected since the server learned to write one, which is the
 //! honest reading of an unreadable or missing stamp — never a zero, which would
 //! be a date.
 

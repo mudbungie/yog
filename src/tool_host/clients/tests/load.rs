@@ -87,6 +87,6 @@ fn a_load_that_cannot_be_recorded_says_so() {
         &quiet(),
     )
     .expect_err("unrecordable");
-    handle.join().expect("engine");
+    handle.join().expect("server");
     assert!(e.contains("recording the load"), "{e}");
 }

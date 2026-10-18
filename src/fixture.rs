@@ -15,12 +15,12 @@
 //!
 //! ```text
 //! root=$(yog fixture busy | jq -r .root)     # lay the state, take the root
-//! XDG_DATA_HOME="$root" yog &                # boot an engine on it
+//! XDG_DATA_HOME="$root" yog &                # boot a server on it
 //! # …dial the address, render, compare…
 //! kill %1 && rm -rf "$root"                  # tear it down
 //! ```
 //!
-//! **It lays and prints; it does not boot.** The consumer owns the engine
+//! **It lays and prints; it does not boot.** The consumer owns the server
 //! process because the consumer is the one that has to kill it — a verb that
 //! parked would hand a harness a live child to parse stdout from, which is
 //! worse at exactly the moment it matters. Booting is `XDG_DATA_HOME=<root>
@@ -32,13 +32,13 @@
 //!
 //! Every byte a state contains is a `&'static str` in [`roster`]; every commit,
 //! message and step is dated from the recipe's own offsets rather than from the
-//! laying machine's clock; and the address is **stated** before the engine
+//! laying machine's clock; and the address is **stated** before the server
 //! binds, because self-provisioning writes `127.0.0.1:0` and only the listener
 //! ever learns what that became ([`crate::wire::provision`]).
 //!
 //! The residual is named rather than hidden. yog serves derived ages
 //! (`age_secs` on a conversation row is `now - last_action_unix`), and the
-//! engine's clock is the system's — there is no environment seam that fakes it
+//! server's clock is the system's — there is no environment seam that fakes it
 //! and this module does not add one, because a product that can be told to lie
 //! about the time is worse than a harness that normalises. So [`Laid::origin`]
 //! reports the second every offset was measured from, and a harness that wants
@@ -51,9 +51,9 @@
 //!   (§3.5), so no static tree can be one. A `Streaming` step lays the bytes
 //!   and [`Laid::hold`] names the two paths a harness opens to complete it —
 //!   one line of shell (`exec 9<dir`), in the process that already owns the
-//!   engine.
+//!   server.
 //! - **`wound_grace` is the server's, and a laid wound must outlive it.** The
-//!   §7.2 catch-up window is spent on the engine (bl-776a): a no-response wound
+//!   §7.2 catch-up window is spent on the server (bl-776a): a no-response wound
 //!   is stated only once the step's own call start is older than it, so a
 //!   fixture that laid its step at *now* would answer no wound at all. The
 //!   `wound` state dates its step from the recipe's own offsets like everything
@@ -81,10 +81,10 @@ use std::path::PathBuf;
 pub struct Laid {
     /// The state's name, echoed so a log line is self-describing.
     pub state: String,
-    /// The data root — the `XDG_DATA_HOME` an engine is booted with, and the
+    /// The data root — the `XDG_DATA_HOME` a server is booted with, and the
     /// one path a teardown removes.
     pub root: PathBuf,
-    /// `host:port` the engine will bind and a seat dials. Stated, not
+    /// `host:port` the server will bind and a seat dials. Stated, not
     /// discovered: it is written into the material before anything binds.
     pub address: String,
     /// The operator CA both ends verify against.

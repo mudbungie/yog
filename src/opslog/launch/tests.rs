@@ -210,7 +210,7 @@ fn a_launch_inside_the_grace_window_has_no_verdict() {
 }
 
 /// A workspace with no derived tree is **no verdict**, never a death (§10: never
-/// a false definite) — a start into a wall yog has not enumerated yet must be
+/// a false definite) — a start into a workspace yog has not enumerated yet must be
 /// silent, not accused.
 #[test]
 fn a_world_yog_cannot_read_answers_nothing() {

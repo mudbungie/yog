@@ -136,7 +136,7 @@ pub(super) fn world(
     balls_by_project.insert(PathBuf::from(PROJECT), balls);
     World {
         snap: Snapshot {
-            // Both walls are enumerated: a join row addresses its workspace
+            // Both workspaces are enumerated: a join row addresses its workspace
             // by §3.1 name since bl-b4b5, and the board resolves that name back
             // through the snapshot's own round trip.
             workspaces: [WS_A, WS_B]

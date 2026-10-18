@@ -21,7 +21,7 @@ pub(crate) const ENROLL: &str = "enroll";
 /// REMOTE §1.4's enrollment (bl-f4e3): the workspace it seats the new client
 /// in, the common name its certificate will carry, and the grade — in the one
 /// grade vocabulary `Grade::word`/`of` spell both ways. `address` rides only
-/// when the operator stated one (bl-fec6): absent is "the address this engine
+/// when the operator stated one (bl-fec6): absent is "the address this server
 /// wrote for itself", which the executor reads, and a null would be a second
 /// spelling of the same absence.
 pub(super) fn encode_enroll(request: &crate::registry::enroll::Request) -> Value {
@@ -62,7 +62,7 @@ pub(super) fn decode(op: &str, o: &Map<String, Value>) -> Result<Action, String>
         name: str_of(o, "name")?,
         grade: grade_of(&str_of(o, "grade")?)?,
         // …and the one OPTIONAL field (bl-fec6): the address the device will
-        // dial, absent when the engine's own is right. A present field must
+        // dial, absent when the server's own is right. A present field must
         // still be a string, so a mistyped one refuses here rather than
         // reaching a QR.
         address: opt_str_of(o, "address")?,

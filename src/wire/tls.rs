@@ -22,7 +22,7 @@ use rustls::{ClientConfig, RootCertStore, ServerConfig};
 use std::path::Path;
 use std::sync::Arc;
 
-/// The engine's end: verify a client certificate against the operator CA, and
+/// The server's end: verify a client certificate against the operator CA, and
 /// present the server leaf. A connection presenting nothing, or a leaf the CA
 /// did not issue, never completes the handshake.
 pub fn server_config(m: &Material) -> Result<Arc<ServerConfig>, String> {

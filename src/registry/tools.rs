@@ -1,8 +1,8 @@
 //! **The advertised tool set** (REMOTE §5, bl-4e08): what a tool host presents
-//! when it connects, and where the engine keeps it.
+//! when it connects, and where the server keeps it.
 //!
 //! REMOTE §5: *"A tool host presents its tool set — name, description, input
-//! schema — when it connects; the engine writes it into the client's
+//! schema — when it connects; the server writes it into the client's
 //! registration (world, file) when it differs from what is stored."* The
 //! spelling of that file is decided here and recorded in REMOTE §5:
 //!
@@ -61,7 +61,7 @@ pub struct Tool {
     pub input_schema: Value,
     /// Whether the advertising box consents to executing this tool at the
     /// invocation's own working directory (`"subject_cwd": true` in that
-    /// box's tools.json; absent reads false). Advertised because the engine
+    /// box's tools.json; absent reads false). Advertised because the server
     /// routes the worktree lane on it — a bare granted name goes to the ONE
     /// registered client that both advertises it and consents.
     pub subject_cwd: bool,

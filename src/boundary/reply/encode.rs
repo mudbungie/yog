@@ -77,7 +77,7 @@ pub fn encode(reply: &Reply) -> Value {
         Reply::Marks { branch } => json!({ "ok": true, "kind": "marks", "branch": branch }),
         // The enumeration, and how current the derivation behind it is
         // (bl-b4b5). Both notes are **absent** rather than null in the ordinary
-        // case, which is what makes "fresh" and "the engine declined to say"
+        // case, which is what makes "fresh" and "the server declined to say"
         // two readings rather than one.
         Reply::Workspaces(view) => {
             let mut map = rows_map("workspaces", view.rows.iter().map(ws_row));

@@ -56,12 +56,12 @@ pub struct ConsumerCtx {
     /// What is queued for each client and what came back (REMOTE §5, bl-024b)
     /// — the routing leg's own RAM, shared by handle beside the presence map.
     pub mailbox: crate::registry::mailbox::Mailbox,
-    /// **What the engine's listener bound** (REMOTE §8, bl-28f4) — set by the
+    /// **What the server's listener bound** (REMOTE §8, bl-28f4) — set by the
     /// boot after a successful bind and read by `/doctor`, which is the one
     /// gesture that asks whether this box is reachable at all. Empty in every
     /// context that did not bind.
     pub listening: crate::wire::Listening,
-    /// The `bz --login` runs in flight (REMOTE §8.3, bl-c285) — the engine's
+    /// The `bz --login` runs in flight (REMOTE §8.3, bl-c285) — the server's
     /// own, beside the two above and for their reason: the act starts one
     /// through this context and a lane held on another connection reads it.
     pub logins: crate::login::runs::Runs,
@@ -86,7 +86,7 @@ impl ConsumerCtx {
     /// Answer the crash debris once, at boot (§8.5, bl-d1f1): every claimed
     /// gesture whose claimant died before its reply earns the in-doubt
     /// refusal on its reply slot ([`super::consume::sweep`]). Boot-time
-    /// rather than per-pass because debris can only exist where an engine
+    /// rather than per-pass because debris can only exist where a server
     /// died, and the restart that follows is this — the same startup
     /// convergence the dotfile temps get (§7.3).
     pub fn sweep(&self) -> usize {
@@ -155,7 +155,7 @@ impl ConsumerCtx {
         }
         // **And a client registered NOWHERE is told so** (bl-2a84), rather
         // than being handed the empty projection of that fact — `{"rows": []}`
-        // reads as an engine holding nothing, and a first-time operator cannot
+        // reads as a server holding nothing, and a first-time operator cannot
         // tell it from their own missing enrolment. Two gestures pass anyway,
         // each for its own reason: one that FOUNDS a workspace is this
         // client's own bootstrap (§4 auto-registers its creator, and the raise
@@ -265,7 +265,7 @@ impl Consumer {
         let handle = std::thread::spawn(move || {
             // The one boot-time act (bl-d1f1): answer the debris a crashed
             // predecessor left, before the first pass, so a depositor still
-            // polling a dead engine's claim gets its in-doubt sentence now.
+            // polling a dead server's claim gets its in-doubt sentence now.
             ctx.sweep();
             while !flag.load(Ordering::Relaxed) {
                 ctx.pass();

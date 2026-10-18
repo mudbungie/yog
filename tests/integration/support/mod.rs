@@ -91,7 +91,7 @@ pub use payload::*;
 mod clock;
 pub use clock::*;
 
-/// The §11 reads — every `boundary::Query` a story puts to the engine, folded
+/// The §11 reads — every `boundary::Query` a story puts to the server, folded
 /// the way the seat folds it. Everything else in this file WRITES the world a
 /// story runs over; those only read it back, which is the seam.
 mod asked;

@@ -3,7 +3,7 @@
 //! **No certificate is ever committed.** A fixture key in the tree is a private
 //! key in a public repository — the exact class `make leak-scan` refuses — and
 //! it would be one whether or not it guarded anything. So the suite performs
-//! the same out-of-channel act the engine's own boot performs, through the same
+//! the same out-of-channel act the server's own boot performs, through the same
 //! function: [`provision::mint`](crate::wire::provision::mint), which is the
 //! crate's one `openssl` recipe (bl-ae05). A second copy here would be a second
 //! recipe, and two spellings of one act drift within a week.

@@ -1,4 +1,4 @@
-//! The peer of one connection, seen from the engine's side (bl-4263): who it
+//! The peer of one connection, seen from the server's side (bl-4263): who it
 //! is, how its silence is read, and how it is hung up on. Split from
 //! [`server`](super) at §12's cap when the punched wire gave a connection a
 //! second way to be quiet.
@@ -6,7 +6,7 @@
 //! **A held connection is quiet on purpose** (REMOTE §13.4). A dialled seat
 //! asks and hangs up, so two minutes of nothing is a peer that vanished; a
 //! punched stream is *held* between asks, and the two NATs it crosses forget
-//! a mapping that carries nothing. So the engine writes a ping frame into the
+//! a mapping that carries nothing. So the server writes a ping frame into the
 //! silence at a 25-second cadence — a frame, because std exposes no keepalive
 //! and a frame is what a test can read — and the two-minute bound still says
 //! when the peer is gone. The frame is `{"ping":true}` and never the start of
@@ -27,7 +27,7 @@ pub(crate) struct Quiet {
     /// How long a read may find nothing, in all, before the peer counts as
     /// gone.
     pub(crate) gone: Duration,
-    /// On a held connection, how often the engine pings into the silence;
+    /// On a held connection, how often the server pings into the silence;
     /// `None` is a dialled connection, which is never pinged.
     pub(crate) ping: Option<Duration>,
 }
@@ -64,8 +64,8 @@ pub(crate) fn ping(tls: &mut StreamOwned<ServerConnection, TcpStream>) -> bool {
 
 /// **A refusal is only a refusal if the peer can read it** (bl-e4c8).
 ///
-/// A refused peer is the one connection the engine hangs up on *first*:
-/// everywhere else the peer closes and the engine reads the EOF. Closing a
+/// A refused peer is the one connection the server hangs up on *first*:
+/// everywhere else the peer closes and the server reads the EOF. Closing a
 /// socket that still holds unread bytes — or that the peer writes to just after
 /// — makes the kernel answer RST, and an RST **discards what the peer had
 /// already received**. So the seat whose refusal was sitting in its receive
@@ -74,7 +74,7 @@ pub(crate) fn ping(tls: &mut StreamOwned<ServerConnection, TcpStream>) -> bool {
 /// by a different door. It is a race and it reads as silence, which is the
 /// worst pair of properties a refusal can have.
 ///
-/// The engine therefore half-closes and reads to EOF. `close_notify` and a FIN
+/// The server therefore half-closes and reads to EOF. `close_notify` and a FIN
 /// say there is nothing more coming; the read side stays open until the peer
 /// has said its own last word, so nothing it wrote is ever unread at the close.
 /// The wait is [`serve`](super::serve)'s quiet bound and not a new one — a

@@ -34,7 +34,7 @@
 //! classification is the artifact clients vendor and judge themselves against,
 //! so a client must re-vendor to read it, and a bump is exactly what makes it.
 //! 7 → 8 (bl-66d4): `reply/advertised` gained `wrote`, the word saying whether
-//! this engine WROTE the advertised set or found it identical and compared. It
+//! this server WROTE the advertised set or found it identical and compared. It
 //! is required rather than optional-absent-reads-false, because absent would
 //! read as *"nothing was restored"* — the reassuring answer — on exactly the
 //! build that cannot tell, and the field exists to make one event audible.
@@ -64,7 +64,7 @@
 //! `says`, the firing rules **in words**. The escalation those words existed
 //! for was ruled a **seat's** act (DESIGN §6: a desktop notification belongs on
 //! the box the operator is looking at), and `AttentionKind::says` stays this
-//! engine's one home for the sentence, so the sentence has to cross rather than
+//! server's one home for the sentence, so the sentence has to cross rather than
 //! be re-worded per seat. A gain on two shapes, which the ledger sees and §3
 //! bumps for regardless.
 //! 12 → 13 (bl-dc3f): `reply/config` gained `settings` — the file's own schema
@@ -81,7 +81,7 @@
 //! 13 → 14 (bl-fec6, bl-d542): two additive fields on two shapes in use, which
 //! §3's rule bumps for outright. `request/enroll` gained an optional
 //! **`address`** — the endpoint the DEVICE being enrolled will dial, which need
-//! not be the one this engine wrote for itself (an emulator reaches its host
+//! not be the one this server wrote for itself (an emulator reaches its host
 //! through the emulator's own alias, a phone on the LAN, an overlay peer by
 //! name), so the envelope stopped being correct only for a device sharing this
 //! box's loopback view. And `reply/clients` gained an optional **`last_seen`**,
@@ -89,7 +89,7 @@
 //! machine that spoke ten seconds ago from one that never once connected, and
 //! on a terminal seat it reads `false` for everything. Both are ABSENT rather
 //! than null when unstated — the absence is the fact in each case ("this
-//! engine's own address", "never") — and both land at ONE version, because two
+//! server's own address", "never") — and both land at ONE version, because two
 //! bumps a minute apart would make every client re-pin twice for one wave.
 //! 14 → 15 (bl-5305): `reply/follow` gained `tools`, the **tool window** — an
 //! entry as a call is posted (its name, which for a routed call carries the

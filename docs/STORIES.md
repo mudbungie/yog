@@ -111,7 +111,7 @@ wire, so "works against the real one" is a run you can re-run, not a claim.
 display, opened nothing and spent nothing on the wire — and every other verb
 drove a window with keystrokes and screenshots. The window is the `lernie`
 seat crate's, so the exception is the whole harness: a bare `yog` is the
-engine, and the run is `yog gesture` lines against a real world. Its beats are
+server, and the run is `yog gesture` lines against a real world. Its beats are
 where a graduated rung's real-substrate half lands. Which
 rungs those are, and which are ruled out and why, is recorded rung by rung in
 `scripts/drive/beats_headless.sh`'s own head; the short of it is that a drive
@@ -202,7 +202,7 @@ it; the evidence needs a home), and getting any of them wrong was silent.
   `beats_s18.sh`, `beats_s19.sh`) — same helpers, split only for the repo's
   300-line cap. Its one transport is `gesture <data> '/line' [flags]`: one
   DESIGN §8.5 boundary gesture, `yog gesture` against the run's own scratch
-  world, converging through the running engine's consumer thread; replies land
+  world, converging through the running server's consumer thread; replies land
   in `<out>/gestures.jsonl` as the audit half. (Four windowed run verbs and the
   `yogdrive.sh` X-seat primitive under them went with the window, bl-7942.)
 - `cleanroom.sh` — the **standing done-bar** wrapper (§16.7 W14, below):
@@ -512,7 +512,7 @@ amended by bl-fa82; ←/→ unfold one) and land through the `focus_agent`
 path, selecting an agent in one key — which
 is why the runner's whole selection gesture is a single `xdotool key Down` where
 it was once a workspace-tab click plus a conversation-row click; the workspace
-is the tab bar's now, since the walk no longer crosses a wall; digits 1–5 pick
+is the tab bar's now, since the walk no longer crosses a workspace; digits 1–5 pick
 an inspector tab the same way. S0/S1 are windowed rungs end to end and carry no
 coordinate at all.
 
@@ -1954,7 +1954,7 @@ Tests:
 Machine state: the operator is not at the machine — a phone, a peer fleet's
 coordinator, an agent. Some conversations are waiting on somebody.
 
-1. **A bare `yog` IS the engine.** One `Engine::boot` (`src/engine.rs`) is the
+1. **A bare `yog` IS the server.** One `Engine::boot` (`src/engine.rs`) is the
    whole of a running yog: the §5.2 startup sweep, the §7.1 roots, the model's
    first synchronous derivation, and the derivation worker + watch bridge +
    gesture consumer beside it. It was `yog serve` while a window stood beside

@@ -2,7 +2,7 @@
 //! can be routed to (REMOTE §5.4). Split out of the lane itself (bl-68e1)
 //! because they answer a different question: [`super::verdict`] decides which
 //! rung a name lands on, and this file decides what a landing on a refusing
-//! rung *says*. The lane's own arms are provable without an engine and so are
+//! rung *says*. The lane's own arms are provable without a server and so are
 //! these, which is why the two halves never needed to sit together.
 
 /// **The clause both zero-consent refusals close on** (bl-68e1): the loaded
@@ -40,7 +40,7 @@ const NOT_A_REMEDY: &str = "loading a machine's tool with the clients tool is no
 pub fn unconsented(name: &str, advertisers: &[String]) -> String {
     if advertisers.is_empty() {
         return format!(
-            "no tool of that name is loaded in this conversation, this engine \
+            "no tool of that name is loaded in this conversation, this server \
              does not implement {name}, and no machine of this workspace \
              advertises it; the operator enrolls a thrall on the box that holds \
              this server's worktrees, with \"subject_cwd\": true on a {name} \

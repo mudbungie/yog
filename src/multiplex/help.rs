@@ -47,14 +47,14 @@ pub(super) const COMMANDS: &[HelpRow] = &[
     HelpRow {
         verb: crate::wire::provision::verb::SUBCMD,
         usage: "yog wire-certs   (every setting is an environment reading, stated before it)",
-        summary: "mint this box's wire certificates, state where the engine listens, or issue \
+        summary: "mint this box's wire certificates, state where the server listens, or issue \
                   one leaf for another box",
         detail: "Every setting is an environment reading, so it goes BEFORE the verb — a \
                  `VAR=value` after it is argv and is refused.\n\
                  \n  WIRE_HOST=<host>[,<host>…]  every host the server leaf answers to. The \
                  first, on WIRE_PORT, is the address; 127.0.0.1 always rides beside them, so a \
                  box reachable by name, by overlay address and on the LAN says so once.\n  \
-                 WIRE_PORT=<port>            what the engine binds and a seat dials \
+                 WIRE_PORT=<port>            what the server binds and a seat dials \
                  (default 7737). Unstated over material already here, the port `address` \
                  already names is kept.\n  \
                  WIRE_DIR=<dir>              the material directory (default: this world's own).\n  \
@@ -64,13 +64,13 @@ pub(super) const COMMANDS: &[HelpRow] = &[
                  WIRE_FOOT=1                 beside WIRE_LEAF, mint that leaf FOOT grade.\n\
                  \nWhat those select is one of three acts.\n\
                  \n1. A box with no material gains the lot — a private CA, the server, client \
-                 and window leaves, and the `address` file. The engine's own boot performs this \
+                 and window leaves, and the `address` file. The server's own boot performs this \
                  for a box that has none, aimed at loopback on a kernel-chosen port, so the \
                  explicit act is for a server another machine dials by name.\n\
                  \n2. On a box that already holds material, a stated WIRE_HOST says where this \
-                 engine listens: it re-issues THE SERVER LEAF over the CA already there and \
+                 server listens: it re-issues THE SERVER LEAF over the CA already there and \
                  writes `address` to match. No CA is founded and no other leaf is touched, so \
-                 nothing already carried away stops verifying — restart the engine and it binds \
+                 nothing already carried away stops verifying — restart the server and it binds \
                  what was stated. That is the act for a box whose own boot provisioned it: a \
                  self-provisioned `127.0.0.1:0` is a request only the listener learns the answer \
                  to, and stating an endpoint over it costs one signature rather than a rotation. \
@@ -80,7 +80,7 @@ pub(super) const COMMANDS: &[HelpRow] = &[
                  founded, no address written, no other leaf touched. That is the leaf a visiting \
                  box participates as; carry it, its key and `ca.pem` to that box by hand and \
                  place them in its `wire/workspaces/<workspace>/` as `client.pem`, `client.key` \
-                 and `ca.pem`, beside an `address` naming this engine. That directory is named \
+                 and `ca.pem`, beside an `address` naming this server. That directory is named \
                  for the WORKSPACE the client will address, never for the common name the leaf \
                  was issued under — a seat routes a gesture by the workspace it names, so a \
                  directory named for the leaf is a channel nothing can reach. The common name \
@@ -103,7 +103,7 @@ pub(super) const COMMANDS: &[HelpRow] = &[
         usage: "yog fixture [state]",
         summary: "lay a named, deterministic world state for a client harness to dial",
         detail: "Write one of a fixed roster of world states into a scratch data root and \
-                 print, as one JSON object, everything a harness needs to dial an engine \
+                 print, as one JSON object, everything a harness needs to dial a server \
                  booted on it: the root, the address, the CA and the client leaf. Bare, it \
                  lists the roster. Booting is the caller's — `XDG_DATA_HOME=<root> yog` — \
                  because the caller is the one that has to kill it, and tearing down is `rm \

@@ -13,8 +13,8 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::AtomicBool;
 use tempfile::TempDir;
 
-/// The lane's injection: no front door (no engine act is exercised here) and
-/// the scripted engine's brisk budget on both bounds.
+/// The lane's injection: no front door (no server act is exercised here) and
+/// the scripted server's brisk budget on both bounds.
 fn injection(root: &Path) -> Injection {
     Injection::new(
         root.to_path_buf(),
@@ -41,7 +41,7 @@ macro_rules! call {
     };
 }
 
-/// One advertised element as the engine's roster reply spells it.
+/// One advertised element as the server's roster reply spells it.
 fn advertised(name: &str, subject_cwd: bool) -> serde_json::Value {
     let mut tool = json!({"name": name, "description": "a tool",
                           "input_schema": {"type": "object"}});
@@ -77,7 +77,7 @@ fn a_granted_worktree_name_routes_with_the_conversations_cwd() {
     let input = json!({"command": "printf made > out.txt"});
     let stop = AtomicBool::new(false);
     let capture = injection(root.path()).route(call!("bash", &input, &stop));
-    handle.join().expect("engine");
+    handle.join().expect("server");
 
     assert_eq!(capture.exit_code, 0);
     assert_eq!(capture.stdout, b"made\n");
@@ -98,7 +98,7 @@ fn a_granted_worktree_name_routes_with_the_conversations_cwd() {
     );
 }
 
-/// The lane's last rung: what the engine performs on its own box, and what it
+/// The lane's last rung: what the server performs on its own box, and what it
 /// still refuses (bl-5710).
 mod engine;
 /// The sentences: unconsented, ambiguous, and the two transport failures.
@@ -134,7 +134,7 @@ fn a_loaded_set_does_not_shadow_the_lane_for_a_bare_name() {
     let stop = AtomicBool::new(false);
     // `bash`, not `laptop_bash`: the bare spelling is the lane's.
     let capture = injection(root.path()).route(call!("bash", &input, &stop));
-    handle.join().expect("engine");
+    handle.join().expect("server");
     assert_eq!(capture.exit_code, 0);
     let _ = seen.recv().expect("the roster read");
     let queued = seen.recv().expect("the queueing act");

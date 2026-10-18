@@ -142,7 +142,7 @@ fn the_last_row_for_a_key_wins_at_every_scope() {
 fn a_routed_refusal_is_addressed_to_the_operator_as_a_hold() {
     let answers = Answers::fold(&[]);
     let at = |name: &str, effect| ruling(&answers, &call("t1", name, "amber"), "w", effect).ruling;
-    // The engine's own leg keeps the in-band decline: the operator is sitting
+    // The server's own leg keeps the in-band decline: the operator is sitting
     // at that machine and the blast radius is in front of them.
     assert_eq!(at("bash", Effect::Destructive), Ruling::Refuse);
     assert_eq!(at("bash", Effect::Secret), Ruling::Refuse);

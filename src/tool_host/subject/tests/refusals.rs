@@ -1,9 +1,9 @@
-//! The lane's sentences: a name no machine consents to and the engine does
+//! The lane's sentences: a name no machine consents to and the server does
 //! not implement, a config ambiguity, and the two transport failures — each
 //! in band, non-zero, and naming the way out.
 //!
 //! `deploy` stands for the operator-granted pool name throughout: a name with
-//! no engine implementation behind it, so the last rung (`performs`) does not
+//! no litany implementation behind it, so the last rung (`performs`) does not
 //! catch it and the refusal is what the model reads. `bash` would be caught,
 //! which is bl-5710's whole point.
 
@@ -39,7 +39,7 @@ fn an_unconsenting_advertiser_is_refused_naming_the_remedy() {
     let input = json!({"target": "staging"});
     let stop = AtomicBool::new(false);
     let capture = injection(root.path()).route(call!("deploy", &input, &stop));
-    handle.join().expect("engine");
+    handle.join().expect("server");
 
     assert_eq!(capture.exit_code, 1);
     let said = String::from_utf8_lossy(&capture.stderr).into_owned();
@@ -61,7 +61,7 @@ fn an_unconsenting_advertiser_is_refused_naming_the_remedy() {
 
 /// **Two consenting machines is a config ambiguity, refused naming both** —
 /// one adjudication decision must stand for exactly one execution on one
-/// machine (REMOTE §5, no broadcast). It is refused for a name the engine
+/// machine (REMOTE §5, no broadcast). It is refused for a name the server
 /// implements too: an ambiguity the operator authored is a config defect to
 /// tell them about, never a reason to quietly execute somewhere third.
 #[test]
@@ -79,7 +79,7 @@ fn two_consenting_machines_are_an_ambiguity_refused_naming_them() {
     let input = json!({"command": "ls"});
     let stop = AtomicBool::new(false);
     let capture = injection(root.path()).route(call!("bash", &input, &stop));
-    handle.join().expect("engine");
+    handle.join().expect("server");
 
     assert_eq!(capture.exit_code, 1);
     let said = String::from_utf8_lossy(&capture.stderr).into_owned();
@@ -90,7 +90,7 @@ fn two_consenting_machines_are_an_ambiguity_refused_naming_them() {
 
 /// A consenting machine that never answers the routing leg is the transport
 /// sentence every other ask renders — in band, non-zero, never a hang. The
-/// scripted engine answers the roster and then goes silent, which is the
+/// scripted server answers the roster and then goes silent, which is the
 /// invoke ask running out its own bound.
 #[test]
 fn a_lane_whose_invoke_is_never_answered_refuses_in_band() {
@@ -102,19 +102,19 @@ fn a_lane_whose_invoke_is_never_answered_refuses_in_band() {
     let input = json!({"command": "ls"});
     let stop = AtomicBool::new(false);
     let capture = injection(root.path()).route(call!("bash", &input, &stop));
-    handle.join().expect("engine");
+    handle.join().expect("server");
 
     assert_eq!(capture.exit_code, 1);
     let said = String::from_utf8_lossy(&capture.stderr).into_owned();
     assert!(said.starts_with("bash: "), "{said}");
-    assert!(said.contains("no engine answered"), "{said}");
+    assert!(said.contains("no server answered"), "{said}");
 }
 
 /// **The lane's first ask can fail too**, and it is refused in band on the same
 /// terms the routing leg is: a lane whose *roster* read never lands has no set
 /// to select from, so the transport's own sentence is what the model reads —
 /// never a hang, and never a silent empty roster read, which would take the
-/// engine rung on a workspace whose consenting machine simply went unread.
+/// server rung on a workspace whose consenting machine simply went unread.
 #[test]
 fn a_lane_whose_roster_is_never_answered_refuses_in_band() {
     let root = TempDir::new().expect("tmp");
@@ -138,7 +138,7 @@ fn a_lane_whose_roster_is_never_answered_refuses_in_band() {
     assert_eq!(capture.exit_code, 1);
     let said = String::from_utf8_lossy(&capture.stderr).into_owned();
     assert!(said.starts_with("bash: "), "{said}");
-    assert!(said.contains("no engine answered"), "{said}");
+    assert!(said.contains("no server answered"), "{said}");
     assert!(
         !said.contains("advertises"),
         "a failed roster read is a transport fact, not a selection one: {said}"

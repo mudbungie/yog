@@ -14,7 +14,7 @@ use crate::boundary::consumer::ConsumerCtx;
 use serde_json::Value;
 use std::sync::Arc;
 
-/// The engine's [`Answerer`](super::server::Answerer): the deposit consumer's
+/// The server's [`Answerer`](super::server::Answerer): the deposit consumer's
 /// context, shared rather than copied.
 pub struct Intake {
     ctx: Arc<ConsumerCtx>,

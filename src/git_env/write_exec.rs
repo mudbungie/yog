@@ -10,7 +10,7 @@
 //! each of which forks `git` on its own account (measured, and measured out —
 //! [`super`]'s module doc carries both numbers).
 //!
-//! bl-fd28 closed it on the side that owns it, for test fixtures. **The engine
+//! bl-fd28 closed it on the side that owns it, for test fixtures. **The server
 //! had the same hazard and kept it**: `world::tools::ensure_shim` wrote the
 //! world's shims with `fs::write` + `set_permissions` and a caller exec'd one
 //! immediately after — yog composes a world's shims and then runs them, and yog

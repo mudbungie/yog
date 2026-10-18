@@ -24,7 +24,7 @@ use crate::model_pick::{Effort, Tuning};
 use crate::ui_state::UiState;
 use std::sync::Arc;
 
-/// The `Deps` an engine booted on a laid root carries: the §16.2 world
+/// The `Deps` a server booted on a laid root carries: the §16.2 world
 /// composed off that root — asserted equal to the writer's own state place, so
 /// this fixture cannot drift into reading where nothing was laid — and the
 /// laid workspace published by name, which is what REMOTE §8's address table
@@ -38,7 +38,7 @@ fn deps_on(root: &Path, litany: &Path) -> Deps {
     assert_eq!(
         world.yog_state_root(),
         places.state,
-        "the engine's own fold"
+        "the server's own fold"
     );
     Deps {
         litany: Cli::new(litany),

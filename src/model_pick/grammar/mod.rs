@@ -120,7 +120,7 @@ pub struct RoleModel {
     /// litany reads it as one: `false` and omitted are one fact upstream, so
     /// there is no third state for a word to name and nothing an unrecognized
     /// one could mean but *not asking*. Reporting `false` for anything but
-    /// `true` is therefore not a normalization — it is the engine's own
+    /// `true` is therefore not a normalization — it is litany's own
     /// reading, said back.
     pub priority: bool,
 }

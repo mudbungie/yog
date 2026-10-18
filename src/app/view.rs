@@ -102,7 +102,7 @@ impl AppModel {
 
     /// **The one door from a §3.1 name to a path** (bl-7407): `name` resolved
     /// against the enumeration, by the same [`by_leaf`](crate::naming::by_leaf)
-    /// rule the engine resolves a gesture's address by — a name nothing answers
+    /// rule the server resolves a gesture's address by — a name nothing answers
     /// resolves to nothing rather than to a guess.
     pub fn workspace_path(&self, name: &str) -> Option<std::path::PathBuf> {
         self.snap.ws_path(name).ok()
@@ -124,7 +124,7 @@ impl AppModel {
     /// acceptance world asking the same call the intake makes, over the same
     /// [`boundary_deps`](Self::boundary_deps) — which asks disk for its
     /// addressable sets exactly as the intake does, so a story cannot resolve
-    /// a name against a set the engine would not.
+    /// a name against a set the server would not.
     pub fn answer(
         &self,
         deps: &crate::boundary::dispatch::Deps,

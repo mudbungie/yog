@@ -5,7 +5,7 @@
 //! Every seat that renders somebody's *name* — a deposit's sender, a
 //! conversation's target, a transcript speaker — was asking
 //! [`display_name_of`](super::display_name_of) against the frame's own
-//! `&[Agent]`. That slice is the engine's tree derivation: fat, disk-derived,
+//! `&[Agent]`. That slice is the server's tree derivation: fat, disk-derived,
 //! and unspellable on a wire, which is exactly what REMOTE §9.4 retires from
 //! paint code. The ladder itself does not move — [`super::display_name`] stays
 //! its one home — only its *input* narrows to the two strings the answer is
@@ -27,7 +27,7 @@ pub struct Titles {
 }
 
 impl Titles {
-    /// The table off the engine's own agent set — the derivation side.
+    /// The table off the server's own agent set — the derivation side.
     pub fn of(agents: &[Agent]) -> Self {
         Self {
             rows: agents

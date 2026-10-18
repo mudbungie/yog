@@ -1,6 +1,6 @@
 //! **What the loop says** (bl-355c), arm by arm, through the bench's injected
 //! sink — and the counters `/doctor` hands a seat. Each test reads the lines
-//! an operator would read off the engine's stderr.
+//! an operator would read off the server's stderr.
 
 use super::super::item::Presence as Published;
 use super::bench::{bench, loopback, until};

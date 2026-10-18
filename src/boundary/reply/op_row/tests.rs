@@ -87,7 +87,7 @@ fn an_out_of_range_exit_refuses() {
 /// **Who said what crosses** (bl-e59e). `client` is the second field a reader
 /// cannot recompute from the line beside it, so it is written and read back
 /// exactly — and a token that names no identity reads as the in-world caller,
-/// which is what an engine writing its own rows is.
+/// which is what a server writing its own rows is.
 #[test]
 fn the_author_crosses_beside_the_surface_that_asked() {
     let seat = crate::registry::Client::parse("seat2").expect("a leaf name");
@@ -98,7 +98,7 @@ fn the_author_crosses_beside_the_surface_that_asked() {
     assert_eq!(decode(&v).expect("decodes").row.client, seat);
 
     let local = op_row(&view(0, Standing::Clean));
-    assert_eq!(local["client"], "local", "and the engine's own rows say so");
+    assert_eq!(local["client"], "local", "and the server's own rows say so");
     assert_eq!(
         decode(&local).expect("decodes").row.client,
         crate::registry::Client::local()

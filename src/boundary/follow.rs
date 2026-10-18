@@ -1,4 +1,4 @@
-//! **The follow lane's engine half** (REMOTE §3, §10; DESIGN §7.2; bl-73e7):
+//! **The follow lane's server half** (REMOTE §3, §10; DESIGN §7.2; bl-73e7):
 //! [`Query::Follow`](super::Query::Follow) answered as a *sequence* — one frame
 //! per growth of the conversation's open `response.json`, and no terminator
 //! until the stream closes.

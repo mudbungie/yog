@@ -29,7 +29,7 @@ fn a_kernel_chosen_port_refuses_before_anything_is_minted() {
         "{refusal}"
     );
     assert!(refusal.contains("WIRE_HOST"), "{refusal}");
-    // bl-a6b7: the remedy must be typeable ON THIS BOX. The running engine holds
+    // bl-a6b7: the remedy must be typeable ON THIS BOX. The running server holds
     // its `:0` listener until it restarts, so a remedy missing that half is one
     // the operator spends their first attempt on. And since bl-98ef it is NOT a
     // rotation: stating the endpoint over standing material re-issues the server
@@ -39,7 +39,7 @@ fn a_kernel_chosen_port_refuses_before_anything_is_minted() {
     assert!(refusal.contains("WIRE_PORT"), "{refusal}");
     assert!(!refusal.contains("FORCE=1"), "{refusal}");
     assert!(refusal.contains("distrusts nothing"), "{refusal}");
-    assert!(refusal.contains("restart the engine"), "{refusal}");
+    assert!(refusal.contains("restart the server"), "{refusal}");
     // …and the other way out, which is this device's own route (bl-fec6).
     assert!(refusal.contains("--at"), "{refusal}");
     assert!(!dir.join("phone-1.pem").exists(), "nothing was minted");
@@ -62,7 +62,7 @@ fn a_stated_address_is_what_the_envelope_carries() {
     };
     let answer = super::enrolled(enroll(&deps, "7", &stated("192.0.2.7:7737")).expect("act"));
     assert_eq!(answer.address, "192.0.2.7:7737");
-    assert_ne!(answer.address, super::STATED, "not this engine's own");
+    assert_ne!(answer.address, super::STATED, "not this server's own");
 
     let refusal = enroll(&deps, "8", &stated("192.0.2.7:0")).expect_err("refused");
     assert!(

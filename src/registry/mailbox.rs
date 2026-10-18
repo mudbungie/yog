@@ -1,9 +1,9 @@
-//! **The invocation mailbox** (REMOTE §5, §9 step 7; bl-024b): the engine-side
+//! **The invocation mailbox** (REMOTE §5, §9 step 7; bl-024b): the server-side
 //! hand-off between an agent's tool call and the machine that runs it.
 //!
 //! REMOTE §3's routing ruling is that **the ask never inverts**: a tool host
 //! rides a follow-class read for its next invocation and posts each capture
-//! back as an ordinary act. So the engine never speaks first, and what stands
+//! back as an ordinary act. So the server never speaks first, and what stands
 //! between the two directions is this — a queue per client and a slot per
 //! invocation, held in RAM beside the presence refcount ([`super::presence`]).
 //!
@@ -32,7 +32,7 @@ use serde_json::{Value, json};
 
 use crate::boundary::codec::fields::{i64_of, str_of};
 
-/// **The engine's own prose on this leg** (REMOTE §5.6): the refusal an
+/// **The server's own prose on this leg** (REMOTE §5.6): the refusal an
 /// unheld handle earns, the capture an exhausted lease is answered with, and
 /// the mark a redelivered one carries.
 mod doubt;
@@ -67,15 +67,15 @@ pub struct Call {
 
 impl Eq for Call {}
 
-/// **What a tool host is handed**: the engine's handle on this call, and the
+/// **What a tool host is handed**: the server's handle on this call, and the
 /// two facts the far end needs to run it. It carries no client — the read is
 /// answered to one identity and a host being told its own name would be a fact
 /// it already holds.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Invocation {
-    /// The engine's handle, minted at the post and quoted by the completion.
+    /// The server's handle, minted at the post and quoted by the completion.
     ///
-    /// **It is also the idempotency key** (bl-e658). An invocation the engine
+    /// **It is also the idempotency key** (bl-e658). An invocation the server
     /// has no capture for is offered again at the client's next follow-class
     /// read, and a redelivery carries the id it was first handed under — so a
     /// far end that must not run something twice has one stable name to dedupe

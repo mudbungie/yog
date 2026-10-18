@@ -3,7 +3,7 @@
 //!
 //! The §11 centre pane paints an identity line, a mark row, a live badge and a
 //! pair of §8.2 verb gates about whatever is selected. Every one of those was
-//! derived on the frame thread out of `GitTree::agents` — the engine's fat,
+//! derived on the frame thread out of `GitTree::agents` — the server's fat,
 //! disk-derived tree, which a thin client will never hold. Nothing was missing
 //! from the *derivations*; what was missing was a **spelling**, so this is that
 //! and nothing more: scalars and two small lists off the published snapshot,

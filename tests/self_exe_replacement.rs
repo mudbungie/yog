@@ -1,4 +1,4 @@
-//! bl-f558 — **a live engine outlives its own inode.** Installing, updating or
+//! bl-f558 — **a live server outlives its own inode.** Installing, updating or
 //! rebuilding yog replaces the file at yog's pathname while the running process
 //! keeps executing the unlinked image; from that instant Linux's
 //! `/proc/self/exe` — the whole of `current_exe()` there — reads back `<path>
@@ -79,7 +79,7 @@ fn the_live_engine_that_lost_its_inode() {
     let body = std::fs::read_to_string(&shim).unwrap();
     assert!(
         body.contains(&format!("exec '{}' ", born.display())),
-        "the shim names the pathname this engine was born from: {body}"
+        "the shim names the pathname this server was born from: {body}"
     );
     assert!(!body.contains("(deleted)"), "{body}");
 }
@@ -129,7 +129,7 @@ fn a_start_after_the_binary_is_replaced_seeds_a_control_that_still_runs() {
         .env(FIXTURE_ENV, dir.path())
         .status()
         .unwrap();
-    assert!(status.success(), "the live-engine arm failed: {status:?}");
+    assert!(status.success(), "the live-server arm failed: {status:?}");
 
     // The durable artifact the child left behind, read back from outside it.
     let shim = yog::world::tools::control_path(&dir.path().join("tools"));

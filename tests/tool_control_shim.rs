@@ -144,7 +144,7 @@ fn the_seeded_shim_answers_the_seam_over_real_stdio() {
     assert!(out.contains(r#""verdict":"refuse""#), "{out}");
 
     // A foot's shell IS a shell (bl-72bd, ruling 2): the same line through a
-    // routed name gets the same CLASS the engine's own bash just gave it, and
+    // routed name gets the same CLASS the server's own bash just gave it, and
     // this is the leg that passed it unread for a year. The verdict differs by
     // one step and deliberately (bl-1772): a refusal is a sentence handed to
     // the model, which on a machine the operator cannot see is handed to the

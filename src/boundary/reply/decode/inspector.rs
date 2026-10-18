@@ -71,7 +71,7 @@ fn governing(o: &Map<String, Value>) -> Result<Reply, String> {
             governance,
             files: strings_of(o, "files")?,
         },
-        // Absent reads as null (REMOTE §3.2: a post-floor key an older engine
+        // Absent reads as null (REMOTE §3.2: a post-floor key an older server
         // never wrote is the general path), and a present value is read
         // strictly by the module that spells it.
         workflow_mark: opt_val(o, "workflow_mark", super::super::workflow::mark_of)?,

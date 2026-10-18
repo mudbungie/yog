@@ -67,7 +67,7 @@
 //!
 //! **It is not a test discipline, and for one round this doc said it was.**
 //! bl-fd28 converted the fixtures and wrote "every executable *fixture*" here,
-//! which read as a settled boundary; the ENGINE still wrote its world shims with
+//! which read as a settled boundary; the SERVER still wrote its world shims with
 //! `fs::write` + `set_permissions` and exec'd them (`world::tools::ensure_shim`),
 //! which is the same window in the process that forks the most. Folding those
 //! beats into bl-fd28's own filter reproduced it at **7** failures over 1,120

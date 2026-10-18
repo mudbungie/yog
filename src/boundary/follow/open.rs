@@ -2,7 +2,7 @@
 //! bytes that were not a whole line yet.
 //!
 //! It was the §7.2 live-tail follower's (`app::live::follow`, bl-54f7) until
-//! bl-73e7 moved it to the engine, where the read finally has a consumer that
+//! bl-73e7 moved it to the server, where the read finally has a consumer that
 //! reaches a seat. Nothing about the mechanism changed: **following, not
 //! re-reading** — each pass reads only what was appended, folds the complete
 //! lines through the one shared parser

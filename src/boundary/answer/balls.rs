@@ -7,7 +7,7 @@
 //! [`Query::Balls`](crate::boundary::Query::Balls) answers the binding facts of
 //! the whole world; this answers *what one workspace holds*, which is what
 //! every §11 balls surface actually paints — and it is addressed by the §3.1
-//! name, so a seat holding a focus can ask it without the engine-side join
+//! name, so a seat holding a focus can ask it without the server-side join
 //! bl-7407 refused.
 //!
 //! **The spend rides the row.** `AppModel::ball_spend` was a second read, per

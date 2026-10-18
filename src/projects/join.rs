@@ -113,11 +113,11 @@ pub fn owner_name(row: &JoinRow) -> String {
 /// `PathBuf` and a workspace `PathBuf` — the last two path-typed fields on a
 /// reply payload after `Prepared::binding`, and the ones §8.1's own list did
 /// not reach. `Reply::Balls` therefore answered a thin seat two absolute paths
-/// under the engine's home: unusable there and a disclosure besides. They are
+/// under the server's home: unusable there and a disclosure besides. They are
 /// the §5.1 #1 project name and the §3.1 workspace leaf now — the *same* two
 /// words `Action::Ball`'s own `Close`/`Assign` already take — so a seat holding a
 /// name can select its own workspace's rows out of the answer without joining
-/// it back against the engine's table (the shape bl-7407 refused). The engine
+/// it back against the server's table (the shape bl-7407 refused). The server
 /// resolves either back through [`Snapshot::project_path`](crate::app::Snapshot)
 /// / [`ws_path`](crate::app::Snapshot) at the one seam that owns the round trip.
 #[derive(Debug, Clone, PartialEq, Eq)]

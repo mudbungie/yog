@@ -12,7 +12,7 @@ use crate::ui_state::UiState;
 
 const ORIGIN: i64 = 2_000_000_000;
 
-/// The queue an engine booted on the laid `state` answers, with nothing seen.
+/// The queue a server booted on the laid `state` answers, with nothing seen.
 /// `then` runs against the workspace before the derivation reads it.
 fn rows(state: &str, then: impl Fn(&Path)) -> Vec<QueueRow> {
     let (_tmp, places, _) = laid(state, ORIGIN);

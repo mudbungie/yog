@@ -4,7 +4,7 @@
 //! Its own file on a real seam, the one `test_support::world` was cut on
 //! (bl-fcd5): everything in [`super::lay`] and [`super::disk`] performs an
 //! *effect*, while this composes a *set of paths* — every one derived by the
-//! production folds an engine reads them back with, so a fixture can never
+//! production folds a server reads them back with, so a fixture can never
 //! write where nothing reads.
 
 use std::path::{Path, PathBuf};
@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 /// Where a laid state's pieces are — computed once so the writer and the
 /// [`super::Laid`] the caller is handed cannot disagree about one path.
 /// The `root` this is folded from is the caller's own — the `XDG_DATA_HOME` an
-/// engine is booted with — and is deliberately **not** a field: it is the
+/// server is booted with — and is deliberately **not** a field: it is the
 /// caller's value, and a copy here would be one fact with two homes.
 pub struct Places {
     /// `<root>/yog` — the anchor every fold below hangs off.

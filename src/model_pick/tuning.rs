@@ -14,7 +14,7 @@
 //! `priority` are what the config says; `reasoning_effort`, `thinking.budget_tokens`,
 //! `service_tier`, `flex` and `batch` are wire spellings that stay inside the
 //! adapter, exactly as litany's own ARCH §4.3 rules. yog spells neither — it
-//! writes the config's two words and the engine resolves the rest.
+//! writes the config's two words and litany resolves the rest.
 //!
 //! **No capability gate stands on the write.** The §9.4 rows state whether a
 //! provider takes each knob ([`ProviderRowView`](crate::config_edit::brazen::ProviderRowView)),
@@ -27,7 +27,7 @@
 //! **Off is the absent field, and there is no third spelling.** litany reads
 //! `effort` and `priority` as `Option`s and states that `false` and omitted are
 //! one fact; writing `priority: false` would be a second spelling of absence
-//! that the engine would read identically and an operator would read as a
+//! that litany would read identically and an operator would read as a
 //! third state. So `off` **removes the line**
 //! ([`remove_field`](super::grammar::remove_field)), which is also what makes
 //! the gesture idempotent: turning off what is already off is the same world.
@@ -39,7 +39,7 @@ use crate::model_pick::GrammarError;
 /// `effort:` takes, in its own lowercase spelling.
 ///
 /// yog's own enum rather than a re-export, for litany's stated reason one layer
-/// down: the engine defines its own instead of re-exporting brazen's because the
+/// down: litany defines its own instead of re-exporting brazen's because the
 /// linked crate's type does not carry what it needs, and here the crate's type
 /// is not on litany's public surface at all. The bridge is
 /// [`as_str`](Self::as_str) and [`parse`](Self::parse), one match each, and the
@@ -92,7 +92,7 @@ impl Effort {
 pub enum Tuning {
     /// `/effort <role> <low|medium|high|off>` — set the role's reasoning level,
     /// or remove it. `None` is `off`, and it is an absence rather than a value
-    /// because that is what the engine reads.
+    /// because that is what litany reads.
     Effort {
         workspace: String,
         role: String,

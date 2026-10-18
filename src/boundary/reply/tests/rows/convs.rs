@@ -89,7 +89,7 @@ fn conversation_rows_encode_their_optional_facts_only_when_present() {
     );
     assert_eq!(rows[1]["direct"], 0);
     // bl-b7d9: both time facts ride, and they say the same instant two ways —
-    // the stamp is absolute, and `age_secs` is the distance from the engine's
+    // the stamp is absolute, and `age_secs` is the distance from the server's
     // own clock, so a reader adding them recovers the `now` this was answered
     // at (1_700_000_000 + 42 == 1_700_000_042).
     assert_eq!(rows[0]["last_active_unix"], 1_700_000_000_i64);

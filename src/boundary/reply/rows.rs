@@ -98,7 +98,7 @@ pub(super) fn conv_row(row: &ConvRow) -> Value {
     // The same recency fact undistanced (REMOTE §9.9, bl-b7d9): an age alone
     // orders a roster and cannot stamp one. Epoch seconds, the unit every
     // other time on this wire speaks (`committed` above); it rides *beside*
-    // `age_secs` because the age is the only carrier of the engine's own clock
+    // `age_secs` because the age is the only carrier of the server's own clock
     // at answer time, and the pair is one value encoded twice at one instant.
     map.insert("last_active_unix".to_owned(), json!(row.last_active_unix));
     if let Some(flight) = row.flight {
@@ -159,7 +159,7 @@ pub(super) fn conv_row(row: &ConvRow) -> Value {
 /// One §3.5 binding fact. **Both addresses are names** since bl-b4b5 (REMOTE
 /// §8.1): the project's §5.1 #1 wire name and the workspace's §3.1 leaf, which
 /// is what the row carries now rather than two absolute paths under the
-/// engine's home — the last payload residual on that list after
+/// server's home — the last payload residual on that list after
 /// `Prepared::binding`.
 pub(super) fn join_row(row: &JoinRow) -> Value {
     let mut map = Map::new();

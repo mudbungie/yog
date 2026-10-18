@@ -17,8 +17,8 @@
 //! in the record, computed and never stored: the old per-bump integer line
 //! continued, so the stamps 1..18 a client already vendors keep their meaning.
 //! `floor` is the edition at which the current major was cut: every path
-//! stamped at or below it is present on every engine speaking this major, and
-//! every later path is optional to READ — absent on an engine of an older
+//! stamped at or below it is present on every server speaking this major, and
+//! every later path is optional to READ — absent on a server of an older
 //! edition, which the hello's `edition` lets a seat say honestly. It moves in
 //! the one regeneration that raises `protocol`, and never after, so a lane
 //! that adds a field in the same unreleased wave as a bump lands it

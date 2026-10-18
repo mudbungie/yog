@@ -90,7 +90,7 @@ pub(crate) fn latest_snapshot(cell: &SnapshotCell) -> Arc<Snapshot> {
     Arc::clone(&lock_cell(cell))
 }
 
-/// The engine's live sign-in runs (REMOTE §8.3, bl-c285): one `bz --login`
+/// The server's live sign-in runs (REMOTE §8.3, bl-c285): one `bz --login`
 /// child per workspace × provider, written by the act and by each run's own
 /// reader thread, read by every lane held on one. A transparent alias, so the
 /// `Mutex` token stays confined here while the map and every rule about it live

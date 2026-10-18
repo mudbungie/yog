@@ -4,7 +4,7 @@
 //! before escalating to `Child::kill` (SIGKILL); [`set_env`] is the process
 //! environment mutation the nested world needs to become a *place* and not only
 //! a value ([`crate::world::inhabit`], DESIGN §16.2, bl-81c9);
-//! [`term_disposition`] is the `SIGTERM` *catch* an engine needs before either
+//! [`term_disposition`] is the `SIGTERM` *catch* a server needs before either
 //! of those can happen at all (§8.5, bl-269a) — under the default disposition
 //! the process dies where it stands, so no `Drop` runs and the `sigterm` above
 //! is never posted; and [`ignore_sigpipe`] is the disposition repair a RETURNED
@@ -66,7 +66,7 @@ static TERM_REQUESTED: std::sync::atomic::AtomicBool = std::sync::atomic::Atomic
 
 /// The SIGTERM handler: one atomic store, which POSIX lists as
 /// async-signal-safe. Everything a stop *means* (§8.5) happens outside it, in
-/// the face's own loop — a handler that dropped the engine would run arbitrary
+/// the face's own loop — a handler that dropped the server would run arbitrary
 /// code, take locks and join threads on a signal stack.
 ///
 /// `pub(crate)` so the §8.5 stop's one process-wide test drives it **as a

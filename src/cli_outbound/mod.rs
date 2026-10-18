@@ -44,7 +44,7 @@ pub(crate) mod resolve;
 pub use resolve::Binary;
 
 /// Which file yog itself is, read once per process (bl-f558) — the one home of
-/// that fact, which a live engine keeps across a replacement of its own inode.
+/// that fact, which a live server keeps across a replacement of its own inode.
 pub(crate) mod self_exe;
 pub(crate) use self_exe::self_exe;
 

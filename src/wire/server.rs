@@ -1,4 +1,4 @@
-//! The engine's listener (REMOTE §8, §9.5; bl-b6fa): a synchronous mTLS accept
+//! The server's listener (REMOTE §8, §9.5; bl-b6fa): a synchronous mTLS accept
 //! loop over `std::net`, one thread per connection.
 //!
 //! **It is a second intake to the same chokepoints, never a second surface.**
@@ -12,7 +12,7 @@
 //! is installed and vacuous, and stays that way): the accept loop polls a
 //! non-blocking [`TcpListener`] so a [`Drop`] can stop it, and each connection
 //! is a blocking thread. That is the [`Worker`](crate::app::Worker) shape the
-//! rest of the engine already uses — a stop flag, a loop, a `Drop` that joins
+//! rest of the server already uses — a stop flag, a loop, a `Drop` that joins
 //! — and it costs one thread per live seat, which is the number of seats an
 //! operator has.
 //!
@@ -38,10 +38,10 @@ use std::time::Duration;
 /// until the next look.
 const ACCEPT_POLL: Duration = Duration::from_millis(20);
 
-/// How long an accepted connection may say nothing before the engine treats it
+/// How long an accepted connection may say nothing before the server treats it
 /// as gone (REMOTE §5.1, bl-1421). **A bound on the transport, not on the
 /// wait** — thrall's channel states the same two minutes from the other end,
-/// and for the same reason: the engine's longest legitimate quiet is a
+/// and for the same reason: the server's longest legitimate quiet is a
 /// follow-class hold, which is thirty seconds
 /// ([`slots`](crate::registry::mailbox), [`follow`](crate::boundary::follow),
 /// and [`attend`](crate::boundary::attend), which holds on the follow lane's
@@ -79,7 +79,7 @@ pub(crate) use peer::{Quiet, peer_client};
 ///
 /// **`peer` is the connection's authorization** (REMOTE §4, §4.2; bl-8bbc,
 /// bl-7ff3): the identity read off the certificate the peer presented — which
-/// the engine resolves to the workspaces that client is registered in — beside
+/// the server resolves to the workspaces that client is registered in — beside
 /// the grade the same subject carries, which decides what it may say at all. It
 /// is a parameter rather than connection state because the answer is the only
 /// thing that ever needs it, and a field would be a second copy of what the
@@ -89,7 +89,7 @@ pub trait Answerer: Send + Sync {
 }
 
 /// The listener thread. Owns its join handle and a stop flag; [`Drop`] signals
-/// stop and joins, the engine's own shutdown shape (§7.2).
+/// stop and joins, the server's own shutdown shape (§7.2).
 pub struct Listener {
     address: String,
     stop: Arc<AtomicBool>,
@@ -142,7 +142,7 @@ impl Drop for Listener {
 
 /// Accept until stopped. Every accept error is transient by treatment — a
 /// descriptor exhaustion or a peer that vanished mid-handshake is a reason to
-/// look again, never a reason for the engine to stop having a wire — so there
+/// look again, never a reason for the server to stop having a wire — so there
 /// is one arm and it is the same as having nothing to accept.
 fn accept_loop(
     tcp: &TcpListener,
@@ -199,7 +199,7 @@ impl Quiet {
 /// rather than sleeping for real ([`Mailbox::holding`](crate::registry::mailbox::Mailbox::holding)'s
 /// own shape) — and, on a held connection, how often the silence is pinged
 /// ([`peer`]). A socket that refuses the timeout is served without one: the
-/// engine having no bound is the behaviour it had before, never a reason to
+/// server having no bound is the behaviour it had before, never a reason to
 /// hang up on a peer that has done nothing wrong.
 ///
 /// Answers whether the peer was **admitted** — `false` for a handshake or a

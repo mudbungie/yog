@@ -42,9 +42,9 @@ const PRIME: &str = "prime";
 /// presence under `LITANY_HOME` is the seeded marker.
 const MODELS_YAML: &str = "models.yaml";
 
-/// The engine home's name before the REMOTE §12 version fence — `<world>/lernie`
+/// litany's home name before the REMOTE §12 version fence — `<world>/lernie`
 /// beside today's `<world>/litany` (DESIGN §16.2). A world carrying it was
-/// founded by a `lernie 0.0.x` engine and has not been migrated.
+/// founded by `lernie 0.0.x`, litany's earlier name, and has not been migrated.
 const LERNIE_ERA_HOME: &str = "lernie";
 
 /// A world-seed failure. `prime` ran non-zero (its stderr rides back in the
@@ -58,8 +58,8 @@ pub enum SeedError {
     #[error("`litany prime` failed (exit {}): {}", .0.exit, .0.stderr)]
     Prime(Outcome),
     #[error(
-        "this world was founded by the lernie-era engine and still holds {0} — \
-         priming now would found a second, empty engine home beside it. Migrate \
+        "this world was founded by lernie-era litany and still holds {0} — \
+         priming now would found a second, empty litany home beside it. Migrate \
          it first: rename that directory to `litany`, then rewrite every mark in \
          each `workspaces/*/repo.git` from `refs/lernie/*` to `refs/litany/*`."
     )]
@@ -90,7 +90,7 @@ pub fn seeded(layout: &Layout) -> bool {
 /// gesture of its own, so it banners wherever that start was offered.
 ///
 /// **A lernie-era world refuses instead of seeding** (DESIGN §16.2, REMOTE §12).
-/// The engine renamed with no compatibility shim, so an unmigrated world's
+/// litany renamed with no compatibility shim, so an unmigrated world's
 /// conversations sit under `<world>/lernie` where nothing looks any more, and
 /// `prime` would happily found an empty `<world>/litany` beside them — the
 /// stranding, made permanent and silent. The probe is not a bootstrap branch: a

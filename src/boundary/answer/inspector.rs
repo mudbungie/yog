@@ -103,7 +103,7 @@ pub(crate) fn live_tail(snap: &Snapshot, ws: &Path, agent: &str) -> Option<Strea
 /// it. The number is derived from the live cadence the snapshot already
 /// carries, and it is spent here rather than named in a reply: a period a seat
 /// had to honour would be one derivation with two implementations, and a
-/// window a seat had to time would be this engine's own staleness made the
+/// window a seat had to time would be this server's own staleness made the
 /// seat's problem.
 pub fn steps(snap: &Snapshot, ws: &Path, agent: &str, now_unix: i64) -> StepsView {
     steps_view::build(

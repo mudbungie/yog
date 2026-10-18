@@ -37,11 +37,11 @@ Two things must exist **on the box yog runs on**, because yog execs them:
 
 - `git` — every workspace read and every act is git (`src/git_env.rs` is the
   crate's one fork);
-- `openssl` — the wire mint the engine's own boot performs when a box holds no
+- `openssl` — the wire mint the server's own boot performs when a box holds no
   certificates. Without it a fresh root comes up with no listener, and the
   refusal says so on stderr.
 
-Then `yog` boots the engine and parks (see "Running"), and a **seat** — the
+Then `yog` boots the server and parks (see "Running"), and a **seat** — the
 [lernie](https://github.com/mudbungie/lernie) window, an android client — is
 what a human looks at. Provisioning the channel between them is "The wire"
 below.
@@ -52,7 +52,7 @@ than binaries — see "The image"), and **a checkout** (`make install
 [INSTALL_PREFIX=<p>]`, which release-builds this tree into
 `$INSTALL_PREFIX/bin`, default `~/.local/bin` — see "Building and
 contributing"). The binary links no display stack: there is no GL, font or
-`pkg-config` dependency to satisfy on a server, and the same is true of every
+`pkg-config` dependency to satisfy on a box, and the same is true of every
 crate in the suite.
 
 ## Architecture
@@ -112,12 +112,12 @@ read-only.
 ## Running
 
 ```
-yog                    # boot the engine and park until a signal
+yog                    # boot the server and park until a signal
 yog gesture '/attention'   # ask the boundary a question from this world
 yog --help             # the whole surface
 ```
 
-A bare `yog` **is** the engine: it enumerates the world, derives it, answers
+A bare `yog` **is** the server: it enumerates the world, derives it, answers
 the gestures inbox and listens on the wire, and parks until `SIGTERM`. There is
 no verb to select it, because there is one face (it was `yog serve` while a
 window stood beside it). A seat — the `lernie` window, an android client,
@@ -131,12 +131,12 @@ yog: wire: listening on 127.0.0.1:39271
 
 That line is the whole of how a port is learned on a box yog provisioned for
 itself. Its `wire/address` holds `127.0.0.1:0` — a *request* for whatever port
-is free, so two engines on one box never contend — and the port is the kernel's
+is free, so two servers on one box never contend — and the port is the kernel's
 answer, which only the listener knows. A seat cannot dial that, and an
 enrollment refuses to put it in a QR, so **state the endpoint**:
 
 ```
-WIRE_HOST=127.0.0.1 WIRE_PORT=7737 yog wire-certs   # then restart the engine
+WIRE_HOST=127.0.0.1 WIRE_PORT=7737 yog wire-certs   # then restart the server
 ```
 
 On a box that already holds material that is not a rotation and distrusts
@@ -146,7 +146,7 @@ verifies. `WIRE_HOST` is a comma-separated list — every entry rides the server
 leaf, and the first one, on `WIRE_PORT`, is the address. An unstated
 `WIRE_PORT` keeps the port `address` already names. A box whose `address` names
 a host and port prints that same line naming what it stated. A wire that
-could not come up prints its refusal on the same stream, and the engine runs on
+could not come up prints its refusal on the same stream, and the server runs on
 without one.
 
 yog enumerates every litany workspace (named workspaces under
@@ -159,10 +159,10 @@ the empty-world bootstrap uses without asking; it is never minted
 wordlist (§3.3). Balls bind to workspaces by claimant: every claim a workspace
 makes is stamped `--as` that chosen name, so assignment is late-mutable
 metadata, not a location (DESIGN §3.2). Which workspace a seat is
-looking at is the seat's own state and rides in the gesture; the engine keeps
+looking at is the seat's own state and rides in the gesture; the server keeps
 no focus. There is no `--repo` flag — the whole roster is the answer.
 
-`make install` builds and seats the binary from your checkout; a server runs
+`make install` builds and seats the binary from your checkout; a headless box runs
 the image under its own unit (`make deploy HOST=<ssh-host>`). The binary links
 no display stack and needs no `apt install` step.
 
@@ -174,7 +174,7 @@ to a host binary.
 
 ### The wire: this box, and the next one
 
-Every seat and every foot reaches the engine over mTLS, and the certificates are
+Every seat and every foot reaches the server over mTLS, and the certificates are
 the operator's own act — yog links no certificate library and mints nothing in
 channel. One verb performs all of it, `yog wire-certs`, and **every setting is
 an environment reading, so it goes before the verb**:
@@ -182,7 +182,7 @@ an environment reading, so it goes before the verb**:
 | reading | what it says |
 |---|---|
 | `WIRE_HOST=<host>[,<host>…]` | every host the server leaf answers to; the first, on `WIRE_PORT`, is the address. `127.0.0.1` always rides beside them |
-| `WIRE_PORT=<port>` | what the engine binds and a seat dials (default `7737`). Unstated over material already here, the port `address` already names is kept |
+| `WIRE_PORT=<port>` | what the server binds and a seat dials (default `7737`). Unstated over material already here, the port `address` already names is kept |
 | `WIRE_DIR=<dir>` | the material directory (default: this world's own) |
 | `FORCE=1` | rotate — delete every artifact and found a new trust root, distrusting every certificate already issued, everywhere |
 | `WIRE_LEAF=<common-name>` | issue ONE extra client leaf under that name, over the CA already here |
@@ -191,9 +191,9 @@ an environment reading, so it goes before the verb**:
 `yog wire-certs --help` is the same table with the three acts those settings
 select. Two recipes are worth having in front of you.
 
-**A seat on this box.** The engine's own boot provisions a box that has none,
+**A seat on this box.** The server's own boot provisions a box that has none,
 aimed at `127.0.0.1:0` — a port only the listener learns, which nothing can be
-told to dial. State the endpoint, then restart the engine:
+told to dial. State the endpoint, then restart the server:
 
 ```
 WIRE_HOST=127.0.0.1 WIRE_PORT=7737 yog wire-certs
@@ -317,11 +317,11 @@ which one. It is the same flag, spelled the same way, as `yog gesture --ws`. Bot
 
 Beyond the hatches, **every operator gesture crosses one control boundary**
 (DESIGN §8.5, VISION §4.8). A gesture is a JSON envelope deposited create-only
-into `<yog-state>/gestures/`; the running engine consumes it and writes
+into `<yog-state>/gestures/`; the running server consumes it and writes
 `gestures/replies/<id>.json`:
 
 ```
-yog &                                   # the engine (worker + watcher + inbox + wire)
+yog &                                   # the server (worker + watcher + inbox + wire)
 yog gesture '{"op":"scan","workspace":"/path/to/ws"}'      # deposit-and-wait sugar
 yog gesture '{"op":"conversations","workspace":"/path"}'   # queries answer typed JSON
 ```
@@ -355,7 +355,7 @@ yog gesture --ws /path/to/ws --agent c-1 '/seen'
 asked *about* a command, so it is the same question wherever you type it:
 
 ```
-yog --help                    # the whole surface: the engine, gestures, hatches, namespaces
+yog --help                    # the whole surface: the server, gestures, hatches, namespaces
 yog help exec                 # one yog command's page
 yog exec --help               # the same page, asked at the command
 yog gesture --help            # every gesture, one line each
@@ -376,8 +376,8 @@ Actions run the same §8 executors the GUI's buttons do and log the same
 is deliberately not restated here — `yog gesture --help` prints every command,
 one line each, read off the interface itself. Exit: `0` ok, `1` refused/failed,
 `2` never deposited, `124` no consumer answered (an unclaimed deposit remains
-and converges later; a gesture whose engine died mid-run is answered *in
-doubt* by the next engine boot — a refusal telling you to read the world
+and converges later; a gesture whose server died mid-run is answered *in
+doubt* by the next server boot — a refusal telling you to read the world
 rather than re-send, because an action is not idempotent and a re-send is a
 second act).
 
@@ -404,7 +404,7 @@ config, so removing the space deletes config, not code.
 | `make drive-cleanroom` [`DRIVE_VERB=<verb>`] | The same ladder with only `yog` and `git` on `PATH` — the standing batteries-included done-bar |
 | `make drive-preflight` | Name every missing host prerequisite at once (python3, git, the `yog` under drive, the world seed's required `models.yaml`, and the workspace **wall** — whether a scratch world can birth a workspace at all, plus the brazen fixtures seeded into it) |
 | `make drive-seed` | Lay a scratch world and print its path — the starting point for a hand-steered capture pass (`docs/QUALITY.md` §3) |
-| `make fixture` [`STATE=<name>`] | Lay a named, deterministic **fixture world**, boot an engine on it and print the address a client harness dials; Ctrl-C stops the engine and removes the root. Bare, it lists the states. See "Fixture worlds" below |
+| `make fixture` [`STATE=<name>`] | Lay a named, deterministic **fixture world**, boot a server on it and print the address a client harness dials; Ctrl-C stops the server and removes the root. Bare, it lists the states. See "Fixture worlds" below |
 | `make drive-log` [`DRIVE_LOG_DIR=<d>`] | Re-emit a run's drive-log skeleton (sha, host tuple, load, beat table) from its verdict rows |
 | `make image` [`ENGINE=docker`] | Build the OCI image from `Containerfile`, tagged `yog:<Cargo.toml version>` and `yog:latest`, then run `image-scan` on it. Pushes nothing (see "The image") |
 | `make image-scan` | Re-judge an already-built image on its own, both directions — the planted-secret self-test, then the real image |
@@ -430,12 +430,12 @@ look a path up in:
 
 ```
 root=$(yog fixture busy | jq -r .root)
-XDG_DATA_HOME="$root" yog &          # boot an engine on it
+XDG_DATA_HOME="$root" yog &          # boot a server on it
 # …dial the address with ca.pem + client.pem + client.key, render, compare…
 kill %1 && rm -rf "$root"            # tear it down
 ```
 
-**It lays and prints; it does not boot.** The consumer owns the engine process
+**It lays and prints; it does not boot.** The consumer owns the server process
 because the consumer is the one that has to kill it. `make fixture STATE=busy`
 is the one-command door over the pair for a hand-run.
 
@@ -452,11 +452,11 @@ is the one-command door over the pair for a hand-run.
 every commit, message and step is dated from the recipe's own offsets rather
 than the laying machine's clock; the `config/default` root commit is pinned at
 a fixed instant, so its oid is byte-identical across runs; and the address is
-**stated** before the engine binds, because self-provisioning writes
+**stated** before the server binds, because self-provisioning writes
 `127.0.0.1:0` and only the listener ever learns what that became.
 
 The residual is named rather than hidden: yog serves derived ages, and the
-engine's clock is the system's — there is no environment seam that fakes it and
+server's clock is the system's — there is no environment seam that fakes it and
 this deliberately does not add one, because a product that can be told to lie
 about the time is worse than a harness that normalises. `origin` reports the
 second every offset was measured back from, so an exact age is computable.
@@ -465,7 +465,7 @@ second every offset was measured back from, so an exact age is computable.
 not a file: liveness is derived from an open `response.json` write fd and a held
 executor lock, so no static tree can be one. `hold` names those two paths, and
 the harness opens them for the run — one line of shell (`exec 9<dir`), in the
-process that already owns the engine. `make fixture` does exactly that.
+process that already owns the server. `make fixture` does exactly that.
 
 **It never touches your own world.** The root defaults under your cache root
 (`FIXTURE_ROOT` names another) and is a scratch tree the lay wipes before it
@@ -504,7 +504,7 @@ retained for the rare legitimate manual commit made directly on `main`; run
 
 The *local* half of delivery is `scripts/install-main`: it recompiles `main`'s
 tip and `make install`s `yog` into `$PATH`, so a landed merge is on this box's
-PATH without a manual build. It restarts nothing: a running engine is a
+PATH without a manual build. It restarts nothing: a running server is a
 service, and whether to restart it is its unit's question. It builds
 from an **ephemeral `git worktree --detach main`**, never the root checkout —
 a plumbing delivery leaves the root working tree stale and possibly holding
@@ -553,9 +553,9 @@ is `cfg`'d out).
 
 ### Server install
 
-The section above builds `main`'s tip out of a checkout. A server wants none of
+The section above builds `main`'s tip out of a checkout. A box running the server wants none of
 that — a checkout on it would be a second source of truth about what is
-running. **A server runs the image** (see "The image" below): it is the unit of
+running. **That box runs the image** (see "The image" below): it is the unit of
 install, it carries its own toolchain pin and its own disclosure gate, and it
 lands on the box as one immutable tag.
 
@@ -572,7 +572,7 @@ toolchain and runs `image-scan`; the result is retagged
 `yog:<version>-<short-commit>`; that tag travels by `save | ssh … load` and the
 loaded name is reconciled back to it on the box; the unit and one generated
 environment file are seated; the unit is restarted onto the new tag; and the
-engine is **verified answering**, or the deploy fails. It refuses a dirty
+server is **verified answering**, or the deploy fails. It refuses a dirty
 worktree, because the tag names a commit and the whole point of an immutable
 tag is that the box can say what it is running.
 
@@ -583,18 +583,18 @@ the registry podman invents for it — and `docker load` faithfully restores
 built. `docker run` then cannot resolve it and the unit crash-loops. The deploy
 reads the name `docker load` reports and retags it to the tag the unit knows,
 rather than writing `localhost/` into `deploy.env`: the tag is a fact about the
-crate — a version and a commit — while the prefix is a fact about which engine
+crate — a version and a commit — while the prefix is a fact about which server
 carried it, and the unit's name must not encode the carrier's quirk.
 
 **The last act is a verification, and its exit code is the deploy's**
 (`scripts/deploy/verify.sh`). A deploy that prints success over a crash loop is
 the defect it exists to prevent: `systemctl --user is-active` says `active`
 whenever the `docker run` client process exists, which is not the same fact as
-an engine serving. One ssh and one bounded wait past the unit's `RestartSec`,
+a server serving. One ssh and one bounded wait past the unit's `RestartSec`,
 then five beats — the unit is active; the running container's image is
 *exactly* the tag just deployed; `yog --version` inside it answers the version
 just built; and an anonymous `openssl s_client` gets a certificate chain out of
-the §9.5 listener at the address the engine itself names in `wire/address`.
+the §9.5 listener at the address the server itself names in `wire/address`.
 That last beat needs no seat and no credential: a TLS server sends its
 certificate before it ever asks the client for one, so the dial is refused for
 want of a client certificate — which is mutual auth working — while the chain
@@ -618,7 +618,7 @@ carried *"an upgrade is this script, run by a human"*; it now seats a timer
 that reconciles the box against `ghcr.io/mudbungie/yog` every fifteen minutes.
 The reversal is deliberate and DESIGN §10.1 records why both original
 objections stopped holding — in short, releases now have exactly one immutable
-registry to poll, and idleness is asked of the engine rather than of a cgroup
+registry to poll, and idleness is asked of the server rather than of a cgroup
 that was answering about the wrong process.
 
 **The two paths are split by what they carry, not by who is watching.**
@@ -643,7 +643,7 @@ What one pass does: read `YOG_IMAGE` out of `deploy.env`; ask the registry
 anonymously for its released tags (the package is public, so the box holds no
 credential — if a pull ever needs one, the pass fails naming the remedy);
 stop if nothing is newer, if the box is *ahead* of the registry, or if this
-tag already failed here; ask the engine over the §8.5 control boundary whether
+tag already failed here; ask the server over the §8.5 control boundary whether
 a turn is in flight; and only then pull, repoint, `reset-failed`, restart and
 prove.
 
@@ -651,7 +651,7 @@ prove.
 workspace row already carries `running` — "whether anything in it is
 Live/InFlight right now" — so the union over the rows is the whole question,
 asked in one deposit. A reply that is `stale` defers too, since that is the
-engine saying its own answer may be out of date. A turn is never killed to
+server saying its own answer may be out of date. A turn is never killed to
 make room for an upgrade; the timer simply asks again.
 
 **A release that does not serve is rolled back and never retried.**
@@ -659,7 +659,7 @@ make room for an upgrade; the timer simply asks again.
 goes back to the tag it was serving, is re-proved on it, and the failed tag is
 recorded as `YOG_REFUSED` in `deploy.env` so no later pass re-attempts it. The
 bound is an invariant, not a counter: without it a bad release would restart
-the engine every fifteen minutes forever. Re-running `make deploy` clears the
+the server every fifteen minutes forever. Re-running `make deploy` clears the
 refusal, which is the human review it was waiting for. Fleet-wide, the lever is
 the registry: a version publishes once, so a bad release is superseded by the
 next one and every box picks it up on its own next pass.
@@ -684,7 +684,7 @@ against an identity-less container — `seat.sh` takes it from the deploying
 checkout's own `git config`, so no name is committed to this tree.
 
 Lingering (`loginctl enable-linger`) is enabled by the deploy, and it is
-load-bearing: without it the user manager — and so the engine — stops at
+load-bearing: without it the user manager — and so the server — stops at
 logout, which presents as "it just stopped overnight".
 
 **The mount is one directory**, `~/.local/share/yog` — the box's real XDG data
@@ -712,7 +712,7 @@ statement about the project. It is not: a box that runs the BINARY has exactly
 the two facts the retired reconciler read, and reads them correctly. "The
 native shape" below restores it there, with the cgroup predicate replaced by
 the same boundary read `reconcile.sh` uses — so there is one idle question in
-the tree and the engine answers it (bl-8ea9).
+the tree and the server answers it (bl-8ea9).
 
 So an upgrade is `make deploy`, run by a human, and the restart it performs is
 unconditional. That is a real loss and worth naming: the retired reconciler
@@ -739,12 +739,12 @@ the unit.
 
 ### The native shape: a box that runs the binary
 
-A server runs the image. A **workstation** usually cannot: there may be no
-container engine on it, and the engine's world is the operator's own
+A headless box runs the image. A **workstation** usually cannot: there may be no
+container engine on it, and the server's world is the operator's own
 `~/.local/share/yog` rather than a mount. That box runs `yog` as a plain
 binary — and until bl-8ea9 it had no unit, no timer and no upgrade path at all,
-so its engine was whatever somebody last launched from a shell. Observed live:
-a hand-launched engine three days old, running a version twenty-nine releases
+so its server was whatever somebody last launched from a shell. Observed live:
+a hand-launched server three days old, running a version twenty-nine releases
 behind, with `Linger=no` so a logout would have ended it.
 
     make deploy-local        # seat THIS box: units, reconciler, timer, first pass
@@ -759,7 +759,7 @@ that should stop tracking releases is one `systemctl --user disable` away with
 no file in this tree to change.
 
 **One unit name, two shapes.** `deploy-local` seats `yog.service` over whatever
-`yog.service` was, and `deploy` seats it back. A box runs one engine over one
+`yog.service` was, and `deploy` seats it back. A box runs one server over one
 world; two units converging the same data root against each other is the
 failure the single name prevents.
 
@@ -779,7 +779,7 @@ and the registry already serves it.
 **What one pass does.** Read the newest live version off the crates.io sparse
 index; if it differs from what `~/.local/bin/yog --version` says, `cargo install
 yog --root ~/.local --locked --version <v> --force`. Then decide whether to
-restart, from four facts and one rule — *the engine should be running the
+restart, from four facts and one rule — *the server should be running the
 newest live version, unless a turn is in flight or the operator stopped it*:
 
 - **the unit is `inactive`** — stopped on purpose, not ours to move. Installs,
@@ -788,13 +788,13 @@ newest live version, unless a turn is in flight or the operator stopped it*:
   version that just failed. A version it has NOT run is the one useful act, so
   it restarts on one. With the yank lever below that closes the loop: a release
   that crashes on boot is recovered by yanking it, with nobody logging in.
-- **the running engine is already the installed VERSION** — nothing to do. Both
+- **the running server is already the installed VERSION** — nothing to do. Both
   halves are self-reported: the running process through `/proc/<pid>/exe`, which
   is still the replaced file after an install renamed a new one over the path,
   and the installed binary through the path itself. No flag anybody writes, so a
   hand-restart or a hand-install needs no reconciling.
 - **a turn is in flight** — defer. The read is the §8.5 boundary's, put to the
-  running engine's own binary: `{"op":"workspaces"}`, with any `"running":true`
+  running server's own binary: `{"op":"workspaces"}`, with any `"running":true`
   or any `stale` note deferring. A deferral is a correct steady state, so it is
   silent-ish and unbounded: the timer is the retry cadence, there is no
   sleep-and-look-again, and **a turn is never killed to make room for an
@@ -807,7 +807,7 @@ there now" was the same question only while this reconciler was the sole writer
 of `~/.local/bin/yog`. It is not: `scripts/install-main` writes it too, on every
 move of `refs/heads/main`, and its whole job is to make the installed binary
 equal to main's **tip**. Under an inode read, a ball closing on a dev box became
-an unattended deploy of unreleased code onto the operator's live engine — and
+an unattended deploy of unreleased code onto the operator's live server — and
 install-main restarts nothing on purpose, precisely because *"whether and when
 to restart it is its unit's question"*. Answering that question by inode made
 install-main a deploy behind its own back. Comparing versions asks the stated
@@ -815,7 +815,7 @@ rule directly, and a dev build swapped underneath at the same version is then
 correctly not a publication and not a restart. A box that runs both is two
 writers of one path, and this is which one the reader obeys: **the reconciler
 installs and restarts on published versions; install-main installs and the
-engine adopts it at the next restart somebody asks for.**
+server adopts it at the next restart somebody asks for.**
 
 **A yank is the rollback lever**, and it is the whole of the rollback story on
 this shape. Yanked versions are filtered *here* rather than left to cargo, so
@@ -852,7 +852,7 @@ It builds under the pinned toolchain (`rust:1.95.0-alpine`, checked against
 `rust-toolchain.toml` during the build so the two pins cannot drift) and copies
 one static musl binary into an `alpine` runtime layer.
 
-**The runtime layer is what the engine execs**, which is why `FROM scratch` is
+**The runtime layer is what the server execs**, which is why `FROM scratch` is
 wrong here whatever the linking story says. Four things: `git` (every workspace
 read and every act is git — `src/git_env.rs` is the crate's one fork),
 `openssl` (the wire mint the boot performs when a box has none; without it a
@@ -882,7 +882,7 @@ podman run --rm \
 (`make print-image-tag` says which version this tree builds — the tag is
 derived from `Cargo.toml` and is not restated anywhere, including here.)
 
-A bare `podman run` with no `-p` reaches **nothing**: the engine binds inside
+A bare `podman run` with no `-p` reaches **nothing**: the server binds inside
 the container's own network namespace, and a self-provisioned root binds a
 kernel-chosen port there. State the endpoint in the mounted root's
 `wire/address` before the run (or mint it with `WIRE_HOST`/`WIRE_PORT`, "The
@@ -891,12 +891,12 @@ installs.
 
 Inside that one root: `world/litany` (the nested harness home), `world/state`
 (balls' clones and worktrees, and yog's own `ui.json` / `ops.jsonl`),
-`world/tools` (the re-exec shims, seeded by the engine), `workspaces/` (the
+`world/tools` (the re-exec shims, seeded by the server), `workspaces/` (the
 named workspaces) and `wire/` — the wire material, beside the world rather than
 inside it, because the world is a generated artifact yog reseeds and a reseed
 must not be a revocation.
 
-Nothing in the image runs a seed. The engine founds what it finds missing on
+Nothing in the image runs a seed. The server founds what it finds missing on
 its own boot, into the mount; writing any of it into a **layer** would put the
 one state yog owns where a mount cannot replace it and an upgrade cannot see
 it.
@@ -911,7 +911,7 @@ least visible.
 #### What the image deliberately does not contain
 
 - **No wire material.** The CA, its leaves and the `address` file are the
-  operator's, minted on the operator's box (`yog wire-certs`, or the engine's
+  operator's, minted on the operator's box (`yog wire-certs`, or the server's
   own boot into the mounted root). REMOTE §1.4 is that certificates arrive out
   of channel by hand, forever; an image that arrived able to present an
   identity would be the in-channel bootstrap that must never exist.
@@ -919,7 +919,7 @@ least visible.
   credential baked into a layer is a credential published to everyone who can
   pull it.
 - **Nothing an agent runs.** A tool call routes to an enrolled thrall over the
-  real wire or refuses in band (REMOTE §12's ship-inert posture); the engine
+  real wire or refuses in band (REMOTE §12's ship-inert posture); the server
   runs no tool itself. A toolchain in this layer for agents to use would be
   quietly undoing that.
 - **No git identity.** yog's substrate commits into the workspaces it drives,
@@ -1013,7 +1013,7 @@ foot (`thrall`) and the phone (`yog-android`) each *vendor* a copy of the
 number in a repo-root `PROTOCOL` file — one line, compiled into the constant by
 `build.rs` — and the wire is fail-closed on a mismatch and does not negotiate
 (`docs/REMOTE.md` §3). Publishing a bump first therefore opened a window in
-which nothing on crates.io composed — measured on a clean box as engine 15,
+which nothing on crates.io composed — measured on a clean box as server 15,
 foot 14, seat 13. So the auto-merge job reads `PROTOCOL` from the release PR's
 tree, from yog's last release, and from each consumer's `main`, and **holds a
 release that raises it until all three carry the new number**, commenting once

@@ -204,7 +204,7 @@ fn the_tuning_knobs_are_read_beside_the_pointer() {
 /// editor is the operator's own authority, so the file can say anything; a read
 /// that normalized it to absent would report *nothing is set*, which is the
 /// defect bl-2410 exists to end. `priority` has no such case — anything but
-/// `true` is *not asking*, which is the engine's own reading said back.
+/// `true` is *not asking*, which is litany's own reading said back.
 #[test]
 fn an_unrecognized_level_survives_the_read_and_a_stray_priority_word_does_not() {
     let odd = "roles:\n  worker:\n    provider: codex\n    model: gpt-5.4\n    effort: extreme\n    \

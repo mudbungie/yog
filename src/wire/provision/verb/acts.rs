@@ -40,7 +40,7 @@ fn mint(dir: &Path, hosts: &[String], port: Option<&str>, force: bool) -> i32 {
             eprintln!(
                 "yog {SUBCMD}: {} already holds material; rotating distrusts every certificate \
                  already issued. Re-run with FORCE=1 if that is what you mean, or state \
-                 {}=<host>[,<host>…] {}=<port> to say where this engine listens — which \
+                 {}=<host>[,<host>…] {}=<port> to say where this server listens — which \
                  re-issues the server leaf and writes the address, over the CA already here, \
                  distrusting nothing.",
                 dir.display(),
@@ -68,17 +68,17 @@ fn mint(dir: &Path, hosts: &[String], port: Option<&str>, force: bool) -> i32 {
     }
 }
 
-/// **State where this engine listens** (bl-98ef): re-issue the server leaf over
+/// **State where this server listens** (bl-98ef): re-issue the server leaf over
 /// the CA already here, and write the `address` file to match it.
 ///
 /// One act, because a stated host is one statement about two facts — what the
-/// engine binds, and what a client may verify what it dialled against — and
+/// server binds, and what a client may verify what it dialled against — and
 /// splitting them left the second sayable only by a rotation. `FORCE=1` was
 /// then the only spelling that could replace a `127.0.0.1:0`, which is the
 /// address a self-provisioned boot writes and the one address nothing
 /// downstream can use: it distrusts every leaf already carried away in order to
 /// change one line of text. Nothing here distrusts anything — the CA stands,
-/// every leaf already issued still verifies, and the engine binds the stated
+/// every leaf already issued still verifies, and the server binds the stated
 /// endpoint when it is next started.
 ///
 /// The port is the operator's when they state one and **the standing one
@@ -107,7 +107,7 @@ fn restate(dir: &Path, hosts: &[String], port: Option<&str>) -> i32 {
     }
     println!("  it answers to {}", hosts.join(", "));
     println!(
-        "  {} names {address} — restart the engine, which binds it as it starts",
+        "  {} names {address} — restart the server, which binds it as it starts",
         dir.join(ADDRESS).display()
     );
     println!("  the CA is untouched, so every leaf already issued still verifies");
@@ -145,7 +145,7 @@ fn leaf(dir: &Path, cn: &str, grade: Grade) -> i32 {
     // nothing, and an advertisement reaches only the workspaces its client is
     // registered in — so a foot provisioned by following this page alone
     // dialled, advertised into the empty set and served nobody, with no
-    // sentence anywhere. The engine refuses that advertisement now; this is the
+    // sentence anywhere. The server refuses that advertisement now; this is the
     // half that stops it being reached.
     println!(
         "  {cn} is registered in NO workspace: enrol the same common name from a seat in the \
@@ -167,7 +167,7 @@ fn report(dir: &Path, address: &str) {
         dir.display(),
         super::super::artifacts(address).join(", ")
     );
-    println!("  the engine binds and a local seat dials {address}");
+    println!("  the server binds and a local seat dials {address}");
     println!(
         "  issue another client with: WIRE_LEAF=<common-name> yog {SUBCMD}, and a tool host's \
          with {}=1 beside that",

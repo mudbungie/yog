@@ -8,7 +8,7 @@
 //! answer — several representations of one fact, which is the drift the house
 //! rule forbids, and the drift is not hypothetical:
 //!
-//! **A live engine outlives its own inode.** Installing, updating or rebuilding
+//! **A live server outlives its own inode.** Installing, updating or rebuilding
 //! yog replaces the file at yog's pathname — the install shape is `cp new
 //! yog.next && mv -f yog.next yog`, atomic by `rename(2)` — while the running
 //! process keeps executing the unlinked image. From that instant Linux's

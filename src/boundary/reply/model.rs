@@ -115,7 +115,7 @@ pub enum Reply {
         branch: String,
     },
     /// A tool host's set landed (REMOTE §5, bl-4e08), and **whether this
-    /// engine WROTE it** (REMOTE §5.1, bl-66d4, PROTOCOL 8). It carried nothing
+    /// server WROTE it** (REMOTE §5.1, bl-66d4, PROTOCOL 8). It carried nothing
     /// until then, on §8.1's own test — the stored set after the write *is* the
     /// set the gesture carried, so an echo would be one computable fact said
     /// twice, the [`Applied`](Self::Applied) shape — and that test still rules

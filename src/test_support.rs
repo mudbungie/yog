@@ -14,7 +14,7 @@
 //! measured 8 failures, bl-fd28 another 2).
 //!
 //! bl-fd28 moved the exposure instead of scheduling around it, and bl-e6c9
-//! found the same hazard standing in the ENGINE — `world::tools::ensure_shim`
+//! found the same hazard standing in the SERVER — `world::tools::ensure_shim`
 //! wrote a shim yog then exec'd — so the helper is production's now and this
 //! module only spells it without a `Result`. Everything about the hazard, the
 //! two measurements and the shapes that were rejected is stated once, in
@@ -91,14 +91,14 @@ impl FileIo for FakeFs {
 }
 
 /// `providers.yaml` exactly as litany's own `template/providers.yaml` authors
-/// it (the pinned engine) — what a materialized `litany new` commits,
+/// it (the pinned litany) — what a materialized `litany new` commits,
 /// worker tool pool included: yog grants nothing on top (§8.1, bl-7fc8).
 ///
-/// A hand copy, so it drifts — it stood a pin behind the engine's own grant
+/// A hand copy, so it drifts — it stood a pin behind litany's own grant
 /// until bl-d06c. What the drift can no longer cost is a parked conversation:
 /// `tests/engine_grant.rs` reads the grant out of a workspace `litany new`
 /// really authors and holds it against the classifier's intrinsic map, so the
-/// fact this constant approximates is checked against the engine and not
+/// fact this constant approximates is checked against litany and not
 /// against this string.
 pub(crate) const TEMPLATE_PROVIDERS: &str = "roles:\n  worker:\n    provider: anthropic\n    \
      model: claude-sonnet-5\n    tools: [apply_patch, bash, cd, dispatch, load_skill, message, \

@@ -2,7 +2,7 @@
 
 You are working in **yog**, a single published binary crate: the **server** of
 the four-component split — the holder of a world of `litany` loops over `balls`
-tasks, with no interface and no local execution. A bare `yog` boots the engine
+tasks, with no interface and no local execution. A bare `yog` boots the server
 and parks; every read and every act crosses the §8.5 control boundary, and the
 desktop window is the `lernie` seat crate's (REMOTE §12). Two authorities
 govern your work and they do not overlap:
@@ -56,7 +56,7 @@ recorded verbatim in the rule — read it before assuming a rule is absolute.**
    stands in, because the linked balls/litany read `getenv` themselves and spawn
    children that do too, so no injected `Env` can reach them (DESIGN §16.2's
    value-and-place ruling, bl-81c9); `term_disposition`, the `SIGTERM`
-   **catch** both engine faces install (DESIGN §8.5, bl-269a) — under the
+   **catch** both server faces install (DESIGN §8.5, bl-269a) — under the
    default disposition the process dies where it stands, so no `Drop` runs and
    the first of the four is never posted; and `ignore_sigpipe`, the disposition
    `crate::git_env::exec` puts back when an `exec` RETURNS — `CommandExt::exec`
@@ -115,7 +115,7 @@ recorded verbatim in the rule — read it before assuming a rule is absolute.**
    listener is synchronous `std::net` (rule 8 stays vacuous — do not add tokio
    to satisfy it), and certificates are minted by shelling to `openssl`
    (`src/wire/provision.rs`, the one recipe) rather than by a library yog
-   links. **Since bl-ae05 the engine's own boot performs that mint** when a box
+   links. **Since bl-ae05 the server's own boot performs that mint** when a box
    has none, which is not an in-channel bootstrap and does not lift REMOTE
    §1.4: the act is the operator's tooling, run on the operator's box, before
    anything is dialled. `yog wire-certs` is the same recipe reached by a verb.
@@ -411,7 +411,7 @@ lint`) still work here; they are just not the gate.
   **vendor** a copy of the constant, and the wire is fail-closed on a mismatch
   with no negotiation (REMOTE §3). So a release that raised `PROTOCOL` used to
   publish a suite that could not compose until three other repositories caught
-  up — measured on a clean box on 2026-09-06 as engine 15, foot 14, seat 13,
+  up — measured on a clean box on 2026-09-06 as server 15, foot 14, seat 13,
   with **no combination on crates.io that composed**, after the same defect had
   been filed and correctly closed eight times across two repositories. The
   ruling is an ordering rule and not a protocol change: **a yog release that
@@ -882,9 +882,9 @@ Facts the queue derives from (do not fight them):
 ### The other merge queue: the release PR, and the protocol hold (bl-bca2)
 
 **A `PROTOCOL` bump is a MAJOR since bl-e598** (REMOTE §3.2): a field removed
-or re-typed, a meaning changed under a spelling in use, a field the engine
+or re-typed, a meaning changed under a spelling in use, a field the server
 newly requires on a request. A new field, word, op or reply kind is an
-**edition** — `make corpus` stamps it in `corpus/shapes.json`, the engine states
+**edition** — `make corpus` stamps it in `corpus/shapes.json`, the server states
 its edition in the hello, and no file below moves. The hold below is therefore
 the rare path, walked by a design ball carrying a migration note.
 
@@ -910,11 +910,11 @@ for days:
 - **The skew runs both ways, and the other half is gated in the consumers.**
   While this was being written thrall published 0.0.15 speaking PROTOCOL 16
   against a newest published yog of 15 — a consumer ahead of every installable
-  engine, the same defect with the arrow reversed. Each consumer's own
+  server, the same defect with the arrow reversed. Each consumer's own
   `merge-release-pr` job now holds a release whose `PROTOCOL` **exceeds** the
   newest published yog's, read off this repository's newest `v<x.y.z>` tag
   (thrall bl-635b, lernie bl-52b5, yog-android bl-5b19). *Strictly greater, not
-  different*: a consumer behind the published engine is the first defect and
+  different*: a consumer behind the published server is the first defect and
   its release is the fix.
 - **So a PROTOCOL bump is a four-repository act, and its ORDER is fixed: the
   consumers' mains carry the number first, then yog publishes, then the
@@ -935,6 +935,6 @@ for days:
   path is not a stable address for that: bl-94a5's split of
   `src/wire/hello.rs` left the old path re-exporting, which a build cannot
   notice and a regex reads as no declaration, so every consumer's gate had
-  silently stopped being able to read this engine and would have held forever
+  silently stopped being able to read this server and would have held forever
   on the bump it was waiting for (thrall bl-c618). **No gate, workflow or
   roster in any of the four repositories names a Rust path for it.**

@@ -4,7 +4,7 @@
 //! everything there is one pass over the inbox.
 //!
 //! **The defect it closes was a workspace nobody could see.** §4 auto-registers
-//! *the creating client*, and the creator of everything made on the engine's own
+//! *the creating client*, and the creator of everything made on the server's own
 //! box is the reserved in-world identity — `yog gesture`, the `gestures/` inbox
 //! — which holds no certificate and is registered nowhere. So `yog gesture --ws
 //! ops '/prepare'`, the act both READMEs teach on a headless box, founded a

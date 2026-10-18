@@ -17,10 +17,10 @@ use std::net::{Ipv4Addr, TcpStream};
 use std::path::Path;
 
 /// Dial `address` as a client of `dir`'s CA, state `version`, ask for the
-/// workspaces, and read every frame the engine writes back.
+/// workspaces, and read every frame the server writes back.
 ///
 /// It states no `edition`, which is deliberate: that is every build older than
-/// bl-1be7, the engine reads it as the floor (REMOTE §3.2), and the decision
+/// bl-1be7, the server reads it as the floor (REMOTE §3.2), and the decision
 /// this file is about is made on the major alone.
 fn stating(dir: &Path, address: &str, version: u32) -> Vec<Value> {
     let config = crate::wire::tls::client_config(&material(dir, Role::Client, address))
@@ -42,7 +42,7 @@ fn stating(dir: &Path, address: &str, version: u32) -> Vec<Value> {
     frames
 }
 
-/// **The engine states its own version to every peer**, and a peer that speaks
+/// **The server states its own version to every peer**, and a peer that speaks
 /// it is answered exactly as before — the preface is a frame beside the
 /// gesture, never a change to it.
 #[test]
@@ -86,7 +86,7 @@ fn a_skewed_peer_is_refused_and_never_reaches_the_answerer() {
 }
 
 /// **The seat's half, end to end.** A `Seat` states this build's version, so
-/// the engine admits it and the answer arrives — which is the whole of what
+/// the server admits it and the answer arrives — which is the whole of what
 /// every other wire test now exercises on its way past the preface.
 #[test]
 fn a_seat_of_this_build_is_admitted() {

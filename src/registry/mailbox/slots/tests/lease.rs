@@ -1,5 +1,5 @@
 //! **The lease** (REMOTE §5.3, §5.6): a hand-off is not a delivery, so an
-//! unanswered invocation goes out again — three times, and then the engine
+//! unanswered invocation goes out again — three times, and then the server
 //! answers it in doubt rather than handing a box a tool that is killing it.
 
 use super::super::super::Capture;
@@ -26,7 +26,7 @@ fn work_handed_to_a_read_that_never_answered_is_offered_again() {
 }
 
 /// **A completed slot is never re-run.** The redelivery above offers only work
-/// this engine has no answer for, so a capture waiting to be collected is not
+/// this server has no answer for, so a capture waiting to be collected is not
 /// handed out a second time.
 #[test]
 fn an_answered_invocation_is_not_offered_again() {
@@ -56,7 +56,7 @@ fn a_read_acknowledges_only_its_own_clients_work() {
 /// **The bound, and the answer past it** (REMOTE §5.6, ruling 2): three
 /// hand-offs is the whole lease — delivery, the redelivery bl-e658 bought, and
 /// one more that separates a blip from a poison invocation. At the read that
-/// would hand it a fourth time the engine writes the slot's capture itself:
+/// would hand it a fourth time the server writes the slot's capture itself:
 /// non-zero, nothing on stdout, and one sentence naming the client, the count
 /// and the instruction the gesture lane already gives.
 #[test]
@@ -72,12 +72,12 @@ fn a_third_unanswered_hand_off_is_answered_in_doubt_naming_the_count() {
     }
     assert!(
         took(&mail, "laptop").is_empty(),
-        "the fourth read is answered by the engine instead"
+        "the fourth read is answered by the server instead"
     );
     let said = mail
         .collect("local", &id)
         .expect("the asker's own handle")
-        .expect("the engine wrote the capture itself");
+        .expect("the server wrote the capture itself");
     assert_eq!(said.stdout, String::new(), "nothing ran here");
     assert_ne!(said.exit_code, 0, "a failed tool result, and read as one");
     assert!(said.stderr.contains("\"laptop\""), "{}", said.stderr);
@@ -94,7 +94,7 @@ fn a_third_unanswered_hand_off_is_answered_in_doubt_naming_the_count() {
     );
 }
 
-/// Once the engine has answered in doubt the slot is a capture like any other,
+/// Once the server has answered in doubt the slot is a capture like any other,
 /// so nothing offers it again — the loop the hour sweep used to be the only end
 /// of is over at the count instead.
 #[test]
@@ -132,7 +132,7 @@ fn a_late_completion_overwrites_an_uncollected_in_doubt_answer() {
     assert_eq!(
         mail.collect("local", &id),
         Ok(Some(landed)),
-        "the driver collects what the engine stored, mark and all"
+        "the driver collects what the server stored, mark and all"
     );
     assert!(
         mail.complete("laptop", &id, &ran(0)).is_err(),
@@ -142,7 +142,7 @@ fn a_late_completion_overwrites_an_uncollected_in_doubt_answer() {
 
 /// **bl-0655**: a foot killed and restarted mid-flight ran one command twice on
 /// the box, and the capture the model was handed read as one clean run. The
-/// engine held the hand-off count the whole time and spent it only on the
+/// server held the hand-off count the whole time and spent it only on the
 /// give-up case; at hand-off two — one restart, one deploy, one blip — it said
 /// nothing.
 ///

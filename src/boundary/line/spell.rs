@@ -102,7 +102,7 @@ fn spell_action(action: &Action) -> String {
         // it; and operator grade spells **bare**, because that is what
         // default-operator means at a keyboard (§4.2).
         // …and `--at` rides only when the operator stated it (bl-fec6), for
-        // the reason the envelope omits it: absent IS the engine's own address,
+        // the reason the envelope omits it: absent IS the server's own address,
         // and a spelled default would be a second statement of one fact.
         Action::Enroll(request) => {
             let grade = match request.grade {

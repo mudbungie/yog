@@ -4,7 +4,7 @@
 //! Two sides of one contract. A peer with no leaf, or a leaf the operator's CA
 //! did not issue, dies inside rustls and asks nothing; a peer that gets through
 //! is handed to the answerer *as* its leaf's common name, which is what the
-//! engine resolves registrations against. A chain naming nothing usable is
+//! server resolves registrations against. A chain naming nothing usable is
 //! nobody, which is the same refusal read off the chain rather than off the
 //! handshake.
 
@@ -82,7 +82,7 @@ fn a_foreign_certificate_is_refused() {
 }
 
 /// **The connection carries an identity** (REMOTE §2, §4; bl-8bbc): the
-/// answerer is handed the certificate's own leaf name, which is what the engine
+/// answerer is handed the certificate's own leaf name, which is what the server
 /// resolves registrations against. `make wire-certs` mints `yog-client`.
 #[test]
 fn the_answerer_is_handed_the_certificates_leaf_name() {

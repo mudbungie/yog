@@ -1,8 +1,8 @@
-//! The engine's one table (STORIES S14-T8): a boot answers a deposit.
+//! The server's one table (STORIES S14-T8): a boot answers a deposit.
 //!
 //! This is the whole server claim in one test — no window, no display, no
 //! face — and it is the test main.rs could never carry, which is why the
-//! assembly moved out of it. Everything the engine used to hand a window (the
+//! assembly moved out of it. Everything the server used to hand a window (the
 //! asker, the poster, the follow lane, the §8.5 searcher) went with the window
 //! (bl-7942); what a seat gets now is a socket, and the listener's own tests
 //! are where that is proven.
@@ -28,7 +28,7 @@ impl Clock for AtClock {
     }
 }
 
-/// The rung: boot the engine into a hermetic world, drop a gesture in its
+/// The rung: boot the server into a hermetic world, drop a gesture in its
 /// inbox, and read the answer back. Every thread a running yog has is up, and
 /// none of them is a frame.
 #[test]
@@ -38,7 +38,7 @@ fn a_booted_engine_answers_a_deposit_and_stops_on_drop() {
     // A boot listens on the default request — `127.0.0.1:0`, a kernel-chosen
     // port (bl-dc14) — so nothing here contends with the operator's own
     // running window, and nothing needs seeding to avoid it.
-    // A staging dir older than the §5.2 horizon: the sweep is the engine's, so
+    // A staging dir older than the §5.2 horizon: the sweep is the server's, so
     // booting one is what drops it.
     let stale = world.yog_stage_root().join("nonce");
     std::fs::create_dir_all(&stale).unwrap();
@@ -47,7 +47,7 @@ fn a_booted_engine_answers_a_deposit_and_stops_on_drop() {
     deposit::deposit(&state_root, "e-1", &json!({"op": "attention"})).unwrap();
 
     let engine = Engine::boot(&world, &[], Arc::new(AtClock(far_future))).expect("booted");
-    assert!(!stale.exists(), "the §5.2 startup sweep is the engine's");
+    assert!(!stale.exists(), "the §5.2 startup sweep is the server's");
     assert_eq!(
         engine.model.ui_json_path(),
         state_root.join("ui.json"),
@@ -59,7 +59,7 @@ fn a_booted_engine_answers_a_deposit_and_stops_on_drop() {
         if let Some(reply) = deposit::read_reply(&state_root, "e-1") {
             break reply;
         }
-        assert!(Instant::now() < deadline, "the engine answered no deposit");
+        assert!(Instant::now() < deadline, "the server answered no deposit");
         std::thread::sleep(Duration::from_millis(10));
     };
     assert_eq!(reply["ok"], true);
@@ -72,16 +72,16 @@ fn a_booted_engine_answers_a_deposit_and_stops_on_drop() {
     drop(engine); // every thread stops and joins — the Drop is the shutdown
 }
 
-/// **An engine that cannot get its wire up is not an engine** (bl-1d9b,
+/// **A server that cannot get its wire up is not a server** (bl-1d9b,
 /// reversing bl-dc14's narrowing): the boot refuses, naming the address, and
 /// nothing is consumed — the deposit sitting in the inbox is still sitting
 /// there afterwards.
 ///
 /// This used to be the opposite assertion: the refusal was said on stderr and
-/// the engine ran on, on the argument that a deposit still converges through
+/// the server ran on, on the argument that a deposit still converges through
 /// the inbox so only a seat is shut out. The seat IS the face since bl-7942, so
 /// what that argument buys is a process that answers nobody, drains the world's
-/// gesture inbox and looks healthy — the half-engine whose second `inv-N`
+/// gesture inbox and looks healthy — the half-server whose second `inv-N`
 /// namespace handed one model another invocation's capture.
 #[test]
 fn a_boot_whose_stated_address_cannot_bind_refuses_and_consumes_nothing() {
@@ -101,7 +101,7 @@ fn a_boot_whose_stated_address_cannot_bind_refuses_and_consumes_nothing() {
 
     let refusal = Engine::boot(&world, &[], Arc::new(AtClock(0)))
         .err()
-        .expect("a yog that cannot listen is not an engine");
+        .expect("a yog that cannot listen is not a server");
     assert!(refusal.starts_with("wire: "), "{refusal}");
     assert!(
         refusal.contains("256.256.256.256:1"),
@@ -113,21 +113,21 @@ fn a_boot_whose_stated_address_cannot_bind_refuses_and_consumes_nothing() {
     );
 }
 
-/// **One world has one engine** (bl-1d9b). The second boot on a world the first
+/// **One world has one server** (bl-1d9b). The second boot on a world the first
 /// still holds is refused before it spawns a consumer, so there is never a
 /// second drain of one `gestures/` inbox and never a second `inv-N` namespace
-/// behind it. The first engine keeps answering throughout.
+/// behind it. The first server keeps answering throughout.
 #[test]
 fn a_second_engine_on_one_world_refuses_while_the_first_keeps_answering() {
     let root = tempdir().unwrap();
     let world = world_under(root.path());
     let state_root = world.yog_state_root();
-    let first = Engine::boot(&world, &[], Arc::new(AtClock(0))).expect("the first engine");
+    let first = Engine::boot(&world, &[], Arc::new(AtClock(0))).expect("the first server");
 
     let refusal = Engine::boot(&world, &[], Arc::new(AtClock(0)))
         .err()
         .expect("the second is refused");
-    assert!(refusal.contains("one world has one engine"), "{refusal}");
+    assert!(refusal.contains("one world has one server"), "{refusal}");
 
     deposit::deposit(&state_root, "e-3", &json!({"op": "attention"})).unwrap();
     let deadline = Instant::now() + Duration::from_secs(10);
@@ -135,12 +135,12 @@ fn a_second_engine_on_one_world_refuses_while_the_first_keeps_answering() {
         if let Some(reply) = deposit::read_reply(&state_root, "e-3") {
             break reply;
         }
-        assert!(Instant::now() < deadline, "the one engine still answers");
+        assert!(Instant::now() < deadline, "the one server still answers");
         std::thread::sleep(Duration::from_millis(10));
     };
     assert_eq!(reply["ok"], true);
     drop(first);
-    // The world frees when its engine goes — modulo the one window no advisory
+    // The world frees when its server goes — modulo the one window no advisory
     // lock can close (see `sole`): a `fork` on another thread at that instant
     // copies the descriptor, and the copy goes at that child's own `exec`. The
     // wait is that window and nothing else, which is why it is spelled in

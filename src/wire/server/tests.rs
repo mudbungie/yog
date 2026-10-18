@@ -71,7 +71,7 @@ fn wired(chunks: usize) -> (TempDir, Listener, Seat, Arc<AtomicUsize>) {
     (tmp, listener, seat, asked)
 }
 
-/// The whole wire: a certificate-bearing seat gestures, the engine answers,
+/// The whole wire: a certificate-bearing seat gestures, the server answers,
 /// and the answer is the envelope the seat asked about.
 #[test]
 fn a_certificate_bearing_seat_is_answered() {

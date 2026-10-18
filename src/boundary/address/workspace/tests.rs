@@ -84,7 +84,7 @@ fn a_gesture_that_names_a_workspace_answers_with_it() {
 /// config act lands in is the workspace it names, so the table answers it and
 /// the §8.2 channel mapping can rewrite it — without this row a config act
 /// aimed at a workspace held on another box under a local rename resolved to
-/// no entry, fell through to the local engine, and edited the local wall's
+/// no entry, fell through to the local server, and edited the local wall's
 /// file. Both halves of the family, because a read of a file and a write of it
 /// must cross the same channel.
 #[test]

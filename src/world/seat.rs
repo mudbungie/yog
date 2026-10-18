@@ -1,18 +1,18 @@
-//! **Which seat may boot the engine** (DESIGN §16.4, bl-3ff4; retargeted for
+//! **Which seat may boot the server** (DESIGN §16.4, bl-3ff4; retargeted for
 //! the server by bl-7942).
 //!
 //! The world seeds a `yog` shim ([`super::tools::YOG`]) so an agent's bash can
 //! drive the §8.5 control boundary. That shim passes argv through verbatim,
 //! like every other one — and a bare `yog`, with no gesture and no subcommand,
-//! **boots the engine**. So the shim that lets an agent *ask* yog something
-//! also, unguarded, lets an agent found a second engine on the world it is
+//! **boots the server**. So the shim that lets an agent *ask* yog something
+//! also, unguarded, lets an agent found a second server on the world it is
 //! already running inside: two pilots, two sentries, two derivation workers —
 //! the instance-coordination shape DESIGN §14 rejects.
 //!
 //! It guarded a *window* until bl-7942, on I7's reasoning that a window is the
 //! operator's own act. The severance did not weaken that reasoning, it moved
 //! what stands behind the bare word: booting the box's server is the
-//! operator's own act for the same reason and one better, since the engine an
+//! operator's own act for the same reason and one better, since the server an
 //! agent is speaking to is the one it would be duplicating.
 //!
 //! **The guard keys on an existing explicit signal, not a new flag.** `YOG_NAME`
@@ -40,19 +40,19 @@
 /// asked for something this seat structurally does not have".
 pub const REFUSED: i32 = 64;
 
-/// The refusal for a seat that asked to boot the engine, or `None` when the
+/// The refusal for a seat that asked to boot the server, or `None` when the
 /// seat may. Pure over the raw `$YOG_NAME` so every branch is testable without
 /// mutating process env; empty reads as absent, the env convention the rest of
 /// yog follows.
 ///
-/// Called at the one place the engine is actually booted — after the namespace
+/// Called at the one place the server is actually booted — after the namespace
 /// arms, the hatches and `tool-control` have all had their say — so it judges
 /// only argv that would really have booted.
 pub fn boot_refusal(yog_name: Option<String>) -> Option<String> {
     let name = yog_name.filter(|n| !n.is_empty())?;
     Some(format!(
-        "yog: no engine boot from an agent seat (this is {name}'s). You are \
-         already inside a running yog and a second one would be a rival engine \
+        "yog: no server boot from an agent seat (this is {name}'s). You are \
+         already inside a running yog and a second one would be a rival server \
          on one world; what you can drive from here is its boundary — `yog \
          gesture '/attention'` and every other gesture (`yog gesture --help` \
          lists them), and the `bl` / `litany` / `bz` namespaces."

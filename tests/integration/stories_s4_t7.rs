@@ -1,4 +1,4 @@
-//! STORIES **S4-T7** tab-strip: the tab strip is the sphere wall — pinned tabs
+//! STORIES **S4-T7** tab-strip: the tab strip is the named workspaces — pinned tabs
 //! hoist **in pin order** ahead of name order, each tab's badge is its own
 //! workspace's attention rollup, foreign and replay workspaces fall to the ⋯
 //! overflow (real, but not regimes), and the overflow button carries their
@@ -74,7 +74,7 @@ fn s4_t7_pins_hoist_kinds_overflow_and_every_badge_is_its_own_rollup() {
         build_agents(&ws, &agents);
     }
     // A FOREIGN workspace (litany's auto-id territory) and a REPLAY one — real
-    // workspaces, but not spheres the operator named, so neither tabs the wall.
+    // workspaces, but not spheres the operator named, so neither is a tab.
     let foreign = roots.litany_data.join("workspaces").join("ws-7f3a");
     std::fs::create_dir_all(&foreign).unwrap();
     build_agents(&foreign, &[stirring("f-001")]);
@@ -89,7 +89,7 @@ fn s4_t7_pins_hoist_kinds_overflow_and_every_badge_is_its_own_rollup() {
         None,
     );
 
-    // --- Unpinned: the wall is the named workspaces in NAME order.
+    // --- Unpinned: the strip is the named workspaces in NAME order.
     let bar = crate::support::tab_bar(&m, None);
     let names: Vec<&str> = bar.tabs.iter().map(|t| t.name.as_str()).collect();
     assert_eq!(
@@ -99,7 +99,7 @@ fn s4_t7_pins_hoist_kinds_overflow_and_every_badge_is_its_own_rollup() {
     );
     assert!(
         bar.tabs.iter().all(|t| t.kind == Kind::Named),
-        "only named workspaces tab the wall"
+        "only named workspaces are the tabs"
     );
 
     // Each badge is its OWN workspace's rollup — never the strip's total, and
@@ -119,9 +119,9 @@ fn s4_t7_pins_hoist_kinds_overflow_and_every_badge_is_its_own_rollup() {
     assert_eq!(
         bar.overflow_attention(),
         2,
-        "the ⋯ button carries what the wall is not showing"
+        "the ⋯ button carries what the strip is not showing"
     );
-    // The strip total spans EVERY workspace, overflow included — the wall hides
+    // The strip total spans EVERY workspace, overflow included — the strip hides
     // rows, never facts (§6).
     assert_eq!(
         crate::support::strip_total(&m),

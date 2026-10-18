@@ -22,7 +22,7 @@ use read::{HOLD_TICK, HOLD_WAITS};
 /// How long an uncollected slot survives before the next post sweeps it: an
 /// hour. A driver that died mid-invocation collects nothing, and a map that
 /// grew by one entry per such death would be the only unbounded thing in the
-/// engine.
+/// server.
 const TTL_SECONDS: i64 = 3600;
 
 /// One invocation's whole life: queued for a host, taken by one, or answered.
@@ -127,7 +127,7 @@ impl Mailbox {
     /// Answer one invocation **as the client it was addressed to**, and hand
     /// back what is stored after the write — the
     /// [`Marks`](crate::boundary::reply::Reply::Marks) discipline: a receipt is
-    /// a re-read, never an echo. A handle this engine does not hold, and a
+    /// a re-read, never an echo. A handle this server does not hold, and a
     /// handle addressed to somebody else, earn the same sentence.
     ///
     /// **A capture for a slot handed out more than once is marked here**

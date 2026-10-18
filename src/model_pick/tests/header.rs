@@ -46,7 +46,7 @@ fn the_row_is_the_pair_and_the_resolved_commit_rides_the_hover() {
     assert!(row.hover.contains("at its next step"));
     assert!(
         !row.hover.contains("frozen"),
-        "the hover may not promise a freeze the engine stopped keeping: {}",
+        "the hover may not promise a freeze litany stopped keeping: {}",
         row.hover
     );
 }

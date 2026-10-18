@@ -1,5 +1,5 @@
-//! The compactor's procedure pair, performed as engine acts (REMOTE §5.4,
-//! bl-dfce): what reaches the engine's front door, what comes back, and the two
+//! The compactor's procedure pair, performed as server acts (REMOTE §5.4,
+//! bl-dfce): what reaches litany's front door, what comes back, and the two
 //! bounded waits.
 
 use super::*;
@@ -13,7 +13,7 @@ use tempfile::TempDir;
 
 use ::litany::cmd::ToolInjection as _;
 
-/// One engine act, as litany's executor hands it over. A macro rather than a
+/// One server act, as litany's executor hands it over. A macro rather than a
 /// function because three independent borrows cannot be elided and a named
 /// lifetime is banned (AGENTS.md rule 1).
 macro_rules! act {
@@ -30,13 +30,13 @@ macro_rules! act {
     };
 }
 
-/// **The closed set itself** (bl-fe43): which names are engine acts, and the
+/// **The closed set itself** (bl-fe43): which names are server acts, and the
 /// two proofs that a machine cannot take one — the enrolled thrall whose
 /// mailbox stays empty, and the id every spawn carries. Its own file at §12's
 /// per-file budget, sharing this module's fixtures and `act!`.
 mod set;
 
-/// **The pair reaches the engine's own front door**, with the verb litany
+/// **The pair reaches litany's own front door**, with the verb litany
 /// answers built-ins under, the caller identity off the CALL rather than off
 /// this process, the `tool_use` input on stdin — and the child's product back
 /// untouched. Nothing of the compactor's semantics is restated by yog: the
@@ -115,7 +115,7 @@ fn an_unspawnable_front_door_refuses_in_band() {
 }
 
 /// Both waits are bounded, and each is its own sentence: a stop landing while
-/// the engine works ends it at once, and a deadline running out ends it too.
+/// the server works ends it at once, and a deadline running out ends it too.
 /// Returning drops the stream, and the drop is the kill.
 #[test]
 fn a_working_engine_is_ended_by_the_stop_flag_and_by_the_deadline() {
@@ -131,7 +131,7 @@ fn a_working_engine_is_ended_by_the_stop_flag_and_by_the_deadline() {
     );
     assert_eq!(capture.exit_code, 1);
     assert!(
-        String::from_utf8_lossy(&capture.stderr).contains("stopped while the engine was working"),
+        String::from_utf8_lossy(&capture.stderr).contains("stopped while the server was working"),
         "{:?}",
         String::from_utf8_lossy(&capture.stderr)
     );
@@ -154,9 +154,9 @@ fn a_working_engine_is_ended_by_the_stop_flag_and_by_the_deadline() {
 /// (bl-77be) — the defect's own probe, answered: `dispatch`, `message`,
 /// `load_skill` and `cd` each reach `<driver_target> tool <name>` with the
 /// caller identity on the environment and the input on stdin, where before
-/// the audit every one of them earned the loadless refusal. The engine's own
+/// the audit every one of them earned the loadless refusal. litany's own
 /// semantics stay upstream's; what is proven here is that the router now
-/// takes these names to the engine instead of to a machine or a refusal.
+/// takes these names to litany's front door instead of to a machine or a refusal.
 #[test]
 fn the_worker_grants_perform_at_the_engines_own_front_door() {
     let root = TempDir::new().expect("tmp");
@@ -190,6 +190,6 @@ fn the_worker_grants_perform_at_the_engines_own_front_door() {
     }
     assert!(
         deposit::pending(root.path()).is_empty(),
-        "an engine act queues nothing at any machine's mailbox"
+        "a server act queues nothing at any machine's mailbox"
     );
 }

@@ -25,7 +25,7 @@
 //! match non-exhaustive until the spelling exists.
 
 pub mod answer;
-/// The attention lane's engine half (REMOTE §14.1, bl-09aa): `Query::Attention`
+/// The attention lane's server half (REMOTE §14.1, bl-09aa): `Query::Attention`
 /// answered as a frame *sequence* — a frame per change of the answer, found at
 /// the derivation worker's own republish.
 pub(crate) mod attend;
@@ -50,7 +50,7 @@ pub mod dispatch;
 pub mod fan;
 /// The VISION §4.3 armed loop's one executor — arming, which is a config write.
 pub mod fleet;
-/// The follow lane's engine half (REMOTE §3, §10; bl-73e7): the read whose
+/// The follow lane's server half (REMOTE §3, §10; bl-73e7): the read whose
 /// answer is a frame *sequence*, held open at the rate the model writes — and
 /// whose hold bound [`attend`] holds on too.
 pub(crate) mod follow;
@@ -62,7 +62,7 @@ pub mod help;
 pub mod interrupt;
 pub mod line;
 /// The §8.3 sign-in as a boundary act (REMOTE §8.3, bl-c285): the act that
-/// starts a `bz --login` on the engine inside the named workspace's wall, the
+/// starts a `bz --login` on the server inside the named workspace's wall, the
 /// read that answers what it has said, and the second follow-class lane.
 pub(crate) mod login;
 /// The VISION §4.9 monitor's two executors — arming and flagging.

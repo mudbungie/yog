@@ -6,7 +6,7 @@
 //! The start flow mints the §3.3 conversation name and hands it back the moment
 //! the **detached** `litany prompt` has been launched (§8.1, §13.3): the driver
 //! writes `agents/<id>` and its `name` blob from its own process, a second or
-//! two later. Between those two moments the engine had already answered its own
+//! two later. Between those two moments the server had already answered its own
 //! receipt's name with *"unknown conversation"* — the identical sentence a name
 //! that never existed earns — so `start` then `follow`, the first pair every
 //! operator types and the whole of a two-seat handoff, failed every time it was

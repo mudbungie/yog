@@ -5,7 +5,7 @@
 //! Every state is written as a departure from
 //! [`Recipe::empty`](super::recipe::Recipe::empty) — DESIGN §3.4's own posture,
 //! *the general path with empty inputs* — so the first-run state is not a
-//! special case here any more than it is in the engine.
+//! special case here any more than it is in the server.
 
 use super::recipe::{Conv, Recipe, Step, Wsp};
 
@@ -72,7 +72,7 @@ const BUSY: Recipe = Recipe {
 
 /// **the §7.3 wound**, both arms: one driver that left words behind and one
 /// that left none. Both conversations are dated well past the §7.2
-/// `wound_grace` window the engine waits out before it states a wound at all
+/// `wound_grace` window the server waits out before it states a wound at all
 /// (bl-776a) — see [`super`] on why a fixture must age its own step.
 const WOUND: Recipe = Recipe {
     summary: "two wounded conversations: one whose stderr.log speaks, one mute",

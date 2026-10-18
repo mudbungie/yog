@@ -14,7 +14,7 @@ use std::sync::Arc;
 /// field a *seat* filled: the window reached into `Deps` to hand over the seed
 /// its greyed prediction had already been drawn off, so the preview and the
 /// fired `--name` agreed. A window that posts its acts over the wire can reach
-/// into nothing — the engine builds `Deps`, one per gesture — so the seed rides
+/// into nothing — the server builds `Deps`, one per gesture — so the seed rides
 /// [`Action::Prompt`](super::super::Action::Prompt) instead, which is where it
 /// always belonged: it is a parameter of the gesture, not of the environment,
 /// and a caller that predicted nothing carries `None` and takes the door's own
@@ -60,7 +60,7 @@ pub struct Deps {
 /// every test. The general path with no input, not a case of its own.
 ///
 /// **Anything that builds its own `Deps` gets that default, and it is not the
-/// engine's.** The §4.3 pilot constructs one per pass, and so does
+/// server's.** The §4.3 pilot constructs one per pass, and so does
 /// `AppModel::boundary_deps` — the acceptance world's stand-in for the
 /// transport, and since bl-ab32 that door's only caller — so a gesture fired
 /// through either reaches a presence map and a mailbox no listener touches.
@@ -70,7 +70,7 @@ pub struct Deps {
 /// [`Action::Login`](crate::boundary::Action::Login), whose run a default
 /// holder would strand — to a control: both are answered through
 /// [`ConsumerCtx`](crate::boundary::consumer::ConsumerCtx), which holds the
-/// engine's own handles, and nothing else may.
+/// server's own handles, and nothing else may.
 #[derive(Clone, Default)]
 pub struct Caller {
     /// The identity the intake carries: a connection's certificate common name
@@ -82,7 +82,7 @@ pub struct Caller {
     /// truth rather than a copy taken when the gesture arrived.
     pub presence: crate::registry::presence::Presence,
     /// What is queued for each client and what came back (REMOTE §5, bl-024b)
-    /// — the engine's own RAM, shared by handle for presence's reason exactly:
+    /// — the server's own RAM, shared by handle for presence's reason exactly:
     /// an invocation posted through one intake is drained through another, and
     /// a copy taken when the gesture arrived would be a hand-off to nobody.
     pub mailbox: crate::registry::mailbox::Mailbox,
@@ -99,7 +99,7 @@ pub struct Caller {
     /// handle, shared for the three above's reason: it is a fact about this
     /// process, in RAM, meaningless in any context that did not bind. Default
     /// is "nothing here is listening", which is the truthful answer for the
-    /// §4.3 pilot, for a test and for an engine whose bind was refused.
+    /// §4.3 pilot, for a test and for a server whose bind was refused.
     pub listening: crate::wire::Listening,
 }
 

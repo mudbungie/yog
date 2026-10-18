@@ -1,4 +1,4 @@
-//! bl-e058 — **a self-provisioned engine says the port it bound.**
+//! bl-e058 — **a self-provisioned server says the port it bound.**
 //!
 //! `address` holds `127.0.0.1:0` on a box that provisioned itself (REMOTE §8,
 //! bl-dc14: an implicit mint must not take a process-global number), so the
@@ -38,7 +38,7 @@ fn a_self_provisioned_boot_says_the_address_it_bound() {
         .spawn()
         .unwrap();
 
-    // Read on a thread so the wait below has a deadline: a parked engine never
+    // Read on a thread so the wait below has a deadline: a parked server never
     // closes its stderr, so a blocking scan for a line that is not coming would
     // hang the suite instead of failing it.
     let err = child.stderr.take().unwrap();
@@ -62,7 +62,7 @@ fn a_self_provisioned_boot_says_the_address_it_bound() {
         }
     }
 
-    // Stop the engine before asserting: a failed assertion must not leave a
+    // Stop the server before asserting: a failed assertion must not leave a
     // parked yog behind, and `Drop` on a `Child` does not kill it.
     let _ = yog::git_env::command(Path::new("kill"))
         .args(["-TERM", &child.id().to_string()])

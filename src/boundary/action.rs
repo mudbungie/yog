@@ -171,7 +171,7 @@ pub enum Action {
     /// [`enroll::Request`](crate::registry::enroll::Request) ([`device`]).
     Enroll(crate::registry::enroll::Request),
     /// **The sign-in, as an act** (REMOTE §8.3; DESIGN §8.3 as amended by
-    /// bl-61bf): `bz --login` on the ENGINE, inside the named workspace's wall
+    /// bl-61bf): `bz --login` on the SERVER, inside the named workspace's wall
     /// ([`device`]).
     Login { workspace: String, provider: String },
     /// **Write or delete one price-table entry** (DESIGN §3.5, §4.1 `prices`;

@@ -2,7 +2,7 @@
 //! declines (REMOTE §5, bl-c907).
 
 /// **The substrate every beat in this family drives against** (REMOTE §5) — the
-/// stand-in engines that hold up the deposit consumer's contract and nothing
+/// stand-in servers that hold up the deposit consumer's contract and nothing
 /// else, the two budgets, and the `Site` an injection answers at. Its own file
 /// at §12's per-file budget: four sibling test modules import it, so it is a
 /// shared subject rather than this file's own scaffolding.
@@ -26,7 +26,7 @@ fn injection(root: &Path) -> Injection {
 }
 
 /// An injection with every knob named — the front door it re-enters for an
-/// engine act, and the budget both its waits are bounded by.
+/// server act, and the budget both its waits are bounded by.
 fn at(root: &Path, driver_target: PathBuf, budget: ask::Budget) -> Injection {
     Injection::new(
         root.to_path_buf(),
@@ -156,7 +156,7 @@ fn a_role_without_the_roster_in_its_grant_is_declared_nothing() {
 }
 
 /// A loaded tool is declared **individually named**, carrying the definition
-/// frozen at the load act — never a multiplexer, and never an engine read.
+/// frozen at the load act — never a multiplexer, and never a server read.
 #[test]
 fn a_loaded_tool_is_declared_under_its_own_name() {
     let root = TempDir::new().expect("tmp");
@@ -189,9 +189,9 @@ fn a_loaded_tool_is_declared_under_its_own_name() {
 /// router is total and nothing resolves a binary behind it. With nothing
 /// loaded and no machine advertising the name, the worktree lane (bl-77be)
 /// renders the loadless sentence with both remedies — the ship-inert posture
-/// working — while the compactor's engine acts still go through, so nothing
+/// working — while the compactor's server acts still go through, so nothing
 /// about compaction depends on a machine being enrolled. `Read` is the name
-/// under test precisely because the engine does not implement it: the three
+/// under test precisely because litany does not implement it: the three
 /// that it does take the lane's last rung instead (bl-5710,
 /// `subject::performs`), which is that ball's whole subject.
 #[test]
@@ -207,7 +207,7 @@ fn nothing_loaded_refuses_an_ordinary_tool_in_band_and_still_compacts() {
         &[json!({"ok": true, "kind": "clients", "rows": []})],
     );
     let refused = live.route(call!("Read", &input, &stop));
-    engine.join().expect("engine");
+    engine.join().expect("server");
     assert_eq!(refused.exit_code, 1);
     assert!(refused.stdout.is_empty());
     let said = String::from_utf8_lossy(&refused.stderr).into_owned();
@@ -228,7 +228,7 @@ fn nothing_loaded_refuses_an_ordinary_tool_in_band_and_still_compacts() {
         let acted = live.route(call!(name, &input, &stop, root.path()));
         assert_eq!(
             acted.exit_code, 0,
-            "{name} is an engine act, not a tool call"
+            "{name} is a server act, not a tool call"
         );
         assert_eq!(acted.stdout, b"compacted");
     }
@@ -247,7 +247,7 @@ fn a_clients_op_answers_as_a_zero_exit_capture() {
     let stop = AtomicBool::new(false);
     let capture =
         at(root.path(), PathBuf::new(), budget()).route(call!(clients::NAME, &input, &stop));
-    handle.join().expect("engine");
+    handle.join().expect("server");
 
     assert_eq!(capture.exit_code, 0);
     assert!(capture.stderr.is_empty());

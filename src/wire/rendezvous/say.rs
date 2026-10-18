@@ -1,16 +1,16 @@
-//! **What the loop says on the engine's stderr** (REMOTE §13.4, bl-355c): one
+//! **What the loop says on the server's stderr** (REMOTE §13.4, bl-355c): one
 //! line per event, in the `yog: wire: listening on …` shape every other
 //! subsystem already speaks. Each line is built here and nowhere else, so the
 //! one rule they share is enforced by the only file that could break it:
 //!
 //! **counts, sequence numbers, nonces and address families — never an
-//! address, a key, a salt or a sealed byte.** An engine's log lands in a
+//! address, a key, a salt or a sealed byte.** A server's log lands in a
 //! public CI log in some deployments. It is also why a DHT failure is said
 //! without its reason: the walk's refusals name the nodes it asked and the
 //! target it walked toward, a derivation of the key and the salt.
 //!
 //! The sink is injected ([`Say`]) so the suite reads the lines the loop
-//! emits; the engine's is [`stderr`].
+//! emits; the server's is [`stderr`].
 
 use std::net::{IpAddr, SocketAddr};
 use std::sync::Arc;
@@ -19,7 +19,7 @@ use std::time::Duration;
 /// Where the loop's lines go.
 pub(crate) type Say = Arc<dyn Fn(&str) + Send + Sync>;
 
-/// The engine's sink: the process's stderr, a line at a time.
+/// The server's sink: the process's stderr, a line at a time.
 pub(crate) fn stderr() -> Say {
     Arc::new(|line: &str| eprintln!("{line}"))
 }
