@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.84](https://github.com/mudbungie/yog/compare/v0.0.83...v0.0.84) - 2026-10-21
+
+### Changes
+
+- a conversation's title is the branch's committed 'title' file when one exists: top rung of the §3.3 display ladder, above the litany-stored name [bl-e6ad]
+
 ## [0.0.83](https://github.com/mudbungie/yog/compare/v0.0.82...v0.0.83) - 2026-10-18
 
 ### Changes
