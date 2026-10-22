@@ -1,7 +1,8 @@
 +++
 title = "a conversation's title is the branch's committed 'title' file when one exists: top rung of the §3.3 display ladder, above the litany-stored name"
 created = 1792631685
-updated = 1792631685
+updated = 1792633385
+claimant = "Satellite"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
