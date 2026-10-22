@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.85](https://github.com/mudbungie/yog/compare/v0.0.84...v0.0.85) - 2026-10-22
+
+### Changes
+
+- brazen bl-6feb: providers is the routing TABLE; add the sign-in CATALOG read (op catalog, bare bz --login --json, edition 24); row refusals name the table and its two entry acts [bl-c6e3]
+
 ## [0.0.84](https://github.com/mudbungie/yog/compare/v0.0.83...v0.0.84) - 2026-10-21
 
 ### Changes
