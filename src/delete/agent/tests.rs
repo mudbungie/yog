@@ -16,6 +16,7 @@ fn agent(id: &str, state: AgentState, ts: i64) -> Agent {
         branch_name: format!("agents/{id}"),
         agent_id: id.to_string(),
         name: None,
+        title: None,
         tip_oid: "a".repeat(40),
         tip_short_oid: "aaaaaaaa".into(),
         tip_timestamp_unix: ts,

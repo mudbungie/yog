@@ -12,10 +12,13 @@ use super::row::preview;
 use crate::git_tree::Agent;
 
 /// What a conversation is called (DESIGN §3.3) — **the one function**, a ladder:
-/// the agent's name fact, else the first payload line (`preview`), else the id's
-/// [`id_floor`] — the terminal generation only (bl-63a1). `name` is [`Agent::name_fact`]'s fold — the litany-stored `name`
-/// blob (rung one), else the legacy `You are <x>.` goal-stamp parse covering
-/// pre-0.0.4 roots until retention ages them out. Every seat reads it and falls
+/// the agent's title or name, else the first payload line (`preview`), else the
+/// id's [`id_floor`] — the terminal generation only (bl-63a1). `name` is the
+/// caller's fold of the two top rungs: the titler-landed `title` blob when one
+/// stands (litany `docs/DESIGN_PROCEDURES.md` §6, bl-e6ad), else
+/// [`Agent::name_fact`] — the litany-stored `name` blob, else the legacy `You
+/// are <x>.` goal-stamp parse covering pre-0.0.4 roots until retention ages
+/// them out. Every seat reads it and falls
 /// through together — the §11 row title, the §11 center header, the §3.6
 /// deletion confirmation. A named conversation (or a named descent child — same
 /// rung, no special case) stops on rung one; a foreign or hand-typed root lands
@@ -158,8 +161,9 @@ pub fn display_name_of(agents: &[Agent], root_id: &str) -> String {
 /// this), and the floor's spelling is [`id_floor`]'s terminal generation
 /// (bl-63a1) — the full id's seat is the hover.
 pub fn member_title(agent: &Agent) -> String {
+    let name = agent.name_fact();
     display_name(
-        agent.name_fact().as_deref(),
+        agent.title.as_deref().or(name.as_deref()),
         &preview(Some(agent)),
         &agent.agent_id,
     )

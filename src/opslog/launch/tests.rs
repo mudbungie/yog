@@ -47,6 +47,7 @@ fn agent(id: &str, name: Option<&str>, state: AgentState, call_start: Option<i64
         held: None,
         goal_ball: None,
         name: name.map(str::to_owned),
+        title: None,
         goal_name: None,
     }
 }

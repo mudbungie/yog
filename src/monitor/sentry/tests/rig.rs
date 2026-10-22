@@ -72,6 +72,7 @@ fn agent(id: &str, tip: &str) -> crate::git_tree::Agent {
         held: None,
         goal_ball: None,
         name: None,
+        title: None,
         goal_name: None,
         call_start_unix: None,
     }

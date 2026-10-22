@@ -130,6 +130,7 @@ pub(super) fn row(
             .and_then(|a| a.failure.as_deref())
             .map(crate::git_tree::clause),
         name: root.and_then(crate::git_tree::Agent::name_fact),
+        title: root.and_then(|a| a.title.clone()),
         name_display_only: root.is_some_and(Agent::name_display_only),
         verdict: crate::monitor::row::worst(
             checks,

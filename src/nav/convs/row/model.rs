@@ -75,6 +75,11 @@ pub struct ConvRow {
     /// rung. `None` for a foreign or hand-typed root, which lands on the
     /// payload line or the id.
     pub name: Option<String>,
+    /// The titler-landed title (DESIGN §3.3's top rung; litany
+    /// `docs/DESIGN_PROCEDURES.md` §6) — shown above the name, never an
+    /// address. On the wire it is not its own field: `display` is the
+    /// ladder's answer, and the decoder recovers it from there.
+    pub title: Option<String>,
     /// Whether [`name`](ConvRow::name) is the **legacy display-only rung**
     /// (bl-8068, [`Agent::name_display_only`]): a goal-stamp parse no
     /// litany-stored fact backs, so peers cannot message the conversation by
@@ -138,7 +143,11 @@ impl ConvRow {
     /// The row's display name — [`display_name`]'s ladder over this row's own
     /// rungs, the one naming rule every seat shares.
     pub fn display_name(&self) -> String {
-        display_name(self.name.as_deref(), &self.preview, &self.root_id)
+        display_name(
+            self.title.as_deref().or(self.name.as_deref()),
+            &self.preview,
+            &self.root_id,
+        )
     }
 
     /// The weak subtitle beside the title (§11: "the name with its preview weak

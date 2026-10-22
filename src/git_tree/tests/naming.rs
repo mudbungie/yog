@@ -104,3 +104,32 @@ fn from_repo_previews_the_goal_not_the_assembled_contexts_pinned_frame() {
         "the operator's headline, not the frame's opening tag"
     );
 }
+
+#[test]
+fn from_repo_reads_the_title_blob_beside_the_name() {
+    // DESIGN §3.3's top rung (bl-e6ad): what litany's titler lands at
+    // `agents/<id>:title` surfaces by the name's own query, and a branch no
+    // titler has run on reads none.
+    let fx = Fixture::new();
+    fx.build_agent("20260422T130000Z-ttl0", "titled");
+    fx.name_agent("20260422T130000Z-ttl0", "pale-otter");
+    fx.title_agent("20260422T130000Z-ttl0", "Parser port to the new grammar");
+    fx.build_agent("20260422T130100Z-ttl1", "untitled");
+    let tree = GitTree::from_repo(&fx.path).unwrap();
+    let titled = tree
+        .agents
+        .iter()
+        .find(|a| a.agent_id == "20260422T130000Z-ttl0")
+        .unwrap();
+    assert_eq!(titled.name.as_deref(), Some("pale-otter"));
+    assert_eq!(
+        titled.title.as_deref(),
+        Some("Parser port to the new grammar")
+    );
+    let untitled = tree
+        .agents
+        .iter()
+        .find(|a| a.agent_id == "20260422T130100Z-ttl1")
+        .unwrap();
+    assert!(untitled.title.is_none());
+}

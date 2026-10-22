@@ -29,6 +29,7 @@ fn world() -> (TempDir, PathBuf, Deps) {
     let ws = dir.path().join("names").join("alba");
     let named = Agent {
         name: Some(MINTED.to_owned()),
+        title: None,
         ..crate::boundary::tests::agent(ROOT, AgentState::Quiescent, 1)
     };
     let deps = Deps {

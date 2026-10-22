@@ -32,6 +32,7 @@ fn agent(id: &str) -> Agent {
         held: None,
         goal_ball: None,
         name: None,
+        title: None,
         goal_name: None,
         call_start_unix: None,
     }

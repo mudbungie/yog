@@ -639,9 +639,15 @@ the pre-aca4 stock until retention ages it out.
 
 **The name is the title; the first payload line is the preview.**
 One function derives what a conversation is called, as a ladder (bl-08f2):
-the litany-stored name fact → the legacy goal-stamp parse → the first
-payload line (the goal with **every preface yog composed** stripped) → the
-root agent id.
+the titler-landed `title` blob (bl-e6ad; litany `docs/DESIGN_PROCEDURES.md`
+§6 — a procedure the basic agentic loop forks on every operator message,
+whose one line lands at `agents/<root>:title`, rewritten each time) → the
+litany-stored name fact → the legacy goal-stamp parse → the first payload
+line (the goal with **every preface yog composed** stripped) → the root
+agent id. The title is shown, never addressed: the stored name stays the
+message target, and nothing crosses the wire differently — a row's
+`display` already is the ladder's answer, and the decoder recovers the
+title from it exactly as it recovers a display-only name (bl-7067).
 
 **The payload is what the operator wrote, and yog writes two prefaces above
 it** (bl-e2ad). The legacy identity stamp is one, and was the only one

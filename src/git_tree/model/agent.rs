@@ -192,6 +192,14 @@ pub struct Agent {
     /// child alike, no special case. `None` for an unnamed agent and for a
     /// pre-0.0.4 branch with no blob.
     pub name: Option<String>,
+    /// The **title** a titler landed on this branch (litany
+    /// `docs/DESIGN_PROCEDURES.md` §6): the `title` blob at the branch root,
+    /// rewritten each time the procedure runs, read `git show
+    /// agents/<id>:title` by the name's own query. The §3.3 ladder's top
+    /// rung — above the stored name, which stays the **address** (litany
+    /// resolves message targets by id or stored name, never by title).
+    /// `None` where no titler has run.
+    pub title: Option<String>,
     /// The **legacy** `You are <x>.` stamp on this agent's `goal.md` first line
     /// (DESIGN §3.3), parsed back by [`crate::start::parse_identity_stamp`].
     /// Demoted by bl-08f2 from the name's home to its fallback: it covers only

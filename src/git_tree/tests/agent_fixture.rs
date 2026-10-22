@@ -115,6 +115,16 @@ impl Fixture {
         run_git(&wt, &["commit", "-q", "--allow-empty", "-m", "settle name"]);
     }
 
+    /// Commit a titler-landed `title` blob on an existing agent's branch —
+    /// what litany's `land_response(title)` writes (`docs/DESIGN_PROCEDURES.md`
+    /// §6), read back `git show agents/<id>:title` beside the name.
+    pub(crate) fn title_agent(&self, conv_id: &str, title: &str) {
+        let wt = self.path.join("agents").join(conv_id);
+        fs::write(wt.join("title"), format!("{title}\n")).unwrap();
+        run_git(&wt, &["add", "title"]);
+        run_git(&wt, &["commit", "-q", "-m", "landing: title"]);
+    }
+
     /// Point a `refs/litany/<kind>/<agent-id>` mark ref at `config/default`
     /// (any commit is fine — the frontend reads existence, not content).
     /// Mirrors `transfer::decline` (§2.6) and `budget::mark_exhausted`

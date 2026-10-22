@@ -110,16 +110,27 @@ pub(crate) fn conv_row(v: &Value) -> Result<ConvRow, String> {
     // string by construction, so this recovers the fact without the wire
     // carrying it twice.
     let display_only = bool_of(o, "display_only")?;
+    let display = str_of(o, "display")?;
     let name = if display_only {
-        Some(str_of(o, "display")?)
+        Some(display.clone())
     } else {
         opt_str_of(o, "name")?
     };
+    let root_id = str_of(o, "root_id")?;
+    let preview = str_of(o, "preview")?;
+    // The title is recovered the same way (bl-e6ad): `display` is the
+    // ladder's answer, so where it is not what the lower rungs would have
+    // said, a title said it — the fact without the wire carrying it twice.
+    // (A display-only legacy name under a title is the one corner this
+    // cannot tell apart: the title reads back as that name, which paints
+    // the same `display` and addresses nothing either way.)
+    let title = (display != crate::nav::convs::display_name(name.as_deref(), &preview, &root_id))
+        .then_some(display);
     Ok(ConvRow {
-        root_id: str_of(o, "root_id")?,
+        root_id,
         state: state_of(o)?,
         uncertain: bool_of(o, "uncertain")?,
-        preview: str_of(o, "preview")?,
+        preview,
         age_secs: i64_of(o, "age_secs")?,
         last_active_unix: i64_of(o, "last_active_unix")?,
         flight: opt(o, "flight", |o, k| pick(o, k, &FLIGHTS))?,
@@ -131,6 +142,7 @@ pub(crate) fn conv_row(v: &Value) -> Result<ConvRow, String> {
         stop_children: bool_of(o, "stop_children")?,
         ball: opt_val(o, "ball", conv_ball)?,
         name,
+        title,
         name_display_only: display_only,
         verdict: opt_val(o, "alignment", check)?,
         tone: pick(o, "tone", &TONES)?,

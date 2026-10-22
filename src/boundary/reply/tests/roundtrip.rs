@@ -98,6 +98,7 @@ fn every_conversation_row_token_survives_both_halves_of_its_table() {
         stop_children: false,
         ball: None,
         name: None,
+        title: None,
         name_display_only: false,
         verdict: None,
         tone: Tone::Plain,
@@ -134,6 +135,20 @@ fn every_conversation_row_token_survives_both_halves_of_its_table() {
             ..base.clone()
         });
     }
+    // A titled row (bl-e6ad): `display` carries the title and `name` the
+    // address, and the decoder recovers the title from the gap between
+    // `display` and what the lower rungs would have said — with or without
+    // a name beneath it.
+    rows.push(ConvRow {
+        name: Some("pale-otter".into()),
+        title: Some("Parser port to the new grammar".into()),
+        ..base.clone()
+    });
+    rows.push(ConvRow {
+        preview: "first line".into(),
+        title: Some("Parser port to the new grammar".into()),
+        ..base.clone()
+    });
     let reply = super::super::Reply::Conversations(rows);
     assert_eq!(decode(&encode(&reply)), Ok(Ok(reply)));
 }

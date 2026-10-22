@@ -53,6 +53,7 @@ pub(crate) fn agent(id: &str, state: AgentState, ts: i64) -> Agent {
         held: None,
         goal_ball: None,
         name: None,
+        title: None,
         goal_name: None,
         call_start_unix: None,
     }

@@ -171,9 +171,25 @@ pub(super) fn for_each_ref_agents(repo: &Path) -> Result<Vec<u8>, GitTreeError> 
 /// empty blob litany writes for an unnamed agent — absence and emptiness are
 /// one fact: no name.
 pub(super) fn ref_name(repo: &Path, branch: &str) -> Result<Option<String>, GitTreeError> {
-    Ok(git_optional(repo, &["show", &format!("{branch}:name")])?
+    ref_line(repo, branch, "name")
+}
+
+/// The **title** a procedure landed on an agent branch (litany
+/// `docs/DESIGN_PROCEDURES.md` §6; DESIGN §3.3's top rung): the `title` blob
+/// the titler's return commits at the branch root, read `git show
+/// <branch>:title` by the same query as the name. `None` where no titler
+/// has run — every pre-procedure branch, and every branch under a workflow
+/// that does not bind one — and for an empty blob.
+pub(super) fn ref_title(repo: &Path, branch: &str) -> Result<Option<String>, GitTreeError> {
+    ref_line(repo, branch, "title")
+}
+
+/// One committed single-line fact at an agent branch's root, trimmed;
+/// absence and emptiness are one answer: no fact.
+fn ref_line(repo: &Path, branch: &str, file: &str) -> Result<Option<String>, GitTreeError> {
+    Ok(git_optional(repo, &["show", &format!("{branch}:{file}")])?
         .map(|out| String::from_utf8_lossy(&out).trim().to_string())
-        .filter(|name| !name.is_empty()))
+        .filter(|line| !line.is_empty()))
 }
 
 /// Every ref under a `refs/litany/<kind>/` namespace as `<refname> <oid>`

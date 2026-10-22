@@ -33,6 +33,7 @@ pub(super) fn conv_rows() -> Vec<ConvRow> {
             badge: Some("closed".into()),
         }),
         name: Some("brave-fox".into()),
+        title: None,
         name_display_only: false,
         verdict: Some(Check {
             workspace: "/ws".into(),
@@ -70,6 +71,7 @@ pub(super) fn conv_rows() -> Vec<ConvRow> {
             badge: None,
         }),
         name: None,
+        title: None,
         name_display_only: false,
         verdict: None,
         tone: Tone::Plain,
@@ -78,6 +80,7 @@ pub(super) fn conv_rows() -> Vec<ConvRow> {
     let legacy = ConvRow {
         root_id: "c-3".into(),
         name: Some("goal-stamped".into()),
+        title: None,
         name_display_only: true,
         ball: None,
         ..bare.clone()

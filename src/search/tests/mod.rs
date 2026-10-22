@@ -60,6 +60,7 @@ fn agent(id: &str, name: Option<&str>) -> Agent {
         held: None,
         goal_ball: None,
         name: name.map(str::to_owned),
+        title: None,
         goal_name: None,
     }
 }

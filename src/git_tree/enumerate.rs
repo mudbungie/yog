@@ -11,7 +11,7 @@
 //! the four ref-derived marks (conflicted, budget-exhausted, abandoned, notify)
 //! are classified here.
 
-use super::cmd::{LogEntry, for_each_ref_agents, ref_name, walk_branch_steps};
+use super::cmd::{LogEntry, for_each_ref_agents, ref_name, ref_title, walk_branch_steps};
 use super::detect::payload_headline;
 use super::marks::Marks;
 use super::probe::{LockProbe, WriterProbe};
@@ -84,6 +84,7 @@ pub(super) fn enumerate_agents(
         let stream = stream_from_disk(workspace, &agent_id);
         agents.push(Agent {
             name: ref_name(git_dir, &branch_name)?,
+            title: ref_title(git_dir, &branch_name)?,
             preview: goal.preview,
             stream,
             tool_calls: tool_calls_from_disk(workspace, &agent_id),

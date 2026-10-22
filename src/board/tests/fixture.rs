@@ -60,6 +60,7 @@ pub(super) fn agent(id: &str, ball: Option<&str>, name: Option<&str>) -> Agent {
     Agent {
         goal_ball: ball.map(str::to_owned),
         name: name.map(str::to_owned),
+        title: None,
         ..crate::boundary::tests::agent(id, AgentState::Quiescent, 0)
     }
 }

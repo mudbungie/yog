@@ -246,3 +246,25 @@ fn the_when_seat_is_comparable_and_printable() {
     assert_eq!(a.clone(), a);
     assert!(format!("{a:?}").contains("StartedAt"));
 }
+
+#[test]
+fn a_titled_row_shows_the_title_and_keeps_the_name_as_the_address() {
+    // DESIGN §3.3's top rung (bl-e6ad): the titler's line outranks the
+    // stored name everywhere the ladder paints, while the name stays what a
+    // peer addresses — and the subtitle is still the preview.
+    let mut root = agent("r1-0", AgentState::Quiescent, 10);
+    root.name = Some("pale-otter".to_owned());
+    root.title = Some("Parser port to the new grammar".to_owned());
+    root.preview = Some("Ball bl-1: fix".to_owned());
+    let agents = [root.clone()];
+    assert_eq!(
+        display_name_of(&agents, "r1-0"),
+        "Parser port to the new grammar"
+    );
+    assert_eq!(member_title(&root), "Parser port to the new grammar");
+    let rows = build(&[root], "/ws", &unseen, 10, &plain, &[]);
+    assert_eq!(rows[0].display_name(), "Parser port to the new grammar");
+    assert_eq!(rows[0].name.as_deref(), Some("pale-otter"));
+    assert!(!rows[0].name_display_only);
+    assert_eq!(rows[0].subtitle(), "Ball bl-1: fix");
+}

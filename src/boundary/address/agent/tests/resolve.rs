@@ -24,6 +24,7 @@ fn snap(agents: Vec<crate::git_tree::Agent>) -> (std::path::PathBuf, crate::app:
 fn named(id: &str, name: Option<&str>) -> crate::git_tree::Agent {
     crate::git_tree::Agent {
         name: name.map(str::to_owned),
+        title: None,
         ..crate::boundary::tests::agent(id, crate::git_tree::AgentState::Quiescent, 1)
     }
 }

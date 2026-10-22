@@ -89,6 +89,7 @@ mod tests {
             stop_children: false,
             ball: ball.map(self::ball),
             name: None,
+            title: None,
             name_display_only: false,
             verdict: None,
             tone: crate::nav::convs::Tone::Plain,

@@ -32,6 +32,7 @@ fn conversation_rows_encode_their_optional_facts_only_when_present() {
             badge: Some("closed".into()),
         }),
         name: Some("brave-fox".into()),
+        title: None,
         name_display_only: false,
         verdict: Some(crate::monitor::Check {
             workspace: "/ws".into(),
@@ -67,6 +68,7 @@ fn conversation_rows_encode_their_optional_facts_only_when_present() {
             badge: None,
         }),
         name: None,
+        title: None,
         name_display_only: false,
         verdict: None,
         tone: crate::nav::convs::Tone::Plain,
@@ -130,6 +132,7 @@ fn a_display_only_name_is_withheld_from_the_boundary_as_a_message_target() {
         stop_children: false,
         ball: None,
         name: Some("marbling-lake".into()),
+        title: None,
         name_display_only: true,
         verdict: None,
         tone: crate::nav::convs::Tone::Plain,
