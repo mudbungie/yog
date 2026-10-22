@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.86](https://github.com/mudbungie/yog/compare/v0.0.85...v0.0.86) - 2026-10-22
+
+### Changes
+
+- pins → brazen =0.0.19 + litany =0.0.14: the catalog read goes live in-process (bare bz --login lists the sign-in catalog; providers is the routing table) [bl-0b4e]
+
 ## [0.0.85](https://github.com/mudbungie/yog/compare/v0.0.84...v0.0.85) - 2026-10-22
 
 ### Changes
