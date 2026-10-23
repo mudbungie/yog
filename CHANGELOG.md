@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.88](https://github.com/mudbungie/yog/compare/v0.0.87...v0.0.88) - 2026-10-23
+
+### Changes
+
+- merge origin/main (release v0.0.87) into main
+- code follows the noun ruling: crate::engine → server, Engine → Server, engine.lock → server.lock, no compat shim [bl-b220]
+
 ## [0.0.87](https://github.com/mudbungie/yog/compare/v0.0.86...v0.0.87) - 2026-10-23
 
 ### Changes
