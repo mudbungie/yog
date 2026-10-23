@@ -97,5 +97,24 @@ pub(super) fn answers() -> Vec<Reply> {
                 priority: false,
             },
         ])),
+        // The sign-in catalog (bl-c6e3): the same row shape under its own
+        // kind, carrying the one row the table above cannot — an oauth preset
+        // nobody has signed into yet, whose Login verb is exactly the point.
+        Reply::Config(ConfigAnswer::Catalog(vec![
+            ProviderRowView {
+                name: "anthropic".into(),
+                fact: "auth oauth2 \u{b7} signed in".into(),
+                blocked: None,
+                effort: true,
+                priority: true,
+            },
+            ProviderRowView {
+                name: "openai-chatgpt".into(),
+                fact: "auth oauth2 \u{b7} not signed in".into(),
+                blocked: None,
+                effort: false,
+                priority: false,
+            },
+        ])),
     ]
 }

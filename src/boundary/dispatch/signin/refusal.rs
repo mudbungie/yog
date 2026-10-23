@@ -52,15 +52,18 @@ fn uncredentialed(row: &ProviderRow, role: &str) -> String {
     )
 }
 
-/// A role resolves a row the wall does not carry (bl-21e9). Not a sign-in: the
-/// row has to arrive before it can hold anything, and the operator's other move
-/// is to point the role at one that is here.
+/// A role resolves a row the wall's routing table does not carry (bl-21e9).
+/// Not a sign-in: the name may be nothing brazen knows at all, and this gate
+/// cannot tell a typo from an unsigned preset, so the row has to arrive before
+/// it can hold anything, and the operator's other move is to point the role at
+/// one that is here.
 fn undeclared(provider: &str, rows: &[ProviderRow], role: &str) -> String {
     format!(
         "`{role}` resolves provider `{provider}`, and this workspace declares no such \
-         row, so a conversation begun here would reach no model — a workspace holds brazen's \
-         built-in rows plus its own config.toml and nothing else, so add the row with \
-         /config brazen, or point the role at one that is here with \
+         row, so a conversation begun here would reach no model — a workspace's routing \
+         table is the rows its config.toml names plus the built-in presets a credential \
+         resolves for, so add the row with /config brazen, or point the role at one that is \
+         here with \
          /model {role} <provider> <model-id> (rows here: {})",
         names(rows)
     )

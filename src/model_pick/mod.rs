@@ -80,9 +80,9 @@ impl Scoped {
     pub fn strand_note(&self) -> Option<String> {
         self.stranded.as_ref().map(|was| {
             format!(
-                "this conversation was dispatched through {was}, which brazen does not \
-                 have — {} is selected instead; add or rename the row with /config \
-                 brazen to keep it",
+                "this conversation was dispatched through {was}, which is not in this \
+                 workspace's routing table — {} is selected instead; /login signs it in, \
+                 or /config brazen names it with a key, to keep it",
                 self.row
             )
         })

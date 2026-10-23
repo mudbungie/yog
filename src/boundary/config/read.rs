@@ -8,7 +8,9 @@ use super::ConfigFile;
 use crate::boundary::dispatch::Deps;
 use crate::boundary::reply::{ConfigAnswer, ConfigView, Reply};
 use crate::config_edit::branch::{Lineage, config_file, lineages};
-use crate::config_edit::brazen::{BzOutcome, BzRunner, RealBzRunner, row_names};
+use crate::config_edit::brazen::{
+    BzOutcome, BzRunner, ProviderRowView, RealBzRunner, row_names, row_views,
+};
 use crate::config_edit::form::{self, Control, Row, schema_for};
 use crate::config_edit::litany_global::LitanyGlobal;
 use crate::config_edit::{RealFileIo, load_snapshot};
@@ -41,9 +43,18 @@ pub enum Read {
     Models { workspace: String, provider: String },
     /// Which branch this agent tracks on (§16.3, bl-0164).
     Marks { workspace: String },
-    /// This workspace's effective provider table with each row's credential
-    /// fact and tuning capability (§8.3, bl-0164/bl-23bd).
+    /// This workspace's **routing table** with each row's credential fact and
+    /// tuning capability (§8.3, bl-0164/bl-23bd): what a run here can route
+    /// to — the rows its `config.toml` names plus the built-in presets a
+    /// credential resolves for (brazen bl-6feb).
     Providers { workspace: String },
+    /// This workspace's **sign-in catalog** (§8.3, bl-c6e3): every row `bz
+    /// --login` can serve — the operator's oauth rows and the built-in oauth
+    /// presets alike, signed in or not — in [`Providers`](Self::Providers)'
+    /// row shape. The other half of the login pane: that read says what can
+    /// run, this says what can be signed into, and a preset nobody has signed
+    /// into yet is in this list and not in that one.
+    Catalog { workspace: String },
     /// **The staged proposals of this workspace** (§9.6, bl-dd88): every
     /// `proposal/*` a reviewer left, with the lineage it is parented on and
     /// whether that parent is still the head — and, when `id` names one, that
@@ -93,6 +104,7 @@ impl Read {
             | Self::Models { workspace, .. }
             | Self::Marks { workspace }
             | Self::Providers { workspace }
+            | Self::Catalog { workspace }
             | Self::Proposals { workspace, .. }
             | Self::Roles { workspace } => Some(workspace),
         }
@@ -184,6 +196,46 @@ fn settings(deps: &Deps, ws: &Path, dest: &ConfigFile, text: &str) -> Vec<Row> {
         Vec::new()
     };
     form::read(&schema, text, &providers)
+}
+
+/// One workspace's **routing table**, rendered (§8.5, bl-0164) — the §8.3
+/// login pane's `↻ providers + credentials`. The table is read **inside the
+/// named sphere's wall** (bl-fcd5): a provider row reads *signed in* only where
+/// this workspace signed it in, so the table is meaningless without the
+/// workspace that scopes it. The credential fact rides the listing's own
+/// `credential` column (bl-dba3) — one ask, and no second derivation over the
+/// credentials directory. brazen unanswerable is an empty table, never an
+/// error: the "asked, never stored" contract every wall read here carries.
+pub(crate) fn providers(deps: &Deps, workspace: &Path) -> Reply {
+    Reply::Config(ConfigAnswer::Providers(rows_in(
+        deps,
+        workspace,
+        &|runner| runner.providers(),
+    )))
+}
+
+/// One workspace's **sign-in catalog**, rendered (§8.3, bl-c6e3) — the login
+/// pane's other read, in the same wall for the same reason: *signed in* is a
+/// fact of the sphere asked about. Same row shape as [`providers`], so a seat
+/// reads both with one parser; the two differ only in membership — this one
+/// holds every row `bz --login` can serve, table or not.
+pub(crate) fn catalog(deps: &Deps, workspace: &Path) -> Reply {
+    Reply::Config(ConfigAnswer::Catalog(rows_in(deps, workspace, &|runner| {
+        runner.catalog()
+    })))
+}
+
+/// One brazen listing read inside the named workspace's wall and rendered —
+/// the fold the two reads above share, so the wall lens and the rendering are
+/// written once.
+fn rows_in(
+    deps: &Deps,
+    workspace: &Path,
+    read: &dyn Fn(&RealBzRunner) -> Vec<crate::config_edit::brazen::ProviderRow>,
+) -> Vec<ProviderRowView> {
+    row_views(&read(&RealBzRunner::resolve(&super::wall_env(
+        deps, workspace,
+    ))))
 }
 
 /// The §9.3 browse (bl-dff8): every lineage with the files its tip holds. A

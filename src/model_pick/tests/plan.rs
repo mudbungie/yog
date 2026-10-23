@@ -70,7 +70,7 @@ fn a_pick_on_a_row_brazen_lacks_is_refused_before_the_file_is_touched() {
     );
     let said = refused.unwrap_err().to_string();
     assert!(said.contains("no provider row `codex`"), "{said}");
-    assert!(said.contains("pick a live row here"), "{said}");
+    assert!(said.contains("routing table"), "{said}");
 }
 
 /// bl-7ada. The pick the operator was refused: an Ollama tag carries a `:`,

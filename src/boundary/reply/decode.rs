@@ -202,6 +202,7 @@ fn listing(kind: &str, o: &Map<String, Value>) -> Option<Result<Reply, String>> 
         "help" => help(o),
         "search" => search(o),
         "providers" => rows_of(o, provider_row).map(|r| config(A::Providers(r))),
+        "catalog" => rows_of(o, provider_row).map(|r| config(A::Catalog(r))),
         "roles" => rows_of(o, role_row).map(|r| config(A::Roles(r))),
         "lineages" => rows_of(o, lineage_row).map(|r| config(A::Lineages(r))),
         "models" => strings_of(o, "rows").map(|r| config(A::Models(r))),

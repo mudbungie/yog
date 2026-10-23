@@ -5886,6 +5886,41 @@ the field existed and what §3.2's second obligation says a missing post-floor
 key reads as. Nothing is stored: the hold mark is still litany's three fields,
 and `scopes` is read off the sentence at the encoder.
 
+### 9.27 The sign-in catalog is its own read (bl-c6e3)
+
+**A new read, `catalog`, answering the workspace's sign-in catalog** — every
+provider row `bz --login` can serve, signed in or not — in **exactly**
+`reply/providers`' row shape under its own kind. An addition: `PROTOCOL`
+stands at 19 and the corpus ledger stamps the two new shapes at the next
+edition; no existing signature moves.
+
+    {"op": "catalog", "workspace": "ws"}
+    {"kind": "catalog", "ok": true, "rows": [
+       {"name": "openai-chatgpt", "fact": "auth oauth2 · not signed in",
+        "blocked": null, "effort": false, "priority": false}]}
+
+**Why a second read and not a field.** brazen bl-6feb severed its preset
+catalog from its routing table: `bz --list-providers` — the `providers` answer
+— now lists only the rows the operator named in `config.toml` plus the
+built-in presets a credential resolves for, so a preset nobody has signed into
+is absent from it, and a seat that offered sign-ins off that list alone could
+offer none on a fresh wall. The two lists answer different questions of one
+row set — *what can run here* and *what can be signed into* — and a row can be
+in either without the other (an unsigned oauth preset is catalog-only; a
+keyless or keyed row is table-only). A flag on `providers` would have made one
+answer carry two memberships; a second kind over the same row shape costs a
+seat one parser and one `kind` match. **A seat renders the catalog where its
+Login verb is and the table everywhere else** — the picker, the role marks and
+every "which rows exist" question stay on `providers`, which is also the list
+`is_unknown_row` judges `/model` against (DESIGN §8.3, §9.4).
+
+Seen on a seat: a fresh wall's `/providers` answering nothing, `/catalog`
+listing the oauth presets with *not signed in*, `/login <row>` completing, and
+the row then appearing in `/providers` as *signed in*. Under a server linking a
+brazen before 0.0.19 the catalog answers no rows (brazen exits 78 to a
+target-less `--login` there), never a refusal — the same empty-is-unanswered
+reading every brazen listing here carries.
+
 ## 10. Open questions (living)
 
 - ~~The follow/streaming frame shape~~ — settled by bl-b6fa (§3): every answer

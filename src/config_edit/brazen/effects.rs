@@ -3,7 +3,8 @@
 //!
 //! **§16.7 W10 split the surface in two; bl-dff8 closed the split.** Every read
 //! verb here — `--dump-config` at a temp, `--dump-config` effective,
-//! `--list-providers`, and now `--list-models` — runs **in-process** through the
+//! `--list-providers`, the target-less `--login` catalog read, and now
+//! `--list-models` — runs **in-process** through the
 //! linked brazen ([`crate::bz_host`]) against the world [`Env`]: no spawn, no
 //! pipe, no version skew between the validator and the thing being validated.
 //! The roster kept a subprocess (`yog bz --list-models …`) while it had one
@@ -77,6 +78,13 @@ impl BzRunner for RealBzRunner {
 
     fn providers(&self) -> Vec<ProviderRow> {
         provider_rows(&self.capture(&["--list-providers", "--json"]).stdout)
+    }
+
+    /// The same `--list-providers` row shape, printed by `--login` when no
+    /// `--provider` names a target (brazen bl-6feb) — no network and no
+    /// credential write: the login route's seams are wired and never touched.
+    fn catalog(&self) -> Vec<ProviderRow> {
+        provider_rows(&self.capture(&["--login", "--json"]).stdout)
     }
 
     fn list_models(&self, provider: &str) -> BzOutcome {

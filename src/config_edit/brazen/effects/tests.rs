@@ -70,11 +70,15 @@ fn dump_config_at_gates_a_malformed_draft_with_brazens_own_stderr() {
 }
 
 #[test]
-fn providers_lists_the_effective_table_including_the_built_in_rows() {
-    // The listing keeps the defaults operand the dump drops (§5.1 #21), so the
-    // built-in rows and the file's own row both appear, in routing order.
+fn providers_lists_the_routing_table_with_a_named_preset_filled_in() {
+    // The listing keeps the defaults operand the dump drops (§5.1 #21), so a
+    // built-in row the operator NAMES — one line, the preset fills the rest
+    // through brazen's per-name merge — appears beside the file's own row, in
+    // routing order. The preset is named rather than relied on, because since
+    // brazen bl-6feb an untouched preset is not in the table at all; naming it
+    // is what holds this fixture true on both sides of that pin.
     let (_dir, path) = config_file(
-        "[[provider]]\nname = \"acme\"\nprotocol = \"openai_chat\"\nbase_url = \"https://acme.test\"\nauth = \"none\"\n",
+        "[[provider]]\nname = \"acme\"\nprotocol = \"openai_chat\"\nbase_url = \"https://acme.test\"\nauth = \"none\"\n\n[[provider]]\nname = \"anthropic\"\n",
     );
     let rows = in_process(&path).providers();
     let named = |n: &str| rows.iter().find(|p| p.name == n).cloned();
@@ -83,13 +87,40 @@ fn providers_lists_the_effective_table_including_the_built_in_rows() {
         Some("none".to_owned()),
         "rows: {rows:?}"
     );
-    // A built-in api-keyed row: the `auth` column rides through the real
-    // projection, which is what makes it the login-capability answer (§8.3).
-    assert_eq!(
-        named("anthropic").map(|p| p.auth),
-        Some("api_key".to_owned()),
-        "rows: {rows:?}"
+    // The named api-keyed preset: the `auth` column rides through the real
+    // projection, which is what makes it the login-capability answer (§8.3),
+    // and with no key anywhere its credential column is the one refusal
+    // spelling — on a row the operator named, which is the only place it can
+    // now appear.
+    let anthropic = named("anthropic").expect("a named preset is in the table");
+    assert_eq!(anthropic.auth, "api_key", "rows: {rows:?}");
+    assert_eq!(anthropic.credential, crate::config_edit::brazen::MISSING);
+}
+
+/// The sign-in catalog is read in-process through the login route with no
+/// target named, and it never leaves the machine: no browser, no loopback
+/// bind, no credential written. Every row it answers is an oauth row — that is
+/// the catalog's whole membership rule — and a brazen before 0.0.19, which
+/// prints no catalog (exit 78), folds to no rows rather than an error, so this
+/// holds on both sides of the pin.
+#[test]
+fn the_catalog_reads_in_process_and_answers_oauth_rows_only() {
+    let (_dir, path) = config_file(
+        "[[provider]]\nname = \"acme\"\nprotocol = \"openai_chat\"\nbase_url = \"https://acme.test\"\nauth = \"none\"\n",
     );
+    let rows = in_process(&path).catalog();
+    assert!(
+        rows.iter().all(|row| row.auth == "oauth2"),
+        "a keyless or keyed row is not in the sign-in catalog: {rows:?}"
+    );
+    assert!(
+        !rows.iter().any(|row| row.name == "acme"),
+        "the file's keyless row cannot be signed into: {rows:?}"
+    );
+    // A malformed config answers no rows here too — brazen exits non-zero and
+    // prints nothing to stdout, exactly as the table read folds.
+    let (_dir, broken) = config_file("= not toml\n");
+    assert_eq!(in_process(&broken).catalog(), Vec::new());
 }
 
 #[test]

@@ -83,7 +83,7 @@ pub const STANDING: &[HelpRow] = &[
                  validated by bz before it is written, into the seat's own workspace (its \
                  providers, sign-ins and model cache belong to that workspace and nowhere \
                  else); `models`, `cadence` and a `workflow` are refused if they name a \
-                 provider row brazen does not have; a lineage (`branch` advances one, `fork` \
+                 provider row outside the workspace's routing table (`/providers`); a lineage (`branch` advances one, `fork` \
                  starts one from another, `orphan` starts a fresh one) is committed by \
                  `litany config` on the seat's workspace. The text is everything \
                  after the destination's words, verbatim — whitespace is part of a config file. \
@@ -112,7 +112,9 @@ pub const STANDING: &[HelpRow] = &[
         summary: "give a role this model, on the focused workspace's config lineage",
         detail: "Assigns a model to a role for the whole focused workspace: one write, into \
                  providers.yaml on the workspace's default config lineage, through `litany \
-                 config`. A provider row brazen does not have, and a row whose dialect cannot \
+                 config`. A provider row outside the workspace's routing table (the rows \
+                 `/providers` lists — `/login` or a key in `/config brazen` puts one there), \
+                 and a row whose dialect cannot \
                  carry a yog turn, are each refused before anything is written. It reaches the \
                  conversations already running too — a conversation follows its lineage's head \
                  at every step boundary, so this governs the one in front of you at its next \

@@ -2486,8 +2486,8 @@ not a special case.
 | 18 | Config branches + contents | `repo.git` `config/*` refs | `for-each-ref` + `git show <ref>:<path>` |
 | 19 | brazen file config | `<wall>/brazen/config.toml`, the named workspace's own (§16.2's wall layout, §8.5's `workspace` field) | raw text. A gesture that names no workspace is **no path at all** (`BrazenPaths::of` answers `None`) — the read refuses rather than falling back to the machine's `$BRAZEN_CONFIG`/`$XDG_CONFIG_HOME`, which is the whole of the blast-radius ruling in one row |
 | 20 | brazen effective config | `bz` itself | `bz --dump-config` stdout verbatim (bz is the authority on the value fold; yog never re-implements TOML semantics). *Since §16.7 W10 this is a **function call**, not a spawn — the linked `brazen` at yog's exact pin, driven through `src/bz_host.rs`; same bytes, same authority, no foreign binary* |
-| 21 | brazen built-in rows | compiled into bz | static read-only hint beside the dump (which drops the defaults operand and so can never show them). *Since W10 the rows are additionally **listed**: `bz --list-providers` keeps that operand, so the login surface offers built-ins and file rows alike — one in-process read (§5.1 #20's sibling), and the source of the credential-presence rows too*. **When** it is read: at the login surface's RAM construction (bl-e290), so the pane opens with its roster already in it; `↻ providers + credentials` is the re-ask for the two things a start-up read can go stale against — a config edit made since, and a credential written since (bl-402f: it re-reads #22 in the same gesture). Never deferred to a second ask — an answer that holds nothing until it is re-asked reads as an answer with nothing in it |
-| 22 | Credential presence | `<wall>/brazen/credentials/<provider>.json` existence — the named workspace's own | existence only; contents never read, never written. Paired with #20's `auth` column it is the whole of what a surface may say about a provider, so the *words* are derived once (`brazen::row_views`). **One carrier: `Query::Providers`** — bl-402f gave the §9.5 config read a second copy of the same sentences and bl-20cb took it back, because the roster belongs to the surface that can act on a row and a verb-less duplicate of it is QUALITY H1's violation exactly. Read at the same gesture that asks #21, never per frame — and the §9.1 pane, painting no credential column, no longer reads it at all |
+| 21 | brazen built-in rows | compiled into bz | static read-only hint beside the dump (which drops the defaults operand and so can never show them). *Since W10 the rows are additionally **listed**: `bz --list-providers` keeps that operand — one in-process read (§5.1 #20's sibling), and the source of the credential-presence rows too*. **Since brazen bl-6feb (yog bl-c6e3) that listing is the ROUTING TABLE, not the merged catalog**: the rows `config.toml` names plus the built-in presets a credential resolves for (`stored`/`ambient`/`inline`); an untouched preset is absent, so `credential = missing` appears only on a row the operator named. The login surface therefore reads **two** listings: `Query::Providers` (what a run here can route to) and `Query::Catalog` — `bz --login --json` with no `--provider`, every row carrying an `oauth` block, preset or not, in the same row shape — which is where a preset nobody has signed into yet gets its Login verb. A brazen before 0.0.19 answers no catalog (exit 78), which folds to no rows. **When** it is read: at the login surface's RAM construction (bl-e290), so the pane opens with its roster already in it; `↻ providers + credentials` is the re-ask for the two things a start-up read can go stale against — a config edit made since, and a credential written since (bl-402f: it re-reads #22 in the same gesture). Never deferred to a second ask — an answer that holds nothing until it is re-asked reads as an answer with nothing in it |
+| 22 | Credential presence | `<wall>/brazen/credentials/<provider>.json` existence — the named workspace's own | existence only; contents never read, never written. Paired with #20's `auth` column it is the whole of what a surface may say about a provider, so the *words* are derived once (`brazen::row_views`). **One carrier per question: `Query::Providers` for the table, `Query::Catalog` for what can be signed into (bl-c6e3)** — bl-402f gave the §9.5 config read a second copy of the same sentences and bl-20cb took it back, because the roster belongs to the surface that can act on a row and a verb-less duplicate of it is QUALITY H1's violation exactly; the catalog is not that duplicate, because its membership is a different fact (an oauth preset with no credential is in it and not in the table), stated in the same words. Read at the same gesture that asks #21, never per frame — and the §9.1 pane, painting no credential column, no longer reads it at all |
 | 23 | Model cache | `<wall>/brazen/models/*.json` — the focused workspace's own | read-only display; refresh = `bz --list-models`, whose write lands in the same wall because the caller carries it — the picker's spawn in its env, the in-process runner in its `Env` (bl-dff8) |
 | 24 | litany global config | `<config-root>/models.yaml`, `workflows/*.yaml` | raw text |
 | 25 | Action history | `ops.jsonl` | tail + parse (§4.2); ambient error prominence is the §6 retirement projection over that tail — never a stored flag |
@@ -4032,9 +4032,12 @@ live twice in one evening and both first goals were wasted.
   whether any row here could answer at all.
 - **A keyless row is not a credential — unless a role names it.** The ruling's
   own wording is *"any row `stored` or `not required`"*; taken literally it is
-  vacuous, because brazen merges its built-in table under **every** config, so
-  `ollama` and `claude-code` read `not required` on every wall there can be
-  (a wall with no config file at all answers eight rows). Nor are they what a
+  vacuous, because brazen merged its built-in table under **every** config, so
+  `ollama` and `claude-code` read `not required` on every wall there could be
+  (a wall with no config file at all answered eight rows; since brazen bl-6feb
+  a keyless preset is in the table only once `config.toml` names it, so a bare
+  wall answers none — the clause below is now also reached by the general path
+  with empty input). Nor are they what a
   doomed start was routed to: both claim no model prefixes and are reached only
   by an explicit `--provider`. So a keyless row alone does not ready a wall.
   **The clause the door forces (bl-2291):** a `not required` row that the
@@ -4323,6 +4326,25 @@ knows the workspace, and no downstream seat has to be told.*
      re-reads brazen *and* re-reads presence (§7.2: never on a schedule), which
      is also how a just-completed sign-in becomes `signed in`.
 
+     **The pane reads two listings since brazen bl-6feb (yog bl-c6e3).**
+     `--list-providers` became the ROUTING TABLE — the rows `config.toml` names
+     plus the presets a credential resolves for — so a built-in oauth preset
+     nobody has signed into is no longer in `Query::Providers` at all, and a
+     pane that read only the table would offer no first sign-in on a fresh wall.
+     `Query::Catalog { workspace }` (op `catalog`, reply kind `catalog`) is
+     brazen's own sign-in catalog — `bz --login --json` with no `--provider`:
+     every row carrying an `oauth` block, the operator's and the presets alike,
+     signed in or not, in **exactly** `Providers`' row shape (name, fact,
+     blocked, effort, priority) so a seat parses both with one reader and
+     differs only in which list it renders where. The split is the two
+     questions the pane asks: *what can run here* (the table; what `/model` may
+     bind a role to, judged by `is_unknown_row`) and *what can be signed into*
+     (the catalog; where the Login verb lives). Both are read inside the named
+     wall for the same reason, no network is touched by either, and a brazen
+     before 0.0.19 — which prints no catalog and exits 78 — answers an empty
+     catalog rather than a refusal. An edition, not a `PROTOCOL` bump (REMOTE
+     §3.2, §9.27).
+
      **A default install has a browser sign-in, and yog spends no code on it**
      (ruled at bl-8c2d, consumed at bl-0219). Every row brazen used to ship was
      keyed or keyless, so the rule above — correctly — put the *reason* where the
@@ -4433,7 +4455,9 @@ knows the workspace, and no downstream seat has to be told.*
      brazen's first row, and that read as a report of what ran. The
      substitution is now a fact the answer carries (`model_pick::Scoped`) in the
      server's own words: *this conversation was dispatched through
-     `<row>`, which brazen does not have*. Steering is unchanged; steering
+     `<row>`, which is not in this workspace's routing table* (reworded from
+     *which brazen does not have* at bl-c6e3, when the table stopped holding
+     every preset). Steering is unchanged; steering
      silently is what ended. The note retires the moment the operator picks a
      row themselves — their selection is their own answer to it.
 
@@ -6254,8 +6278,9 @@ very file it was stated beside. **The roster is `Query::Providers` and nothing
 else** — the answer that carries the sign-in verb owns the rows the verb applies
 to. What this file's read still owes, and Providers does not state, is what the
 file itself decides: how many rows it ends up routing (counted from brazen's own
-answer, never pinned), and the standing hint that the built-ins are in that
-count and not in this file. The remedy is named rather than restated — the same
+answer, never pinned), and the standing hint that built-in rows are compiled in
+and not in this file — since brazen bl-6feb a preset is in that count only once
+this file names it or a credential resolves for it (§5.1 #21). The remedy is named rather than restated — the same
 "name the remedy, carry nothing of it" shape §9.4's credential fault takes
 (bl-91f1).
 

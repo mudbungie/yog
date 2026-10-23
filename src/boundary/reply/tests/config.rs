@@ -78,6 +78,24 @@ fn a_providers_reply_names_each_rows_credential_fact_and_login_block() {
     assert_eq!(rows[1]["blocked"], "keyless — nothing to log in");
 }
 
+/// The catalog rides the providers row shape under its own kind (bl-c6e3), so
+/// a seat parses both with one reader and tells them apart by `kind` alone.
+#[test]
+fn a_catalog_reply_is_the_providers_row_shape_under_its_own_kind() {
+    let row = ProviderRowView {
+        name: "openai-chatgpt".to_owned(),
+        fact: "auth oauth2 · not signed in".to_owned(),
+        blocked: None,
+        effort: false,
+        priority: false,
+    };
+    let catalog = encode(&Reply::Config(ConfigAnswer::Catalog(vec![row.clone()])));
+    let table = encode(&Reply::Config(ConfigAnswer::Providers(vec![row])));
+    assert_eq!(catalog["kind"], "catalog");
+    assert_eq!(table["kind"], "providers");
+    assert_eq!(catalog["rows"], table["rows"], "one row shape, two kinds");
+}
+
 /// The browse row (bl-dff8): the lineage's bare name — the word `/config
 /// branch <lineage> …` takes — its tip both short and full, and the paths that
 /// tip holds, which are the paths a read may ask for.

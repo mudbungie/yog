@@ -14,8 +14,9 @@ use crate::test_support::FakeFs;
 use std::path::PathBuf;
 use std::sync::Mutex;
 
-/// A runner that returns one preset outcome (and one preset provider table)
-/// and logs each call.
+/// A runner that returns one preset outcome (and one preset routing table,
+/// which the sign-in catalog echoes — the fixture draws no line between the
+/// two reads, so a test that does must build its own) and logs each call.
 struct FakeRunner {
     outcome: BzOutcome,
     providers: Vec<ProviderRow>,
@@ -79,6 +80,10 @@ impl BzRunner for FakeRunner {
     }
     fn providers(&self) -> Vec<ProviderRow> {
         self.log().push("providers".into());
+        self.providers.clone()
+    }
+    fn catalog(&self) -> Vec<ProviderRow> {
+        self.log().push("catalog".into());
         self.providers.clone()
     }
     fn list_models(&self, provider: &str) -> BzOutcome {

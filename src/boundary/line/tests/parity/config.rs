@@ -52,6 +52,9 @@ fn the_config_familys_reads_round_trip() {
     rt(Gesture::Ask(Query::Config(Read::Providers {
         workspace: "ws".to_owned(),
     })));
+    rt(Gesture::Ask(Query::Config(Read::Catalog {
+        workspace: "ws".to_owned(),
+    })));
     // The browse and the roster beside them (bl-dff8).
     rt(Gesture::Ask(Query::Config(Read::Lineages {
         workspace: "ws".to_owned(),

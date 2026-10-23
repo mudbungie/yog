@@ -70,6 +70,15 @@ pub(super) fn queries(verb: &str, tail: &str, ctx: &Context) -> Result<Gesture, 
                 workspace: args::workspace(ctx, verb)?,
             })))
         }
+        // The sign-in catalog (bl-c6e3): `/providers`' shape over the rows
+        // `bz --login` can serve — the login pane's other read, and scoped by
+        // the seat for the same reason.
+        "catalog" => {
+            args::none(tail, verb)?;
+            Ok(ask(Query::Config(Read::Catalog {
+                workspace: args::workspace(ctx, verb)?,
+            })))
+        }
         // What this workspace's roles are set to (bl-2410) — `/providers`'
         // shape at the other subject, and scoped by the seat the same way.
         "roles" => {

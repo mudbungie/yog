@@ -50,6 +50,9 @@ impl BzRunner for RefusingBz {
     fn providers(&self) -> Vec<ProviderRow> {
         Vec::new()
     }
+    fn catalog(&self) -> Vec<ProviderRow> {
+        Vec::new()
+    }
     fn list_models(&self, _provider: &str) -> BzOutcome {
         self.dump_config_effective()
     }

@@ -171,6 +171,35 @@ fn every_way_a_check_fails_is_an_err_and_never_a_verdict() {
     assert!(run(&noise, ws(), &watch(), "p", "r").is_err());
 }
 
+/// A watch naming no provider is prefix-routed by brazen over the wall's
+/// routing table, and since brazen bl-6feb an empty table is exit 78 "no
+/// provider resolved" rather than 77 on a row nobody chose. The failure row
+/// carries brazen's own sentence verbatim — the three acts it names are the
+/// remedy, and yog invents no provider to dodge it.
+#[test]
+fn an_empty_routing_table_surfaces_brazens_own_no_provider_sentence() {
+    // brazen's own sentence (its `ConfigError::NoProvider`), abridged to the
+    // clause the test is about: the fixture is canned, so only its shape rides.
+    let said = "no provider resolved: the routing table holds the rows you declared in \
+                config and the built-in rows you hold a credential for — name one with \
+                --provider, sign in with `bz --login`, set a key, or declare a \
+                [[provider]] row";
+    let unrouted = Fake::answering(Called {
+        exit: 78,
+        stdout: String::new(),
+        stderr: format!("bz: {said}\n"),
+    });
+    assert_eq!(watch().provider, None, "the prefix-routed shape");
+    let why = run(&unrouted, ws(), &watch(), "p", "r").expect_err("a failed call");
+    assert_eq!(why, format!("check call failed (exit 78): bz: {said}"));
+    let argv = unrouted
+        .seen
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+        .concat();
+    assert!(!argv.iter().any(|a| a == "--provider"), "{argv:?}");
+}
+
 /// The production caller is the embedded brazen and nothing else, and it makes
 /// its call **inside the armed workspace's wall** (§16.2 as amended) — one
 /// sentry, one call per sphere, each spending that sphere's own providers.

@@ -22,9 +22,15 @@ pub enum ConfigAnswer {
     /// One §9 destination, raw bytes and typed settings both — see
     /// [`ConfigView`].
     File(ConfigView),
-    /// brazen's effective provider table with the §5.1 #22 credential
-    /// presence (§8.5, bl-0164) — the §8.3 login pane's own rows.
+    /// brazen's **routing table** with the §5.1 #22 credential presence
+    /// (§8.5, bl-0164) — the §8.3 login pane's own rows: what a run in this
+    /// workspace can route to.
     Providers(Vec<crate::config_edit::brazen::ProviderRowView>),
+    /// brazen's **sign-in catalog** in the same row shape (§8.3, bl-c6e3):
+    /// every row `bz --login` can serve, signed in or not — the login pane's
+    /// other read, so a preset nobody has signed into yet has a Login verb
+    /// somewhere.
+    Catalog(Vec<crate::config_edit::brazen::ProviderRowView>),
     /// This workspace's role assignments (§9.4, §5.1 #27): the whole `roles:`
     /// block of the commit its lineage stands at, one row per role, in file
     /// order. The type is the grammar's own

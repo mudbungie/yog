@@ -183,7 +183,7 @@ fn write(w: Write) -> Action {
 #[cfg(test)]
 pub(crate) mod tests;
 
-/// The §9 family's six READ spellings, off the one carrier the roster holds
+/// The §9 family's seven READ spellings, off the one carrier the roster holds
 /// (bl-719a) — here beside the write family's (bl-dd88), rather than in the
 /// query roster, for the reason `codec::balls::encode` is: a family whose
 /// grammar is already one subject spells itself in one place, and the roster
@@ -196,6 +196,7 @@ pub(super) fn encode_read(read: &crate::boundary::config::Read) -> Value {
         }
         Read::Marks { workspace } => json!({ "op": "marks", "workspace": workspace }),
         Read::Providers { workspace } => json!({ "op": "providers", "workspace": workspace }),
+        Read::Catalog { workspace } => json!({ "op": CATALOG, "workspace": workspace }),
         Read::Roles { workspace } => json!({ "op": "roles", "workspace": workspace }),
         Read::Lineages { workspace } => json!({ "op": "lineages", "workspace": workspace }),
         Read::Models {
@@ -211,6 +212,11 @@ pub(super) fn encode_read(read: &crate::boundary::config::Read) -> Value {
         },
     }
 }
+
+/// The §8.3 sign-in catalog's op token (bl-c6e3), named once for both
+/// directions: `providers` is the routing table, this is what `bz --login`
+/// can serve.
+pub(super) const CATALOG: &str = "catalog";
 
 /// The §9.6 staged-proposal read's op token (bl-dd88), named once for both
 /// directions. Plural, because the read is the listing and naming one is a

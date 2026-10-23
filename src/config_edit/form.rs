@@ -95,9 +95,9 @@ fn present(control: Control, raw: &str, provider_rows: &[String]) -> (String, Op
             raw.to_owned(),
             is_unknown_row(raw, provider_rows).then(|| {
                 format!(
-                    "brazen's table has no provider row `{raw}` — every dispatch \
-                     through it dies with `unknown provider`; pick a live row, or \
-                     add the row with /config brazen"
+                    "no provider row `{raw}` in this workspace's routing table — every \
+                     dispatch through it dies with `unknown provider`; /login signs \
+                     in, or /config brazen takes a key"
                 )
             }),
         ),

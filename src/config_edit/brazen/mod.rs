@@ -17,8 +17,8 @@
 //!
 //! The view-model is pure over two injected effects, exactly the
 //! [`LockProbe`](crate::git_tree) shape: a [`BzRunner`] (the sole `bz`
-//! command surface — validate / effective-dump / provider table / list-models)
-//! and the shared [`FileIo`](super::FileIo) seam. A fake pair drives every
+//! command surface — validate / effective-dump / routing table / sign-in
+//! catalog / list-models) and the shared [`FileIo`](super::FileIo) seam. A fake pair drives every
 //! state transition under Linux tarpaulin; the real [`RealBzRunner`] is a thin
 //! shell over [`crate::bz_host`] plus one recorder-covered spawn.
 //!
@@ -79,11 +79,24 @@ pub trait BzRunner {
     fn dump_config_at(&self, config: &Path) -> BzOutcome;
     /// `bz --dump-config` against the real file/env — the effective view.
     fn dump_config_effective(&self) -> BzOutcome;
-    /// The effective provider table, in routing order (`bz --list-providers`,
-    /// §5.1 #20/#21): the login rows and the credential-presence rows both read
-    /// this one answer, and its `auth` column is the login-capability fact
-    /// (§8.3) — see [`ProviderRow`].
+    /// The **routing table**, in routing order (`bz --list-providers`, §5.1
+    /// #20/#21): what a run in this wall can route to. Since brazen bl-6feb
+    /// that is the rows the operator named in `config.toml` plus the built-in
+    /// presets a credential resolves for (`stored`/`ambient`/`inline`) — an
+    /// untouched preset is **absent**, so `credential = "missing"` appears only
+    /// on a row the operator named. The §9.4 pick gate and the §8.1 sign-in
+    /// gate judge against this answer; its `auth` column is the
+    /// login-capability fact (§8.3) — see [`ProviderRow`].
     fn providers(&self) -> Vec<ProviderRow>;
+    /// The **sign-in catalog** (`bz --login --json` with no `--provider`,
+    /// §8.3): every row carrying an `oauth` block — the operator's rows and the
+    /// built-in presets alike, signed in or not — in the same row shape as
+    /// [`providers`](Self::providers). What CAN be signed into, as distinct
+    /// from what a run can route to: a preset nobody has signed into yet is
+    /// exactly what `bz --login` is for, and it is in this list and not in the
+    /// table. Offline by construction. A brazen before 0.0.19 answers no
+    /// catalog (exit 78, empty stdout), which folds to no rows.
+    fn catalog(&self) -> Vec<ProviderRow>;
     /// `bz --list-models --provider <provider> --json` — cache refresh.
     fn list_models(&self, provider: &str) -> BzOutcome;
 }

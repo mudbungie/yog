@@ -231,6 +231,7 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
                 config::Read::File { file } => config::file(deps, ws, file),
                 config::Read::Marks { .. } => Ok(config::read_marks(deps, ws)),
                 config::Read::Providers { .. } => Ok(config::providers(deps, ws)),
+                config::Read::Catalog { .. } => Ok(config::catalog(deps, ws)),
                 config::Read::Lineages { .. } => config::lineages(ws),
                 config::Read::Models { provider, .. } => config::models(deps, ws, provider),
                 config::Read::Roles { .. } => Ok(config::roles(ws)),

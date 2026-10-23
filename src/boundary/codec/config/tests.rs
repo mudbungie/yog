@@ -40,6 +40,13 @@ fn providers() -> Query {
     })
 }
 
+/// The sign-in catalog (bl-c6e3): the table's address, the other membership.
+fn catalog() -> Query {
+    Query::Config(Read::Catalog {
+        workspace: "ws".to_owned(),
+    })
+}
+
 fn branch(origin: EditOrigin) -> ConfigFile {
     ConfigFile::Branch {
         workspace: "ws".to_owned(),
@@ -120,6 +127,7 @@ pub(crate) fn surface() -> Vec<Gesture> {
         workspace: "ws".to_owned(),
     })));
     out.push(Gesture::Ask(providers()));
+    out.push(Gesture::Ask(catalog()));
     out.push(Gesture::Ask(Query::Config(Read::Roles {
         workspace: "ws".to_owned(),
     })));
@@ -170,6 +178,7 @@ fn the_config_envelope_names_its_target_and_carries_the_text_whole() {
 fn a_wall_scoped_envelope_without_its_workspace_is_refused() {
     for value in [
         json!({ "op": "providers" }),
+        json!({ "op": "catalog" }),
         json!({ "op": "config", "target": { "file": "brazen" } }),
         json!({ "op": "config", "target": { "file": "brazen" }, "text": "x" }),
     ] {

@@ -211,6 +211,11 @@ fn read(op: &str, o: &Map<String, Value>) -> Result<Option<Query>, String> {
         "providers" => Query::Config(Read::Providers {
             workspace: str_of(o, "workspace")?,
         }),
+        // The sign-in catalog beside the table (bl-c6e3): same address, same
+        // row shape, a different membership.
+        super::config::CATALOG => Query::Config(Read::Catalog {
+            workspace: str_of(o, "workspace")?,
+        }),
         // The workspace's own role assignments (bl-2410) — the other half of
         // the §9.4 picture, and the one a control loads itself from.
         "roles" => Query::Config(Read::Roles {

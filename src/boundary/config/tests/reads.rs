@@ -109,6 +109,30 @@ fn a_seat_with_no_wall_of_its_own_still_reaches_the_named_sphere() {
     assert!(fire(&deps, &applying(brazen_file(), ACME)).is_ok());
 }
 
+/// The sign-in catalog is read through the same chokepoint, inside the named
+/// sphere's wall (bl-c6e3). Every row it answers is one `bz --login` can serve
+/// — the file's keyless `acme` row is in the table and not here — and under a
+/// brazen that prints no catalog the answer is empty rather than a refusal,
+/// which is why nothing below asserts a count.
+#[test]
+fn the_catalog_answers_oauth_rows_inside_the_named_wall() {
+    let root = tempdir().unwrap();
+    let deps = quiet(root.path());
+    let Ok(Reply::Config(ConfigAnswer::Catalog(rows))) = ask(
+        &deps,
+        &Query::Config(Read::Catalog {
+            workspace: crate::naming::leaf(&(crate::test_support::fixture_workspace())),
+        }),
+    ) else {
+        panic!("catalog answers catalog");
+    };
+    assert!(!rows.iter().any(|r| r.name == "acme"), "{rows:?}");
+    assert!(
+        rows.iter().all(|r| r.fact.starts_with("auth oauth2")),
+        "{rows:?}"
+    );
+}
+
 #[test]
 fn a_destination_not_there_yet_reads_as_empty_not_a_refusal() {
     let root = tempdir().unwrap();

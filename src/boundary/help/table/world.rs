@@ -96,13 +96,32 @@ pub const WORLD: &[HelpRow] = &[
     HelpRow {
         verb: "providers",
         usage: "/providers",
-        summary: "one workspace's provider table, with each row's credential fact",
-        detail: "brazen's provider rows (`bz --list-providers`) paired with the credential \
-                 presence read: which rows are signed in, which need no credential, which have \
-                 a key stored. The same rows the login pane's `↻` and the brazen config pane's \
-                 read-only rows render — one derivation, every seat. Scoped to the seat's \
-                 workspace (`--ws`, or the focused one): providers and their sign-ins belong to \
-                 a workspace, so the same row can read signed-in in one and not in another.",
+        summary: "one workspace's routing table, with each row's credential fact",
+        detail: "brazen's routing table (`bz --list-providers`): the provider rows a run in this \
+                 workspace can route to — the rows its config.toml names, plus the built-in \
+                 presets a credential resolves for — each with its credential fact in words: \
+                 signed in, no credential needed, key stored or not. A built-in preset nobody \
+                 named and nobody signed into is not here; `/catalog` is where it is. The same \
+                 rows the login pane's `↻` renders, and the rows `/model` may bind a role to — \
+                 one derivation, every seat. Scoped to the seat's workspace (`--ws`, or the \
+                 focused one): providers and their sign-ins belong to a workspace, so the same \
+                 row can read signed-in in one and not in another.",
+        surface: Surface::Control,
+    },
+    HelpRow {
+        verb: "catalog",
+        usage: "/catalog",
+        summary: "the rows this workspace can sign in to, signed in or not",
+        detail: "brazen's sign-in catalog (`bz --login` with no row named): every provider row \
+                 carrying an OAuth sign-in — the workspace's own rows and the built-in presets \
+                 alike, whether or not anything is signed in yet — in the same row shape as \
+                 `/providers`. It answers the question that table cannot: a preset nobody has \
+                 signed into is absent from the routing table, and signing into it is exactly \
+                 how it enters. `/login <row>` takes any row listed here; the moment it \
+                 completes, the row appears in `/providers` as signed in. Scoped to the seat's \
+                 workspace exactly as `/providers` is, because signed in is a fact of the \
+                 workspace asked about. Nothing is contacted: the catalog is read off the config \
+                 and the credential store, never the network.",
         surface: Surface::Control,
     },
     HelpRow {

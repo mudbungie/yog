@@ -31,7 +31,7 @@
 
 use crate::config_edit::branch::config_file;
 use crate::config_edit::branch::edit::EditOrigin;
-use crate::config_edit::brazen::{BrazenPaths, BzRunner, RealBzRunner, row_views};
+use crate::config_edit::brazen::{BrazenPaths, BzRunner, RealBzRunner};
 use crate::config_edit::litany_global::LitanyGlobal;
 use crate::model_pick::{BRANCH, PROVIDERS, Pick};
 use crate::world::marks;
@@ -47,7 +47,8 @@ pub use read::Read;
 
 pub(crate) mod read;
 pub(crate) mod write;
-pub(super) use read::file;
+// The two brazen listing reads live beside the other wall reads (bl-c6e3).
+pub(super) use read::{catalog, file, providers};
 pub use write::Write;
 use write::{cadence_path, commit};
 
@@ -122,22 +123,6 @@ pub(super) fn read_marks(deps: &Deps, workspace: &Path) -> Reply {
     Reply::Marks {
         branch: marks::read(&deps.world, workspace).branch(),
     }
-}
-
-/// One workspace's effective provider table, rendered (§8.5, bl-0164) — the
-/// §8.3 login pane's `↻ providers + credentials`. The table is read **inside
-/// the named sphere's wall** (bl-fcd5): a provider row reads *signed in* only
-/// where this workspace signed it in, so the table is meaningless without the
-/// workspace that scopes it. The credential fact rides the listing's own
-/// `credential` column (bl-dba3) — one ask, and no second derivation over the
-/// credentials directory. brazen unanswerable is an empty table, never an
-/// error: the same "asked, never stored" contract [`Deps::provider_rows`]
-/// carries.
-pub(super) fn providers(deps: &Deps, workspace: &Path) -> Reply {
-    let wall = wall_env(deps, workspace);
-    Reply::Config(ConfigAnswer::Providers(row_views(
-        &RealBzRunner::resolve(&wall).providers(),
-    )))
 }
 
 /// This workspace's **role assignments** (§9.4, §5.1 #27; bl-2410) — what
@@ -238,8 +223,7 @@ pub(super) fn pick_model(
     let assigned = config_file(workspace, &format!("config/{BRANCH}"), PROVIDERS)
         .map(|b| String::from_utf8_lossy(&b).into_owned())
         .map_err(|e| e.to_string())?;
-    let table =
-        crate::config_edit::brazen::RealBzRunner::resolve(&wall_env(deps, workspace)).providers();
+    let table = RealBzRunner::resolve(&wall_env(deps, workspace)).providers();
     let assigned = crate::model_pick::plan(&assigned, &table, pick).map_err(|e| e.to_string())?;
     commit(
         deps,

@@ -22,6 +22,7 @@ fn a_wall_scoped_gesture_with_no_workspace_refuses_by_name() {
         "/config brazen",
         "/config brazen [[provider]]",
         "/providers",
+        "/catalog",
     ] {
         let err = parse(line, &Context::default()).unwrap_err();
         assert!(err.contains("no workspace in context"), "{line:?}: {err}");
@@ -30,6 +31,12 @@ fn a_wall_scoped_gesture_with_no_workspace_refuses_by_name() {
     assert_eq!(
         parse("/providers", &ctx()),
         Ok(Gesture::Ask(Query::Config(Read::Providers {
+            workspace: "ws".to_owned(),
+        })))
+    );
+    assert_eq!(
+        parse("/catalog", &ctx()),
+        Ok(Gesture::Ask(Query::Config(Read::Catalog {
             workspace: "ws".to_owned(),
         })))
     );

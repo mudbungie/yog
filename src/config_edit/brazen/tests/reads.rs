@@ -37,6 +37,22 @@ fn the_rendered_table_is_the_listing_asked_once() {
     assert_eq!(*runner.log(), vec!["providers".to_string()]);
 }
 
+/// The sign-in catalog is its own read, asked once and logged as itself —
+/// what can be signed into is not what a run can route to (brazen bl-6feb),
+/// so the two never share a call.
+#[test]
+fn the_catalog_is_its_own_read_asked_once() {
+    let runner = FakeRunner::listing(&["codex"]);
+    assert_eq!(
+        row_views(&runner.catalog())
+            .iter()
+            .map(|v| v.name.clone())
+            .collect::<Vec<_>>(),
+        ["codex"]
+    );
+    assert_eq!(*runner.log(), vec!["catalog".to_string()]);
+}
+
 #[test]
 fn model_cache_reads_present_and_absent() {
     let fs = FakeFs::seed(

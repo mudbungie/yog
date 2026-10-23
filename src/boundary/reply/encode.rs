@@ -168,7 +168,7 @@ pub fn encode(reply: &Reply) -> Value {
     }
 }
 
-/// The §9 family's five answers, each under the `kind` it has always had — the
+/// The §9 family's answers, each under the `kind` it has always had — the
 /// fold is in the carrier and never in the surface, so no protocol version
 /// moves and the corpus regenerates byte-identical.
 ///
@@ -180,6 +180,7 @@ fn config_answer(answer: &super::ConfigAnswer) -> Value {
     match answer {
         A::File(view) => super::config_view::config(view),
         A::Providers(rows) => rows_reply("providers", rows.iter().map(provider_row)),
+        A::Catalog(rows) => rows_reply("catalog", rows.iter().map(provider_row)),
         A::Roles(rows) => rows_reply("roles", rows.iter().map(role_row)),
         A::Lineages(rows) => rows_reply("lineages", rows.iter().map(lineage_row)),
         A::Models(ids) => rows_reply("models", ids.iter().map(|id| json!(id))),

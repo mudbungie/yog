@@ -236,6 +236,9 @@ fn the_query_table_answers_both_ways() {
         Query::Config(Read::Providers {
             workspace: WS.into(),
         }),
+        Query::Config(Read::Catalog {
+            workspace: WS.into(),
+        }),
         // The §3.9 projection is aimed like the work diff it composes.
         Query::Science {
             workspace: WS.into(),

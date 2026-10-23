@@ -24,15 +24,18 @@ use crate::config_edit::brazen::{ProviderRow, row_names};
 pub enum PickError {
     #[error("{0}")]
     Grammar(GrammarError),
-    /// bl-bd89. The pick's provider row is not in brazen's effective table, so
-    /// the write would land a config that dies at the first dispatch
+    /// bl-bd89. The pick's provider row is not in this workspace's routing
+    /// table, so the write would land a config that dies at the first dispatch
     /// (`unknown provider`). Refused before the file is touched — the picker's
     /// whole promise is that a listed model yields a working config. Also the
     /// §9.4 role rows' one fault ([`role_fault`]), which is the same question
-    /// asked of the assignment already in the file.
+    /// asked of the assignment already in the file. The remedy names the two
+    /// acts that put a row in the table (bl-c6e3): an oauth preset enters by a
+    /// sign-in, a keyed one by a key — "add the row" was the right word only
+    /// while every built-in was in the table unasked.
     #[error(
-        "brazen's table has no provider row `{provider}` — pick a live row here, \
-         or add the row with /config brazen"
+        "no provider row `{provider}` in this workspace's routing table — /login signs \
+         in, or /config brazen takes a key"
     )]
     UnknownProvider { provider: String },
     /// bl-3d22. The row EXISTS and still cannot serve the role: its protocol

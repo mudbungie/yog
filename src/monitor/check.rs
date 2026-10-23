@@ -104,6 +104,11 @@ pub fn request(evidence: &Evidence, standing: Option<super::Verdict>) -> String 
 /// The `bz` argv one check runs. Options precede the prompt, and the prompt is
 /// the last operand — brazen's own options-before-prompt rule (arch §5.5), so
 /// nothing inside the evidence can be read as a flag.
+///
+/// `--provider` rides only when the watch names one; otherwise brazen
+/// prefix-routes the model over the wall's **routing table**, and since brazen
+/// bl-6feb an empty table is exit 78 *no provider resolved* — [`run`] surfaces
+/// that sentence verbatim in the failure row, and nothing here guesses a row.
 pub fn argv(watch: &Watch, policy: &str, request: &str) -> Vec<String> {
     let mut argv = vec![
         "--json".to_owned(),

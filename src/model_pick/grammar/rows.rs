@@ -27,10 +27,17 @@
 /// bl-3ffa) asked about `models.<id>.provider`, a field nothing dispatches
 /// through.
 ///
-/// `providers` is `bz --list-providers`' answer (built-ins included, which a
-/// scan of `config.toml` would miss). An **empty** table is no answer rather
-/// than an empty one — brazen could not be asked — so it judges nothing: no
-/// surface may refuse on the strength of a question that went unanswered.
+/// `providers` is `bz --list-providers`' answer — the workspace's **routing
+/// table**: the rows its `config.toml` names plus the built-in presets a
+/// credential resolves for (brazen bl-6feb). A built-in preset nobody named
+/// and nobody signed into is NOT in it, and this judgement stays with the
+/// table on purpose: binding a role to a row that cannot run is the defect
+/// brazen just removed from its own default, and the §8.3 sign-in catalog is
+/// where such a row is offered — so the refusal every caller words names the
+/// two acts that put a row in the table, `/login` and a key in `/config
+/// brazen`, never "add the row". An **empty** table is no answer rather than
+/// an empty one — brazen could not be asked — so it judges nothing: no surface
+/// may refuse on the strength of a question that went unanswered.
 pub fn is_unknown_row(provider: &str, providers: &[String]) -> bool {
     !providers.is_empty() && !providers.iter().any(|p| p == provider)
 }

@@ -209,7 +209,7 @@
           "verb": "disband"
         },
         {
-          "detail": "With text after the destination, writes one configuration file, carrying its entire new contents. The destination decides how it lands: `brazen` is validated by bz before it is written, into the seat's own workspace (its providers, sign-ins and model cache belong to that workspace and nowhere else); `models`, `cadence` and a `workflow` are refused if they name a provider row brazen does not have; a lineage (`branch` advances one, `fork` starts one from another, `orphan` starts a fresh one) is committed by `litany config` on the seat's workspace. The text is everything after the destination's words, verbatim — whitespace is part of a config file. With nothing after the destination, reads its current bytes instead — a file not there yet answers empty text, a lineage answers what its tip holds at that path, and `/lineages` lists the lineages and the paths to ask for.",
+          "detail": "With text after the destination, writes one configuration file, carrying its entire new contents. The destination decides how it lands: `brazen` is validated by bz before it is written, into the seat's own workspace (its providers, sign-ins and model cache belong to that workspace and nowhere else); `models`, `cadence` and a `workflow` are refused if they name a provider row outside the workspace's routing table (`/providers`); a lineage (`branch` advances one, `fork` starts one from another, `orphan` starts a fresh one) is committed by `litany config` on the seat's workspace. The text is everything after the destination's words, verbatim — whitespace is part of a config file. With nothing after the destination, reads its current bytes instead — a file not there yet answers empty text, a lineage answers what its tip holds at that path, and `/lineages` lists the lineages and the paths to ask for.",
           "summary": "read or write a config file: the destination's words, then the text (or nothing)",
           "surface": "control",
           "usage": "/config brazen|models|cadence <text…> | /config workflow <name> <text…> | /config branch|orphan <lineage> <path> <text…> | /config fork <lineage> <source> <path> <text…>",
@@ -223,7 +223,7 @@
           "verb": "marks"
         },
         {
-          "detail": "Assigns a model to a role for the whole focused workspace: one write, into providers.yaml on the workspace's default config lineage, through `litany config`. A provider row brazen does not have, and a row whose dialect cannot carry a yog turn, are each refused before anything is written. It reaches the conversations already running too — a conversation follows its lineage's head at every step boundary, so this governs the one in front of you at its next step, and every other one here, and the next one started.",
+          "detail": "Assigns a model to a role for the whole focused workspace: one write, into providers.yaml on the workspace's default config lineage, through `litany config`. A provider row outside the workspace's routing table (the rows `/providers` lists — `/login` or a key in `/config brazen` puts one there), and a row whose dialect cannot carry a yog turn, are each refused before anything is written. It reaches the conversations already running too — a conversation follows its lineage's head at every step boundary, so this governs the one in front of you at its next step, and every other one here, and the next one started.",
           "summary": "give a role this model, on the focused workspace's config lineage",
           "surface": "control",
           "usage": "/model <role> <provider> <model-id>",
@@ -384,11 +384,18 @@
           "verb": "board"
         },
         {
-          "detail": "brazen's provider rows (`bz --list-providers`) paired with the credential presence read: which rows are signed in, which need no credential, which have a key stored. The same rows the login pane's `↻` and the brazen config pane's read-only rows render — one derivation, every seat. Scoped to the seat's workspace (`--ws`, or the focused one): providers and their sign-ins belong to a workspace, so the same row can read signed-in in one and not in another.",
-          "summary": "one workspace's provider table, with each row's credential fact",
+          "detail": "brazen's routing table (`bz --list-providers`): the provider rows a run in this workspace can route to — the rows its config.toml names, plus the built-in presets a credential resolves for — each with its credential fact in words: signed in, no credential needed, key stored or not. A built-in preset nobody named and nobody signed into is not here; `/catalog` is where it is. The same rows the login pane's `↻` renders, and the rows `/model` may bind a role to — one derivation, every seat. Scoped to the seat's workspace (`--ws`, or the focused one): providers and their sign-ins belong to a workspace, so the same row can read signed-in in one and not in another.",
+          "summary": "one workspace's routing table, with each row's credential fact",
           "surface": "control",
           "usage": "/providers",
           "verb": "providers"
+        },
+        {
+          "detail": "brazen's sign-in catalog (`bz --login` with no row named): every provider row carrying an OAuth sign-in — the workspace's own rows and the built-in presets alike, whether or not anything is signed in yet — in the same row shape as `/providers`. It answers the question that table cannot: a preset nobody has signed into is absent from the routing table, and signing into it is exactly how it enters. `/login <row>` takes any row listed here; the moment it completes, the row appears in `/providers` as signed in. Scoped to the seat's workspace exactly as `/providers` is, because signed in is a fact of the workspace asked about. Nothing is contacted: the catalog is read off the config and the credential store, never the network.",
+          "summary": "the rows this workspace can sign in to, signed in or not",
+          "surface": "control",
+          "usage": "/catalog",
+          "verb": "catalog"
         },
         {
           "detail": "One row per role this workspace's config declares: the provider row and model id bound to it, the effort level it asks for, and whether it asks for the priority lane. This is what `/model`, `/effort` and `/priority` have set — read back from the same place they write it, so a control can open showing what is in force instead of blank. It is the other half of `/providers`, and the two do not overlap: that one is per provider row and says what a row is capable of, this one is per role and says what has been chosen. Under follow-the-tip these are the settings every conversation here resolves at its next step, not just the next one started. A workspace whose config declares no role answers an empty list rather than refusing — nothing set is a state a fresh workspace is really in. Scoped to the seat's workspace (`--ws`, or the focused one), exactly as `/providers` is.",
