@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.89](https://github.com/mudbungie/yog/compare/v0.0.88...v0.0.89) - 2026-10-23
+
+### Changes
+
+- a conversation's procedure runs are a reply: per run the role, the message or tool result that fired it, state, epitaph, verdict token, landed file content, tokens and cost [bl-55ea]
+
 ## [0.0.88](https://github.com/mudbungie/yog/compare/v0.0.87...v0.0.88) - 2026-10-23
 
 ### Changes
