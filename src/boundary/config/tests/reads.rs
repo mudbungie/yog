@@ -62,8 +62,9 @@ fn a_config_gesture_reads_the_sphere_it_names_not_the_seats_own() {
     );
     // And the table follows the same name: rows are read inside the sphere the
     // query points at, so the row this workspace authored is absent from the
-    // other's — which lists brazen's compiled-in rows and nothing else, never
-    // the machine's own brazen state (§16.2).
+    // other's — a sphere that names nothing and holds no credential, so its
+    // table is empty (brazen bl-6feb) — and never the machine's own brazen
+    // state (§16.2).
     let named = |ws: &str| match ask(
         &deps,
         &Query::Config(Read::Providers {

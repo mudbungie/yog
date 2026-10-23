@@ -140,7 +140,15 @@ balls = "=0.5.13"
 # multiplex arm alone, and the key is set by litany, which hands every model
 # call the agent id (upstream litany bl-6961). The pin moves because the
 # lockfile must resolve exactly ONE brazen and litany's is 0.0.18.
-brazen = { version = "=0.0.18", features = ["native-host"] }
+# 0.0.19 (upstream bl-6feb) is the pin the `catalog` op (bl-c6e3) was written
+# for: the built-in rows are PRESETS, `--list-providers` is the ROUTING TABLE
+# (rows the config names + presets a credential resolves for), and a bare
+# `bz --login --json` lists the sign-in CATALOG — which `BzRunner::catalog`
+# reads. Under 0.0.18 that read exited 78 and the catalog was empty; the op
+# was shipped first so the seats could land against the fixtures, and this pin
+# is what makes it answer. 0.0.20 is a docs-only release (changelog curation)
+# and the pin stays on 0.0.19 because litany's does (below).
+brazen = { version = "=0.0.19", features = ["native-host"] }
 clap = { version = "4", features = ["derive"] }
 # The embedded agent harness (DESIGN §16.7 W11): the multiplex arm `yog litany
 # <argv…>` reproduces litany's own thin exec binding over `litany::cmd`, and the
@@ -349,7 +357,10 @@ clap = { version = "4", features = ["derive"] }
 # `provider` for the same grows-only reason. `BUILTIN_TOOLS`,
 # `template/workflow.yaml` and `template/providers.yaml` are byte-identical to
 # 0.0.12's, and its brazen pin is the same `=0.0.18`.
-litany = "=0.0.13"
+# 0.0.14 is litany's own brazen pin walking to `=0.0.19` (litany bl-cdcb) and
+# nothing else of consequence here; the two pins step together so the lockfile
+# resolves exactly ONE brazen.
+litany = "=0.0.14"
 libc = "0.2"
 notify = "6"
 # The REMOTE §9.5 wire's TLS (bl-b6fa, approved by operator ruling 2026-08-13).

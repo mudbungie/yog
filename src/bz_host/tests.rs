@@ -125,7 +125,16 @@ fn the_data_plane_route_dumps_the_effective_config_from_the_injected_env() {
     // The env decides which file is read (§16.2 ambient share) — proof that
     // `EnvSnapshot` is threaded, not `std::env`.
     let dir = tempdir().unwrap();
-    let wall = dir.path().join("wall");
+    let (exit, out, _) = drive(&["--dump-config"], &acme_wall(dir.path()));
+    assert_eq!(exit, 0);
+    assert!(out.contains("acme"), "dump: {out}");
+}
+
+/// A wall under `dir` whose config names one keyless row, `acme`. The wall
+/// names the file; an ambient `BRAZEN_CONFIG` pointing elsewhere is
+/// deliberately present and must lose (§16.2 as amended).
+fn acme_wall(dir: &std::path::Path) -> Env {
+    let wall = dir.join("wall");
     let path = crate::config_edit::brazen::BrazenPaths::in_wall(&wall).config;
     fs::create_dir_all(path.parent().expect("the wall's brazen dir")).unwrap();
     fs::write(
@@ -134,18 +143,13 @@ fn the_data_plane_route_dumps_the_effective_config_from_the_injected_env() {
          base_url = \"https://acme.test\"\nauth = \"none\"\n",
     )
     .unwrap();
-    // The wall names the file; an ambient `BRAZEN_CONFIG` pointing elsewhere is
-    // deliberately present and must lose (§16.2 as amended).
-    let env = Env::from_pairs([
+    Env::from_pairs([
         (
             "BRAZEN_CONFIG",
             "/definitely/not/an/ambient/config.toml".to_owned(),
         ),
         (crate::world::wall::YOG_WALL, wall.display().to_string()),
-    ]);
-    let (exit, out, _) = drive(&["--dump-config"], &env);
-    assert_eq!(exit, 0);
-    assert!(out.contains("acme"), "dump: {out}");
+    ])
 }
 
 #[test]
@@ -162,12 +166,22 @@ fn a_malformed_config_fails_before_the_sink_with_brazens_own_stderr() {
 
 #[test]
 fn the_list_providers_route_prints_the_effective_table() {
-    // Offline by construction: `ProvidersIo` has no transport at all. With no
-    // config file the table is exactly brazen's compiled-in rows.
+    // Offline by construction: `ProvidersIo` has no transport at all. The table
+    // is the ROUTING table (brazen bl-6feb): the rows the wall names plus the
+    // built-in presets a credential resolves for — so a wall with no config and
+    // nothing signed in is an empty table, not brazen's compiled-in rows.
     let (exit, out, _) = drive(&["--list-providers", "--json"], &bare());
     assert_eq!(exit, 0);
-    assert!(out.contains("\"providers\""), "listing: {out}");
-    assert!(out.contains("anthropic"), "listing: {out}");
+    assert_eq!(out.trim_end(), r#"{"providers":[]}"#, "listing: {out}");
+    // And a wall that names a row is a table of that row.
+    let dir = tempdir().unwrap();
+    let (exit, out, _) = drive(&["--list-providers", "--json"], &acme_wall(dir.path()));
+    assert_eq!(exit, 0);
+    assert!(out.contains("\"acme\""), "listing: {out}");
+    assert!(
+        !out.contains("anthropic"),
+        "an unnamed, unsigned preset is absent: {out}"
+    );
 }
 
 #[test]

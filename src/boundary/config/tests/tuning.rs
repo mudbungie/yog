@@ -7,7 +7,7 @@
 //! `knobs` reached §12's cap when the second family arrived.
 
 use super::knobs::{pick, workspace};
-use super::{deps_at, fire, quiet, script};
+use super::{deps_at, fire, quiet, script, seed_wall};
 use crate::boundary::Action;
 use crate::boundary::config::Write;
 use crate::boundary::reply::Reply;
@@ -72,8 +72,8 @@ fn a_tuning_gesture_commits_the_same_file_the_pick_does() {
 }
 
 /// **No provider table is read at all**, which is what makes the capability a
-/// control's question and never a write's: this workspace's wall names no rows,
-/// so a pick here would refuse — and the knob lands.
+/// control's question and never a write's: this workspace's wall names one row
+/// and it is not `acme`, so a pick of `acme` here refuses — and the knob lands.
 #[test]
 fn a_tuning_gesture_reads_no_provider_table_and_so_cannot_be_gated_by_one() {
     let root = tempdir().unwrap();
@@ -92,6 +92,10 @@ fn a_tuning_gesture_reads_no_provider_table_and_so_cannot_be_gated_by_one() {
         &deps_at(root.path(), &litany, Path::new("/no/bl")),
         &[fx.path.as_path()],
     );
+    // A wall naming nothing is an EMPTY table and gates no pick either (brazen
+    // bl-6feb), so the contrast needs a table that lacks `acme`: one named
+    // preset is the smallest such table.
+    seed_wall(&deps, &fx.path, "[[provider]]\nname = \"ollama\"\n");
     let reply = fire(
         &deps,
         &tune(Tuning::Priority {

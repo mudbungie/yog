@@ -139,6 +139,10 @@ fn a_pick_on_a_row_brazen_lacks_writes_nothing() {
     let root = tempdir().unwrap();
     let fx = workspace();
     let deps = super::seeing(&quiet(root.path()), &[fx.path.as_path()]);
+    // The table has to hold a row for `nope` to be absent from: a wall naming
+    // nothing is an EMPTY table (brazen bl-6feb), and an empty table judges
+    // nothing.
+    seed_wall(&deps, &fx.path, ACME);
     let err = fire(&deps, &pick("worker", "nope", "m-9", &fx.path)).unwrap_err();
     assert!(err.contains("no provider row `nope`"), "{err}");
     assert!(!root.path().join("litany/models.yaml").exists());
@@ -166,11 +170,14 @@ fn a_pick_whose_models_file_cannot_be_read_refuses_before_planning() {
 /// the row gate passed it and both config halves advanced; the next worker start
 /// then died inside brazen's encoder before any network call. Neither half is
 /// written now, and the refusal names the protocol rather than the row name.
+/// A shipped preset sits in the table only once the wall NAMES it (brazen
+/// bl-6feb), so the fixture names it — the one line that puts it there.
 #[test]
 fn a_pick_on_a_tool_less_protocol_writes_neither_half() {
     let root = tempdir().unwrap();
     let fx = workspace();
     let deps = super::seeing(&quiet(root.path()), &[fx.path.as_path()]);
+    seed_wall(&deps, &fx.path, "[[provider]]\nname = \"claude-code\"\n");
     let err = fire(&deps, &pick("worker", "claude-code", "sonnet", &fx.path)).unwrap_err();
     assert!(err.contains("`claude-code` cannot serve a role"), "{err}");
     assert!(err.contains("claude_code declares no tools"), "{err}");

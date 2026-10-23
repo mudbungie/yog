@@ -25,10 +25,12 @@ use std::sync::Arc;
 /// fails loudly.
 const REFUSAL: &str = "sign in first";
 
-/// A brazen config declaring two keyed rows and one keyless row, so the wall's
-/// table holds both spellings this gate judges beside brazen's built-ins — and
-/// a second keyed row a sign-in never reaches, which is what lets a beat put a
-/// credential somewhere the roles do not name (bl-58e7).
+/// A brazen config declaring two keyed rows, one keyless row and one NAMED oauth
+/// preset, so the wall's table holds every act this gate words — and a second
+/// keyed row a sign-in never reaches, which is what lets a beat put a credential
+/// somewhere the roles do not name (bl-58e7). The preset is named because a
+/// built-in nobody named and nobody signed into is not in the table at all
+/// (brazen bl-6feb); one line puts it there.
 const TABLE: &str = "[[provider]]\nname = \"keyed\"\nprotocol = \"openai_chat\"\n\
                      base_url = \"https://keyed.test\"\nauth = \"api_key\"\n\
                      api_header = { name = \"x-api-key\", scheme = \"raw\" }\n\n\
@@ -36,7 +38,8 @@ const TABLE: &str = "[[provider]]\nname = \"keyed\"\nprotocol = \"openai_chat\"\
                      base_url = \"https://other.test\"\nauth = \"api_key\"\n\
                      api_header = { name = \"x-api-key\", scheme = \"raw\" }\n\n\
                      [[provider]]\nname = \"local\"\nprotocol = \"openai_chat\"\n\
-                     base_url = \"http://localhost:1\"\nauth = \"none\"\n";
+                     base_url = \"http://localhost:1\"\nauth = \"none\"\n\n\
+                     [[provider]]\nname = \"openai-chatgpt\"\n";
 
 /// A workspace with a bare repo carrying `config/default` (the lineage the
 /// fire forks off), and a world whose wall for it holds [`TABLE`].
@@ -149,8 +152,8 @@ fn a_signed_wall_passes_the_gate() {
     assert!(wall.trail(), "the fire reached the spawn and left its row");
 }
 
-/// A keyless row readies nothing by itself (the built-in table merges under
-/// every config), and readies the wall exactly when the lineage names it in a
+/// A keyless row readies nothing by itself (being in the table is not a
+/// credential), and readies the wall exactly when the lineage names it in a
 /// role — the operator's own hand.
 #[test]
 fn a_role_naming_a_keyless_row_readies_the_wall() {
@@ -220,9 +223,9 @@ fn a_role_naming_a_row_the_wall_lacks_is_not_a_sign_in() {
 /// A brazen that cannot answer is an empty table, and no surface refuses on
 /// the strength of a question that went unanswered: a wall whose config brazen
 /// cannot read passes this gate to the ones behind it. (A wall with NO config
-/// is not that case — brazen's built-in table merges under every config, so a
-/// missing file still answers eight rows, and the first beat above is what it
-/// answers.)
+/// is the same empty table by another road since brazen bl-6feb — a built-in
+/// preset nobody named and nobody signed into is not in it — and so the same
+/// pass; the first beat above is what a wall that names rows answers.)
 #[test]
 fn an_unanswerable_table_refuses_nothing() {
     let wall = Wall::new();

@@ -96,15 +96,39 @@ const TURN: &[u8] = br#"{"model":"sonnet","system":[{"type":"text","text":"you a
     "tools":[{"name":"clients","description":"the machines that can run work",
               "input_schema":{"type":"object","properties":{}}}]}"#;
 
-/// The linked brazen's own effective table, projected as yog consumes it —
+/// The two shipped keyless presets this file drives, NAMED into a config file —
+/// brazen's routing table holds a built-in row only once an act of the
+/// operator's reaches it (brazen 0.0.19, its config.md §3.2), and for an
+/// `auth = "none"` preset the one act is naming it; the preset fills the rest.
+/// Hermetic as a bonus: `BRAZEN_CONFIG` pinned here keeps the machine's own
+/// `~/.config/brazen/config.toml` out of the fold.
+fn config() -> tempfile::TempDir {
+    let dir = tempfile::TempDir::new().unwrap();
+    std::fs::write(
+        dir.path().join("config.toml"),
+        "[[provider]]\nname = \"claude-code\"\n[[provider]]\nname = \"ollama\"\n",
+    )
+    .unwrap();
+    dir
+}
+
+fn env(config: &tempfile::TempDir) -> brazen::EnvSnapshot {
+    brazen::EnvSnapshot(std::collections::BTreeMap::from([(
+        "BRAZEN_CONFIG".to_owned(),
+        config.path().join("config.toml").display().to_string(),
+    )]))
+}
+
+/// The linked brazen's own routing table, projected as yog consumes it —
 /// `bz --list-providers --json` through the same in-process route
-/// `config_edit::brazen::effects` spawns, over the shipped default rows. This
+/// `config_edit::brazen::effects` spawns, over the two named presets. This
 /// is the answer `config_remedy` judges with, so the column and the decline
 /// below come from one crate at one version.
 fn rows() -> Vec<yog::config_edit::brazen::ProviderRow> {
+    let config = config();
     let args = brazen::Args {
         argv: vec!["--list-providers".to_owned(), "--json".to_owned()],
-        env: brazen::EnvSnapshot(std::collections::BTreeMap::new()),
+        env: env(&config),
         tty: false,
         stdout_tty: false,
     };
@@ -120,18 +144,19 @@ fn rows() -> Vec<yog::config_edit::brazen::ProviderRow> {
     let rows = yog::config_edit::brazen::provider_rows(&listing);
     assert!(
         rows.iter().any(|r| r.protocol == "claude_code"),
-        "the shipped table lost its exec row: {listing}"
+        "the named exec row is not in the table: {listing}"
     );
     rows
 }
 
-/// Run one `bz --provider <row>` turn against brazen's shipped defaults and
+/// Run one `bz --provider <row>` turn against brazen's shipped presets and
 /// return what it said and whether the request ever reached the wire. brazen
 /// writes an in-band error's message to stderr, one line.
 fn turn(provider: &str) -> (String, bool) {
+    let config = config();
     let args = brazen::Args {
         argv: vec!["--provider".to_owned(), provider.to_owned()],
-        env: brazen::EnvSnapshot(std::collections::BTreeMap::new()),
+        env: env(&config),
         tty: false,
         stdout_tty: false,
     };

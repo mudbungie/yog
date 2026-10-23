@@ -174,22 +174,38 @@ fn a_named_workspace_adds_its_wall_and_its_roster() {
     let tmp = tempdir().expect("tmp");
     let deps = deps(&tmp, Caller::default());
     let ws = tmp.path().join("names").join("alba");
+    // A wall naming one keyed row nobody has signed into: the one shape the
+    // gate refuses deterministically. A wall naming nothing is an EMPTY table
+    // since brazen bl-6feb, and an empty table refuses nothing.
+    let config = crate::config_edit::brazen::BrazenPaths::in_wall(&crate::world::wall::root_of(
+        &deps.world,
+        &ws,
+    ))
+    .config;
+    std::fs::create_dir_all(config.parent().expect("the wall's brazen dir")).expect("mkdir");
+    std::fs::write(
+        &config,
+        "[[provider]]\nname = \"keyed\"\nprotocol = \"openai_chat\"\n\
+         base_url = \"https://keyed.test\"\nauth = \"api_key\"\n\
+         api_header = { name = \"x-api-key\", scheme = \"raw\" }\n",
+    )
+    .expect("write");
     let rows = examine(&deps, Some(("alba", &ws)));
 
     assert_eq!(rows.len(), 6, "four server rows and two workspace ones");
     assert!(row(&rows, "clients").ok, "informational, and it passes");
     assert!(row(&rows, "clients").fact.contains("0 registered"));
-    // The wall row's verdict depends on what brazen answers on this box: an
-    // unanswerable table refuses nothing (the gate's own contract), so the beat
-    // asserts the row is THERE and names the workspace either way.
+    // The wall row fails in the door's own words: the remedy IS the refusal.
     let wall = row(&rows, "wall");
+    assert!(!wall.ok, "{wall:?}");
     assert!(
         wall.fact.contains("alba"),
         "the wall row names the workspace: {wall:?}"
     );
-    assert_eq!(
-        wall.ok,
-        wall.remedy.is_none(),
-        "a remedy exactly when it failed"
+    assert!(
+        wall.remedy
+            .as_deref()
+            .is_some_and(|r| r.starts_with("sign in first")),
+        "the gate's sentence, quoted: {wall:?}"
     );
 }

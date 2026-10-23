@@ -7,7 +7,7 @@
 //! has — those cases are about which bytes come back, these about what those
 //! bytes are read AS.
 
-use super::{applying, ask, brazen_file, fire, quiet, seeing};
+use super::{applying, ask, brazen_file, fire, quiet, seed_wall, seeing};
 use crate::boundary::Query;
 use crate::boundary::config::{ConfigFile, Read};
 use crate::boundary::reply::ConfigAnswer;
@@ -106,6 +106,10 @@ fn a_role_bound_to_a_dead_provider_row_is_faulted_in_the_answer() {
         &TEMPLATE_PROVIDERS.replace("provider: anthropic", "provider: gone"),
     );
     let deps = seeing(&quiet(root.path()), &[fx.path.as_path()]);
+    // The table has to hold a row for `gone` to be absent from: a wall naming
+    // nothing is an EMPTY table (brazen bl-6feb), and an empty table faults
+    // nothing.
+    seed_wall(&deps, &fx.path, super::ACME);
     let settings = answered(&deps, roles_file(&fx.path)).settings;
 
     let provider = settings

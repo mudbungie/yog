@@ -227,8 +227,9 @@ fn the_spawn_drops_browser_exactly_where_the_row_declares_a_device_endpoint() {
     let world = crate::test_support::world::world_under(dir.path());
     let state = tempdir().expect("tmp");
     // A browser-only oauth row, authored in this workspace's own wall beside
-    // brazen's built-ins: `openai-chatgpt` is the built-in row that declares a
-    // device endpoint, and this one deliberately declares none.
+    // one NAMED built-in: `openai-chatgpt` is the preset that declares a device
+    // endpoint, in the table only because the wall names it (brazen bl-6feb),
+    // and the hand-written row deliberately declares none.
     let paths = crate::test_support::world::wall_paths(dir.path());
     std::fs::create_dir_all(paths.config.parent().expect("the wall's brazen dir")).expect("mkdir");
     std::fs::write(
@@ -238,7 +239,8 @@ fn the_spawn_drops_browser_exactly_where_the_row_declares_a_device_endpoint() {
          api_header = { name = \"Authorization\", scheme = \"bearer\" }\n\
          [provider.oauth]\nclient_id = \"c\"\n\
          authorize_url = \"https://acme.test/authorize\"\n\
-         token_url = \"https://acme.test/token\"\n",
+         token_url = \"https://acme.test/token\"\n\n\
+         [[provider]]\nname = \"openai-chatgpt\"\n",
     )
     .expect("write");
     // bz echoes the argv it was fired with, then the device flow's own line.
