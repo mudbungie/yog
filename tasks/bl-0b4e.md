@@ -1,7 +1,8 @@
 +++
 title = "pins → brazen =0.0.19 + litany =0.0.14: the catalog read goes live in-process (bare bz --login lists the sign-in catalog; providers is the routing table)"
 created = 1792729607
-updated = 1792729607
+updated = 1792730268
+claimant = "Gelded"
 priority = 1
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["release"]
