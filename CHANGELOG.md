@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.87](https://github.com/mudbungie/yog/compare/v0.0.86...v0.0.87) - 2026-10-23
+
+### Changes
+
+- a procedure child leaves the conversations forest: an agent whose founding commit carries litany's 'Procedure:' trailer is answered by no Reply::Conversations row and counted in no direct/members; no wire shape moves [bl-009a]
+
 ## [0.0.86](https://github.com/mudbungie/yog/compare/v0.0.85...v0.0.86) - 2026-10-22
 
 ### Changes
