@@ -1,7 +1,7 @@
 +++
-title = "brazen bl-6feb: providers reply is now the routing TABLE; add the sign-in CATALOG read (bare bz --login) and stop refusing unnamed built-ins"
+title = "brazen bl-6feb: providers is the routing TABLE; add the sign-in CATALOG read (op catalog, bare bz --login --json, edition 24); row refusals name the table and its two entry acts"
 created = 1792728816
-updated = 1792729112
+updated = 1792729350
 claimant = "Gelded-yog"
 priority = 1
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
