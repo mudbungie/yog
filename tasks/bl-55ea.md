@@ -1,7 +1,8 @@
 +++
 title = "a conversation's procedure runs are a reply: per run the role, the message or tool result that fired it, state, epitaph, verdict token, landed file content, tokens and cost"
 created = 1792729503
-updated = 1792729503
+updated = 1792813357
+claimant = "Sheepdog"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
