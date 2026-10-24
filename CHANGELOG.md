@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changes
+
+- litany pin → `=0.0.15`: the embedded litany founds every procedure child with
+  the `Procedure: <event>` trailer that bl-009a's forest cut reads, and runs the
+  two ref marks at a child's verdict; brazen stays `=0.0.19` on both. [bl-e262]
+
 ## [0.0.88](https://github.com/mudbungie/yog/compare/v0.0.87...v0.0.88) - 2026-10-23
 
 ### Changes

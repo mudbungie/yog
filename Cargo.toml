@@ -360,7 +360,14 @@ clap = { version = "4", features = ["derive"] }
 # 0.0.14 is litany's own brazen pin walking to `=0.0.19` (litany bl-cdcb) and
 # nothing else of consequence here; the two pins step together so the lockfile
 # resolves exactly ONE brazen.
-litany = "=0.0.14"
+# 0.0.15 is the two halves of the procedures-on-the-seat ruling (lernie
+# bl-454d) the server reads: every harness-forked child's dispatch commit now
+# carries the trailer `Procedure: <event>` (litany bl-2854), which is what
+# `Agent::procedure` reads and `nav::convs` cuts from the forest (bl-009a), and
+# `notify_ui` / `mark_abandoned` run at a child's verdict (litany bl-ef78), so a
+# guard's `INJECTED` marks the dispatcher and lands on the attention queue. Its
+# brazen pin is still `=0.0.19`.
+litany = "=0.0.15"
 libc = "0.2"
 notify = "6"
 # The REMOTE §9.5 wire's TLS (bl-b6fa, approved by operator ruling 2026-08-13).
