@@ -47,7 +47,7 @@ fn the_address_is_stated_from_the_readings_or_a_free_port() {
         &env,
         Some("busy".to_owned()),
         Some("/tmp/fx".to_owned()),
-        Some("engine.example.com".to_owned()),
+        Some("server.example.com".to_owned()),
         Some("7737".to_owned()),
     );
     assert_eq!(
@@ -55,7 +55,7 @@ fn the_address_is_stated_from_the_readings_or_a_free_port() {
         Plan::Lay {
             state: "busy".to_owned(),
             root: PathBuf::from("/tmp/fx"),
-            address: "engine.example.com:7737".to_owned(),
+            address: "server.example.com:7737".to_owned(),
         }
     );
     let Plan::Lay { address, root, .. } = plan(&env, Some("busy".to_owned()), None, None, None)

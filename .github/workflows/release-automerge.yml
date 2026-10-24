@@ -111,13 +111,13 @@ name: Auto-merge release PR
 # copy of the constant, and the wire is fail-closed on a mismatch with no
 # negotiation (`docs/REMOTE.md` §3). So a yog release that raised PROTOCOL
 # published a suite that could not compose until three other repositories
-# caught up — measured on 2026-09-06 as engine 15, foot 14, seat 13, with no
+# caught up — measured on 2026-09-06 as server 15, foot 14, seat 13, with no
 # combination on crates.io that composed, after the same defect had been filed
 # and correctly closed eight times.
 #
 # Every repository states the number in a top-level `PROTOCOL` file, one line
 # (bl-3e57), and that is the only path fetched below. It used to be a Rust
-# path per repository, and the engine moved its own out from under all four
+# path per repository, and the server moved its own out from under all four
 # gates: a module split left the old file re-exporting the constant, which a
 # build cannot notice and a regex cannot read, so every consumer's gate would
 # have held forever on the very bump it was waiting for (thrall bl-c618).

@@ -92,7 +92,7 @@ fn an_attention_ask_opens_a_lane_for_any_seat() {
     // answer beside it.
     let intake = crate::wire::intake::Intake::new(std::sync::Arc::new(ctx));
     assert_eq!(
-        crate::wire::server::Answerer::answer(&intake, &unseated, request)
+        crate::wire::listener::Answerer::answer(&intake, &unseated, request)
             .take(1)
             .count(),
         1,
@@ -147,14 +147,15 @@ fn a_resolvable_follow_opens_a_stream_rather_than_answering_once() {
     // answer beside it.
     let intake = crate::wire::intake::Intake::new(std::sync::Arc::new(ctx));
     assert_eq!(
-        crate::wire::server::Answerer::answer(&intake, &phone, request)
+        crate::wire::listener::Answerer::answer(&intake, &phone, request)
             .take(0)
             .count(),
         0,
         "the follow arm hands the stream through untouched"
     );
     assert_eq!(
-        crate::wire::server::Answerer::answer(&intake, &phone, json!({"op": "workspaces"})).count(),
+        crate::wire::listener::Answerer::answer(&intake, &phone, json!({"op": "workspaces"}))
+            .count(),
         1,
         "an ordinary read is one frame"
     );

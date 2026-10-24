@@ -46,7 +46,7 @@ fn stating(dir: &Path, address: &str, version: u32) -> Vec<Value> {
 /// it is answered exactly as before — the preface is a frame beside the
 /// gesture, never a change to it.
 #[test]
-fn an_engine_states_its_version_and_answers_a_peer_that_shares_it() {
+fn a_server_states_its_version_and_answers_a_peer_that_shares_it() {
     let (tmp, listener, _seat, asked) = wired(1);
     let frames = stating(
         tmp.path(),

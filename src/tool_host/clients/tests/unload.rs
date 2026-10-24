@@ -180,7 +180,7 @@ fn a_load_after_an_unload_declares_it_again() {
 /// finished host can be dropped with the server down and no gesture is
 /// deposited.
 #[test]
-fn an_unload_never_reaches_the_engine() {
+fn an_unload_never_reaches_the_server() {
     let root = TempDir::new().expect("tmp");
     crate::tool_host::loaded::add(
         root.path(),

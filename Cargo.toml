@@ -198,7 +198,7 @@ clap = { version = "4", features = ["derive"] }
 # litany's closed built-in name set, exported so a host with a total
 # injection derives which names this litany can perform instead of restating
 # them. yog's `tool_host` consumes it (`subject::performs`), and the partition
-# it draws over that set — conversation-subject acts to `engine_act`, everything
+# it draws over that set — conversation-subject acts to `server_act`, everything
 # else to the worktree lane — is now the only thing yog states.
 # 0.0.2 is **the inverted tool-injection seam** (upstream bl-a00a, its
 # `docs/DESIGN_TOOL_INJECTION.md`), which REMOTE §5's one-pipeline ruling asked
@@ -296,7 +296,7 @@ clap = { version = "4", features = ["derive"] }
 # arrive — `python`, one round trip that runs a model-authored program which
 # composes the agent's own tools through `litany invoke`, and `search_history`,
 # a pickaxe over the workspace's `agents/*` refs — and both are server acts, so
-# `engine_act::NAMES` grows to eight in the same change or the router ships them
+# `server_act::NAMES` grows to eight in the same change or the router ships them
 # to a foot that holds neither a step record nor a repository. One name LEAVES:
 # `multi_tool` retires (upstream bl-99bb), a program being what the envelope was
 # for, and with it the executor's batch API — yog called neither, so the bump is

@@ -8,7 +8,7 @@
 #
 # **It restarts nothing** (bl-7942). It used to `make reload` a running window
 # on the freshly installed binary — a launch verb that went with the window.
-# A running engine is a service: whether and when to restart it is its unit's
+# A running server is a service: whether and when to restart it is its unit's
 # question (`scripts/deploy/`), not an installer's.
 #
 # It is a CONVERGENCE, not an event handler: it asks "is main's tip what is

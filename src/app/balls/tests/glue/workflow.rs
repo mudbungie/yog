@@ -9,7 +9,7 @@ use crate::boundary::Action;
 use crate::boundary::reply::Reply;
 use crate::cli_outbound::Cli;
 use crate::opslog;
-use crate::test_support::engine;
+use crate::test_support::server;
 use tempfile::tempdir;
 
 fn act(w: &super::super::World, ts: &str, action: &Action) -> Result<Reply, String> {
@@ -17,7 +17,7 @@ fn act(w: &super::super::World, ts: &str, action: &Action) -> Result<Reply, Stri
     let (_c, m) = model(w);
     let litany = fake_litany(bin.path());
     let deps = m.boundary_deps(&litany, &Cli::new("/no/bl"));
-    engine::act(&m, &deps, ts, action)
+    server::act(&m, &deps, ts, action)
 }
 
 #[test]

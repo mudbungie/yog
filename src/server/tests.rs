@@ -32,7 +32,7 @@ impl Clock for AtClock {
 /// inbox, and read the answer back. Every thread a running yog has is up, and
 /// none of them is a frame.
 #[test]
-fn a_booted_engine_answers_a_deposit_and_stops_on_drop() {
+fn a_booted_server_answers_a_deposit_and_stops_on_drop() {
     let root = tempdir().unwrap();
     let world = world_under(root.path());
     // A boot listens on the default request — `127.0.0.1:0`, a kernel-chosen
@@ -46,10 +46,10 @@ fn a_booted_engine_answers_a_deposit_and_stops_on_drop() {
     let state_root = world.yog_state_root();
     deposit::deposit(&state_root, "e-1", &json!({"op": "attention"})).unwrap();
 
-    let engine = Engine::boot(&world, &[], Arc::new(AtClock(far_future))).expect("booted");
+    let server = Server::boot(&world, &[], Arc::new(AtClock(far_future))).expect("booted");
     assert!(!stale.exists(), "the §5.2 startup sweep is the server's");
     assert_eq!(
-        engine.model.ui_json_path(),
+        server.model.ui_json_path(),
         state_root.join("ui.json"),
         "the model is rooted in the world it was booted into"
     );
@@ -69,7 +69,7 @@ fn a_booted_engine_answers_a_deposit_and_stops_on_drop() {
         Some(0),
         "an empty world asks nothing of anyone"
     );
-    drop(engine); // every thread stops and joins — the Drop is the shutdown
+    drop(server); // every thread stops and joins — the Drop is the shutdown
 }
 
 /// **A server that cannot get its wire up is not a server** (bl-1d9b,
@@ -99,7 +99,7 @@ fn a_boot_whose_stated_address_cannot_bind_refuses_and_consumes_nothing() {
     let state_root = world.yog_state_root();
     deposit::deposit(&state_root, "e-2", &json!({"op": "attention"})).unwrap();
 
-    let refusal = Engine::boot(&world, &[], Arc::new(AtClock(0)))
+    let refusal = Server::boot(&world, &[], Arc::new(AtClock(0)))
         .err()
         .expect("a yog that cannot listen is not a server");
     assert!(refusal.starts_with("wire: "), "{refusal}");
@@ -118,13 +118,13 @@ fn a_boot_whose_stated_address_cannot_bind_refuses_and_consumes_nothing() {
 /// second drain of one `gestures/` inbox and never a second `inv-N` namespace
 /// behind it. The first server keeps answering throughout.
 #[test]
-fn a_second_engine_on_one_world_refuses_while_the_first_keeps_answering() {
+fn a_second_server_on_one_world_refuses_while_the_first_keeps_answering() {
     let root = tempdir().unwrap();
     let world = world_under(root.path());
     let state_root = world.yog_state_root();
-    let first = Engine::boot(&world, &[], Arc::new(AtClock(0))).expect("the first server");
+    let first = Server::boot(&world, &[], Arc::new(AtClock(0))).expect("the first server");
 
-    let refusal = Engine::boot(&world, &[], Arc::new(AtClock(0)))
+    let refusal = Server::boot(&world, &[], Arc::new(AtClock(0)))
         .err()
         .expect("the second is refused");
     assert!(refusal.contains("one world has one server"), "{refusal}");
@@ -146,7 +146,7 @@ fn a_second_engine_on_one_world_refuses_while_the_first_keeps_answering() {
     // wait is that window and nothing else, which is why it is spelled in
     // milliseconds; the fact under test is that the lock is released at all.
     let deadline = Instant::now() + Duration::from_secs(5);
-    while crate::engine::sole::take(&state_root).is_err() {
+    while crate::server::sole::take(&state_root).is_err() {
         assert!(Instant::now() < deadline, "the world never freed");
         std::thread::sleep(Duration::from_millis(20));
     }

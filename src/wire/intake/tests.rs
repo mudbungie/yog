@@ -4,7 +4,7 @@ use super::*;
 use crate::boundary::consumer::ConsumerCtx;
 use crate::cli_outbound::Cli;
 use crate::ui_state::SystemClock;
-use crate::wire::server::Answerer;
+use crate::wire::listener::Answerer;
 use serde_json::json;
 use std::path::PathBuf;
 use tempfile::tempdir;

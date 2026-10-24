@@ -1,11 +1,11 @@
-# The yog engine as a CONTAINER user service (DESIGN §8.5, §10.1; REMOTE §8,
+# The yog server as a CONTAINER user service (DESIGN §8.5, §10.1; REMOTE §8,
 # §12) — the unit `scripts/deploy/seat.sh` seats, and the one shape the
 # deployment box runs since the bl-b973 cutover.
 #
 # It runs the OCI image `Containerfile` builds. The image is the unit of
 # install and nothing more (README "The image"): no state lives in a layer, and
 # the XDG root is the runtime contract, mounted in below. Nothing here seeds
-# anything — the engine founds what it finds missing on its own boot, into the
+# anything — the server founds what it finds missing on its own boot, into the
 # mount.
 #
 # **The image is named by `%h/.config/yog/deploy.env`, which `seat.sh` writes.**
@@ -21,11 +21,11 @@
 # free of any account name.
 #
 # Requires lingering (`loginctl enable-linger`) or the manager, and so the
-# engine, stops at logout. `seat.sh` enables it.
+# server, stops at logout. `seat.sh` enables it.
 [Unit]
-Description=yog engine (container)
+Description=yog server (container)
 Documentation=https://github.com/mudbungie/yog
-# The engine dials nothing at boot, but its agents do.
+# The server dials nothing at boot, but its agents do.
 After=network-online.target
 Wants=network-online.target
 # **A user unit cannot order against the container daemon**, which is a SYSTEM
@@ -46,7 +46,7 @@ StartLimitBurst=20
 [Service]
 Type=simple
 EnvironmentFile=%h/.config/yog/deploy.env
-# The engine is PID 1 inside the container and `docker run` is a client of the
+# The server is PID 1 inside the container and `docker run` is a client of the
 # daemon, so a stale container from a hard kill would take the name and refuse
 # the next start. Clearing it is `-`-prefixed: there is usually nothing there.
 ExecStartPre=-/usr/bin/docker rm -f yog
@@ -81,8 +81,8 @@ RestartSec=5s
 # The grace a stop actually spends (DESIGN §8.5, bl-269a) — and it is spelled
 # as `docker stop` rather than left to systemd because SIGTERM has to reach PID
 # 1 INSIDE the container. Killing the `docker run` client does not stop the
-# container; it detaches from it. The engine catches that SIGTERM: the loop
-# ends, the Engine drops, each thread joins, and every piped child gets
+# container; it detaches from it. The server catches that SIGTERM: the loop
+# ends, the Server drops, each thread joins, and every piped child gets
 # Stream's polite SIGTERM-then-SIGKILL instead of dying with the process.
 ExecStop=/usr/bin/docker stop -t 30 yog
 # Longer than the 30 s above, or systemd's own kill lands mid-grace and the

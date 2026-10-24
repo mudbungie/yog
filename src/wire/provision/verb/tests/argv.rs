@@ -23,12 +23,12 @@ fn a_bare_invocation_has_no_stray_word() {
 #[test]
 fn a_setting_spelled_after_the_verb_refuses_and_says_where_it_goes() {
     let refusal = stray(&[
-        "WIRE_HOST=engine.example.com".to_owned(),
+        "WIRE_HOST=server.example.com".to_owned(),
         "WIRE_PORT=7737".to_owned(),
     ])
     .expect("a word past the verb refuses");
     assert!(
-        refusal.contains("WIRE_HOST=engine.example.com"),
+        refusal.contains("WIRE_HOST=server.example.com"),
         "{refusal}"
     );
     // The remedy is the prefix, and every reading is named so the operator can

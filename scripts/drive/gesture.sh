@@ -1,5 +1,5 @@
 #!/bin/bash
-# gesture.sh — the ENGINE UNDER DRIVE and the §8.5 boundary gestures aimed at
+# gesture.sh — the SERVER UNDER DRIVE and the §8.5 boundary gestures aimed at
 # it. Sourced by harness.sh (beside wall.sh, and for the same reason: it is a
 # tier of its own, not a shard of the assertion helpers). It defines no beat and
 # no verb — one launch wrapper, one liveness predicate, one transport.
@@ -19,18 +19,18 @@
 # deposit cannot miss. The reply JSON lands beside the screenshots as the audit
 # half; what the world holds afterwards is the other.
 
-# --- the engine under drive -------------------------------------------------
+# --- the server under drive -------------------------------------------------
 # WHICH yog this run's gestures are aimed at, recorded where it is booted and
-# nowhere else (bl-5cf7). Every run verb boots exactly one engine at a time —
+# nowhere else (bl-5cf7). Every run verb boots exactly one server at a time —
 # `boot_headless` — and sets this on the way through, so there is no second
 # place a run says which process it is driving and no way to boot without
 # saying it.
-engine_pid=""
-# An EMPTY pid is not "no claim", it is a refusal: a gesture with no engine
+server_pid=""
+# An EMPTY pid is not "no claim", it is a refusal: a gesture with no server
 # recorded is a gesture nothing can answer, and reporting that in milliseconds
 # beats waiting out a deadline to say the same thing (the empty-subject
 # discipline every predicate in predicates.sh holds, bl-f16e).
-engine_alive() { [ -n "$engine_pid" ] && kill -0 "$engine_pid" 2>/dev/null; }
+server_alive() { [ -n "$server_pid" ] && kill -0 "$server_pid" 2>/dev/null; }
 
 # --- the transport, deadlined ------------------------------------------------
 # `gesture <data-root> <gesture...>` — fire one line across the boundary and
@@ -49,14 +49,14 @@ engine_alive() { [ -n "$engine_pid" ] && kill -0 "$engine_pid" 2>/dev/null; }
 #      that is not JSON), so ours fires first, the audit file stays one JSON
 #      object per line, and the drive owns the verdict. If that budget ever
 #      moves, this stays under it.
-#   2. THE ENGINE'S OWN LIVENESS, watched alongside the reply — the wall that
+#   2. THE SERVER'S OWN LIVENESS, watched alongside the reply — the wall that
 #      fires in milliseconds instead of seconds. A yog that dies mid-run cannot
 #      answer any deposit, ever, so spending a whole deadline on each of a run's
-#      remaining gestures is time spent proving nothing: a dead engine is an
+#      remaining gestures is time spent proving nothing: a dead server is an
 #      immediate red. That is what bounds the case this was written for —
 #      `await board_says` (beats_s13.sh) wraps a gesture in a 40-iteration
 #      poll, so at `yog gesture`'s own 60 s ONE beat cost forty minutes of a
-#      dead engine's silence before it could go red.
+#      dead server's silence before it could go red.
 #
 # A gesture that hits either wall APPENDS ITS OWN REFUSAL ROW and returns 124
 # (the shell's timeout convention, and `yog gesture`'s own). The row is not
@@ -78,16 +78,16 @@ gesture() {
   g=$! ; rc=0
   # The watch is a JOB BESIDE the gesture, not a poll around it: this shell
   # `wait`s on the gesture itself, so a landed reply returns the instant it
-  # lands, and the only thing polled is the engine. A loop that polled the
+  # lands, and the only thing polled is the server. A loop that polled the
   # CHILD instead had to decide when the child was finished, and every wrong
   # answer to that question is a wait it then blocks out in full.
-  ( while engine_alive; do sleep 0.5; done; kill "$g" 2>/dev/null ) &
+  ( while server_alive; do sleep 0.5; done; kill "$g" 2>/dev/null ) &
   w=$!
   wait "$g" || rc=$?
   kill "$w" 2>/dev/null || true ; wait "$w" 2>/dev/null || true
   case $rc in
   124) why="no reply in ${GESTURE_DEADLINE}s" ;;
-  143) why="the engine (pid ${engine_pid:-unrecorded}) is gone" ;;
+  143) why="the server (pid ${server_pid:-unrecorded}) is gone" ;;
   *)   return "$rc" ;;
   esac
   printf '{"ok":false,"error":"drive: gesture abandoned — %s"}\n' "$why" >>"$out/gestures.jsonl"

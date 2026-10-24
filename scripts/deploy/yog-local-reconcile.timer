@@ -3,7 +3,7 @@
 #
 # **Hourly, not the container shape's fifteen minutes**, and the difference is
 # the cost of a tick. There, a pass that finds nothing is one anonymous registry
-# read; here, a pass that finds something is a full build of the engine on this
+# read; here, a pass that finds something is a full build of the server on this
 # box's own cores. An hour is well inside any useful latency for a release and
 # far below the registry's rate limits, and the tick is cheap when nothing
 # changed — one small index fetch and one `--version`.
@@ -17,7 +17,7 @@ Description=hourly check for a new yog release
 Documentation=https://github.com/mudbungie/yog
 
 [Timer]
-# Not at boot exactly: the engine should come up first, and a box that was off
+# Not at boot exactly: the server should come up first, and a box that was off
 # overnight should not race its own network.
 OnBootSec=5min
 OnUnitActiveSec=1h

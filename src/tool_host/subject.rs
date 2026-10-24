@@ -29,7 +29,7 @@
 //! `subject_cwd` key, so it wins; with no consenting machine the executing
 //! box is the one subject-locality already named — the server's own, which
 //! holds the worktree — and the act is performed at litany's own front
-//! door ([`super::engine_act::perform`]), the same `<driver_target> tool
+//! door ([`super::server_act::perform`]), the same `<driver_target> tool
 //! <name>` re-entry the compactor pair takes, at the conversation's resolved
 //! cwd with the caller identity on the child's environment. yog restates none
 //! of what the three names *do*: the definitions are litany's built-ins
@@ -75,7 +75,7 @@ use crate::registry::roster::ClientRow;
 ///
 /// > `litany::cmd::BUILTIN_TOOLS` — the names `litany tool <name>` answers to,
 /// > exported by litany since 0.0.5 for exactly this reader — MINUS
-/// > [`super::engine_act::NAMES`], the acts whose subject is the *conversation*
+/// > [`super::server_act::NAMES`], the acts whose subject is the *conversation*
 /// > rather than its working tree.
 ///
 /// The subtraction is total, and that is the claim worth attacking: a name the
@@ -85,7 +85,7 @@ use crate::registry::roster::ClientRow;
 /// class to fall through to, and a built-in litany adds lands on the
 /// worktree lane by default, where a consenting machine still outranks it.
 /// Classifying one as conversation-subject is the deliberate act, and its
-/// home is `engine_act`'s own enumerated set. `engine_act` is the wider of the
+/// home is `server_act`'s own enumerated set. `server_act` is the wider of the
 /// two only because it also carries the compactor's injected procedure pair,
 /// which is no built-in at all; subtracting those from a set that never held
 /// them costs nothing.
@@ -93,11 +93,11 @@ use crate::registry::roster::ClientRow;
 /// Until 0.0.5 litany kept these names crate-private and this was three
 /// string literals — a second spelling of somebody else's closed set, which is
 /// the drift the export exists to end. What the literals still pin is the
-/// **audit**, in `subject/tests/engine.rs`: the partition's three members by
+/// **audit**, in `subject/tests/server.rs`: the partition's three members by
 /// name, so a set that moves upstream reddens a test instead of changing yog's
 /// behavior in silence.
 pub fn performs(name: &str) -> bool {
-    ::litany::cmd::BUILTIN_TOOLS.contains(&name) && !super::engine_act::is(name)
+    ::litany::cmd::BUILTIN_TOOLS.contains(&name) && !super::server_act::is(name)
 }
 
 /// Where one workspace-subject attempt is executed, once the roster has been
@@ -107,7 +107,7 @@ enum Lane {
     /// Route to this machine, with the conversation's cwd on the invocation.
     Machine(Box<loaded::Entry>),
     /// Perform it here, at litany's front door ([`performs`]).
-    Engine,
+    Server,
     /// Nothing can run it; this is what the model reads instead.
     Refused(String),
 }
@@ -129,7 +129,7 @@ pub fn answer(
     };
     match verdict(&roster, call.name) {
         Lane::Machine(entry) => routed(site, &entry, call),
-        Lane::Engine => super::engine_act::perform(driver_target, deadline, call),
+        Lane::Server => super::server_act::perform(driver_target, deadline, call),
         Lane::Refused(refusal) => capture(call.name, Err(refusal)),
     }
 }
@@ -157,7 +157,7 @@ fn verdict(roster: &[ClientRow], name: &str) -> Lane {
     }
     match consenting.len() {
         1 => Lane::Machine(Box::new(consenting.remove(0))),
-        0 if performs(name) => Lane::Engine,
+        0 if performs(name) => Lane::Server,
         0 => Lane::Refused(refusal::unconsented(name, &advertisers)),
         _ => Lane::Refused(refusal::ambiguous(
             name,

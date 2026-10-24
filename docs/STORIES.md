@@ -1954,7 +1954,7 @@ Tests:
 Machine state: the operator is not at the machine — a phone, a peer fleet's
 coordinator, an agent. Some conversations are waiting on somebody.
 
-1. **A bare `yog` IS the server.** One `Engine::boot` (`src/engine.rs`) is the
+1. **A bare `yog` IS the server.** One `Server::boot` (`src/server.rs`) is the
    whole of a running yog: the §5.2 startup sweep, the §7.1 roots, the model's
    first synchronous derivation, and the derivation worker + watch bridge +
    gesture consumer beside it. It was `yog serve` while a window stood beside
@@ -2030,7 +2030,7 @@ Tests:
   remains beside it (bl-5cfe: the remainder alone is the `attention` answer
   above, byte for byte, so the act said nothing about itself) — and the
   watermark lands in the `ui.json` the window reads (I0).
-- **S14-T8 a-windowless-engine-answers**: `Engine::boot` into a hermetic world
+- **S14-T8 a-windowless-server-answers**: `Server::boot` into a hermetic world
   with `NoRepaint` runs the §5.2 sweep, brings up every thread a running yog
   has and none of them a frame, answers a deposit, and stops cleanly on drop —
   the V5 claim, end to end, with no display anywhere.

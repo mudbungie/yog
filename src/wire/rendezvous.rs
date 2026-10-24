@@ -4,7 +4,7 @@
 //! from one fixed port, and serves every stream that lands on that port — in
 //! a call's window or at any other time (bl-5276) — exactly as the listener
 //! serves what it accepts: two threads, one `Drop` that joins both, the
-//! [`Listener`] shape ([`server`](super::server)).
+//! [`Listener`] shape ([`listener`](super::listener)).
 //!
 //! **Severable by material** (REMOTE §13.4). A server whose wire root holds no
 //! [`material`] punches nothing, polls nothing and starts no thread: [`start`]
@@ -27,7 +27,7 @@
 //! open; `cycle` is the loop itself, `call` what one opened call draws,
 //! `accept` the port's one acceptor, and `cadence` every duration.
 
-use super::server::Answerer;
+use super::listener::Answerer;
 use crate::dht::{Config, Udp};
 use crate::registry::presence::Presence;
 use crate::ui_state::Clock;

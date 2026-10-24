@@ -10,11 +10,11 @@ fn loopback(port: u16) -> SocketAddr {
 
 #[test]
 fn a_punch_lands_on_the_peers_listener_and_carries_bytes() {
-    let engine = Punch::bind(0).expect("bind");
+    let server = Punch::bind(0).expect("bind");
     let client = Punch::bind(0).expect("bind");
-    let target = loopback(engine.port());
+    let target = loopback(server.port());
     let served = std::thread::spawn(move || {
-        let mut streams = engine.punch(vec![], Duration::from_secs(5));
+        let mut streams = server.punch(vec![], Duration::from_secs(5));
         let mut byte = [0u8; 1];
         streams
             .first_mut()
@@ -79,11 +79,11 @@ fn v6_is_punched_first() {
 
 #[test]
 fn a_v6_loopback_punch_lands_where_the_box_has_v6() {
-    let engine = Punch::bind(0).expect("bind");
-    let target: SocketAddr = format!("[::1]:{}", engine.port()).parse().expect("v6");
-    let has_v6 = engine.listeners.len() == 2;
+    let server = Punch::bind(0).expect("bind");
+    let target: SocketAddr = format!("[::1]:{}", server.port()).parse().expect("v6");
+    let has_v6 = server.listeners.len() == 2;
     let client = Punch::bind(0).expect("bind");
-    let served = std::thread::spawn(move || engine.punch(vec![], Duration::from_millis(600)).len());
+    let served = std::thread::spawn(move || server.punch(vec![], Duration::from_millis(600)).len());
     let landed = client.punch(vec![target], Duration::from_millis(500)).len();
     assert_eq!(
         landed == 1,

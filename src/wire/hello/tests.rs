@@ -1,6 +1,6 @@
 //! The preface, from both ends, over doubles — the end-to-end skew a real
 //! listener refuses lives beside the listener it refuses at
-//! (`wire::server::tests::protocol`).
+//! (`wire::listener::tests::protocol`).
 
 use super::*;
 use serde_json::Value;

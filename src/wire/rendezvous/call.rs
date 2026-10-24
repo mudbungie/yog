@@ -8,7 +8,7 @@ use super::item::Call;
 use super::punch::LINGER;
 use super::{Punch, Say, Stats, say};
 use crate::registry::presence::Presence;
-use crate::wire::server::{Answerer, Quiet, serve};
+use crate::wire::listener::{Answerer, Quiet, serve};
 use rustls::ServerConfig;
 use std::net::{SocketAddr, TcpStream};
 use std::sync::Arc;

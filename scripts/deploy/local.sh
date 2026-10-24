@@ -1,10 +1,10 @@
 #!/bin/sh
-# Seat the NATIVE engine deployment on THIS box (bl-8ea9): `make deploy-local`.
+# Seat the NATIVE server deployment on THIS box (bl-8ea9): `make deploy-local`.
 #
 # It takes no argument and reaches no network but the registry. `seat.sh` is the
 # server recipe — an ssh destination, an image carried over the channel, a
 # container unit — and it cannot seat the box it is run ON: the box most likely
-# to run a native engine is a workstation, which is the box least likely to be
+# to run a native server is a workstation, which is the box least likely to be
 # running an sshd, and it cannot ssh to itself. This is the same three acts
 # without the hop.
 #
@@ -15,7 +15,7 @@
 # and the registry already serves it.
 #
 # **One unit name, two shapes.** The unit is seated AS `yog.service`, over
-# whatever `yog.service` was, because a box runs one engine over one world and
+# whatever `yog.service` was, because a box runs one server over one world and
 # two managers converging the same data root against each other is the failure
 # this prevents. Re-running is therefore also how a box seated on the container
 # shape adopts this one, and `seat.sh` is how it goes back — that file says the
@@ -40,12 +40,12 @@ command -v systemctl >/dev/null 2>&1 || die 'no systemctl: this recipe seats sys
 command -v cargo >/dev/null 2>&1 || die 'no cargo on PATH: the reconciler installs from crates.io'
 command -v curl >/dev/null 2>&1 || die 'no curl on PATH: the reconciler reads the registry index'
 
-# The engine's substrate commits, and git refuses against an identity-less
+# The server's substrate commits, and git refuses against an identity-less
 # process. The container unit passes this in by name out of `deploy.env`; a
-# native engine reads the operator's own `~/.gitconfig`, so the check is that
+# native server reads the operator's own `~/.gitconfig`, so the check is that
 # there IS one rather than a file to write.
 git config --get user.name >/dev/null 2>&1 && git config --get user.email >/dev/null 2>&1 \
-    || die 'no git user.name/user.email on this box; the engine commits and git refuses without one'
+    || die 'no git user.name/user.email on this box; the server commits and git refuses without one'
 
 say 'installing the units and the reconciler'
 mkdir -p "$HOME/.local/bin" "$HOME/.config/systemd/user"
@@ -61,13 +61,13 @@ install -m 0644 "$here/yog-local-reconcile.service" \
 install -m 0644 "$here/yog-local-reconcile.timer" \
     "$HOME/.config/systemd/user/yog-reconcile.timer"
 
-# **Lingering, or the engine stops at logout** — and a box that reboots without
-# it comes back with no engine at all. `enable-linger` is the one act here that
+# **Lingering, or the server stops at logout** — and a box that reboots without
+# it comes back with no server at all. `enable-linger` is the one act here that
 # is not a file copy, and it is what makes the unit a deployment rather than a
 # convenience.
-say 'enabling lingering so the engine outlives a logout'
+say 'enabling lingering so the server outlives a logout'
 loginctl enable-linger "$(id -un)" >/dev/null 2>&1 \
-    || say 'could not enable lingering (the engine will stop at logout)'
+    || say 'could not enable lingering (the server will stop at logout)'
 
 say 'arming the units'
 # `reset-failed` before the enable, for the reason `reconcile.sh` states: a unit
@@ -82,10 +82,10 @@ systemctl --user start yog-reconcile.timer
 # `systemctl --user start` blocks on a `Type=oneshot` unit and exits non-zero
 # when it fails, so this is a real end-to-end run — the index reached, the
 # version compared, the build done if there was one, the unit started under it —
-# and not a status print. A first-ever seating builds the engine here, which is
+# and not a status print. A first-ever seating builds the server here, which is
 # minutes.
 #
-# It is also what STARTS the engine: `enable` above arms the unit for the next
+# It is also what STARTS the server: `enable` above arms the unit for the next
 # boot and does not run it, and the reconciler's `failed`/`inactive` arms leave a
 # stopped unit alone on purpose. So the first pass installs the binary and the
 # start below puts the box in the state the timer will then hold.
@@ -96,11 +96,11 @@ systemctl --user start yog-reconcile.service \
          die 'the first reconcile failed (the timer is armed; it will retry)'; }
 journalctl --user -u yog-reconcile.service --no-pager --lines=5 -o cat 2>/dev/null || true
 
-say 'starting the engine'
+say 'starting the server'
 systemctl --user restart yog.service
 
 # One bounded sleep, no polling loop — the discipline `verify.sh` states. Longer
-# than the unit's `RestartSec=5s`, so an engine that cannot start has already
+# than the unit's `RestartSec=5s`, so a server that cannot start has already
 # been restarted at least once by here and this reads a settled box.
 sleep 8
 state=$(systemctl --user is-active yog.service 2>/dev/null || true)
@@ -109,9 +109,9 @@ state=$(systemctl --user is-active yog.service 2>/dev/null || true)
     die "yog.service is '$state', not active"
 }
 # `is-active` on its own is worth nothing — it says a process exists, not that
-# the engine serves. The boundary answering is the fact a deploy exists to
+# the server serves. The boundary answering is the fact a deploy exists to
 # establish, and it needs no certificate and no seat.
 "$HOME/.local/bin/yog" gesture '{"op":"workspaces"}' >/dev/null 2>&1 \
-    || die 'the unit is active but the engine does not answer the boundary'
+    || die 'the unit is active but the server does not answer the boundary'
 
 say "seated: $("$HOME/.local/bin/yog" --version) is serving, and this box tracks released versions hourly"

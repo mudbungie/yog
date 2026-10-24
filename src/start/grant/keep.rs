@@ -38,13 +38,13 @@
 //! would otherwise have had.
 
 use crate::control::policy::Policy;
-use crate::tool_host::{clients, engine_act};
+use crate::tool_host::{clients, server_act};
 
 /// Whether the **pinned litany** can execute `name` at all:
 ///
 /// > `litany::cmd::BUILTIN_TOOLS` — the names `litany tool <name>` answers to,
 /// > exported by litany for exactly this reader — plus
-/// > [`engine_act::NAMES`], which adds the compactor's injected procedure pair
+/// > [`server_act::NAMES`], which adds the compactor's injected procedure pair
 /// > (in no `providers.yaml`, granted by nobody, and kept here so a fold over
 /// > a hand-written file could not delete one), plus yog's own
 /// > [`clients::NAME`], which litany's template cannot carry because the tool
@@ -53,7 +53,7 @@ use crate::tool_host::{clients, engine_act};
 /// Read against the same two sets `tool_host::subject::performs` subtracts, so
 /// "litany ships it" has one answer in this crate.
 pub(super) fn ships(name: &str) -> bool {
-    ::litany::cmd::BUILTIN_TOOLS.contains(&name) || engine_act::is(name) || name == clients::NAME
+    ::litany::cmd::BUILTIN_TOOLS.contains(&name) || server_act::is(name) || name == clients::NAME
 }
 
 /// Whether the worker's grant may keep `name`: litany ships it, or

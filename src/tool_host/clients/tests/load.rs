@@ -73,7 +73,7 @@ fn a_load_that_cannot_be_recorded_says_so() {
     let root = TempDir::new().expect("tmp");
     let mut s = site(root.path(), budget());
     s.agent = "..".to_owned();
-    let (handle, _seen) = engine(
+    let (handle, _seen) = server(
         root.path(),
         &reply::encode(&Reply::Clients(vec![row(
             "laptop",

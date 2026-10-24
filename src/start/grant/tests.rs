@@ -4,7 +4,7 @@ use super::*;
 use crate::git_tree::tests::fixture::Fixture;
 use crate::model_pick::BRANCH;
 use crate::test_support::TEMPLATE_PROVIDERS;
-use crate::tool_host::engine_act;
+use crate::tool_host::server_act;
 
 /// **The defect** (bl-0460): litany's shipped template cannot name `clients`,
 /// because the tool is yog's — so after bl-52b7 the worker was declared nothing
@@ -123,7 +123,7 @@ fn no_grant_means_no_description_and_no_lineage_means_neither() {
 /// `opaque`, holds, and parks the conversation. The prune converges the
 /// lineage at its next start — and touches nothing else in the list.
 #[test]
-fn a_name_the_pinned_engine_no_longer_ships_is_pruned() {
+fn a_name_the_pinned_litany_no_longer_ships_is_pruned() {
     let stale =
         TEMPLATE_PROVIDERS.replace("tools: [apply_patch,", "tools: [multi_tool, apply_patch,");
     assert_ne!(stale, TEMPLATE_PROVIDERS, "the stale lineage was planted");
@@ -162,10 +162,10 @@ fn a_name_the_operator_stated_a_reach_for_is_kept() {
 /// The predicate's own two directions, over the three sets it is derived from
 /// and a name in none of them.
 #[test]
-fn the_kept_set_is_the_engine_s_own_plus_what_the_operator_states() {
+fn the_kept_set_is_the_server_s_own_plus_what_the_operator_states() {
     for name in ::litany::cmd::BUILTIN_TOOLS
         .into_iter()
-        .chain(engine_act::NAMES)
+        .chain(server_act::NAMES)
         .chain([clients::NAME])
     {
         assert!(keep::keep(name, &shipped()), "{name}");

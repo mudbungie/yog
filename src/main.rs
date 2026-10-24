@@ -2,7 +2,7 @@ use clap::Parser;
 use yog::Args;
 use yog::cli_outbound::Cli;
 use yog::config_edit;
-use yog::engine::Engine;
+use yog::server::Server;
 use yog::world::hatch;
 use yog::xdg::Env;
 
@@ -136,11 +136,11 @@ fn main() {
         eprintln!("{refusal}");
         std::process::exit(yog::world::seat::REFUSED);
     }
-    // The whole face is `Engine::serve` and therefore tested (bl-269a) — this
+    // The whole face is `Server::serve` and therefore tested (bl-269a) — this
     // is the one call, which is all a coverage-excluded file should ever hold
     // of a face. Its answer is the process's exit code: a boot that could not
     // take the world or could not listen exits non-zero (bl-1d9b).
-    std::process::exit(Engine::serve(&ambient, &overrides));
+    std::process::exit(Server::serve(&ambient, &overrides));
 }
 
 /// `yog fixture [state]` (bl-8741): lay one named world state, or list the

@@ -66,10 +66,10 @@ fn a_stated_host_is_a_list_of_them() {
     assert_eq!(hosts(None), Vec::<String>::new());
     assert_eq!(hosts(Some("")), Vec::<String>::new());
     assert_eq!(hosts(Some(", ,")), Vec::<String>::new());
-    assert_eq!(hosts(Some("engine.example.com")), ["engine.example.com"]);
+    assert_eq!(hosts(Some("server.example.com")), ["server.example.com"]);
     assert_eq!(
-        hosts(Some(" engine.example.com , 192.0.2.7 ,")),
-        ["engine.example.com", "192.0.2.7"]
+        hosts(Some(" server.example.com , 192.0.2.7 ,")),
+        ["server.example.com", "192.0.2.7"]
     );
 }
 
@@ -96,7 +96,7 @@ fn a_stated_host_over_standing_material_re_issues_the_server_leaf() {
     let server = std::fs::read(dir.join("server.pem")).expect("server leaf");
 
     assert_eq!(
-        perform(&stated(&["engine.example.com", "192.0.2.7"])),
+        perform(&stated(&["server.example.com", "192.0.2.7"])),
         0,
         "re-issued rather than refused"
     );
@@ -117,7 +117,7 @@ fn a_stated_host_over_standing_material_re_issues_the_server_leaf() {
     );
     assert_eq!(
         std::fs::read_to_string(dir.join(ADDRESS)).expect("address"),
-        "engine.example.com:7737\n",
+        "server.example.com:7737\n",
         "the first host stated, on the port stated"
     );
     assert!(Role::Server.leaf() == "server");
@@ -211,7 +211,7 @@ fn a_re_issue_a_client_box_cannot_perform_exits_one() {
         perform(&Plan {
             dir: tmp.path().to_owned(),
             act: Act::Mint {
-                hosts: vec!["engine.example.com".to_owned()],
+                hosts: vec!["server.example.com".to_owned()],
                 port: Some("7737".to_owned()),
                 force: false,
             },

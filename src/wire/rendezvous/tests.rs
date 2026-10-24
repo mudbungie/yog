@@ -5,7 +5,7 @@
 use super::item::Presence as Published;
 use super::*;
 use crate::dht::tests::fake::Mood;
-use crate::wire::server::Quiet;
+use crate::wire::listener::Quiet;
 use bench::{bench, loopback, until};
 use std::net::SocketAddr;
 use std::sync::atomic::Ordering::Relaxed;
@@ -20,7 +20,7 @@ const WAIT: Duration = Duration::from_secs(10);
 #[test]
 fn presence_is_published_sealed_and_republished_hourly() {
     let b = bench(Mood::Answer, None);
-    let stats = b.engine.stats();
+    let stats = b.server.stats();
     assert!(until(|| stats.published.load(Relaxed) >= 1, WAIT));
     let keypair = b.pairing.keypair().expect("key");
     let mut dht = b.dht();
@@ -46,7 +46,7 @@ fn presence_is_published_sealed_and_republished_hourly() {
 /// The presence a bench over a node of `mood` publishes first.
 fn first_presence(mood: Mood) -> (Vec<SocketAddr>, u16) {
     let b = bench(mood, None);
-    let stats = b.engine.stats();
+    let stats = b.server.stats();
     assert!(until(|| stats.published.load(Relaxed) >= 1, WAIT));
     let key = b.pairing.keypair().expect("key").public();
     let item = b.dht().get(key, b.pairing.presence_salt());
@@ -68,7 +68,7 @@ fn presence_carries_the_observed_address_at_the_punch_port() {
 #[test]
 fn a_call_in_the_inbox_is_punched_served_and_pinged() {
     let b = bench(Mood::Answer, None);
-    let stats = b.engine.stats();
+    let stats = b.server.stats();
     assert!(until(|| stats.polls.load(Relaxed) >= 1, WAIT));
     assert_eq!(stats.calls.load(Relaxed), 0, "an empty inbox draws nothing");
     let client = Punch::bind(0).expect("client port");
@@ -79,7 +79,7 @@ fn a_call_in_the_inbox_is_punched_served_and_pinged() {
     let mut tls = b.ask_over(stream);
     assert_eq!(
         crate::wire::frame::read_value(&mut tls).expect("held"),
-        Some(crate::wire::server::peer::ping_frame()),
+        Some(crate::wire::listener::peer::ping_frame()),
         "the held connection is pinged through its silence"
     );
     assert!(until(|| stats.served.load(Relaxed) >= 1, WAIT));
@@ -96,7 +96,7 @@ fn a_call_in_the_inbox_is_punched_served_and_pinged() {
 #[test]
 fn a_call_that_will_not_unseal_draws_no_syn() {
     let b = bench(Mood::Answer, None);
-    let stats = b.engine.stats();
+    let stats = b.server.stats();
     assert!(until(|| stats.polls.load(Relaxed) >= 1, WAIT));
     assert!(b.write_inbox(1, b"signed, but sealed under nobody's key".to_vec()) >= 1);
     b.clock.advance(Duration::from_secs(15));
@@ -112,7 +112,7 @@ fn a_call_that_will_not_unseal_draws_no_syn() {
 #[test]
 fn a_dark_commons_is_counted_and_tried_again() {
     let b = bench(Mood::Silent, None);
-    let stats = b.engine.stats();
+    let stats = b.server.stats();
     assert!(until(
         || stats.publish_failures.load(Relaxed) >= 1 && stats.poll_failures.load(Relaxed) >= 1,
         WAIT
@@ -125,7 +125,7 @@ fn a_dark_commons_is_counted_and_tried_again() {
 #[test]
 fn a_bootstrap_that_resolves_to_nothing_fails_each_deadline_and_never_walks() {
     let b = bench(Mood::Answer, Some(vec!["nowhere".to_owned()]));
-    let stats = b.engine.stats();
+    let stats = b.server.stats();
     assert!(until(
         || stats.publish_failures.load(Relaxed) >= 1 && stats.poll_failures.load(Relaxed) >= 1,
         WAIT

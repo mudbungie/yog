@@ -32,13 +32,13 @@ fn the_loop_says_it_started_and_what_it_published() {
         .find(|l| l.contains("published"))
         .expect("said");
     assert!(published.contains("1 endpoint(s), 1 ack(s)"), "{published}");
-    assert!(b.engine.stats().standing().active);
+    assert!(b.server.stats().standing().active);
 }
 
 #[test]
 fn a_dark_commons_says_each_publish_and_one_poll_failure_per_streak() {
     let b = bench(Mood::Silent, None);
-    let stats = b.engine.stats();
+    let stats = b.server.stats();
     assert!(until(|| stats.publish_failures.load(Relaxed) >= 1, WAIT));
     b.clock.advance(Duration::from_hours(1));
     assert!(until(|| stats.publish_failures.load(Relaxed) >= 2, WAIT));
@@ -55,7 +55,7 @@ fn a_dark_commons_says_each_publish_and_one_poll_failure_per_streak() {
 #[test]
 fn an_item_that_will_not_verify_is_said_once_by_its_seq() {
     let b = bench(Mood::Answer, None);
-    let stats = b.engine.stats();
+    let stats = b.server.stats();
     assert!(until(|| stats.polls.load(Relaxed) >= 1, WAIT));
     assert!(b.write_inbox(4, b"sealed under nobody's key".to_vec()) >= 1);
     b.clock.advance(Duration::from_secs(15));
@@ -71,7 +71,7 @@ fn an_item_that_will_not_verify_is_said_once_by_its_seq() {
 #[test]
 fn an_item_that_verifies_and_is_not_a_call_is_said_as_such() {
     let b = bench(Mood::Answer, None);
-    let stats = b.engine.stats();
+    let stats = b.server.stats();
     assert!(until(|| stats.polls.load(Relaxed) >= 1, WAIT));
     let sealed = Published {
         endpoints: vec![loopback(1)],
@@ -87,7 +87,7 @@ fn an_item_that_verifies_and_is_not_a_call_is_said_as_such() {
 #[test]
 fn a_call_says_opened_landed_ended_and_then_seen_once() {
     let b = bench(Mood::Answer, None);
-    let stats = b.engine.stats();
+    let stats = b.server.stats();
     assert!(until(|| stats.polls.load(Relaxed) >= 1, WAIT));
     let client = Punch::bind(0).expect("client port");
     assert!(b.write_inbox(1, b.call(7, client.port())) >= 1);
@@ -125,7 +125,7 @@ fn a_punched_call_read_between_quiet_polls_is_said_seen_once() {
     // The commons shows the stale call, then nothing, then the call again
     // (bl-1633): a quiet poll between them must not make it news twice.
     let b = bench(Mood::Blink, None);
-    let stats = b.engine.stats();
+    let stats = b.server.stats();
     assert!(until(|| stats.polls.load(Relaxed) >= 1, WAIT));
     let closed = Punch::bind(0).expect("a port").port();
     assert!(b.write_inbox(1, b.call(9, closed)) >= 1);
@@ -144,7 +144,7 @@ fn a_punched_call_read_between_quiet_polls_is_said_seen_once() {
 #[test]
 fn a_punch_toward_nobody_says_it_expired() {
     let b = bench(Mood::Answer, None);
-    let stats = b.engine.stats();
+    let stats = b.server.stats();
     assert!(until(|| stats.polls.load(Relaxed) >= 1, WAIT));
     let closed = Punch::bind(0).expect("a port").port();
     assert!(b.write_inbox(1, b.call(8, closed)) >= 1);
@@ -157,8 +157,8 @@ fn a_punch_toward_nobody_says_it_expired() {
 #[test]
 fn a_dropped_loop_is_no_longer_active() {
     let b = bench(Mood::Answer, None);
-    let stats = b.engine.stats();
+    let stats = b.server.stats();
     assert!(stats.standing().active);
-    drop(b.engine);
+    drop(b.server);
     assert!(!stats.standing().active);
 }

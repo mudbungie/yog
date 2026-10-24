@@ -12,7 +12,7 @@ use super::*;
 /// the request back over a channel, and stop. It is the deposit consumer's
 /// contract and nothing else — claim, then reply — because that contract is
 /// the whole of what the driver's ask depends on.
-pub(in crate::tool_host) fn engine(
+pub(in crate::tool_host) fn server(
     root: &Path,
     reply: &Value,
 ) -> (JoinHandle<()>, Receiver<Value>) {
@@ -86,7 +86,7 @@ pub(in crate::tool_host) fn site(root: &Path, budget: ask::Budget) -> Site {
 }
 
 /// A stand-in server that answers `replies` in order, one per deposit — the
-/// routing leg needs two round trips (queue, then poll) and [`engine`] answers
+/// routing leg needs two round trips (queue, then poll) and [`server`] answers
 /// exactly one. Hands every request back over the channel.
 pub(in crate::tool_host) fn scripted(
     root: &Path,

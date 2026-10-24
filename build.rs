@@ -17,7 +17,7 @@
 //! does not build. A Rust path is not a stable address for that: bl-94a5 split
 //! `src/wire/hello.rs` into `src/wire/hello/version.rs` and left the old file
 //! re-exporting, which is invisible to a build and fatal to a regex, so every
-//! consumer's gate silently stopped being able to read the engine's number and
+//! consumer's gate silently stopped being able to read the server's number and
 //! would have held its release forever on a bump that had already landed
 //! (thrall bl-c618). A repo-root file with no extension is the one address a
 //! module split cannot move. The edition needs no such address — a consumer
@@ -100,14 +100,14 @@ fn write(out: &Path, protocol: u32, edition: u32, floor: u32) -> Result<(), Box<
              \n\
              /// The edition of the corpus this build was generated from: the\n\
              /// newest stamp in `corpus/shapes.json`, compiled in by `build.rs`\n\
-             /// (REMOTE §3.2, bl-1be7). The engine states it in its preface, so\n\
-             /// a seat that vendors the ledger can tell a field this engine\n\
+             /// (REMOTE §3.2, bl-1be7). The server states it in its preface, so\n\
+             /// a seat that vendors the ledger can tell a field this server\n\
              /// cannot spell from a field it chose not to say.\n\
              pub const EDITION: u32 = {edition};\n\
              \n\
              /// The edition at which the current major was cut: `floor` in\n\
              /// `corpus/shapes.json`, compiled in by `build.rs`. Every path\n\
-             /// stamped at or below it is written by every engine of this\n\
+             /// stamped at or below it is written by every server of this\n\
              /// major, so a peer that states no edition at all is read as\n\
              /// speaking exactly this one.\n\
              pub const FLOOR: u32 = {floor};\n"

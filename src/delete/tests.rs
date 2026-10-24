@@ -103,7 +103,7 @@ fn the_seat_builds_the_same_confirmation_off_the_answers() {
     // sequence, and lawfully so: the answer is sorted by recency (§11) while
     // the agent set is in §2.3 descent order, and neither the gate nor the
     // arming reads an order.
-    let engine = confirm(
+    let server = confirm(
         &crate::nav::convs::liveness(&agents),
         vec![claim("p", "bl-1")],
     );
@@ -111,7 +111,7 @@ fn the_seat_builds_the_same_confirmation_off_the_answers() {
         c.conversations.sort();
         c
     };
-    assert_eq!(sorted(seat), sorted(engine));
+    assert_eq!(sorted(seat), sorted(server));
 }
 
 #[test]

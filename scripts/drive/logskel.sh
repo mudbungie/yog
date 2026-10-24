@@ -35,7 +35,7 @@ files=$(find "$dir" -name verdicts.jsonl | sort)
 # A VERDICT-LESS RUN IS REPORTED, NOT REFUSED (bl-d0a0). This used to exit 1
 # before emitting a byte, which made the generator the loudest thing about a
 # run it knew nothing about: `drive.sh` redirects into `drive-log.md` and dies
-# on the non-zero under `set -e`, so an engine that never came up produced a
+# on the non-zero under `set -e`, so a server that never came up produced a
 # zero-byte report and a complaint about the report in place of the boot's own
 # error. Emitting the run is the generator's job and it can always do it — the
 # beat table is simply the sentence "no verdicts produced", which is a finding.

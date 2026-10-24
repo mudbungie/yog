@@ -806,7 +806,7 @@ mediation.
      machines this control cannot see into — and held on every call; the
      operator saw a question with tool calls and no reply. The instance is gone
      with the name, and the **class** is now guarded rather than fixed
-     (`tests/engine_grant.rs`): every name the pinned litany's own grant
+     (`tests/litany_grant.rs`): every name the pinned litany's own grant
      carries, read out of a workspace `litany new` really authors, must
      classify on the server leg.
 
@@ -1325,7 +1325,7 @@ widget anywhere.
 
 **Landed (bl-f6fe), and what it does not include.** Points 1–4 are
 in, as DESIGN §8.5's "the decision queue" and "one engine, two faces": the
-assembly both faces boot is one `Engine::boot` in the library (it was two copies
+assembly both faces boot is one `Server::boot` in the library (it was two copies
 inside coverage-excluded `main.rs`, which is exactly the drift point 4 forbids);
 the queue is `Query::Attention` and its answer `Action::MarkSeen`, in all three
 serializations, writing the very watermarks the window's focus tick writes from

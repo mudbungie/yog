@@ -38,7 +38,7 @@
 //! fork-to-exec, microseconds, and it can only ever *delay* a next server, never
 //! admit a second one. Nothing in production is inside it: a restart is a new
 //! process launched long after the old one's children have exec'd. The suite
-//! sees it, because it forks continuously, and `engine::tests` waits it out
+//! sees it, because it forks continuously, and `server::tests` waits it out
 //! rather than pretending it is not there.
 
 use std::fs::{File, OpenOptions};
@@ -46,7 +46,7 @@ use std::path::Path;
 
 /// The lock file's leaf, under the yog state root (§5.2) beside `ui.json` and
 /// `ops.jsonl` — yog's own artifacts, which is what this is.
-pub(crate) const LOCK: &str = "engine.lock";
+pub(crate) const LOCK: &str = "server.lock";
 
 /// The held exclusion. Owns the open file; dropping it closes the descriptor,
 /// which is what releases the lock — the §7.2 shutdown shape with nothing to
@@ -63,13 +63,13 @@ pub(crate) struct Sole {
 pub(crate) fn take(state_root: &Path) -> Result<Sole, String> {
     let path = state_root.join(LOCK);
     std::fs::create_dir_all(state_root)
-        .map_err(|e| format!("engine lock {}: {e}", path.display()))?;
+        .map_err(|e| format!("server lock {}: {e}", path.display()))?;
     let held = OpenOptions::new()
         .create(true)
         .truncate(false)
         .write(true)
         .open(&path)
-        .map_err(|e| format!("engine lock {}: {e}", path.display()))?;
+        .map_err(|e| format!("server lock {}: {e}", path.display()))?;
     match held.try_lock() {
         Ok(()) => Ok(Sole { _held: held }),
         Err(_) => Err(format!(

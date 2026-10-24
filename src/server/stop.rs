@@ -3,7 +3,7 @@
 //!
 //! A stop here is *"stop taking new work, finish what is running, drop the
 //! server"* — and it is almost entirely a subtraction, because dropping the
-//! server is already the whole of it. Every thread [`Engine::boot`] spawns
+//! server is already the whole of it. Every thread [`Server::boot`] spawns
 //! owns the §7.2 shutdown shape (stop flag, park loop, a [`Drop`] that unparks
 //! and joins), so a server dropped at the end of a consumer pass is a server
 //! that refused the next deposit and completed the last one; and every child
@@ -13,7 +13,7 @@
 //!
 //! **What was missing was only the catch.** `yog serve` parked forever with
 //! the default `SIGTERM` disposition, so the signal killed the process where
-//! it stood: no `Drop` ran, the `Engine` was never dropped, and the polite
+//! it stood: no `Drop` ran, the `Server` was never dropped, and the polite
 //! `SIGTERM` above was never posted. So the fix is a disposition
 //! ([`cli_outbound::sys::term_disposition`](crate::cli_outbound)), a flag, and
 //! a loop that ends.
@@ -34,13 +34,13 @@
 //!
 //! **Both faces, one mechanism** (VISION V5.4). They differ only in the loop
 //! that consults it, exactly as they already differ in a repaint hook: the
-//! windowless face's loop is [`Engine::park_until_stopped`] below, and the
+//! windowless face's loop is [`Server::park_until_stopped`] below, and the
 //! window's is eframe's, which asks [`requested`] each frame and closes its
 //! viewport — the same close a human's click makes, so the server drops down
 //! the same path either way. Neither face adds a verb, a flag or a config
 //! key: the signal is the signal.
 
-use super::Engine;
+use super::Server;
 use crate::cli_outbound::sys;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
@@ -67,7 +67,7 @@ pub fn requested() -> bool {
     sys::term_flag().load(Ordering::SeqCst)
 }
 
-impl Engine {
+impl Server {
     /// **The windowless face's whole loop** — park until a stop is asked for,
     /// then drop the server. Takes `self` by value so that returning from it
     /// and stopping the server are the same act: there is no way to park

@@ -51,7 +51,7 @@ mod goal;
 /// name the pinned litany no longer ships, converged in the same pass as the
 /// control block and the instruction glob.
 ///
-/// `pub` for one reader: `tests/engine_grant.rs` holds the derived shipped set
+/// `pub` for one reader: `tests/litany_grant.rs` holds the derived shipped set
 /// against the grant the real binary authors, which is the one direction a
 /// hand copy in this tree cannot answer (bl-d06c's own lesson).
 pub mod grant;

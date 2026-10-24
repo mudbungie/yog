@@ -6,12 +6,12 @@
 # section "The image" for the mount contract this file implements.
 #
 # **What ships is the UI-FREE SERVER** (bl-7942). A bare `yog` boots the
-# engine and parks; there is no window, no display stack and no `serve` verb.
+# server and parks; there is no window, no display stack and no `serve` verb.
 # The image existed as a deferral for exactly as long as there was a GL stack
 # to keep out of a layer nothing in a server can present.
 #
 # Two stages. The build stage is the pinned toolchain and the C toolchain the
-# TLS stack needs; the runtime stage is the small set of programs the engine
+# TLS stack needs; the runtime stage is the small set of programs the server
 # actually EXECS, and nothing else.
 
 # ---------------------------------------------------------------------------
@@ -78,7 +78,7 @@ RUN cargo build --release --locked --bin yog
 # ---------------------------------------------------------------------------
 # Stage 2 — runtime.
 #
-# THE RUNTIME LAYER IS WHAT THE ENGINE EXECS, and this engine execs four
+# THE RUNTIME LAYER IS WHAT THE SERVER EXECS, and this server execs four
 # things. `FROM scratch` is wrong here whatever the linking story says:
 #
 #   git      — every workspace read and every act is git (`src/git_env.rs` is
@@ -87,7 +87,7 @@ RUN cargo build --release --locked --bin yog
 #              §3.9 retention walk, balls' own landing repair).
 #   openssl  — the wire mint (`src/wire/provision/openssl.rs`). yog links no
 #              certificate library and mints nothing in channel (REMOTE §1.4);
-#              the recipe shells to `openssl`, and the engine's own boot runs
+#              the recipe shells to `openssl`, and the server's own boot runs
 #              it when a box has none. Without it a fresh mount comes up with
 #              no listener at all.
 #   sh       — the `$EDITOR` re-entry a §9.3 lineage write performs
@@ -108,7 +108,7 @@ RUN cargo build --release --locked --bin yog
 #
 # **Nothing an AGENT runs is here, and that is the ship-inert posture**
 # (REMOTE §12, bl-37fd). A tool call routes to an enrolled thrall over the real
-# wire or refuses in band; the engine runs no tool itself. An image that
+# wire or refuses in band; the server runs no tool itself. An image that
 # carried a toolchain for agents to use would be quietly undoing that.
 FROM docker.io/library/alpine:3.22@sha256:14358309a308569c32bdc37e2e0e9694be33a9d99e68afb0f5ff33cc1f695dce
 
@@ -132,7 +132,7 @@ COPY --from=build /src/target/release/yog /usr/local/bin/yog
 #   /state/yog/world/litany   the nested LITANY_HOME (config and data)
 #   /state/yog/world/state    the nested XDG_STATE_HOME: balls clones and
 #                             worktrees, and yog's own ui.json / ops.jsonl
-#   /state/yog/world/tools    the re-exec shims (seeded by the engine, not here)
+#   /state/yog/world/tools    the re-exec shims (seeded by the server, not here)
 #   /state/yog/workspaces     the §3.1 named workspaces
 #   /state/yog/wire           the wire material — BESIDE the world, not inside
 #                             it, because the world is a generated artifact yog
@@ -140,7 +140,7 @@ COPY --from=build /src/target/release/yog /usr/local/bin/yog
 #
 # Mount the operator's provisioned data root at /state/yog.
 #
-# **Nothing here runs a seed.** The engine founds what it finds missing on its
+# **Nothing here runs a seed.** The server founds what it finds missing on its
 # own boot, into the mount; writing any of it into a LAYER would put the one
 # state yog owns where a mount cannot replace it and an upgrade cannot see it.
 #

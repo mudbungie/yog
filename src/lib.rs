@@ -2,7 +2,7 @@
 //! (REMOTE §12): holder of the world, the balls and the conversations, with no
 //! UI and no local execution.
 //!
-//! One world, one server. The binary boots [`engine::Engine`], which derives
+//! One world, one server. The binary boots [`server::Server`], which derives
 //! every workspace from disk, answers the §8.5 control [`boundary`] over the
 //! REMOTE §9.5 [`wire`], and drives `litany`/`bl`/`bz` as children of the
 //! nested [`world`]. Every seat — the `lernie` window, an android client, a
@@ -55,7 +55,6 @@ pub mod doctor;
 /// Where to cut a string that will not fit (QUALITY G1, L4) — one rule, cut
 /// where the information is not. Machine strings only; prose keeps its head.
 pub(crate) mod elide;
-pub mod engine;
 /// The VISION §4.10 mutating fan — N isolated candidate attempts over one
 /// delivery obligation, materialized through balls' attempt capability.
 pub mod fan;
@@ -96,6 +95,7 @@ pub mod science;
 /// leftovers — internal, not library surface.
 pub(crate) mod scratch;
 pub mod search;
+pub mod server;
 pub mod spend;
 pub mod start;
 pub mod state;

@@ -1,5 +1,5 @@
 //! The boundary glue a frame's gestures land in (§8.5), driven from where the
-//! **server** stands ([`crate::test_support::engine::act`]) — since bl-1747 the
+//! **server** stands ([`crate::test_support::server::act`]) — since bl-1747 the
 //! window posts every act over the wire and holds no dispatch of its own, so
 //! these read the chokepoint the wire's listener reaches, over a `ui.json`
 //! opened fresh per gesture. Shares [`super::world`]'s hermetic fixture; spawns
@@ -11,7 +11,7 @@ use crate::boundary::reply::Reply;
 use crate::cli_outbound::Cli;
 use crate::opslog::{self, DETACHED_EXIT};
 use crate::start::Prepared;
-use crate::test_support::engine;
+use crate::test_support::server;
 use std::path::Path;
 use tempfile::tempdir;
 
@@ -55,7 +55,7 @@ fn prepared(w: &super::World) -> Prepared {
 }
 
 #[test]
-fn the_engines_dispatch_is_the_one_chokepoint_a_posted_act_reaches() {
+fn the_servers_dispatch_is_the_one_chokepoint_a_posted_act_reaches() {
     let bin = tempdir().unwrap();
     let w = world();
     let (_c, m) = model(&w);
@@ -64,7 +64,7 @@ fn the_engines_dispatch_is_the_one_chokepoint_a_posted_act_reaches() {
     let action = Action::Scan {
         workspace: crate::naming::leaf(&(w.ws_cobalt.clone())),
     };
-    let Reply::Outcome(outcome) = engine::act(&m, &deps, "TS", &action).unwrap() else {
+    let Reply::Outcome(outcome) = server::act(&m, &deps, "TS", &action).unwrap() else {
         panic!("a verb answers an outcome");
     };
     assert!(outcome.ok());
@@ -86,7 +86,7 @@ fn the_retarget_exit_spawns_the_bound_litany_verb() {
         workspace: crate::naming::leaf(&(w.ws_cobalt.clone())),
         agent: AGENT.into(),
     };
-    let Reply::Outcome(outcome) = engine::act(&m, &deps, "TR", &action).unwrap() else {
+    let Reply::Outcome(outcome) = server::act(&m, &deps, "TR", &action).unwrap() else {
         panic!("a verb answers an outcome");
     };
     assert!(outcome.ok());
@@ -118,7 +118,7 @@ fn the_prompt_door_launches_detached_and_mints_off_the_seat_s_own_seed() {
         // preview seed crossing with the act it predicted.
         seed: Some(7),
     };
-    let Reply::Started { conversation } = engine::act(&m, &deps, "T1", &action).unwrap() else {
+    let Reply::Started { conversation } = server::act(&m, &deps, "T1", &action).unwrap() else {
         panic!("the prompt door answers the minted name");
     };
     assert!(
@@ -134,7 +134,7 @@ fn the_prompt_door_launches_detached_and_mints_off_the_seat_s_own_seed() {
 
     // The same door refuses when the fork cannot land, error text riding back.
     let dead = signed(m.boundary_deps(&Cli::new("/no/such/litany"), &Cli::new("/no/bl")));
-    let err = engine::act(&m, &dead, "T2", &action).unwrap_err();
+    let err = server::act(&m, &dead, "T2", &action).unwrap_err();
     assert!(!err.is_empty());
 }
 
@@ -160,7 +160,7 @@ fn two_seedless_prompts_in_one_second_mint_two_names() {
     };
     let mut minted = Vec::new();
     for _ in 0..2 {
-        let Reply::Started { conversation } = engine::act(&m, &deps, "T9", &action).unwrap() else {
+        let Reply::Started { conversation } = server::act(&m, &deps, "T9", &action).unwrap() else {
             panic!("the prompt door answers the minted name");
         };
         assert!(!conversation.is_empty(), "a name was minted regardless");
@@ -190,7 +190,7 @@ fn an_attempt_dispatches_the_ordinary_fork_and_logs_its_whole_argv() {
         },
         goal: "try it the other way".into(),
     };
-    let Reply::Outcome(outcome) = engine::act(&m, &deps, "TS", &action).unwrap() else {
+    let Reply::Outcome(outcome) = server::act(&m, &deps, "TS", &action).unwrap() else {
         panic!("a verb answers an outcome");
     };
     assert!(outcome.ok());

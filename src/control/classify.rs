@@ -200,7 +200,7 @@ pub fn checkpoint(name: &str) -> bool {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Leg {
     /// The server's own machine: an intrinsic name, adjudicated in band.
-    Engine,
+    Server,
     /// A machine a foot administers: everything else.
     Routed,
 }
@@ -210,7 +210,7 @@ impl Leg {
     /// two readers of "is this ours" cannot drift.
     pub fn of(name: &str) -> Leg {
         if intrinsic::Known::of(name).is_some() {
-            Leg::Engine
+            Leg::Server
         } else {
             Leg::Routed
         }

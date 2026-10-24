@@ -30,7 +30,7 @@
 # version from this repo's release workflow at tag time. That is a registry a
 # box may poll, it is public, and it only moves forward. And the second
 # objection — an unattended restart killing an in-flight turn — is answered by
-# asking the engine over the §8.5 control boundary instead of asking the
+# asking the server over the §8.5 control boundary instead of asking the
 # cgroup. `scripts/deploy/reconcile.sh` states both answers in full and is what
 # this script now seats.
 #
@@ -43,7 +43,7 @@
 # Idempotent, and the upgrade path. Re-run it to move the box to the tip;
 # re-running is also how a box seated on the old binary units adopts this one.
 #
-# **It ends by PROVING the engine answers** (`verify.sh`, bl-0719) and exits
+# **It ends by PROVING the server answers** (`verify.sh`, bl-0719) and exits
 # non-zero when it does not — a deploy that prints success over a crash loop is
 # the defect, so the exit code and not a status print carries the truth.
 set -eu
@@ -151,9 +151,9 @@ ssh -n "$host" 'systemctl --user disable --now yog-update.timer 2>/dev/null; \
           "$HOME/.config/systemd/user/yog-update.service" \
           "$HOME/.local/bin/yog-update"' || true
 
-# Without lingering the user manager — and so the engine — dies at logout, which
+# Without lingering the user manager — and so the server — dies at logout, which
 # is the one failure that looks like "it just stopped overnight".
-say "enabling lingering (the engine must outlive a login)"
+say "enabling lingering (the server must outlive a login)"
 ssh -n "$host" 'loginctl enable-linger "$USER"' \
     || echo "  ! could not enable lingering; run: sudo loginctl enable-linger \$USER" >&2
 
@@ -164,7 +164,7 @@ ssh -n "$host" 'loginctl enable-linger "$USER"' \
 # at a keyboard, which is the one condition under which killing an in-flight
 # turn is somebody's decision. `reconcile.sh` cannot assume it and so defers
 # instead — same `reset-failed`, different answer to "may I restart now".
-say "starting the engine on $tag"
+say "starting the server on $tag"
 ssh -n "$host" 'systemctl --user daemon-reload; \
     systemctl --user reset-failed yog.service 2>/dev/null; \
     systemctl --user enable yog.service; \
@@ -179,10 +179,10 @@ ssh -n "$host" 'systemctl --user enable --now yog-reconcile.timer'
 # **The last act is a VERIFICATION, and it fails the deploy** (bl-0719). What
 # stood here was a status print, which is exactly what could not see a
 # crash-looping unit: `is-active` says `active` because a `docker run` client
-# process exists, not because the engine serves. `verify.sh` is the whole of
+# process exists, not because the server serves. `verify.sh` is the whole of
 # that question — one ssh, one bounded sleep, five beats ending at a real TLS
 # handshake with the §9.5 listener — and it says why in full. It is a separate
 # file because re-asking "is it answering?" must not require re-seating a box.
-say "verifying the engine on $host"
+say "verifying the server on $host"
 "$here/verify.sh" "$host" "$tag" "$version" \
-    || die "the engine is not answering on $host (still seated on $tag)"
+    || die "the server is not answering on $host (still seated on $tag)"

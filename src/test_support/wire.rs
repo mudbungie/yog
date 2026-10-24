@@ -13,7 +13,7 @@ use std::path::Path;
 
 /// The address minted into the material: loopback on a kernel-chosen port. A
 /// test never names a port, so two tests never collide on one; the bound
-/// address comes back from [`Listener::address`](crate::wire::server::Listener::address).
+/// address comes back from [`Listener::address`](crate::wire::listener::Listener::address).
 ///
 /// It is also what self-provisioning itself requests since bl-dc14 —
 /// bl-4c50's fixture seed (an `ephemeral` writer that pre-named this address

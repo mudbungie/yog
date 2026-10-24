@@ -8,9 +8,9 @@
 //! the assembly twice — once inside the eframe closure and once in the
 //! windowless arm — in the one file `tarpaulin.toml` excludes, so the two
 //! copies were free to drift and no test could notice. Now there is one
-//! [`Engine::boot`] and two callers, and what a face adds beside it is exactly
+//! [`Server::boot`] and two callers, and what a face adds beside it is exactly
 //! what the window is: an event loop to repaint ([`Repaint`]), the four
-//! off-frame wire halves ([`Engine::window_wire`] — asker, poster, follow lane
+//! off-frame wire halves ([`Server::window_wire`] — asker, poster, follow lane
 //! and the §8.5 searcher, which the windowless face needs none of, since every
 //! headless seat already answers in place and off-frame), and the §5.3 RAM
 //! surfaces a pointer needs.
@@ -48,7 +48,7 @@ use std::sync::Arc;
 /// face renders it; the three threads are held only so they live as long as
 /// the server and are stopped and joined when it drops (each owns that shape
 /// itself — §7.2).
-pub struct Engine {
+pub struct Server {
     pub model: AppModel,
     _bridge: Bridge,
     _worker: Worker,
@@ -60,7 +60,7 @@ pub struct Engine {
     /// inbox, which is the half-server that ball is about. A refusal is fatal
     /// and names the address. Held so it lives as long as the server and stops
     /// when it drops.
-    _wire: crate::wire::server::Listener,
+    _wire: crate::wire::listener::Listener,
     _rendezvous: Option<crate::wire::rendezvous::Rendezvous>,
     _sentry: Sentry,
     _pilot: Pilot,
@@ -70,7 +70,7 @@ pub struct Engine {
     _sole: sole::Sole,
 }
 
-impl Engine {
+impl Server {
     /// Boot the server into `world` (already composed, §16.2) with `overrides`
     /// standing on every child spawn — **or refuse, in one sentence the caller
     /// prints and exits on** (bl-1d9b).
@@ -173,7 +173,7 @@ impl Engine {
         // because the operator cannot see it. The refusal is returned rather
         // than printed, since one caller owns the saying and the exit code.
         let answerer = Arc::new(crate::wire::intake::Intake::new(Arc::clone(&intake)))
-            as Arc<dyn crate::wire::server::Answerer>;
+            as Arc<dyn crate::wire::listener::Answerer>;
         let wire = crate::wire::listen(world, Arc::clone(&answerer), presence.clone())
             .map_err(|reason| format!("wire: {reason}"))?;
         // The punched wire's server end (REMOTE §13, bl-4263): a second door

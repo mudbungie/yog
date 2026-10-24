@@ -23,7 +23,7 @@
 //!
 //! Three sources, because a granted name has three origins and only one of them
 //! is litany's file: the shipped `worker` grant, yog's own server acts
-//! ([`engine_act::NAMES`], which carries the compactor's injected pair — never
+//! ([`server_act::NAMES`], which carries the compactor's injected pair — never
 //! in any `providers.yaml`), and the roster tool yog adds to a workspace's grant
 //! ([`clients::NAME`]).
 //!
@@ -40,7 +40,7 @@ use std::process::Command;
 
 use yog::control::classify::Leg;
 use yog::control::policy::Policy;
-use yog::tool_host::{clients, engine_act};
+use yog::tool_host::{clients, server_act};
 
 /// The role whose grant is what an interactive conversation can call out of the
 /// box — litany's own words for it: "roots are workers".
@@ -129,12 +129,12 @@ fn every_name_a_granted_invocation_can_carry_has_an_intrinsic_row() {
     for name in granted
         .iter()
         .map(String::as_str)
-        .chain(engine_act::NAMES)
+        .chain(server_act::NAMES)
         .chain([clients::NAME])
     {
         assert_eq!(
             Leg::of(name),
-            Leg::Engine,
+            Leg::Server,
             "`{name}` is granted but has no row in the intrinsic map, so every \
              call of it classifies opaque and holds — the bl-d06c park. Add its \
              row to `src/control/classify/intrinsic.rs`, choosing the class its \
@@ -160,7 +160,7 @@ fn every_name_a_granted_invocation_can_carry_has_an_intrinsic_row() {
 /// derivation drifting from litany's own file: the grant litany itself
 /// authors must come back whole, gaining `clients` and losing nothing.
 #[test]
-fn the_birth_fold_prunes_no_name_the_pinned_engine_grants() {
+fn the_birth_fold_prunes_no_name_the_pinned_litany_grants() {
     let home = tempfile::TempDir::new().unwrap();
     let providers = shipped_providers(&minted(home.path()));
     let before = grant(&providers, ROLE);

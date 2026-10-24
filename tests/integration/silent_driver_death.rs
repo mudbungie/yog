@@ -166,7 +166,7 @@ fn the_wound_states_the_reason_the_step_recorded() {
 /// so what crosses the §8.5 boundary is already judged and no seat times
 /// anything; and a driver that really did die is still never silenced.
 #[test]
-fn the_engine_waits_out_the_catch_up_window() {
+fn the_server_waits_out_the_catch_up_window() {
     let dir = tempdir().unwrap();
     let ws = dir.path();
     // A live send, one instant old: request written, response empty, no meta —

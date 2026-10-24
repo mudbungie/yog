@@ -1,5 +1,5 @@
 #!/bin/bash
-# headless.sh — how a run boots an engine and reads what it said. Sourced by
+# headless.sh — how a run boots a server and reads what it said. Sourced by
 # stories.sh; not an entry point, and it writes no verdict row of its own.
 #
 # It is a tier for the reason harness.sh and gesture.sh are: five sourced files
@@ -11,7 +11,7 @@
 # a scope decision, this is the vocabulary the verb and its stages speak.
 #
 # It was the SEATLESS tier — the one run verb that claimed no X display while
-# every other verb drove a window. Since bl-7942 a bare `yog` IS the engine and
+# every other verb drove a window. Since bl-7942 a bare `yog` IS the server and
 # there is no other kind of run, so what was the exception is the whole harness.
 
 # `yog` parks until a signal, so it is backgrounded and its pid is the run's one
@@ -19,18 +19,18 @@
 # first gesture is the one that waits — `await`, never a sleep.
 boot_headless() {
   XDG_DATA_HOME="$1" yog >"$2/headless.log" 2>&1 &
-  # THIS run's engine, recorded where it is booted — what every `gesture` below
-  # watches alongside its reply, so an engine that dies mid-run reddens the next
+  # THIS run's server, recorded where it is booted — what every `gesture` below
+  # watches alongside its reply, so a server that dies mid-run reddens the next
   # gesture instead of waiting out its deadline (bl-5cf7).
-  engine_pid=$!
+  server_pid=$!
   # PAIRED WITH THE BOOT: `set -e` can end this file anywhere between here and
-  # the tail, and a parked engine survives to hold a scratch world nobody will
+  # the tail, and a parked server survives to hold a scratch world nobody will
   # look at again. One aborted mutation run left exactly that behind.
-  trap 'kill "$engine_pid" 2>/dev/null || true' EXIT
+  trap 'kill "$server_pid" 2>/dev/null || true' EXIT
   await consumer_up "$1"
 }
 # The probe is TIMED OUT and its reply is thrown away — 2 s, its own budget,
-# because this one is asked BEFORE there is an engine to watch and the answer it
+# because this one is asked BEFORE there is a server to watch and the answer it
 # wants is "not yet". `yog gesture`'s own budget is 60 s (`multiplex.rs`), so
 # without this the boot probe would spend a minute per attempt learning nothing;
 # the shared `gesture` helper's deadline is `gesture.sh`'s. Its answers must also

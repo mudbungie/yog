@@ -3,7 +3,7 @@
 
 use super::*;
 use crate::registry::tools::Tool;
-use crate::tool_host::tests::{budget, engine, impatient};
+use crate::tool_host::tests::{budget, impatient, server};
 use serde_json::json;
 use tempfile::TempDir;
 
@@ -21,10 +21,10 @@ fn the_default_budget_is_a_bounded_wait() {
 
 /// The happy path: deposit, the server answers, the envelope comes back whole.
 #[test]
-fn a_deposit_earns_the_engine_s_own_envelope() {
+fn a_deposit_earns_the_server_s_own_envelope() {
     let root = TempDir::new().expect("tmp");
     let answer = json!({"ok": true, "kind": "clients", "rows": []});
-    let (handle, seen) = engine(root.path(), &answer);
+    let (handle, seen) = server(root.path(), &answer);
     let got = ask(
         root.path(),
         &json!({"op": "clients", "workspace": "home"}),
@@ -40,7 +40,7 @@ fn a_deposit_earns_the_engine_s_own_envelope() {
 /// No server is a sentence, not a hang — the router's own deadline
 /// (`docs/DESIGN_TOOL_INJECTION.md` §3.3).
 #[test]
-fn no_engine_gives_up_and_says_so() {
+fn no_server_gives_up_and_says_so() {
     let root = TempDir::new().expect("tmp");
     let e = ask(
         root.path(),
@@ -113,7 +113,7 @@ fn the_roster_is_the_landed_clients_query() {
         }],
     }];
     let answer = crate::boundary::reply::encode(&Reply::Clients(rows.clone()));
-    let (handle, seen) = engine(root.path(), &answer);
+    let (handle, seen) = server(root.path(), &answer);
     let got = roster(root.path(), "home", budget(), &quiet()).expect("rows");
     handle.join().expect("server");
     assert_eq!(got, rows);
@@ -140,7 +140,7 @@ fn an_answer_that_is_not_a_roster_is_named() {
         (json!({"ok": true, "kind": "no-such-kind"}), "undecodable"),
     ];
     for (answer, said) in cases {
-        let (handle, _seen) = engine(root.path(), &answer);
+        let (handle, _seen) = server(root.path(), &answer);
         let e = roster(root.path(), "home", budget(), &quiet()).expect_err("not a roster");
         handle.join().expect("server");
         assert!(e.contains(said), "{e}");

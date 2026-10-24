@@ -1,5 +1,5 @@
 //! **The server, whole** (DESIGN §8.5, VISION §4.8, REMOTE §8, §12):
-//! [`Engine::serve`], which is what a bare `yog` *is*.
+//! [`Server::serve`], which is what a bare `yog` *is*.
 //!
 //! It is here and not in `main.rs` for that file's own standing reason
 //! (bl-f6fe): `main.rs` is coverage-excluded, so anything that lives there is
@@ -13,7 +13,7 @@
 //! this one, which is exactly what a coverage-excluded file should hold of a
 //! face.
 
-use super::Engine;
+use super::Server;
 use crate::ui_state::SystemClock;
 use crate::xdg::Env;
 use std::sync::Arc;
@@ -24,9 +24,9 @@ use std::sync::Arc;
 /// deliberately not `0`: a supervisor restarting a unit, a script chaining a
 /// launch, and a human reading `echo $?` all learn the same thing from it, and
 /// none of them learned anything before.
-pub const NO_ENGINE: i32 = 69;
+pub const NO_SERVER: i32 = 69;
 
-impl Engine {
+impl Server {
     /// Run the server until a §8.5 stop is asked for, and answer the process's
     /// exit code. Converge the world's tool shims (§8.4, bl-44a5 — the world
     /// `PATH` names that dir unconditionally, so every face that hands the
@@ -38,7 +38,7 @@ impl Engine {
     /// **A boot that refuses exits non-zero, naming what could not be had**
     /// (bl-1d9b): a world another server already holds, or an address this box
     /// cannot listen on. The saying is here rather than in
-    /// [`boot`](Engine::boot) because one face owns stderr and the exit code
+    /// [`boot`](Server::boot) because one face owns stderr and the exit code
     /// together — the same argument bl-dc14 made for the wire's refusal when
     /// there were two faces to make it to.
     pub fn serve(ambient: &Env, overrides: &[(String, String)]) -> i32 {
@@ -49,13 +49,13 @@ impl Engine {
             overrides,
             Arc::new(SystemClock),
         ) {
-            Ok(engine) => {
-                engine.park_until_stopped();
+            Ok(server) => {
+                server.park_until_stopped();
                 0
             }
             Err(refusal) => {
                 eprintln!("yog: {refusal}");
-                NO_ENGINE
+                NO_SERVER
             }
         }
     }

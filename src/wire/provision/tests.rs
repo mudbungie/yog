@@ -120,15 +120,15 @@ fn a_box_with_an_anchor_and_no_ca_key_is_left_alone() {
 #[test]
 fn an_existing_address_is_kept_and_the_server_leaf_names_it() {
     let tmp = TempDir::new().expect("tmp");
-    std::fs::write(tmp.path().join(ADDRESS), "engine.example.com:7737\n").expect("address");
+    std::fs::write(tmp.path().join(ADDRESS), "server.example.com:7737\n").expect("address");
     ensure(tmp.path()).expect("mint");
     let m = material::read_dir(tmp.path(), Role::Server)
         .expect("readable")
         .expect("provisioned");
-    assert_eq!(m.address, "engine.example.com:7737");
+    assert_eq!(m.address, "server.example.com:7737");
     assert_eq!(
-        san(Role::Server, &["engine.example.com".to_owned()]),
-        format!("DNS:engine.example.com,IP:{LOOPBACK}")
+        san(Role::Server, &["server.example.com".to_owned()]),
+        format!("DNS:server.example.com,IP:{LOOPBACK}")
     );
 }
 
@@ -185,7 +185,7 @@ fn a_blank_address_names_nothing() {
 fn a_host_is_the_address_without_its_port_or_brackets() {
     assert_eq!(host_of("127.0.0.1:7737"), "127.0.0.1");
     assert_eq!(host_of("[::1]:7737"), "::1");
-    assert_eq!(host_of("engine.example.com"), "engine.example.com");
+    assert_eq!(host_of("server.example.com"), "server.example.com");
 }
 
 /// A SAN says which **kind** of name a seat verifies against, and the loopback

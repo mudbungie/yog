@@ -22,9 +22,9 @@ fn quiet() -> AtomicBool {
 /// server budget — a server that has not answered is down, a tool that has
 /// not answered is working.
 #[test]
-fn the_tool_bound_is_longer_than_the_engine_bound() {
-    let (tool_bound, engine_bound) = (patience(), Budget::default());
-    assert!(tool_bound.tick * tool_bound.waits > engine_bound.tick * engine_bound.waits);
+fn the_tool_bound_is_longer_than_the_server_bound() {
+    let (tool_bound, server_bound) = (patience(), Budget::default());
+    assert!(tool_bound.tick * tool_bound.waits > server_bound.tick * server_bound.waits);
 }
 
 /// The poll runs more than once: the first look finds nothing, the second
@@ -159,7 +159,7 @@ fn an_answer_that_is_not_a_routed_invocation_names_itself() {
 
 /// No server at all is the same class of answer, at the first round trip.
 #[test]
-fn no_engine_is_a_sentence_at_the_first_ask() {
+fn no_server_is_a_sentence_at_the_first_ask() {
     let root = TempDir::new().expect("tmp");
     let e = invoke(
         &site(root.path(), impatient()),

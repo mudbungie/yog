@@ -59,11 +59,11 @@ fn row(client: &str, name: &str, subject_cwd: bool) -> ClientRow {
 /// classified as server acts in the same breath (bl-fe43, bl-81cc, bl-ebef,
 /// bl-9ced), which is exactly the deliberate act this audit exists to force.
 /// What is deliberately outside: the **eight** built-ins whose subject is the
-/// conversation (they are `engine_act`'s and never reach the lane), the
+/// conversation (they are `server_act`'s and never reach the lane), the
 /// compactor's injected pair (no built-in at all), an operator-granted pool
 /// name with no implementation to reach, and a name that differs only in case.
 #[test]
-fn the_partition_leaves_the_engine_exactly_the_three_worktree_names() {
+fn the_partition_leaves_the_server_exactly_the_three_worktree_names() {
     let performed: Vec<&str> = ::litany::cmd::BUILTIN_TOOLS
         .into_iter()
         .filter(|name| performs(name))
@@ -94,7 +94,7 @@ fn the_partition_leaves_the_engine_exactly_the_three_worktree_names() {
     // enroll a machine for work the server can already do.
     for name in ::litany::cmd::BUILTIN_TOOLS {
         assert!(
-            performs(name) || crate::tool_host::engine_act::is(name),
+            performs(name) || crate::tool_host::server_act::is(name),
             "{name} is a built-in on neither lane"
         );
     }
@@ -105,7 +105,7 @@ fn the_partition_leaves_the_engine_exactly_the_three_worktree_names() {
 /// litany implements; with nothing consenting, a performed name is the
 /// server's and a pool name is a sentence.
 #[test]
-fn a_consenting_machine_wins_and_the_engine_takes_what_is_left() {
+fn a_consenting_machine_wins_and_the_server_takes_what_is_left() {
     // `desk` consents too, but to another name: it is no advertiser of this
     // one, so it neither competes nor makes the pick an ambiguity.
     let mixed = vec![
@@ -123,9 +123,9 @@ fn a_consenting_machine_wins_and_the_engine_takes_what_is_left() {
     // The same roster, and a name it advertises without consent anywhere:
     // litany implements it, so the server performs it.
     let unconsented = vec![row("laptop", "bash", false)];
-    assert!(matches!(verdict(&unconsented, "bash"), Lane::Engine));
-    assert!(matches!(verdict(&[], "apply_patch"), Lane::Engine));
-    assert!(matches!(verdict(&[], "read_file"), Lane::Engine));
+    assert!(matches!(verdict(&unconsented, "bash"), Lane::Server));
+    assert!(matches!(verdict(&[], "apply_patch"), Lane::Server));
+    assert!(matches!(verdict(&[], "read_file"), Lane::Server));
     // And a pool name litany does not implement keeps the operator's remedy —
     // the only one that puts the work where its subject is (bl-68e1). The
     // load the model could take unaided is named as what it is NOT, so a
@@ -207,7 +207,7 @@ fn an_empty_roster_performs_a_worktree_name_at_the_front_door() {
 /// child is spawned (the front door here does not exist, so a spawn would
 /// surface as a different sentence entirely).
 #[test]
-fn an_empty_roster_still_refuses_a_name_the_engine_cannot_perform() {
+fn an_empty_roster_still_refuses_a_name_the_server_cannot_perform() {
     let root = TempDir::new().expect("tmp");
     let (handle, _seen) = scripted(
         root.path(),

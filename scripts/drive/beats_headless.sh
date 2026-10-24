@@ -4,7 +4,7 @@
 #
 # Every other run verb in this family drives a WINDOW: it claims an X display,
 # launches yog on it and presses §11 keys. This one claims nothing. `yog
-# serve` is "the same engine with no window: worker, watcher, gesture
+# serve` is "the same server with no window: worker, watcher, gesture
 # consumer" (§8.4), so the whole run is `yog gesture` lines against a real
 # world — which makes it the cheapest real-substrate verb there is: **no seat,
 # no window, no wire spend, and no model call anywhere in it.** It is also the
@@ -25,7 +25,7 @@
 #   S2  (director) IN — the target rung's whole subject is the cwd a spawn will
 #                      run in, and the shipped binary is the only thing that
 #                      composes it.
-#   S14 (teleop)  PART — T8 (a windowless engine answers) is this verb's own
+#   S14 (teleop)  PART — T8 (a windowless server answers) is this verb's own
 #                      premise, and T5 (an answer aimed at nothing refuses) is
 #                      free. T1-T4 need a LIVE conversation waiting on the
 #                      operator, which needs a model call; the world that
@@ -125,13 +125,13 @@ run_headless() {
   claim=$(in_world "$data" bl create "board claimed" --body "no tools" --as yogdrive)
   in_world "$data" bl create "board blocked" --body "no tools" \
     --needs "$ready" --as yogdrive >/dev/null
-  # S14-T8 — the premise, asserted rather than assumed: an engine with no face
+  # S14-T8 — the premise, asserted rather than assumed: a server with no face
   # booted, consumed a deposit and answered it. Every beat below rides on it, so
   # a boot that never answered ends the run HERE with a verdict row rather than
   # leaving every gesture below to spend its deadline on a consumer that will
   # never come.
   boot_headless "$data" "$out" || {
-    fail "S14-T8 windowless engine: a deposit is consumed and answered" "no engine in 40s"
+    fail "S14-T8 windowless server: a deposit is consumed and answered" "no server in 40s"
     verdict "$out" ; return 1
   }
   # `|| true` ON EVERY BARE FIRE BELOW, and it says something: in this file the
@@ -139,21 +139,21 @@ run_headless() {
   # it — so the fire's own exit is not an assertion, and under `set -eu` an
   # unguarded one ENDS THE RUN where a beat should have gone red. That was
   # academic while a gesture only ever failed by being refused; since bl-5cf7 it
-  # also fails when the engine dies, which is precisely when the remaining rows
+  # also fails when the server dies, which is precisely when the remaining rows
   # are worth writing: each one now reddens on its own refusal row in
   # milliseconds and the run still reaches `verdict`. Where the exit IS the
   # claim — the S14-T5 refusal below — it is spelled `if gesture …` and both
   # arms are written out.
   #
   # The wire spells NAMES, never paths (REMOTE §8, bl-f5f6): `--ws` is the
-  # workspace's own name and `--project` the repo's, and the engine resolves
+  # workspace's own name and `--project` the repo's, and the server resolves
   # each at the dispatch chokepoint.
   ws="$BOOTSTRAP_WS"
   proj_name=$(basename "$proj")
   gesture "$data" /prepare --ws "$ws" --project "$proj_name" || true
   reply_is 'd["ok"] and d["prepared"]["workspace"]=="'"$BOOTSTRAP_WS"'" and not d["prepared"].get("binding")' \
-    && pass "S14-T8 windowless engine: a deposit is consumed and answered" \
-    || fail "S14-T8 windowless engine: a deposit is consumed and answered" "no prepared reply"
+    && pass "S14-T8 windowless server: a deposit is consumed and answered" \
+    || fail "S14-T8 windowless server: a deposit is consumed and answered" "no prepared reply"
 
   # S2-T1 — the target rung, asserted at the TYPED BINDING and nowhere else.
   # The prepared reply named this `cwd` until bl-6654 landed (642b054f) and made

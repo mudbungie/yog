@@ -20,7 +20,7 @@ INSTALL_STAMP  := $(INSTALL_BIN)/.yog.commit
 CARGO_TARGET_DIR ?= target
 export CARGO_TARGET_DIR
 
-# The runtime world this box's engine holds: the SAME root yog itself resolves
+# The runtime world this box's server holds: the SAME root yog itself resolves
 # for `$XDG_DATA_HOME/yog` (`yog_data_root`, src/xdg/mod.rs — the env var if
 # set, else `~/.local/share`). Only `WIRE_DIR` below derives from it now; the
 # `ux`/`reload` launch verbs that used to live here were the window's, and a
@@ -29,7 +29,7 @@ YOG_DATA_HOME := $(or $(XDG_DATA_HOME),$(HOME)/.local/share)/yog
 # The REMOTE §9.5 wire's key material (bl-b6fa). BESIDE the world subtree, not
 # inside it: the world is a generated artifact yog reseeds, and a reseed must
 # not be a revocation. Same `yog_data_root` fold as everything above, so the
-# directory the engine reads and the directory this mints into are one path.
+# directory the server reads and the directory this mints into are one path.
 WIRE_DIR      ?= $(YOG_DATA_HOME)/wire
 # A LIST since bl-52f4: comma-separated, each entry read as an address or a name,
 # so a box reachable by name, by overlay address and on the LAN says so once and
@@ -126,7 +126,7 @@ beat-audit:
 # Mint the wire's local CA and its server/client/window leaves (REMOTE §1.4,
 # §8; bl-b6fa, amended bl-ae05). **Operator tooling, never an in-channel
 # protocol** — but no longer a script: the recipe is `yog wire-certs`, because
-# an installed binary has no repository to find a script in and the engine's own
+# an installed binary has no repository to find a script in and the server's own
 # boot performs the same act on an unprovisioned box. One recipe, two callers.
 # Nothing it writes is in the repo — `WIRE_DIR` is under the yog data root,
 # beside the world. Refuses to overwrite; `FORCE=1` rotates, which distrusts
@@ -151,14 +151,14 @@ beat-audit:
 # whose absence is a no-op: a refusal saying "Re-run with FORCE=1" answered the
 # re-run with the same refusal.
 #   make wire-certs
-#   make wire-certs WIRE_HOST=engine.example.com WIRE_PORT=7737
-#   make wire-certs WIRE_HOST=engine.example.com,198.51.100.9,192.0.2.7
+#   make wire-certs WIRE_HOST=server.example.com WIRE_PORT=7737
+#   make wire-certs WIRE_HOST=server.example.com,198.51.100.9,192.0.2.7
 #   make wire-certs WIRE_LEAF=phone
 #   make wire-certs WIRE_LEAF=buildbox WIRE_FOOT=1
 # The binary itself takes NO argv — every setting is an environment reading, so
 # it is a prefix there and the verb refuses a trailing word rather than
 # ignoring it:
-#   WIRE_HOST=engine.example.com WIRE_PORT=7737 yog wire-certs
+#   WIRE_HOST=server.example.com WIRE_PORT=7737 yog wire-certs
 wire-certs:
 	@WIRE_DIR="$(WIRE_DIR)" WIRE_HOST="$(WIRE_HOST)" WIRE_PORT="$(WIRE_PORT)" \
 		WIRE_LEAF="$(WIRE_LEAF)" FORCE="$(FORCE)" WIRE_FOOT="$(WIRE_FOOT)" \
@@ -338,7 +338,7 @@ install-hooks:
 	echo "hooks: $$common/hooks/{$$(ls .githooks | tr '\n' ',' | sed 's/,$$//')} -> $$top/.githooks"
 
 # The binary is a live spawn target (the substrate shims re-exec it, and a
-# running engine's own children resolve it mid-install), so it gets rename(2)
+# running server's own children resolve it mid-install), so it gets rename(2)
 # atomicity: `install` writes a temp name in the SAME directory, then `mv -f`
 # swaps it into place — a concurrent spawn sees whole-old or whole-new, never
 # ENOENT from install(1)'s unlink-then-write window.
@@ -352,7 +352,7 @@ install: release
 
 # --- fixture worlds (bl-8741) -----------------------------------------------
 # The one-command door over `yog fixture`: lay a named, deterministic world
-# state, boot an engine on it, print the address a harness dials, and remove
+# state, boot a server on it, print the address a harness dials, and remove
 # both on the way out.
 #
 #   make fixture                 list the states
@@ -427,7 +427,7 @@ drive-log:
 # reasons that retired it — it reconciled a cargo-installed BINARY against the
 # crates.io index and read quiescence off the unit's cgroup, which under a
 # container unit answers about `docker run`, a client process. What replaced it
-# polls the §10.1 registry for RELEASED version tags only and asks the engine
+# polls the §10.1 registry for RELEASED version tags only and asks the server
 # itself, over the §8.5 control boundary, whether a turn is in flight. So this
 # target is the bootstrap, the dev-build path and the emergency path — a human
 # carrying an unreleased tag over ssh — and released versions arrive on their
@@ -439,7 +439,7 @@ deploy:
 # The NATIVE shape of the same deployment (bl-8ea9): seat THIS box on the binary
 # unit and the crates.io reconciler. No ssh, no image and no container engine —
 # `deploy` above is the server recipe and cannot seat the box it is run on,
-# because the box most likely to run a native engine is a workstation, which is
+# because the box most likely to run a native server is a workstation, which is
 # the box least likely to be running an sshd and cannot ssh to itself.
 #
 # It takes no parameter, and that is the severability test passing: every fact
@@ -448,7 +448,7 @@ deploy:
 # is one `systemctl --user disable` away with no file here to change.
 #
 # **The unit name is single on purpose.** This seats `yog.service` over whatever
-# `yog.service` was, because a box runs one engine over one world; re-running
+# `yog.service` was, because a box runs one server over one world; re-running
 # `deploy` is how a box goes back to the container shape. `scripts/deploy/local.sh`
 # carries the reasoning.
 deploy-local:

@@ -26,7 +26,7 @@ fails=0
 # Sourced here rather than from stories.sh because everything else this file
 # defines is reached the same way, and `beats_s5.sh` spends `wall_dir` too.
 . "$(dirname "${BASH_SOURCE[0]}")/wall.sh"
-# The §8.5 boundary transport and the engine it is aimed at — `engine_alive`,
+# The §8.5 boundary transport and the server it is aimed at — `server_alive`,
 # `gesture` (bl-5cf7). Reached the same way and for the same reason: `gesture`
 # is a WAITING PRIMITIVE like the two above it, spent by every beats file, and
 # its deadline watches a fact (which yog is up) that every run verb records at

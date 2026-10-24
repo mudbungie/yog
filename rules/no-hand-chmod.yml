@@ -25,7 +25,7 @@
 # fixtures and that a production shim was a different thing with "no `sh` to
 # borrow at that layer". Both halves were wrong: `ensure_shim` wrote the world's
 # shims with `fs::write` + `set_permissions` and a caller exec'd one immediately
-# after — the engine is the process that forks the most, not the least — and the
+# after — the server is the process that forks the most, not the least — and the
 # `sh` was always there, `git_env` being the crate's one fork. bl-fd28's own
 # stress filter with the `world::tools`/`world::tests` beats folded in cost 7
 # ETXTBSY failures over 1,120 runs, and zero after. A retry loop on ETXTBSY was

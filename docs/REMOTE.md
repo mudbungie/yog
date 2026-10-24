@@ -657,7 +657,7 @@ is where a seat would one day read it. Nothing answers with it yet.
 
 A seat that vendors the ledger then answers two questions no bump ever
 answered: *can this server spell the field this control would send* —
-`stamp(shape, key) ≤ engine edition`, else grey the control — and *is this
+`stamp(shape, key) ≤ server edition`, else grey the control — and *is this
 absent field absent because the server cannot say it*, which is rendered as
 exactly that rather than as the reassuring default. The three entries that
 paid a bump to make an absence loud (8's `wrote`, 15's `tools`, 18's `held`)
@@ -1840,7 +1840,7 @@ resolution addressed before the inversion, with the caller identity on the
 child's environment and the `tool_use` input on its stdin; the child is yog
 under the `litany` namespace, standing in the same world. One definition of the
 acts and it is upstream's. **The name set is closed and enumerated in exactly
-one place in code** (`src/tool_host/engine_act.rs`): two rows, because the
+one place in code** (`src/tool_host/server_act.rs`): two rows, because the
 procedure is the only second source of injected definitions litany has. A third
 would arrive there as a row, never as a prefix test or a name shape.
 
@@ -1936,7 +1936,7 @@ audit and neither a machine's:
   answer for the one way out of a cut the harness imposed.
 
 The server-act name set stays closed and enumerated in exactly one place
-(`src/tool_host/engine_act.rs`), now ten rows, and the mechanism is bl-dfce's
+(`src/tool_host/server_act.rs`), now ten rows, and the mechanism is bl-dfce's
 unchanged: re-entry at litany's own front door with the caller identity on
 the child's environment — and, since the seam hands it over (litany bl-ddaa),
 at the caller's **resolved working directory**, which is the server's own
@@ -2085,7 +2085,7 @@ is the default, because a default install has no foot.
 **The rung's set is closed, and since bl-e654 it is *derived* in exactly one
 place in code rather than listed** (`src/tool_host/subject.rs`, `performs`):
 `litany::cmd::BUILTIN_TOOLS` — litany's own constant, exported since litany
-0.0.5, upstream bl-4cbb — **minus** `engine_act::NAMES`. The two admitting facts
+0.0.5, upstream bl-4cbb — **minus** `server_act::NAMES`. The two admitting facts
 are unchanged and are now *stated by the partition itself*: a row's subject is
 the conversation's working tree (it is not a server act), and litany
 already ships an implementation of it (it is a builtin). What the partition
@@ -2582,7 +2582,7 @@ reaching into seats to tidy it was never this server's to do.
 
 **Bare `yog` is the server, and there is no other face in this crate**
 *(bl-7942)*. The binary's whole interface is: the server (a bare `yog`, which
-boots `Engine::boot` and parks until a §8.5 stop); `yog gesture`, the
+boots `Server::boot` and parks until a §8.5 stop); `yog gesture`, the
 deposit-and-wait sugar over the world's own inbox; the three namespace arms
 (`bl`, `litany`, `bz`) and balls' two plugin seams; the two world hatches (`yog
 env`, `yog exec`); `yog tool-control`, the capability adjudicator litany's seam
@@ -2653,7 +2653,7 @@ document is the authority for; the file paths are history.
 
 **Two roles in one process, one boundary between them** *(bl-ae05; the two roles
 became two processes at bl-7942)*. Bare `yog` boots the server in its own
-process exactly as it always has — the listener rides `Engine::boot`, one world
+process exactly as it always has — the listener rides `Server::boot`, one world
 one server, and that ruling is untouched. What changed is that the second role
 left: a local window used to share this process and be handed its address in
 RAM, because only the listener knows what a `:0` became. A seat is a separate
@@ -2669,7 +2669,7 @@ spawns a second server, and nothing refuses a desktop launch with a terminal
 instruction, because a desktop launch is the seat's own program.
 
 **`headless` is now `serve`, and the rename is the point** *(bl-b6fa)*. The
-face did not change — it is still the one `Engine::boot` with no window — but
+face did not change — it is still the one `Server::boot` with no window — but
 the server now carries the listener, so what it is to anything off the box is a
 server. Two spellings of one face is the drift the const exists to prevent, so
 there is one word and §8's is it.
@@ -2677,7 +2677,7 @@ there is one word and §8's is it.
 **The listener rides the SERVER, not one face** *(decided, bl-b6fa)*. §8.5
 already runs the deposit consumer on both faces, for I0's reason: *a deposit
 converges whichever face is up*. A seat wants the identical guarantee, so the
-listener boots beside the consumer in `Engine::boot`, which is the whole binary
+listener boots beside the consumer in `Server::boot`, which is the whole binary
 since bl-7942. That decides the local boot question §9.5
 was asked to settle, and it decides it by **dissolving it**: nothing spawns
 anything, nothing refuses with a remedy, and there is no ladder — because there
@@ -2890,8 +2890,8 @@ bind, a mint, a missing file), never the consequence derived from it.
 **And one world has one server** *(bl-1d9b)*. The bind cannot be that exclusion
 — a self-provisioned box requests `127.0.0.1:0` so two servers in two worlds
 never contend for a process-global port, and two `:0` binds both succeed — so
-the boot takes an advisory lock on `<yog-state-root>/engine.lock` before it
-consumes anything (DESIGN §8.5, `src/engine/sole.rs`). Two servers on one world
+the boot takes an advisory lock on `<yog-state-root>/server.lock` before it
+consumes anything (DESIGN §8.5, `src/server/sole.rs`). Two servers on one world
 is not a degraded mode: two consumers of one inbox are two `registry::mailbox`
 instances minting into one `inv-N` namespace, so a routed tool call is answered
 "not in flight" when the handle misses and handed **another invocation's
@@ -3261,7 +3261,7 @@ without: its own.
 **The reframe, tested and taken in half.** The proposal was that "local" stop
 being a special case — the loopback server one entry among N, the window
 picking one. Half holds: loopback stops being the *only* channel, and
-`Engine::window_seat`'s forced `loopback()` stops defining the window's shape
+`Server::window_seat`'s forced `loopback()` stops defining the window's shape
 — it becomes one channel's address resolution among N. Half is rejected, for
 cause. The loopback channel cannot BE an entry, because an entry's address is
 a file and the loopback address is a `:0` answered in RAM by the listener
@@ -4011,7 +4011,7 @@ before anything is dialled (§8). Every consequence is recorded where it belongs
   decodes with `reply::decode` and publishes. Two channels, no lock, and no
   frame-side wait: a dead server costs a surface its content and the window
   nothing.
-- `Engine::asker` — a window took it, and the server never did. It went with
+- `Server::asker` — a window took it, and the server never did. It went with
   the window (bl-7942): what the server hands a seat is a socket.
 - The **clients section** (§5) is the first surface painted from a wire reply:
   the roster it renders crossed loopback mTLS, was scoped against the window's
@@ -4323,7 +4323,7 @@ boundary instead of running in process. The second is the smaller and is the one
 to take; the win is `§1.2` compliance, not one fewer thread.
 
 **Landed (bl-44e9), as ruled.** `Searcher` holds a seat rather than a snapshot
-cell and asks `Query::Search` over the wire; it is minted by `Engine::searcher`
+cell and asks `Query::Search` over the wire; it is minted by `Server::searcher`
 beside the asker and the poster, on the same window leaf and the same failure
 condition, and rides `WindowWire` as its third half. Two consequences are stated
 rather than discovered. **A refusal is an unreadable source** — `Found` already
@@ -4916,7 +4916,7 @@ arriving. They survive unchanged; the general handle is the ticket.
   twin: `fire` for the act whose receipt is nothing, `Held` for the act whose
   receipt is a sentence.
 - `src/engine/window.rs` — the server's hand-overs to a window, both ends off
-  the one loopback seat, split from `engine.rs` at DESIGN §12's budget.
+  the one loopback seat, split from `server.rs` at DESIGN §12's budget.
 
 **The poster is a thread of its own, and that is a ruling.** An act runs as long
 as the verb behind it — a `bl close` runs a project's gate — so posting it on
@@ -5718,7 +5718,7 @@ rule instead, at edition 19, and nothing about the shapes changed.)
 
 The shape is the one the board's ball rows, `reply/workspace-balls` and
 `reply/agent` already carry and lernie already decodes (`reply/spend`):
-`{"micro_usd": <u64>, "usd": "<engine-rendered>", "unpriced_tokens": <u64>}`,
+`{"micro_usd": <u64>, "usd": "<server-rendered>", "unpriced_tokens": <u64>}`,
 the key **absent** — never zero — when the price table is empty. Derived text
 rides beside the fact, as §9.7 ruled: a seat paints `usd` verbatim and never
 multiplies, because the box that holds the rates is the only box that may
@@ -6444,7 +6444,7 @@ two items are filed under, `seal key` is the ChaCha20-Poly1305 key both are
 sealed with, and `inbox key` is a second ed25519 **seed** — the inbox is
 signed under a keypair *derived from the pairing salt*, so a client needs no
 keypair of its own to write it and the server holds no client key to poll
-it. Presence lives at `(engine public key, presence salt)`; the inbox at
+it. Presence lives at `(server public key, presence salt)`; the inbox at
 `(inbox public key, inbox salt)`. A sealed item is `nonce(12) ‖ ciphertext ‖
 tag(16)`; the presence plaintext is one endpoint list, a call's is an
 8-byte big-endian nonce then one; an endpoint list is a count byte and per

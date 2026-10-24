@@ -18,7 +18,7 @@ use super::*;
 /// the roster's doc states — their subject is the working tree, which a
 /// consenting machine may hold.
 #[test]
-fn the_ten_names_are_engine_acts_and_nothing_else_is() {
+fn the_ten_names_are_server_acts_and_nothing_else_is() {
     assert_eq!(
         NAMES,
         [
@@ -46,7 +46,7 @@ fn the_ten_names_are_engine_acts_and_nothing_else_is() {
 /// is queued at the server at all. The loaded set is present precisely so the
 /// beat can say the router had a machine to route to and did not use it.
 #[test]
-fn an_engine_act_never_reaches_an_enrolled_thralls_mailbox() {
+fn a_server_act_never_reaches_an_enrolled_thralls_mailbox() {
     let root = TempDir::new().expect("tmp");
     loaded::add(
         root.path(),

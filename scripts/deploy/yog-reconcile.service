@@ -13,10 +13,10 @@
 # already answered. The unit is left in `failed`, which is where an operator
 # sees it: `systemctl --user list-units --failed`.
 [Unit]
-Description=yog engine reconcile (unattended CD)
+Description=yog server reconcile (unattended CD)
 Documentation=https://github.com/mudbungie/yog
 # It dials the registry, so it needs the network — and it must not race the
-# engine it is about to ask a question of.
+# server it is about to ask a question of.
 After=network-online.target yog.service
 Wants=network-online.target
 

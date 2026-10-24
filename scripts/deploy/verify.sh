@@ -1,5 +1,5 @@
 #!/bin/sh
-# **Prove the deployed engine ANSWERS** (bl-0719) — `seat.sh`'s last act, and
+# **Prove the deployed server ANSWERS** (bl-0719) — `seat.sh`'s last act, and
 # the only act in the deploy whose whole product is an exit code.
 #
 #   verify.sh <ssh-host|--local> <image-tag> <version>
@@ -15,7 +15,7 @@
 # A status print stood at the end of the deploy, and a status print is exactly
 # what could not see the defect this file was written for: `systemctl --user
 # is-active` says `active` while the unit crash-loops, because a `docker run`
-# client process existing is not the engine serving. Two consecutive real
+# client process existing is not the server serving. Two consecutive real
 # deploys reported success over a container that never started. A deploy that
 # cannot tell success from a crash loop has reinvented the retired
 # reconciler's blindness at the moment it acts — so the truth is carried here,
@@ -36,18 +36,18 @@
 #   3. the running container's image is EXACTLY the tag: bl-0719's defect head
 #      on, and a crash loop with it — mid-loop there is no container at all.
 #   4. `yog --version` inside it answers the version just built — the container
-#      does not merely exist, it EXECUTES this engine.
-#   5. the wire answers, and this needs NO seat and no credential: the engine's
+#      does not merely exist, it EXECUTES this server.
+#   5. the wire answers, and this needs NO seat and no credential: the server's
 #      own container carries `openssl` (the mint's recipe shells to it), the
 #      listener is `--network host`, and a TLS server sends its certificate
 #      before it ever asks the client for one. So an anonymous `s_client` gets
 #      the operator chain out of the §9.5 listener and is then refused for want
 #      of a client certificate — the refusal is mutual auth working, and the
-#      chain is the proof the engine is bound and serving. Nothing weaker
+#      chain is the proof the server is bound and serving. Nothing weaker
 #      separates "a process is up" from "the wire answers", which is the fact a
 #      deploy exists to establish. The address is never passed in — it has one
 #      home (`wire/address`, REMOTE §8) and it is read out of the container's
-#      own data root, so the probe asks the engine where it bound.
+#      own data root, so the probe asks the server where it bound.
 set -eu
 
 host=${1:-}
@@ -91,11 +91,11 @@ said=$(docker exec yog yog --version 2>&1 || true)
 [ "$said" = "yog $version" ] || fail "the container answers '$said', not 'yog $version'"
 
 address=$(docker exec yog cat /state/yog/wire/address 2>/dev/null || true)
-[ -n "$address" ] || fail 'the engine bound no wire: no address in its data root'
+[ -n "$address" ] || fail 'the server bound no wire: no address in its data root'
 
 probe=$(docker exec yog timeout 10 openssl s_client -connect "$address" 2>&1 || true)
 printf '%s\n' "$probe" | grep -q 'Server certificate' \
     || fail "nothing answered TLS at $address"
 
-printf 'engine answering: %s, wire at %s\n' "$image" "$address"
+printf 'server answering: %s, wire at %s\n' "$image" "$address"
 REMOTE

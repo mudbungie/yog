@@ -78,7 +78,7 @@ stamp() { date -u +%Y%m%dT%H%M%SZ; }
 # EVERY STAGE THIS FILE DRIVES LEAVES A ROW, whatever happened to it — verb and
 # exit code, appended before the next stage starts (bl-d0a0). A stage that dies
 # before its first beat writes no verdict, so until this it left no trace at all:
-# an engine that never came up, a duplicate beat definition refused at source
+# a server that never came up, a duplicate beat definition refused at source
 # time, a preflight tool that answered and then quit. The report reads these rows, so
 # "which stage failed" is in the document rather than in a scrolled-past
 # terminal. It is not a second copy of the verdicts — it is the only record of a
@@ -97,7 +97,7 @@ stage_row() { printf '%s\t%s\n' "$2" "$3" >>"$1/stages.tsv"; }
 # reports a verdict-less run instead of refusing it, and this guard keeps the
 # primary failure and the exit code below whatever else it does. (The run that
 # found this had died claiming an X seat; there is no seat to fail at now, but
-# an engine that will not boot fails in exactly the same place.)
+# a server that will not boot fails in exactly the same place.)
 skeleton() {
   "$here/logskel.sh" "$1" >"$1/drive-log.md" \
     || echo "drive.sh: the log skeleton failed; the run's own verdict stands" >&2

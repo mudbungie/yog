@@ -8,7 +8,7 @@ use tempfile::TempDir;
 
 struct Silent;
 
-impl server::Answerer for Silent {
+impl listener::Answerer for Silent {
     fn answer(
         &self,
         _peer: &crate::registry::Peer,
@@ -57,7 +57,7 @@ fn an_unprovisioned_box_founds_its_own_loopback_wire() {
 /// it is the harder case for this property (one address file, two live
 /// listeners, two distinct ports) and **not** because it is a lawful
 /// arrangement: two servers on one world is refused a rung up, by the world's
-/// own lock (`engine::sole`, bl-1d9b), which exists precisely because this
+/// own lock (`server::sole`, bl-1d9b), which exists precisely because this
 /// property means the bind can never be that exclusion.
 #[test]
 fn two_listeners_on_one_box_each_get_their_own_port() {
@@ -95,7 +95,7 @@ fn a_stated_port_another_process_holds_is_a_refusal_that_names_it() {
 /// A box whose material directory cannot even be MADE is told why, in a
 /// sentence naming the cause: the mint is a capability, and a box without
 /// `openssl` or without a writable data root cannot have a wire. What the
-/// server then does with that sentence is `Engine::boot`'s — since bl-1d9b it
+/// server then does with that sentence is `Server::boot`'s — since bl-1d9b it
 /// refuses and exits, a yog with no listener being no server at all.
 #[test]
 fn a_box_the_mint_cannot_provision_is_told_why() {

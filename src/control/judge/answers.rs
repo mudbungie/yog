@@ -143,7 +143,7 @@ impl Answers {
         // operator is asked. The once-answer stands ahead of this on purpose —
         // an operator who answered this exact id has made the decision.
         let table = match classify::Leg::of(&request.name) {
-            classify::Leg::Engine => policy.ruling(effect),
+            classify::Leg::Server => policy.ruling(effect),
             classify::Leg::Routed => policy.ruling(effect).for_the_operator(),
         };
         // The compaction procedure's own pair is never floored (bl-a821): it is

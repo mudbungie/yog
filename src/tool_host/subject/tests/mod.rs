@@ -98,11 +98,11 @@ fn a_granted_worktree_name_routes_with_the_conversations_cwd() {
     );
 }
 
-/// The lane's last rung: what the server performs on its own box, and what it
-/// still refuses (bl-5710).
-mod engine;
 /// The sentences: unconsented, ambiguous, and the two transport failures.
 mod refusals;
+/// The lane's last rung: what the server performs on its own box, and what it
+/// still refuses (bl-5710).
+mod server;
 
 /// The site used by the lane is the call's own, so the loaded set stays
 /// consulted first: a loaded qualified name never reaches the lane, and an

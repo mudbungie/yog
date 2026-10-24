@@ -42,7 +42,7 @@ mod set;
 /// untouched. Nothing of the compactor's semantics is restated by yog: the
 /// front door is the one definition.
 #[test]
-fn the_pair_is_performed_at_the_engines_own_front_door() {
+fn the_pair_is_performed_at_litanys_own_front_door() {
     let root = TempDir::new().expect("tmp");
     // A sleep first, so the drain is entered with nothing buffered and the
     // waiting arm is the one that runs — the ordinary case, not a corner.
@@ -118,7 +118,7 @@ fn an_unspawnable_front_door_refuses_in_band() {
 /// the server works ends it at once, and a deadline running out ends it too.
 /// Returning drops the stream, and the drop is the kill.
 #[test]
-fn a_working_engine_is_ended_by_the_stop_flag_and_by_the_deadline() {
+fn a_working_server_is_ended_by_the_stop_flag_and_by_the_deadline() {
     let root = TempDir::new().expect("tmp");
     let door = front_door(root.path(), "sleep 30");
     let input = json!({});
@@ -158,7 +158,7 @@ fn a_working_engine_is_ended_by_the_stop_flag_and_by_the_deadline() {
 /// semantics stay upstream's; what is proven here is that the router now
 /// takes these names to litany's front door instead of to a machine or a refusal.
 #[test]
-fn the_worker_grants_perform_at_the_engines_own_front_door() {
+fn the_worker_grants_perform_at_litanys_own_front_door() {
     let root = TempDir::new().expect("tmp");
     let door = front_door(
         root.path(),

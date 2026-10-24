@@ -28,7 +28,7 @@ fn dial(b: &Bench) -> TcpStream {
 /// A call toward a port nobody listens on, opened and its window told to the
 /// acceptor: the SYNs go nowhere, so only what the test dials lands.
 fn open_call_to_nobody(b: &Bench, nonce: u64) {
-    let stats = b.engine.stats();
+    let stats = b.server.stats();
     assert!(until(|| stats.polls.load(Relaxed) >= 1, WAIT));
     let closed = Punch::bind(0).expect("a port").port();
     assert!(b.write_inbox(1, b.call(nonce, closed)) >= 1);
@@ -44,7 +44,7 @@ fn a_stream_between_calls_is_served_and_said_once_per_burst() {
     let (first, second) = (dial(&b), dial(&b));
     drop(b.ask_over(first));
     drop(b.ask_over(second));
-    let stats = b.engine.stats();
+    let stats = b.server.stats();
     assert_eq!(b.said(&accepted()), 1, "{:?}", b.heard());
     let standing = stats.standing();
     assert_eq!((standing.accepted, standing.served), (2, 2));
@@ -70,7 +70,7 @@ fn a_stream_that_fails_mtls_is_dropped_and_said_once() {
     let refused = format!("{P} stream on the punch port (v4) refused at the handshake — dropped");
     assert!(until(|| b.said(&refused) == 1, WAIT), "{:?}", b.heard());
     assert_eq!(b.said(&accepted()), 1);
-    assert_eq!(b.engine.stats().standing().accepted, 1);
+    assert_eq!(b.server.stats().standing().accepted, 1);
 }
 
 #[test]
@@ -80,7 +80,7 @@ fn the_listener_survives_a_punch_window_ending() {
     let expired = format!("{P} punch for nonce 8 expired after 3s with no stream");
     assert!(until(|| b.said(&expired) == 1, WAIT), "{:?}", b.heard());
     drop(b.ask_over(dial(&b)));
-    let standing = b.engine.stats().standing();
+    let standing = b.server.stats().standing();
     assert_eq!((standing.accepted, standing.punched), (1, 0));
 }
 
@@ -91,7 +91,7 @@ fn a_stream_from_a_live_windows_peer_is_the_windows() {
     drop(b.ask_over(dial(&b)));
     let landed = format!("{P} punch for nonce 6 landed 1 stream(s) (1 v4)");
     assert_eq!(b.said(&landed), 1, "{:?}", b.heard());
-    let stats = b.engine.stats();
+    let stats = b.server.stats();
     assert_eq!(
         (stats.standing().punched, stats.standing().accepted),
         (1, 0)

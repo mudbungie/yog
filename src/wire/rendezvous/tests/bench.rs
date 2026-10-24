@@ -11,8 +11,8 @@ use crate::registry::Peer;
 use crate::registry::presence::Presence;
 use crate::test_support::clock::FakeClock;
 use crate::test_support::wire::{EPHEMERAL, material, mint};
+use crate::wire::listener::{Answerer, Quiet};
 use crate::wire::material::Role;
-use crate::wire::server::{Answerer, Quiet};
 use crate::wire::{frame, hello, tls};
 use rustls::pki_types::ServerName;
 use rustls::{ClientConnection, StreamOwned};
@@ -40,7 +40,7 @@ pub(super) struct Bench {
     pub(super) clock: FakeClock,
     pub(super) port: u16,
     heard: Arc<Mutex<Vec<String>>>,
-    pub(super) engine: Rendezvous,
+    pub(super) server: Rendezvous,
 }
 
 /// A walk that waits milliseconds.
@@ -92,7 +92,7 @@ pub(super) fn bench(mood: Mood, bootstrap: Option<Vec<String>>) -> Bench {
     let port = punch.port();
     let heard = Arc::new(Mutex::new(Vec::new()));
     let sink = Arc::clone(&heard);
-    let engine = Rendezvous::spawn(Ctx {
+    let server = Rendezvous::spawn(Ctx {
         pairing: pairing.clone(),
         transport: Udp::bind(loopback(0)).expect("udp"),
         bootstrap: bootstrap.unwrap_or_else(|| vec![router.addr.to_string()]),
@@ -119,7 +119,7 @@ pub(super) fn bench(mood: Mood, bootstrap: Option<Vec<String>>) -> Bench {
         clock,
         port,
         heard,
-        engine,
+        server,
     }
 }
 

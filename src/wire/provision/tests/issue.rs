@@ -79,12 +79,12 @@ fn the_pair_reads_back_as_an_entry_on_the_box_it_is_carried_to() {
     ] {
         std::fs::copy(host.path().join(from), entry.join(to)).expect("carried by hand");
     }
-    std::fs::write(entry.join(ADDRESS), "engine.example.com:7737\n").expect("stated address");
+    std::fs::write(entry.join(ADDRESS), "server.example.com:7737\n").expect("stated address");
 
     let material = read_dir(&entry, Role::Client)
         .expect("readable")
         .expect("provisioned");
-    assert_eq!(material.address, "engine.example.com:7737");
+    assert_eq!(material.address, "server.example.com:7737");
     assert_eq!(material.chain, entry.join("client.pem"));
     assert!(
         described(&material.chain, &["-subject"]).contains(&format!("CN={VISITOR}")),

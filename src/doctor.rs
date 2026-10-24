@@ -34,7 +34,7 @@ use crate::boundary::dispatch::Deps;
 
 /// The server-wide checks — wire material, the endpoint, the listener, the
 /// identity every substrate spawn signs with.
-mod engine;
+mod server;
 /// The per-workspace checks — the wall the first conversation needs, and who is
 /// registered to reach it.
 mod workspace;
@@ -108,7 +108,7 @@ pub fn report(deps: &Deps, workspace: Option<(&str, &Path)>) -> Report {
 /// workspace was named, since a seat with none selected is asking about the
 /// box.
 pub fn examine(deps: &Deps, workspace: Option<(&str, &Path)>) -> Vec<Row> {
-    let mut rows = engine::rows(deps);
+    let mut rows = server::rows(deps);
     if let Some((name, path)) = workspace {
         rows.extend(workspace::rows(deps, name, path));
     }

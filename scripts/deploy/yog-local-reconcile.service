@@ -14,10 +14,10 @@
 # is left in `failed`, which is where an operator sees it:
 # `systemctl --user list-units --failed`.
 [Unit]
-Description=yog engine reconcile (unattended CD)
+Description=yog server reconcile (unattended CD)
 Documentation=https://github.com/mudbungie/yog
 # It dials the registry, so it needs the network — and it must not race the
-# engine it is about to ask a question of.
+# server it is about to ask a question of.
 After=network-online.target yog.service
 Wants=network-online.target
 
@@ -25,7 +25,7 @@ Wants=network-online.target
 Type=oneshot
 ExecStart=%h/.local/bin/yog-reconcile
 # **The build is the long pole**, and it runs on this box's own cores: a native
-# reconcile is a `cargo install` of the whole engine, not a registry pull. The
+# reconcile is a `cargo install` of the whole server, not a registry pull. The
 # container shape's ten minutes is the wrong bound here — a cold first build is
 # minutes and a cold-cache one on a laptop can be many. Long enough for that,
 # short enough that a wedged pass does not hold the box out forever.
@@ -36,7 +36,7 @@ Environment=PATH=%h/.local/bin:%h/.cargo/bin:/usr/local/bin:/usr/bin:/bin
 # **This box may be somebody's desktop and they may be using it.** A background
 # build that makes the machine unpleasant to type on is worse than a slow one:
 # it gets the timer switched off, and a switched-off timer is no CD at all. It
-# must also never outrank the engine it is building for — the whole point of the
+# must also never outrank the server it is building for — the whole point of the
 # box is the agents already running on it.
 Nice=19
 IOSchedulingClass=idle

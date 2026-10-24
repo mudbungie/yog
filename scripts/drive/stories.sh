@@ -71,10 +71,10 @@ seed() {
 # carries the verdict's machine-keyable half, the `verdicts.jsonl` row each
 # PASS/FAIL line writes beside `gestures.jsonl` (bl-56d5), and it sources the
 # three tiers of its own: the assertion helpers (`predicates.sh`), the §16.2
-# wall fixture (`wall.sh`) and the §8.5 boundary transport with the engine it
-# is aimed at (`gesture.sh` — `boot_engine`, `engine_alive`, `gesture`).
+# wall fixture (`wall.sh`) and the §8.5 boundary transport with the server it
+# is aimed at (`gesture.sh` — `boot_server`, `server_alive`, `gesture`).
 . "$here/harness.sh"
-# How a run boots an engine and reads what it said (`boot_headless`, `reply_is`,
+# How a run boots a server and reads what it said (`boot_headless`, `reply_is`,
 # `row`).
 . "$here/headless.sh"
 

@@ -43,7 +43,7 @@ fn a_stated_plan_is_taken_and_an_empty_statement_is_not() {
     let stated = plan(
         &world,
         Some("/elsewhere/wire".to_owned()),
-        Some("engine.example.com".to_owned()),
+        Some("server.example.com".to_owned()),
         Some("7000".to_owned()),
         Some("1".to_owned()),
         None,
@@ -54,7 +54,7 @@ fn a_stated_plan_is_taken_and_an_empty_statement_is_not() {
     assert_eq!(
         stated.act,
         Act::Mint {
-            hosts: vec!["engine.example.com".to_owned()],
+            hosts: vec!["server.example.com".to_owned()],
             port: Some("7000".to_owned()),
             force: true,
         }
@@ -91,7 +91,7 @@ fn a_stated_leaf_is_the_other_act_and_takes_no_mint_facts() {
     let stated = plan(
         &world,
         None,
-        Some("engine.example.com".to_owned()),
+        Some("server.example.com".to_owned()),
         Some("7000".to_owned()),
         Some("1".to_owned()),
         Some("phone".to_owned()),

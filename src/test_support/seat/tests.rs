@@ -19,14 +19,14 @@ fn the_server_name_comes_off_the_address() {
         ServerName::IpAddress("::1".parse::<IpAddr>().expect("ip").into())
     );
     assert_eq!(
-        server_name("engine.example.com:7737").expect("dns"),
-        ServerName::try_from("engine.example.com").expect("dns")
+        server_name("server.example.com:7737").expect("dns"),
+        ServerName::try_from("server.example.com").expect("dns")
     );
     // A bare host with no port is still a name — the address file is the
     // operator's, and refusing it here would be a second opinion about it.
     assert_eq!(
-        server_name("engine.example.com").expect("dns"),
-        ServerName::try_from("engine.example.com").expect("dns")
+        server_name("server.example.com").expect("dns"),
+        ServerName::try_from("server.example.com").expect("dns")
     );
 }
 
@@ -96,7 +96,7 @@ fn a_dead_address_refuses_naming_itself() {
 /// A peer that accepts and then says nothing TLS-shaped is a receive failure,
 /// not an answer — the seat never invents one.
 #[test]
-fn a_peer_that_is_not_an_engine_fails_to_answer() {
+fn a_peer_that_is_not_a_server_fails_to_answer() {
     let tmp = TempDir::new().expect("tmp");
     mint(tmp.path());
     let listener = std::net::TcpListener::bind("127.0.0.1:0").expect("bind");
@@ -115,6 +115,6 @@ fn a_peer_that_is_not_an_engine_fails_to_answer() {
 fn a_local_seat_dials_loopback_at_the_bound_port() {
     use super::loopback;
     assert_eq!(loopback("0.0.0.0:7737"), "127.0.0.1:7737");
-    assert_eq!(loopback("engine.example.com:9"), "127.0.0.1:9");
+    assert_eq!(loopback("server.example.com:9"), "127.0.0.1:9");
     assert_eq!(loopback("nonsense"), "127.0.0.1:");
 }

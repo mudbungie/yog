@@ -3,7 +3,7 @@
 //!
 //! REMOTE §1.2 rules that the UI operates entirely via RPC and that even the
 //! local, single-machine arrangement does the hard split. This module is the
-//! channel that makes that possible: [`server`] is the server's listener,
+//! channel that makes that possible: [`listener`] is the server's listener,
 //! [`client`] is a seat's transport, [`frame`] is what they say to each other,
 //! [`material`] is the operator-provisioned trust the whole thing rests on, and
 //! [`seat`] is the first shipped consumer — the terminal seat, `yog seat`.
@@ -19,7 +19,7 @@
 //! **The listener rides the server, not one face** (bl-b6fa). Both faces run
 //! the deposit consumer so a deposit converges whichever face is up (§8.5, I0);
 //! a seat wants the identical guarantee, so the listener boots in
-//! [`Engine::boot`](crate::engine::Engine::boot) beside it. That is also what
+//! [`Server::boot`](crate::server::Server::boot) beside it. That is also what
 //! keeps **one server per world**: a windowed yog serves the wire it would
 //! otherwise have to start a second server to reach, and `yog serve` is the
 //! same server with no window.
@@ -44,6 +44,7 @@ pub mod frame;
 /// before it says anything, and the fail-closed refusal a skew earns.
 pub mod hello;
 pub mod intake;
+pub mod listener;
 pub mod material;
 /// The mint (REMOTE §1.4, §8; bl-ae05) — the one `openssl` recipe, spent by the
 /// server's boot and by `yog wire-certs` alike.
@@ -51,7 +52,6 @@ pub mod provision;
 /// The punched wire's server end (REMOTE §13, bl-4263): presence, the inbox
 /// poll, the punch, and held-connection serving.
 pub mod rendezvous;
-pub mod server;
 pub mod tls;
 
 /// **How often a seat re-asks its standing set** — human cadence (REMOTE §3),
@@ -82,7 +82,7 @@ pub const ASK_PERIOD: std::time::Duration = std::time::Duration::from_millis(500
 ///
 /// A refusal is *returned* rather than said here, and the caller owns both the
 /// saying and the consequence (bl-dc14): the server's boot hands it up, and
-/// `Engine::serve` prints it and **exits non-zero** (bl-1d9b). It used not to
+/// `Server::serve` prints it and **exits non-zero** (bl-1d9b). It used not to
 /// be fatal — a box with no `openssl` got the server yog had always been — on
 /// the argument that only a seat was shut out; the window that made that true
 /// left with bl-7942, so a yog with no listener answers nobody while still
@@ -90,9 +90,9 @@ pub const ASK_PERIOD: std::time::Duration = std::time::Duration::from_millis(500
 /// about.
 pub fn listen(
     world: &Env,
-    answerer: Arc<dyn server::Answerer>,
+    answerer: Arc<dyn listener::Answerer>,
     presence: crate::registry::presence::Presence,
-) -> Result<server::Listener, String> {
+) -> Result<listener::Listener, String> {
     let minted = provision::ensure(&material::dir(world));
     let material = match material::read(world, material::Role::Server) {
         Ok(Some(m)) => m,
@@ -107,7 +107,7 @@ pub fn listen(
     if let Err(e) = minted {
         eprintln!("yog: wire: {e}");
     }
-    server::Listener::bind(&material, answerer, presence)
+    listener::Listener::bind(&material, answerer, presence)
 }
 
 /// **What this process's listener bound** (REMOTE §8, bl-28f4) — a handle, set

@@ -1,6 +1,6 @@
 //! The peer of one connection, seen from the server's side (bl-4263): who it
 //! is, how its silence is read, and how it is hung up on. Split from
-//! [`server`](super) at §12's cap when the punched wire gave a connection a
+//! [`listener`](super) at §12's cap when the punched wire gave a connection a
 //! second way to be quiet.
 //!
 //! **A held connection is quiet on purpose** (REMOTE §13.4). A dialled seat

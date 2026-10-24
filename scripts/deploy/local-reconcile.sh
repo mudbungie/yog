@@ -1,5 +1,5 @@
 #!/bin/sh
-# **Unattended engine CD on a NATIVE box** (bl-8ea9) — the timer-driven half of
+# **Unattended server CD on a NATIVE box** (bl-8ea9) — the timer-driven half of
 # `local.sh`'s deployment, and the sibling of `reconcile.sh`. That one
 # reconciles a box that runs the image against ghcr's released tags; this one
 # reconciles a box that runs the BINARY against crates.io's released versions.
@@ -13,16 +13,16 @@
 # different safety conditions and must be free to happen at different times:
 #
 #   1. the INSTALLED binary against the registry's newest live version
-#   2. the RUNNING engine against the installed binary
+#   2. the RUNNING server against the installed binary
 #
-# (1) is always safe while the engine runs: `cargo install` replaces the file by
+# (1) is always safe while the server runs: `cargo install` replaces the file by
 # rename, so the running process keeps its own inode and never sees a
 # half-written binary. (2) is NOT always safe — a restart kills whatever turn is
 # in flight — and that is the whole reason this file exists rather than a
 # `cargo install && systemctl restart` line.
 #
 # **What a restart actually destroys is the WORK IN FLIGHT and the SPEND that
-# bought it**, not the conversation. The engine survives a SIGTERM (§4.1 state
+# bought it**, not the conversation. The server survives a SIGTERM (§4.1 state
 # is write-through, bl-b54e) and the pinned litany settles an unanswered tool
 # window at the next drive boundary, so the branch revives on an ordinary
 # deposit. What does not come back is the tools that died mid-execution, their
@@ -33,23 +33,23 @@
 # deleted by whoever checks the claim (bl-286b).
 #
 # **The idle read is the §8.5 boundary's, not the cgroup's.** `reconcile.sh`
-# states why the question belongs to the engine — `WsRow::running` is the
+# states why the question belongs to the server — `WsRow::running` is the
 # boundary's one aggregate liveness bit and the union over the rows is exactly
 # "no turn in flight anywhere in this world" — and the reply's own `stale` note
-# defers too, because a stale derivation means the engine is saying its own
+# defers too, because a stale derivation means the server is saying its own
 # `running` bits may be a photograph. A native unit's cgroup WOULD answer
 # honestly here (the objection that retired the old process-count predicate is
 # about a container unit's cgroup holding a `docker run` client), but two
 # statements of one idle question drift, and the one that drifts is the one
-# nobody re-reads. There is one idle question and the engine answers it.
+# nobody re-reads. There is one idle question and the server answers it.
 #
-# **The question is put to the RUNNING engine's own binary**, `/proc/<pid>/exe`,
+# **The question is put to the RUNNING server's own binary**, `/proc/<pid>/exe`,
 # never to the one just installed: the gesture inbox is a serialization, and the
 # process that reads it should be asked in its own words.
 #
 # Nothing here is stored. "Which version is installed" is the binary's own
 # answer, "is a restart pending" is a kernel fact, and "is it safe" is the
-# engine's answer. There is no state file to drift, and nothing to reconcile if
+# server's answer. There is no state file to drift, and nothing to reconcile if
 # somebody installs or restarts by hand.
 #
 # Exit 0 whenever the box is in a lawful state, including "newer version
@@ -76,7 +76,7 @@ die() { say "$*" >&2; exit 1; }
 
 # ------------------------------------------------------------- the decision
 #
-# ONE RULE: the engine should be running the newest live version, unless a turn
+# ONE RULE: the server should be running the newest live version, unless a turn
 # is in flight or the operator stopped it. Every case below falls out of that
 # sentence. It is a pure function of four facts so the branches that matter can
 # be tested without a server, a release or an agent (`--self-test`). Prints
@@ -100,7 +100,7 @@ decide() {
     # Stopped on purpose, or mid-transition: not ours to move.
     if [ "$_state" != active ]; then echo current; return; fi
     # **The pending read is answered BEFORE the unknown guard, and the order is
-    # load-bearing.** The idle question is only put to the engine when there is
+    # load-bearing.** The idle question is only put to the server when there is
     # something to defer FOR, so on a box that is already current `idle` is
     # `unknown` by construction — and an unknown-first guard would answer
     # `defer` on every tick of the steady state, reporting "a turn is in flight
@@ -223,7 +223,7 @@ pid=$(systemctl --user show -P MainPID "$UNIT" 2>/dev/null || echo 0)
 
 # "A restart is pending" is not a flag anybody writes: it is the running process
 # being an older VERSION than the one installed. Both halves are self-reported —
-# the running engine through `/proc/<pid>/exe`, which is still the replaced file
+# the running server through `/proc/<pid>/exe`, which is still the replaced file
 # after an install renamed a new one over the path, and the installed binary
 # through the path itself.
 #
@@ -233,10 +233,10 @@ pid=$(systemctl --user show -P MainPID "$UNIT" 2>/dev/null || echo 0)
 # `scripts/install-main` writes it too, on every move of `refs/heads/main`, and
 # its whole job is to make the installed binary equal to main's TIP. Under the
 # inode read, a ball closing on this box became an unattended deploy of
-# unreleased code onto the operator's live engine — install-main restarts
+# unreleased code onto the operator's live server — install-main restarts
 # nothing precisely because "whether and when to restart is the unit's
 # question", and answering it by inode made install-main a deploy behind its own
-# back. The rule this file states is *the engine should be running the newest
+# back. The rule this file states is *the server should be running the newest
 # live version*; after step 1 the installed binary IS that version, so comparing
 # versions asks the rule directly. A dev build swapped underneath at the same
 # version is then correctly not a publication and not a restart.
@@ -249,13 +249,13 @@ if [ -n "$running_version" ] && [ -n "$installed_version" ]; then
     if [ "$running_version" = "$installed_version" ]; then pending=no; else pending=yes; fi
 fi
 
-# The boundary read, and only when there is something to defer FOR: an engine
+# The boundary read, and only when there is something to defer FOR: a server
 # that is already the installed binary is not going to be restarted whatever it
 # answers, and asking anyway spends a deposit on every tick forever.
 idle=unknown
 if [ "$state" = active ] && [ "$pending" = yes ] && [ "${pid:-0}" != 0 ]; then
-    # The running engine's own binary (see the header), and bounded: a wedged
-    # engine must not hold the box when the next tick fires.
+    # The running server's own binary (see the header), and bounded: a wedged
+    # server must not hold the box when the next tick fires.
     reply=$(timeout 30 "/proc/$pid/exe" gesture '{"op":"workspaces"}' 2>/dev/null) || reply=
     case ${reply:-} in
         '')                 idle=unknown ;;
@@ -269,7 +269,7 @@ fi
 case "$(decide "$state" "$changed" "$pending" "$idle")" in
     current)
         if [ "$state" = active ]; then
-            say 'the running engine is the installed binary; nothing to do'
+            say 'the running server is the installed binary; nothing to do'
         else
             say "$UNIT is $state; leaving it alone"
         fi ;;

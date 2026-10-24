@@ -31,7 +31,7 @@ use std::process::Stdio;
 const FIXTURE_ENV: &str = "YOG_TEST_REPLACED_EXE_DIR";
 /// The child arm's test name, spawned `--exact`. Deliberately shares no
 /// substring with any argv the shim is later exec'd under.
-const CHILD_ARM: &str = "the_live_engine_that_lost_its_inode";
+const CHILD_ARM: &str = "the_live_server_that_lost_its_inode";
 
 /// The built `yog` — the executable the "install" moves onto the pathname the
 /// child was born from, so the shim it writes can actually be consulted.
@@ -43,7 +43,7 @@ fn installed_yog() -> &'static Path {
 /// its own pathname atomically replaced under it, and then does what a Start
 /// does — re-resolve and rewrite the §8.6 control shim.
 #[test]
-fn the_live_engine_that_lost_its_inode() {
+fn the_live_server_that_lost_its_inode() {
     let Ok(dir) = std::env::var(FIXTURE_ENV) else {
         return;
     };

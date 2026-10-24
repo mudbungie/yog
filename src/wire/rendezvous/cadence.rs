@@ -3,7 +3,7 @@
 //! off the root at §12's budget (bl-5276) when the punch port gained its
 //! standing acceptor.
 
-use crate::wire::server::Quiet;
+use crate::wire::listener::Quiet;
 use std::time::Duration;
 
 /// The mainline DHT's bootstrap nodes — the caller's fact, resolved on the

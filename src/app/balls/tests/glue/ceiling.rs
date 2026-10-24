@@ -12,7 +12,7 @@ use super::{fake_litany, model, prepared, signed, world};
 use crate::boundary::Action;
 use crate::cli_outbound::Cli;
 use crate::opslog;
-use crate::test_support::engine;
+use crate::test_support::server;
 use std::fs;
 use tempfile::tempdir;
 
@@ -37,7 +37,7 @@ fn the_spend_ceiling_refuses_the_fire_and_says_so_on_the_trail() {
         goal: "go".into(),
         seed: Some(7),
     };
-    let err = engine::act(&m, &deps, "T3", &action).unwrap_err();
+    let err = server::act(&m, &deps, "T3", &action).unwrap_err();
     assert!(err.contains("spend ceiling reached"), "{err}");
     let ops = opslog::tail(&w.roots.yog_state, 4);
     let last = ops.last().expect("the refusal is on the trail");
@@ -87,7 +87,7 @@ fn spend_in_another_workspace_refuses_a_fire_into_an_idle_one() {
         goal: "go".into(),
         seed: Some(7),
     };
-    let err = engine::act(&m, &deps, "T3", &action).unwrap_err();
+    let err = server::act(&m, &deps, "T3", &action).unwrap_err();
     assert!(
         err.contains("$3.00"),
         "the sibling's spend is the figure: {err}"

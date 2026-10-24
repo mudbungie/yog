@@ -54,7 +54,7 @@ fn a_loaded_remote_name_is_routed_and_its_capture_comes_back() {
 /// A transport failure is yog's own sentence, and it is in band and non-zero —
 /// the shape a vanished endpoint already had to produce. Nothing hangs.
 #[test]
-fn an_engine_that_never_answers_refuses_in_band() {
+fn a_server_that_never_answers_refuses_in_band() {
     let root = TempDir::new().expect("tmp");
     loaded::add(
         root.path(),

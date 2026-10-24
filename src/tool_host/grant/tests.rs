@@ -32,7 +32,7 @@ fn workspace(providers: &str) -> TempDir {
 /// the same namespace (`refs/heads/agents/`), which is what a live workspace
 /// shows.
 #[test]
-fn the_fixture_branch_is_the_namespace_the_engine_enumerates() {
+fn the_fixture_branch_is_the_namespace_the_server_enumerates() {
     let ws = workspace(TEMPLATE);
     seed_agent_branch(ws.path(), "amber", None);
     let ids: Vec<String> = crate::git_tree::living_agents(ws.path())

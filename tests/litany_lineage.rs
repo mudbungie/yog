@@ -17,7 +17,7 @@
 //! one of them is a link in this chain:
 //!
 //! 1. the front-door spawn puts `LITANY_TOOL_ID` on the child
-//!    (`src/tool_host/engine_act.rs`, `const TOOL_ID`);
+//!    (`src/tool_host/server_act.rs`, `const TOOL_ID`);
 //! 2. the shim is a bare `/bin/sh` re-exec that strips nothing
 //!    (`src/world/tools.rs`, `shim_script`);
 //! 3. the multiplex arm reads it back at the binding and fills `Fx::tool_id`

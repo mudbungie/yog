@@ -18,7 +18,7 @@
 //!   litany's `docs/DESIGN_MCP_BRIDGE.md` §6 ruling binds a host too, so the
 //!   grant gate, the tool control and any future policy keep seeing one name
 //!   per capability.
-//! - [`engine_act`] — the compactor's procedure pair, which is not a host
+//! - [`server_act`] — the compactor's procedure pair, which is not a host
 //!   injection at all: litany injects it from the calling role's own procedure,
 //!   and since the seam inverted it reaches this router like every other name.
 //!   Its subject is the conversation, which yog holds, so yog answers it
@@ -79,8 +79,6 @@ use crate::ui_state::{Clock, iso8601_extended};
 pub mod ask;
 /// The `clients` tool: the roster, and the act that loads from it.
 pub mod clients;
-/// The compactor's procedure pair, performed as server acts.
-pub mod engine_act;
 /// The calling role's `providers.yaml` grant — the gate on this whole
 /// injection since bl-52b7.
 pub mod grant;
@@ -90,6 +88,8 @@ pub mod loaded;
 pub mod remote;
 /// The dated observations the tool appends to context.
 pub mod render;
+/// The compactor's procedure pair, performed as server acts.
+pub mod server_act;
 /// The worktree lane (REMOTE §5.4, bl-77be): a granted, unqualified name
 /// routed to the workspace's one consenting machine, with the conversation's
 /// working directory on the invocation.
@@ -132,7 +132,7 @@ pub struct Injection {
     state_root: PathBuf,
     /// The path litany's own third hop addresses as `<driver_target> tool
     /// <name>` — the world's `litany` shim, which re-executes yog under that
-    /// namespace. [`engine_act`] performs the compactor pair through it, so the
+    /// namespace. [`server_act`] performs the compactor pair through it, so the
     /// acts stay litany's own and yog restates none of their semantics.
     driver_target: PathBuf,
     budget: ask::Budget,
@@ -269,8 +269,8 @@ impl ToolInjection for Injection {
         if call.name == clients::NAME {
             return capture(call.name, clients::answer(&site, call.input, call.stop));
         }
-        if engine_act::is(call.name) {
-            return engine_act::perform(&self.driver_target, self.patience.span(), &call);
+        if server_act::is(call.name) {
+            return server_act::perform(&self.driver_target, self.patience.span(), &call);
         }
         match loaded::read(&site.state_root, &site.workspace, &site.agent)
             .into_iter()

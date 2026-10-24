@@ -26,7 +26,7 @@ use yog::projects::runner::{BlRunner, BlStore};
 
 /// `id` is the ball the parent's `create` sealed in this directory's store.
 pub(crate) fn the_board_reads_the_directorys_own_store(proj: &Path, id: &str) {
-    // The composed world, exactly as `Engine::boot` composes it from the
+    // The composed world, exactly as `Server::boot` composes it from the
     // ambient environment this binary owns — `YOG_HOST_STATE` and all.
     let world = yog::world::compose(&yog::xdg::Env::from_env());
     let board = BlStore::new(world, Cli::new("bl"));

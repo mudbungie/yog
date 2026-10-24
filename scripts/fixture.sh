@@ -1,12 +1,12 @@
 #!/bin/bash
 # fixture.sh — the one-command door over `yog fixture` (bl-8741): lay a named
-# world state, boot an engine on it, print the address, and tear the lot down
+# world state, boot a server on it, print the address, and tear the lot down
 # on the way out.
 #
 # The verb is the portable half and this is the convenience: `yog fixture
 # <state>` writes the world and answers one JSON object, and everything below
 # is the three lines a consumer would otherwise write around it. A harness in
-# another repository should spend the VERB — it owns its own engine process and
+# another repository should spend the VERB — it owns its own server process and
 # its own teardown, which is the whole reason the verb does not park.
 #
 # Usage:
@@ -38,13 +38,13 @@ d = json.load(sys.stdin)
 print(d["root"], d["address"], d["anchors"], d["chain"], d["key"])')
 EOF
 
-# **Everything this script started, it stops.** The engine is a child and the
+# **Everything this script started, it stops.** The server is a child and the
 # root is a scratch tree the verb wiped to make; a run that abandoned either
 # would leave a world nobody looks at again holding a port nobody can reuse.
-engine=""
+server=""
 cleanup() {
-  [ -z "$engine" ] || kill "$engine" 2>/dev/null || true
-  [ -z "$engine" ] || wait "$engine" 2>/dev/null || true
+  [ -z "$server" ] || kill "$server" 2>/dev/null || true
+  [ -z "$server" ] || wait "$server" 2>/dev/null || true
   rm -rf "$root"
 }
 trap cleanup EXIT INT TERM
@@ -68,19 +68,19 @@ for p in json.load(sys.stdin)["hold"]:
     print(p)')
 EOF
 
-XDG_DATA_HOME="$root" "$yog" >"$root/engine.log" 2>&1 &
-engine=$!
+XDG_DATA_HOME="$root" "$yog" >"$root/server.log" 2>&1 &
+server=$!
 
-# The engine is up when it answers, not when the process exists. Deadlined,
-# and the deadline is the engine's own liveness too: a boot that died has
+# The server is up when it answers, not when the process exists. Deadlined,
+# and the deadline is the server's own liveness too: a boot that died has
 # nothing to wait for.
 if ! timeout 60 bash -c '
   until XDG_DATA_HOME="$1" "$2" gesture /workspaces >/dev/null 2>&1; do
     kill -0 "$3" 2>/dev/null || exit 2
     sleep 0.5
-  done' _ "$root" "$yog" "$engine"; then
-  echo "fixture: the engine never came up; its log:" >&2
-  tail -20 "$root/engine.log" >&2
+  done' _ "$root" "$yog" "$server"; then
+  echo "fixture: the server never came up; its log:" >&2
+  tail -20 "$root/server.log" >&2
   exit 1
 fi
 
@@ -91,9 +91,9 @@ anchors  $anchors
 chain    $chain
 key      $key
 root     $root
-log      $root/engine.log
+log      $root/server.log
 
-dial it with those three files; Ctrl-C stops the engine and removes the root.
+dial it with those three files; Ctrl-C stops the server and removes the root.
 EOF
 
-wait "$engine"
+wait "$server"

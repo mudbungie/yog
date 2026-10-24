@@ -22,7 +22,7 @@
 use super::call::Answer;
 use super::punch::LINGER;
 use super::say;
-use crate::wire::server::serve;
+use crate::wire::listener::serve;
 use std::net::{IpAddr, TcpStream};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{Receiver, SyncSender};

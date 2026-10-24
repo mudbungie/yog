@@ -32,23 +32,23 @@ fn every_host_stated_is_one_entry_and_none_is_said_twice() {
         san(
             Role::Server,
             &[
-                "engine.example.com".to_owned(),
+                "server.example.com".to_owned(),
                 "198.51.100.9".to_owned(),
                 "192.0.2.7".to_owned(),
             ]
         ),
-        format!("DNS:engine.example.com,IP:198.51.100.9,IP:192.0.2.7,IP:{LOOPBACK}")
+        format!("DNS:server.example.com,IP:198.51.100.9,IP:192.0.2.7,IP:{LOOPBACK}")
     );
     assert_eq!(
         san(
             Role::Server,
             &[
-                "engine.example.com".to_owned(),
+                "server.example.com".to_owned(),
                 LOOPBACK.to_owned(),
-                "engine.example.com".to_owned(),
+                "server.example.com".to_owned(),
             ]
         ),
-        format!("DNS:engine.example.com,IP:{LOOPBACK}"),
+        format!("DNS:server.example.com,IP:{LOOPBACK}"),
         "a repeat is said once, wherever it falls"
     );
     assert_eq!(san(Role::Server, &[]), format!("IP:{LOOPBACK}"));
@@ -60,15 +60,15 @@ fn every_host_stated_is_one_entry_and_none_is_said_twice() {
 #[test]
 fn the_mint_covers_the_address_and_every_further_host() {
     assert_eq!(
-        hosts_of("engine.example.com:7737", &["192.0.2.7".to_owned()]),
-        vec!["engine.example.com".to_owned(), "192.0.2.7".to_owned()]
+        hosts_of("server.example.com:7737", &["192.0.2.7".to_owned()]),
+        vec!["server.example.com".to_owned(), "192.0.2.7".to_owned()]
     );
     assert_eq!(hosts_of("[::1]:7737", &[]), vec!["::1".to_owned()]);
 
     let tmp = TempDir::new().expect("tmp");
     mint(
         tmp.path(),
-        "engine.example.com:7737",
+        "server.example.com:7737",
         &["192.0.2.7".to_owned()],
         false,
     )
@@ -95,8 +95,8 @@ fn the_server_leaf_re_issues_over_the_standing_ca() {
     let carried = std::fs::read(tmp.path().join("phone.pem")).expect("the carried leaf");
     let address = std::fs::read(tmp.path().join(ADDRESS)).expect("address");
 
-    reissue(tmp.path(), &["engine.example.com".to_owned()]).expect("re-issue");
-    assert!(names(tmp.path(), Role::Server).contains("engine.example.com"));
+    reissue(tmp.path(), &["server.example.com".to_owned()]).expect("re-issue");
+    assert!(names(tmp.path(), Role::Server).contains("server.example.com"));
     assert_eq!(std::fs::read(tmp.path().join(ANCHORS)).expect("ca"), ca);
     assert_eq!(
         std::fs::read(tmp.path().join("phone.pem")).expect("leaf"),
@@ -117,7 +117,7 @@ fn a_box_that_founded_nothing_cannot_re_issue() {
     let tmp = TempDir::new().expect("tmp");
     ensure(tmp.path()).expect("mint");
     std::fs::remove_file(tmp.path().join(CA_KEY)).expect("a client box");
-    let refusal = reissue(tmp.path(), &["engine.example.com".to_owned()])
+    let refusal = reissue(tmp.path(), &["server.example.com".to_owned()])
         .expect_err("only the box that founded it can issue");
     assert!(refusal.contains(CA_KEY), "{refusal}");
 }

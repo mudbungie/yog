@@ -96,7 +96,7 @@ impl FileIo for FakeFs {
 ///
 /// A hand copy, so it drifts — it stood a pin behind litany's own grant
 /// until bl-d06c. What the drift can no longer cost is a parked conversation:
-/// `tests/engine_grant.rs` reads the grant out of a workspace `litany new`
+/// `tests/litany_grant.rs` reads the grant out of a workspace `litany new`
 /// really authors and holds it against the classifier's intrinsic map, so the
 /// fact this constant approximates is checked against litany and not
 /// against this string.
@@ -164,6 +164,7 @@ pub(crate) use world::{fixture_workspace, no_wall, no_world, signed, wall_paths,
 /// part of the spawn discipline above.
 pub(crate) mod workspace;
 
+pub(crate) mod seat;
 /// The §9.5 wire's key material, minted at test runtime by the same
 /// out-of-channel act an operator performs (REMOTE §1.4, bl-b6fa) — its own
 /// file because a certificate fixture is never committed and the minting is a
@@ -171,8 +172,7 @@ pub(crate) mod workspace;
 /// **The suite's own seat** — the client half of the wire, which the crate no
 /// longer ships (bl-7942) and its own tests must still speak to prove the
 /// listener.
-pub(crate) mod engine;
-pub(crate) mod seat;
+pub(crate) mod server;
 pub(crate) mod wire;
 
 /// The §11 accessories that crossed with bl-296f — the altitude-0 chrome and

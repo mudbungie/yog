@@ -17,7 +17,7 @@ mod unload;
 use super::*;
 use crate::boundary::reply::{self, Reply};
 use crate::registry::tools::Tool;
-use crate::tool_host::tests::{budget, engine, impatient, site, tool};
+use crate::tool_host::tests::{budget, impatient, server, site, tool};
 use serde_json::json;
 use std::path::Path;
 use tempfile::TempDir;
@@ -37,7 +37,7 @@ fn row(client: &str, present: bool, tools: Vec<Tool>) -> ClientRow {
 
 /// Answer one op against a stand-in server holding `rows`.
 fn against(root: &Path, rows: Vec<ClientRow>, input: &Value) -> Result<String, String> {
-    let (handle, _seen) = engine(root, &reply::encode(&Reply::Clients(rows)));
+    let (handle, _seen) = server(root, &reply::encode(&Reply::Clients(rows)));
     let answered = answer(&site(root, budget()), input, &quiet());
     handle.join().expect("server");
     answered
@@ -206,7 +206,7 @@ fn an_unregistered_client_is_absent() {
 /// A malformed invocation is declined **before** the server is asked: the
 /// refusal belongs to the caller, not to a round trip.
 #[test]
-fn a_declined_invocation_never_reaches_the_engine() {
+fn a_declined_invocation_never_reaches_the_server() {
     let root = TempDir::new().expect("tmp");
     let e = answer(
         &site(root.path(), impatient()),
@@ -223,7 +223,7 @@ fn a_declined_invocation_never_reaches_the_engine() {
 
 /// A server that does not answer is the ask's own sentence, in band.
 #[test]
-fn an_unreachable_engine_is_said_in_band() {
+fn an_unreachable_server_is_said_in_band() {
     let root = TempDir::new().expect("tmp");
     let e = answer(
         &site(root.path(), impatient()),

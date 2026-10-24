@@ -1,7 +1,7 @@
 //! The loop, on a flag this test owns.
 //!
 //! **The process-wide flag is not touched here.** It has exactly one owner in
-//! the whole suite — `engine::serve::tests`, which drives the face that reads
+//! the whole suite — `server::serve::tests`, which drives the face that reads
 //! it — because a static two tests may raise is a static they can race, and
 //! `cargo test` runs them in parallel. One owner is cheaper than a lock and is
 //! the same discipline the linked litany applies to its own §2.9 flag.

@@ -9,7 +9,7 @@ use tempfile::tempdir;
 /// bl-1d9b it produced a second gesture consumer and a second `inv-N`
 /// namespace rather than a refusal.
 #[test]
-fn a_second_engine_on_one_world_is_refused() {
+fn a_second_server_on_one_world_is_refused() {
     let dir = tempdir().expect("tmp");
     let state = dir.path().join("state").join("yog");
     let first = take(&state).expect("the first server takes the world");
@@ -45,5 +45,5 @@ fn a_state_root_that_cannot_be_made_refuses() {
     let blocked = dir.path().join("blocked");
     std::fs::write(&blocked, b"a file where the state root goes").expect("block it");
     let refusal = take(&blocked).err().expect("refused");
-    assert!(refusal.contains("engine lock"), "{refusal}");
+    assert!(refusal.contains("server lock"), "{refusal}");
 }

@@ -9,7 +9,7 @@
 # quietly weaker on whichever side moves first.
 #
 # - `src/main.rs` is the process edge: the multi-call argv match, the two
-#   world hatches, and one call into `Engine::serve` — which is itself a
+#   world hatches, and one call into `Server::serve` — which is itself a
 #   tested function (bl-269a). Everything it reaches is covered.
 # - **`src/shell/*` is gone with the exclusion** (bl-7942). It was the egui
 #   interaction glue, whose `.clicked()` branches were unreachable headless;

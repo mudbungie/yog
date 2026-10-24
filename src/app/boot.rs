@@ -21,7 +21,7 @@ impl AppModel {
     /// first gesture rather than an empty snapshot.
     ///
     /// Returned as a pair rather than spawned here: the thread is the caller's
-    /// ([`Engine::boot`](crate::engine::Engine::boot) hands it a wake hook; a
+    /// ([`Server::boot`](crate::server::Server::boot) hands it a wake hook; a
     /// test drives `step()` by hand), and a model that spawned its own thread
     /// could not be exercised deterministically. This is the same shape the
     /// watch bridge always had.

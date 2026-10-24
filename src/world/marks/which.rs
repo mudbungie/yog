@@ -68,7 +68,7 @@ mod tests {
     use crate::xdg::Env;
     use std::path::Path;
 
-    /// A world composed the way `Engine::boot` composes one: the anchor is
+    /// A world composed the way `Server::boot` composes one: the anchor is
     /// ambient, the state home is nested, and the host's own is carried in
     /// beside it (§16.2, bl-262a).
     fn world() -> Env {

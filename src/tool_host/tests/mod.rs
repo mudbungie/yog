@@ -8,7 +8,7 @@
 /// shared subject rather than this file's own scaffolding.
 mod stand_in;
 
-pub(super) use stand_in::{budget, engine, front_door, impatient, scripted, site, tool};
+pub(super) use stand_in::{budget, front_door, impatient, scripted, server, site, tool};
 
 use super::*;
 use crate::boundary::deposit;
@@ -202,12 +202,12 @@ fn nothing_loaded_refuses_an_ordinary_tool_in_band_and_still_compacts() {
     let stop = AtomicBool::new(false);
     let live = at(root.path(), door, budget());
 
-    let (engine, _seen) = scripted(
+    let (server, _seen) = scripted(
         root.path(),
         &[json!({"ok": true, "kind": "clients", "rows": []})],
     );
     let refused = live.route(call!("Read", &input, &stop));
-    engine.join().expect("server");
+    server.join().expect("server");
     assert_eq!(refused.exit_code, 1);
     assert!(refused.stdout.is_empty());
     let said = String::from_utf8_lossy(&refused.stderr).into_owned();
@@ -224,7 +224,7 @@ fn nothing_loaded_refuses_an_ordinary_tool_in_band_and_still_compacts() {
         "{said}"
     );
 
-    for name in engine_act::NAMES {
+    for name in server_act::NAMES {
         let acted = live.route(call!(name, &input, &stop, root.path()));
         assert_eq!(
             acted.exit_code, 0,
@@ -239,7 +239,7 @@ fn nothing_loaded_refuses_an_ordinary_tool_in_band_and_still_compacts() {
 #[test]
 fn a_clients_op_answers_as_a_zero_exit_capture() {
     let root = TempDir::new().expect("tmp");
-    let (handle, seen) = engine(
+    let (handle, seen) = server(
         root.path(),
         &json!({"ok": true, "kind": "clients", "rows": []}),
     );

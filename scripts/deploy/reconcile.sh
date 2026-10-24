@@ -1,5 +1,5 @@
 #!/bin/sh
-# **Unattended engine CD** (bl-4e3c) — the timer-driven half of the deployment.
+# **Unattended server CD** (bl-4e3c) — the timer-driven half of the deployment.
 # `seat.sh` is a human at a keyboard; this runs on the box with nobody there.
 #
 #   reconcile.sh          # from yog-reconcile.service, every 15 minutes
@@ -20,7 +20,7 @@
 #      reconciler read quiescence off the unit's own cgroup, which for a
 #      container unit answers about `docker run`, a client process — the wrong
 #      question wearing the right word. The right one is asked **over the §8.5
-#      control boundary**, of the engine itself, and is answered below.
+#      control boundary**, of the server itself, and is answered below.
 #
 # **The idle read is `{"op":"workspaces"}`, and it is not a new gesture.**
 # `WsRow::running` is "whether anything in it is Live/InFlight right now"
@@ -35,7 +35,7 @@
 #
 # The reply's own `stale` note is read too, and it defers. `stale` is present
 # only when the derivation behind these rows is behind the world (§7.2) — so
-# the engine is saying its own `running` bits may be out of date, and acting on
+# the server is saying its own `running` bits may be out of date, and acting on
 # them would be acting on a photograph.
 #
 # **A deferral is a correct steady state, so it is unbounded and silent-ish:**
@@ -46,7 +46,7 @@
 # once, ever.** The bound is an invariant rather than a counter: a rollback
 # writes `YOG_REFUSED` into `deploy.env` beside the `YOG_IMAGE` it restored,
 # and this refuses to re-attempt that tag. Without it a bad release restarts
-# the engine every fifteen minutes forever, which is the failure mode an
+# the server every fifteen minutes forever, which is the failure mode an
 # unattended upgrade has and a human one does not.
 #
 # **`verify.sh` gates, and it is the same file `seat.sh` calls** — `--local`,
@@ -180,18 +180,18 @@ if [ "$refused" = "$target" ]; then
 fi
 
 # ---------------------------------------------------------------------------
-# 4. Ask the engine, over the boundary, whether a turn is in flight.
+# 4. Ask the server, over the boundary, whether a turn is in flight.
 
 # `docker exec` and not a wire dial: the gesture inbox is the §8.5 boundary's
-# other serialization, it needs no certificate, and the engine is right there.
-# An engine that does not answer is deferred to rather than upgraded past — a
+# other serialization, it needs no certificate, and the server is right there.
+# A server that does not answer is deferred to rather than upgraded past — a
 # silent failure to read is not a reading of "idle".
 reply=$(docker exec yog yog gesture '{"op":"workspaces"}' 2>/dev/null) || reply=
-[ -n "$reply" ] || { say "the engine did not answer the boundary — deferring $target"; exit 0; }
+[ -n "$reply" ] || { say "the server did not answer the boundary — deferring $target"; exit 0; }
 
 case $reply in
     *'"stale":'*)
-        say "the engine says its derivation is stale — deferring $target"
+        say "the server says its derivation is stale — deferring $target"
         exit 0 ;;
 esac
 case $reply in
@@ -236,7 +236,7 @@ point_at "$target"
 restart
 
 if "$here/verify.sh" --local "$target" "$newest"; then
-    say "the engine is answering on $target"
+    say "the server is answering on $target"
     exit 0
 fi
 

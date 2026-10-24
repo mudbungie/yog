@@ -14,7 +14,7 @@ use crate::boundary::consumer::ConsumerCtx;
 use serde_json::Value;
 use std::sync::Arc;
 
-/// The server's [`Answerer`](super::server::Answerer): the deposit consumer's
+/// The server's [`Answerer`](super::listener::Answerer): the deposit consumer's
 /// context, shared rather than copied.
 pub struct Intake {
     ctx: Arc<ConsumerCtx>,
@@ -27,7 +27,7 @@ impl Intake {
     }
 }
 
-impl super::server::Answerer for Intake {
+impl super::listener::Answerer for Intake {
     /// One request, one reply frame — **unless the read is follow-class**
     /// (bl-73e7), in which case it is the frames that read produces, written as
     /// they are produced. Two arms and no third: [`follow`](ConsumerCtx::follow)

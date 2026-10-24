@@ -17,7 +17,7 @@
 use super::{model, world};
 use crate::boundary::{Action, reply::Reply};
 use crate::cli_outbound::Cli;
-use crate::test_support::{authoring_new_arm, engine};
+use crate::test_support::{authoring_new_arm, server};
 use std::fs;
 use std::path::Path;
 use tempfile::tempdir;
@@ -54,7 +54,7 @@ fn staged(
         workspace: m.snap.ws_name(&inputs.workspace),
         payload: inputs.payload.clone(),
     };
-    match engine::act(m, &deps, "TS", &action)? {
+    match server::act(m, &deps, "TS", &action)? {
         Reply::Prepared(prepared) => Ok(prepared),
         other => panic!("the prepare door answers a Prepared, not {other:?}"),
     }

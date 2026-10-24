@@ -9,15 +9,15 @@
 #   scripts/protocol-gate.sh --self-test  both directions, no network
 #
 # WHY THIS EXISTS. The wire is fail-closed on a version mismatch and there is
-# no negotiation (docs/REMOTE.md §3): an engine and a seat that state different
+# no negotiation (docs/REMOTE.md §3): a server and a seat that state different
 # integers refuse each other, naming both numbers. That is the right refusal
 # and is not what this gate is about. What it is about is the RELEASE WINDOW it
 # opens. yog is the only component that mints the number; the seat, the foot
 # and the phone each VENDOR a copy of the constant and learn about a bump when
-# the engine they dial refuses them. So every yog release that raised PROTOCOL
+# the server they dial refuses them. So every yog release that raised PROTOCOL
 # published a suite that could not compose, and stayed that way until three
 # other repositories caught up. On 2026-09-06 a clean box installing all five
-# published crates got engine 15, foot 14, seat 13 — no combination on
+# published crates got server 15, foot 14, seat 13 — no combination on
 # crates.io composed, and the same defect had been filed and correctly closed
 # eight times across two repositories, each close stale by the next release.
 # The recurrence is the finding: a per-instance re-vendor ball is a fact about
@@ -43,7 +43,7 @@
 # of one path out of a tree the reader does not build, and a Rust path is not a
 # stable address for that: bl-94a5 split yog's `src/wire/hello.rs` into
 # `src/wire/hello/version.rs`, leaving the old file re-exporting — invisible to
-# a build, fatal to a regex. Every consumer's gate then read the engine's
+# a build, fatal to a regex. Every consumer's gate then read the server's
 # constant as ABSENT, which is fail-closed and therefore held, so the bump the
 # holds were waiting for would have made them permanent (thrall bl-c618). So
 # the number now has one file-shaped home per repository, at the one address a

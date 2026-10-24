@@ -12,7 +12,7 @@ use super::Harness;
 use crate::boundary::{Action, reply::Reply};
 use crate::cli_outbound::Cli;
 use crate::git_tree::AgentState;
-use crate::test_support::engine;
+use crate::test_support::server;
 use std::path::{Path, PathBuf};
 use tempfile::{TempDir, tempdir};
 
@@ -68,7 +68,7 @@ fn an_unnamed_workspace_is_refused_before_any_gate() {
             typed: String::new(),
         },
     ] {
-        let err = engine::act(&m, &deps, "TS", &action).unwrap_err();
+        let err = server::act(&m, &deps, "TS", &action).unwrap_err();
         assert!(err.contains("not a yog-named workspace"), "{err}");
     }
     assert!(w.h.ws.exists(), "a refusal attempts nothing");
@@ -82,7 +82,7 @@ fn a_workspace_delete_needs_its_own_name_typed() {
     let (_c, m) = w.h.model();
     let deps = w.deps(&m);
     let unmake = |typed: &str| {
-        engine::act(
+        server::act(
             &m,
             &deps,
             "TS",
@@ -120,7 +120,7 @@ fn a_live_conversation_refuses_the_workspace_and_the_conversation() {
         .push(super::agent("c-1-x-2", AgentState::Live));
     rig.publish();
     let deps = w.deps(&rig.model);
-    let ws_err = engine::act(
+    let ws_err = server::act(
         &rig.model,
         &deps,
         "TS",
@@ -135,7 +135,7 @@ fn a_live_conversation_refuses_the_workspace_and_the_conversation() {
         "the refusal names what is live, by the §3.3 display name a seat shows \
          rather than by an id: {ws_err}"
     );
-    let agent_err = engine::act(
+    let agent_err = server::act(
         &rig.model,
         &deps,
         "TS",
@@ -159,7 +159,7 @@ fn an_agent_delete_spawns_the_litany_verb_and_arms_children_by_name() {
     let (_c, m) = w.h.model();
     let deps = w.deps(&m);
     let fire = |typed: &str| {
-        let reply = engine::act(
+        let reply = server::act(
             &m,
             &deps,
             "TS",

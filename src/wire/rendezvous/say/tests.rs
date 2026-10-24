@@ -67,6 +67,6 @@ fn an_accepted_stream_says_its_family_only() {
 }
 
 #[test]
-fn the_engine_sink_writes_a_line() {
+fn the_server_sink_writes_a_line() {
     stderr()("yog: rendezvous: a line the suite says on stderr");
 }
