@@ -5925,6 +5925,27 @@ brazen before 0.0.19 the catalog answers no rows (brazen exits 78 to a
 target-less `--login` there), never a refusal — the same empty-is-unanswered
 reading every brazen listing here carries.
 
+### 9.28 The rail says which cards are procedure runs (bl-55ea)
+
+**`reply/rail` cards gain three optional keys**, one edition under §3.2, no
+major: `procedure` — the workflow binding that forked the child, read off its
+own dispatch commit's `Procedure:` trailer (litany bl-2854; `user_message` for
+a titler, `worker_flush` for a compactor, `worker_return` for a verifier);
+`role` — the role its founding subject records; and `landed` — the flat file
+the parent's newest `landing: <file> [<child>]` commit consumed its return as
+(litany `docs/DESIGN_PROCEDURES.md` §4), `title` for a titler. Each is absent
+where it has none, so a subagent a model dispatched reads exactly as it did.
+
+**Why the rail and not the transcript.** A procedure run belongs at a
+position in the conversation — the ruling (lernie bl-454d) paints it as a
+marker on the message that fired it, never as a row of the conversation list
+(§9.7 as amended by bl-009a) — and the rail already answers positions: a card
+hangs under its provenance notch, and the notch carries its chat seat (`row`,
+`cut`). The three facts ride that card rather than a second list because a
+second list would be a second placement of the same children. The content of
+what landed is the card's own `tail` — for a finished child, the last thing it
+said — so nothing is read twice and the landed file is named, never copied.
+
 ## 10. Open questions (living)
 
 - ~~The follow/streaming frame shape~~ — settled by bl-b6fa (§3): every answer

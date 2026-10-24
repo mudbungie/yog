@@ -23,6 +23,11 @@ pub struct Agent {
     /// agent everywhere else — addressable, stoppable with the cascade, and
     /// on the attention queue for the marks it can wear.
     pub procedure: Option<String>,
+    /// **The role the agent was dispatched as** (litany ARCH §4.3): the one
+    /// word of its own dispatch commit subject, `dispatch: <role> [<id>]`.
+    /// `None` for a branch founded under the older subject that recorded no
+    /// role — litany reads those as `worker`, and a seat may too.
+    pub role: Option<String>,
     /// Branch name (`agents/<agent-id>`). Held separately so the renderer
     /// can label rows without re-deriving.
     pub branch_name: String,

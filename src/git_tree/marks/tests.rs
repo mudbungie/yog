@@ -7,6 +7,7 @@ use crate::git_tree::AgentState;
 fn agent() -> Agent {
     Agent {
         procedure: None,
+        role: None,
         branch_name: "agents/a-b".into(),
         agent_id: "a-b".into(),
         tip_oid: "0".repeat(40),

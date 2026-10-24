@@ -18,6 +18,7 @@ mod turn;
 fn agent(id: &str) -> Agent {
     Agent {
         procedure: None,
+        role: None,
         branch_name: format!("agents/{id}"),
         agent_id: id.to_string(),
         tip_oid: format!("tip-{id}"),

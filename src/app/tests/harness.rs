@@ -149,6 +149,7 @@ impl Harness {
 pub(crate) fn agent(id: &str, state: AgentState) -> Agent {
     Agent {
         procedure: None,
+        role: None,
         branch_name: format!("agents/{id}"),
         agent_id: id.to_string(),
         tip_oid: "d".repeat(40),

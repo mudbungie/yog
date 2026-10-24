@@ -112,8 +112,11 @@ const FOREIGN: &[&str] = &[
     // §9.27 joins them (bl-c6e3): the sign-in catalog read beside the routing
     // table, after brazen severed the two — cited "REMOTE §9.27" from DESIGN
     // §8.3's login-pane rules, which carry the server-side half.
+    // §9.28 joins them (bl-55ea): the rail's child card says when it is a
+    // procedure run — cited "REMOTE §9.28" from DESIGN §5.1 #30, which carries
+    // the derivation.
     "9.7", "9.8", "9.9", "9.11", "9.14", "9.15", "9.19", "9.20", "9.21", "9.22", "9.23", "9.24",
-    "9.25", "9.27",
+    "9.25", "9.27", "9.28",
     // REMOTE.md's §14 family — §14.1 (the attention lane, bl-09aa) — cited
     // prefixed ("REMOTE §14.1") like every other foreign key. DESIGN §14 is
     // "Rejections" and has no subsections at all, which the sibling test keeps

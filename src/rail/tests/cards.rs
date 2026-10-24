@@ -113,3 +113,40 @@ fn the_card_carries_the_childs_own_id_and_spend() {
     assert_eq!(card.name, "mole");
     assert_eq!(card.tokens, 4242);
 }
+
+#[test]
+fn a_procedure_childs_card_names_its_binding_its_role_and_what_it_landed() {
+    // bl-55ea: a titler the workflow forked at `user_message` is a procedure
+    // run — the card carries the binding and the role off the child's own
+    // founding commit, and the file the parent's newest `landing:` commit
+    // consumed its return as. A sibling a model dispatched carries none.
+    let mut titler = child("titler", vec![commit("ffff9999", 25)]);
+    titler.procedure = Some("user_message".into());
+    titler.role = Some("titler".into());
+    let mut landing = commit("cccc3333", 30);
+    landing.subject = "landing: title [root-titler]".into();
+    let rail = build(
+        "storeroom",
+        &[commit("aaaa1111", 10), commit("bbbb2222", 20), landing],
+        &steps(vec![
+            step("001", Some("aaaa1111"), 0),
+            step("002", Some("bbbb2222"), 0),
+        ]),
+        &chat(2),
+        &[titler, child("mole", vec![commit("eeee8888", 26)])],
+    );
+    let [run, sub] = rail.cards.as_slice() else {
+        panic!("two cards: {:?}", rail.cards);
+    };
+    assert_eq!(run.procedure.as_deref(), Some("user_message"));
+    assert_eq!(run.role.as_deref(), Some("titler"));
+    assert_eq!(run.landed.as_deref(), Some("title"));
+    assert_eq!(
+        (
+            sub.procedure.as_deref(),
+            sub.role.as_deref(),
+            sub.landed.as_deref()
+        ),
+        (None, None, None)
+    );
+}

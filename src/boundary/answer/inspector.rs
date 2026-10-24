@@ -261,6 +261,8 @@ fn child_input(ws: &Path, agents: &[Agent], child: &Agent) -> ChildInput {
         config_label: governing_config(ws, &child.tip_oid)
             .ok()
             .and_then(|gov| gov.followed_lineage()),
+        procedure: child.procedure.clone(),
+        role: child.role.clone(),
     }
 }
 

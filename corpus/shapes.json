@@ -684,8 +684,11 @@
       "signature": {
         "/cards/[]/agent:string": 1,
         "/cards/[]/fork:string": 1,
+        "/cards/[]/landed:string": 25,
         "/cards/[]/name:string": 1,
         "/cards/[]/notch:number": 1,
+        "/cards/[]/procedure:string": 25,
+        "/cards/[]/role:string": 25,
         "/cards/[]/state:string": 1,
         "/cards/[]/tail:string": 1,
         "/cards/[]/tokens:number": 1,

@@ -150,6 +150,25 @@ pub struct ChildCard {
     /// separate "terminal response" derivation would be a second reader of one
     /// file, disagreeing with this one at every moment the file is still open.
     pub tail: Option<String>,
+    /// **The workflow binding that forked this child**, when one did (bl-55ea;
+    /// `Agent::procedure`, litany bl-2854): `user_message` for a titler,
+    /// `worker_flush` for a compactor, `worker_return` for a verifier. A card
+    /// carrying it is a **procedure run** — out of band, never a conversation
+    /// (lernie bl-454d) — and a seat paints it as a marker on the notch's chat
+    /// seat rather than as a subagent card. `None` for a subagent a model or
+    /// an operator dispatched.
+    pub procedure: Option<String>,
+    /// The role the child was dispatched as (`Agent::role`), when its founding
+    /// commit records one.
+    pub role: Option<String>,
+    /// **What the child's conclusion landed as** on the parent's branch, when a
+    /// `land_response(<file>)` binding consumed its return (litany
+    /// `docs/DESIGN_PROCEDURES.md` §4): the flat file name of the parent's
+    /// newest `landing: <file> [<child-id>]` commit — `title` for a titler.
+    /// The content is the child's own [`tail`](Self::tail), which for a
+    /// finished child is the last thing it said; nothing is read twice. `None`
+    /// while it runs, and for every child whose return delivered instead.
+    pub landed: Option<String>,
     pub provenance_notch: usize,
 }
 
@@ -195,6 +214,10 @@ pub struct ChildInput {
     /// only where diverged lineages hold it and there is no one lineage to
     /// name (bl-e654).
     pub config_label: Option<String>,
+    /// `Agent::procedure` — the binding that forked the child, if a binding did.
+    pub procedure: Option<String>,
+    /// `Agent::role` — the role its founding commit records.
+    pub role: Option<String>,
 }
 
 /// Derive the spine for one focused agent. `parent_name` labels a fork point

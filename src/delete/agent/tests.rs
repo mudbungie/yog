@@ -14,6 +14,7 @@ pub(super) const CHILD: &str = "r-aa-c-bb";
 fn agent(id: &str, state: AgentState, ts: i64) -> Agent {
     Agent {
         procedure: None,
+        role: None,
         branch_name: format!("agents/{id}"),
         agent_id: id.to_string(),
         name: None,

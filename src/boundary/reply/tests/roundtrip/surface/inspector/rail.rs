@@ -35,6 +35,11 @@ pub(super) fn rail() -> Rail {
         ],
         cards: vec![
             ChildCard {
+                // bl-55ea: the procedure run's three keys on one card, and the
+                // absent arm on the other.
+                procedure: Some("user_message".into()),
+                role: Some("titler".into()),
+                landed: Some("title".into()),
                 agent_id: "c-1-a".into(),
                 name: "Cobalt".into(),
                 fork: "from here".into(),
@@ -44,6 +49,9 @@ pub(super) fn rail() -> Rail {
                 provenance_notch: 0,
             },
             ChildCard {
+                procedure: None,
+                role: None,
+                landed: None,
                 agent_id: "c-1-b".into(),
                 name: "Dun".into(),
                 fork: "from config/main".into(),

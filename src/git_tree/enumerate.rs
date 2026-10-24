@@ -84,7 +84,8 @@ pub(super) fn enumerate_agents(
         // #10, #28b) — what the model has said, and what it is doing.
         let stream = stream_from_disk(workspace, &agent_id);
         agents.push(Agent {
-            procedure: procedure_of(&steps, &agent_id),
+            procedure: founding(&steps, &agent_id).and_then(|c| c.procedure.clone()),
+            role: founding(&steps, &agent_id).and_then(|c| role_of(&c.subject)),
             name: ref_name(git_dir, &branch_name)?,
             title: ref_title(git_dir, &branch_name)?,
             preview: goal.preview,
@@ -253,15 +254,23 @@ fn goal_from_disk(workspace: &Path, agent_id: &str) -> Goal {
     }
 }
 
-/// The `Procedure:` trailer of the commit that **founds** `agent_id`'s branch
-/// (litany ARCH §2.5): the one whose subject is `dispatch: <role> [<agent_id>]` — the role's one home, and
+/// The commit that **founds** `agent_id`'s branch (litany ARCH §2.5): the one
+/// whose subject is `dispatch: <role> [<agent_id>]` — the role's one home, and
 /// since litany bl-2854 the carrier of the `Procedure:` trailer. A branch
 /// inherits its parent's commits, so the match is on the bracketed id, never
-/// on position.
-fn procedure_of(steps: &[StepCommit], agent_id: &str) -> Option<String> {
+/// on position. Returned owned: the rules refuse a named lifetime.
+fn founding(steps: &[StepCommit], agent_id: &str) -> Option<StepCommit> {
     let tail = format!("[{agent_id}]");
     steps
         .iter()
         .find(|c| c.subject.starts_with("dispatch: ") && c.subject.ends_with(&tail))
-        .and_then(|c| c.procedure.clone())
+        .cloned()
+}
+
+/// The role a dispatch subject names (`dispatch: <role> [<id>]`), or `None`
+/// for any other subject — the same reading `tool_host::grant` makes.
+fn role_of(subject: &str) -> Option<String> {
+    let rest = subject.strip_prefix("dispatch: ")?;
+    let (role, _) = rest.rsplit_once(" [")?;
+    (!role.is_empty()).then(|| role.to_owned())
 }

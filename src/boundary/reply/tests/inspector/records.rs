@@ -217,6 +217,9 @@ fn a_rail_reply_omits_what_makes_a_notch_unpinnable() {
             },
         ],
         cards: vec![ChildCard {
+            procedure: None,
+            role: None,
+            landed: None,
             agent_id: "c-1-w-1".to_owned(),
             name: "koi".to_owned(),
             fork: "from here".to_owned(),
@@ -245,6 +248,9 @@ fn a_rail_reply_omits_what_makes_a_notch_unpinnable() {
     let quiet = encode(&Reply::Rail(Rail {
         notches: Vec::new(),
         cards: vec![ChildCard {
+            procedure: None,
+            role: None,
+            landed: None,
             agent_id: "c-1-w-2".to_owned(),
             name: "eel".to_owned(),
             fork: "from config/default".to_owned(),

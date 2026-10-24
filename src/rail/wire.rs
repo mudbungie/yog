@@ -62,6 +62,16 @@ fn card_row(card: &ChildCard) -> Value {
     if let Some(tail) = &card.tail {
         map.insert("tail".to_owned(), json!(tail));
     }
+    // bl-55ea: a procedure run's three facts, each absent where it has none.
+    for (key, value) in [
+        ("procedure", &card.procedure),
+        ("role", &card.role),
+        ("landed", &card.landed),
+    ] {
+        if let Some(value) = value {
+            map.insert(key.to_owned(), json!(value));
+        }
+    }
     Value::Object(map)
 }
 
@@ -106,5 +116,8 @@ fn card_of(v: &Value) -> Result<ChildCard, String> {
         tokens: u64_of(o, "tokens")?,
         tail: opt_str_of(o, "tail")?,
         provenance_notch: usize_of(o, "notch")?,
+        procedure: opt_str_of(o, "procedure")?,
+        role: opt_str_of(o, "role")?,
+        landed: opt_str_of(o, "landed")?,
     })
 }

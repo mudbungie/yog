@@ -45,7 +45,23 @@ pub(super) fn card(
         tokens: child.tokens,
         tail: child.streaming_text.as_deref().and_then(tail_of),
         provenance_notch,
+        procedure: child.procedure.clone(),
+        role: child.role.clone(),
+        landed: landed(parent_commits, &child.agent_id),
     })
+}
+
+/// The file the parent's newest `landing: <file> [<child>]` commit landed
+/// this child's return as (litany `docs/DESIGN_PROCEDURES.md` §4), read off
+/// the parent's own step subjects — the one record of a consumed return.
+fn landed(parent_commits: &[StepCommit], child_id: &str) -> Option<String> {
+    let tail = format!(" [{child_id}]");
+    parent_commits
+        .iter()
+        .rev()
+        .find_map(|c| c.subject.strip_prefix("landing: ")?.strip_suffix(&tail))
+        .filter(|file| !file.is_empty())
+        .map(str::to_owned)
 }
 
 /// How many leading commits the two branches share — the fork point's position

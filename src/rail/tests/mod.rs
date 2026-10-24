@@ -106,5 +106,7 @@ pub(super) fn child(name: &str, commits: Vec<StepCommit>) -> ChildInput {
         commits,
         tokens: 0,
         config_label: None,
+        procedure: None,
+        role: None,
     }
 }

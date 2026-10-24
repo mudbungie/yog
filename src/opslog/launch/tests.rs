@@ -23,6 +23,7 @@ const GRACE: Duration = Duration::from_secs(20);
 fn agent(id: &str, name: Option<&str>, state: AgentState, call_start: Option<i64>) -> Agent {
     Agent {
         procedure: None,
+        role: None,
         branch_name: format!("agents/{id}"),
         agent_id: id.to_owned(),
         tip_oid: format!("tip-{id}"),

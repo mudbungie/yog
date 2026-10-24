@@ -49,6 +49,7 @@ fn said(verdict: &str) -> String {
 fn agent(id: &str, tip: &str) -> crate::git_tree::Agent {
     crate::git_tree::Agent {
         procedure: None,
+        role: None,
         branch_name: format!("agents/{id}"),
         agent_id: id.to_owned(),
         tip_oid: tip.to_owned(),
