@@ -117,7 +117,10 @@ pub(super) fn walk_branch_steps(
             "log",
             "--reverse",
             "--first-parent",
-            "--format=%H %ct%x00%s",
+            // The third field is the `Procedure:` trailer (litany bl-2854),
+            // which git prints with its own newline: the parser skips the
+            // blank line that leaves behind a trailered commit.
+            "--format=%H %ct%x00%s%x00%(trailers:key=Procedure,valueonly)",
             branch,
             "--not",
             "--branches=config/*",
@@ -129,10 +132,11 @@ pub(super) fn walk_branch_steps(
 pub(super) fn parse_step_commits(stdout: &[u8]) -> Result<Vec<StepCommit>, GitTreeError> {
     let text = String::from_utf8_lossy(stdout);
     let mut result = Vec::new();
-    for line in text.lines() {
-        let (head, subject) = line
+    for line in text.lines().filter(|l| !l.is_empty()) {
+        let (head, rest) = line
             .split_once('\x00')
             .ok_or_else(|| GitTreeError::LogFormat(line.to_string()))?;
+        let (subject, trailer) = rest.split_once('\x00').unwrap_or((rest, ""));
         let (oid, ts) = head
             .split_once(' ')
             .ok_or_else(|| GitTreeError::LogFormat(line.to_string()))?;
@@ -145,6 +149,9 @@ pub(super) fn parse_step_commits(stdout: &[u8]) -> Result<Vec<StepCommit>, GitTr
             short_oid,
             timestamp_unix: ts,
             subject: subject.to_string(),
+            procedure: Some(trailer.trim())
+                .filter(|t| !t.is_empty())
+                .map(str::to_owned),
         });
     }
     Ok(result)

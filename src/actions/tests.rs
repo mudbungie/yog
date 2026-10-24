@@ -9,6 +9,7 @@ use crate::git_tree::{Agent, AgentState};
 
 fn branch(name: &str, state: AgentState) -> Agent {
     Agent {
+        procedure: None,
         branch_name: format!("agents/{name}"),
         agent_id: name.to_string(),
         tip_oid: "0".repeat(40),

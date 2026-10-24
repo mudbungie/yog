@@ -14,6 +14,7 @@
 use super::cmd::{LogEntry, for_each_ref_agents, ref_name, ref_title, walk_branch_steps};
 use super::detect::payload_headline;
 use super::marks::Marks;
+use super::model::StepCommit;
 use super::probe::{LockProbe, WriterProbe};
 use super::state::classify;
 use super::streaming::{RESPONSE_FILE, latest_step_dir, stream_from_disk};
@@ -83,6 +84,7 @@ pub(super) fn enumerate_agents(
         // #10, #28b) — what the model has said, and what it is doing.
         let stream = stream_from_disk(workspace, &agent_id);
         agents.push(Agent {
+            procedure: procedure_of(&steps, &agent_id),
             name: ref_name(git_dir, &branch_name)?,
             title: ref_title(git_dir, &branch_name)?,
             preview: goal.preview,
@@ -249,4 +251,17 @@ fn goal_from_disk(workspace: &Path, agent_id: &str) -> Goal {
         name: text.as_deref().and_then(crate::start::parse_identity_stamp),
         preview: text.as_deref().map(payload_headline),
     }
+}
+
+/// The `Procedure:` trailer of the commit that **founds** `agent_id`'s branch
+/// (litany ARCH §2.5): the one whose subject is `dispatch: <role> [<agent_id>]` — the role's one home, and
+/// since litany bl-2854 the carrier of the `Procedure:` trailer. A branch
+/// inherits its parent's commits, so the match is on the bracketed id, never
+/// on position.
+fn procedure_of(steps: &[StepCommit], agent_id: &str) -> Option<String> {
+    let tail = format!("[{agent_id}]");
+    steps
+        .iter()
+        .find(|c| c.subject.starts_with("dispatch: ") && c.subject.ends_with(&tail))
+        .and_then(|c| c.procedure.clone())
 }

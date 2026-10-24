@@ -6,6 +6,7 @@ use crate::git_tree::AgentState;
 /// An unmarked agent — every `refs/litany/*` oid absent.
 fn agent() -> Agent {
     Agent {
+        procedure: None,
         branch_name: "agents/a-b".into(),
         agent_id: "a-b".into(),
         tip_oid: "0".repeat(40),

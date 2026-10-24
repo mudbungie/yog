@@ -33,6 +33,32 @@ fn one_row_per_root_with_subtree_member_counts() {
 }
 
 #[test]
+fn a_procedure_child_and_its_descent_leave_the_forest_and_every_count() {
+    // lernie bl-454d: a titler the workflow forked is not a conversation. The
+    // model-dispatched sibling stays, folded under the root as before; the
+    // titler, and a child the titler itself forked, answer no row and count
+    // in neither `members` nor `direct`.
+    let mut titler = agent("r1-0-t-1", AgentState::Quiescent, 50);
+    titler.procedure = Some("user_message".into());
+    let agents = [
+        agent("r1-0", AgentState::Quiescent, 10),
+        agent("r1-0-c-1", AgentState::Quiescent, 20),
+        titler,
+        agent("r1-0-t-1-g-1", AgentState::Quiescent, 60),
+    ];
+    let forest = super::super::expand::forest_rows(&agents, "/ws", &unseen, 100, &plain, &[]);
+    let ids: Vec<&str> = forest.iter().map(|r| r.root_id.as_str()).collect();
+    assert_eq!(ids, ["r1-0", "r1-0-c-1"]);
+    let rows = build(&agents, "/ws", &unseen, 100, &plain, &[]);
+    assert_eq!(rows.len(), 1);
+    assert_eq!(rows[0].members, 2);
+    assert_eq!(rows[0].direct, 1);
+    // Its recency is the machinery's too: the titler acted last and the row
+    // does not say so, because the row is the conversation.
+    assert_eq!(rows[0].last_active_unix, 20);
+}
+
+#[test]
 fn sort_is_last_action_descending_and_nothing_else() {
     // bl-cad5: the §11 rank tiers are gone. `dead` bears attention (an unseen
     // rest, §6 rule 2) and `running` holds a driver, but both acted long ago,

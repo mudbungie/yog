@@ -151,6 +151,22 @@ fn parse_step_commits_parses_valid_lines() {
 }
 
 #[test]
+fn parse_step_commits_reads_the_procedure_trailer_and_skips_its_blank_line() {
+    // litany bl-2854: git prints `%(trailers:…)` with its own newline, so a
+    // trailered commit is followed by an empty line; an untrailered one has
+    // an empty third field and no blank line after it.
+    let out = parse_step_commits(
+        b"abc 100\x00dispatch: titler [x-1]\x00user_message\n\ndef 200\x00step 002 [x-1]\x00\n",
+    )
+    .unwrap();
+    assert_eq!(out.len(), 2);
+    assert_eq!(out[0].subject, "dispatch: titler [x-1]");
+    assert_eq!(out[0].procedure.as_deref(), Some("user_message"));
+    assert_eq!(out[1].subject, "step 002 [x-1]");
+    assert_eq!(out[1].procedure, None);
+}
+
+#[test]
 fn parse_step_commits_errors_on_missing_subject_separator() {
     // No `\x00` between the timestamp column and the subject.
     let err = parse_step_commits(b"abc 100\n").unwrap_err();

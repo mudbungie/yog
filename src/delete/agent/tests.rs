@@ -13,6 +13,7 @@ pub(super) const CHILD: &str = "r-aa-c-bb";
 /// One agent row, the conversation-list fixture shape (litany ARCH §2.3).
 fn agent(id: &str, state: AgentState, ts: i64) -> Agent {
     Agent {
+        procedure: None,
         branch_name: format!("agents/{id}"),
         agent_id: id.to_string(),
         name: None,

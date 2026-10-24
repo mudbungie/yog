@@ -133,3 +133,35 @@ fn from_repo_reads_the_title_blob_beside_the_name() {
         .unwrap();
     assert!(untitled.title.is_none());
 }
+
+#[test]
+fn a_procedure_childs_founding_trailer_is_read_and_a_subagents_absence_is_too() {
+    // litany bl-2854 / bl-009a: the `Procedure:` trailer on the dispatch
+    // commit is the one fact that tells a titler from a subagent, read off
+    // the founding commit by its bracketed id — never by position, since a
+    // child's log opens on its parent's commits.
+    let fx = Fixture::new();
+    fx.build_agent("20260427T120100Z-root", "hello");
+    fx.build_child("20260427T120100Z-root", "20260427T120100Z-root-s-1");
+    fx.build_procedure_child(
+        "20260427T120100Z-root",
+        "20260427T120100Z-root-t-1",
+        "titler",
+        "user_message",
+    );
+    let tree = GitTree::from_repo(&fx.path).unwrap();
+    let of = |id: &str| {
+        tree.agents
+            .iter()
+            .find(|a| a.agent_id == id)
+            .unwrap()
+            .procedure
+            .clone()
+    };
+    assert_eq!(of("20260427T120100Z-root"), None);
+    assert_eq!(of("20260427T120100Z-root-s-1"), None);
+    assert_eq!(
+        of("20260427T120100Z-root-t-1").as_deref(),
+        Some("user_message")
+    );
+}

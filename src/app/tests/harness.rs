@@ -148,6 +148,7 @@ impl Harness {
 /// reached against a dead fixture, so they are injected into `trees`).
 pub(crate) fn agent(id: &str, state: AgentState) -> Agent {
     Agent {
+        procedure: None,
         branch_name: format!("agents/{id}"),
         agent_id: id.to_string(),
         tip_oid: "d".repeat(40),

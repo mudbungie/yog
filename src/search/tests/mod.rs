@@ -35,6 +35,7 @@ fn ball(id: &str, title: &str, body: &str) -> Ball {
 
 fn agent(id: &str, name: Option<&str>) -> Agent {
     Agent {
+        procedure: None,
         branch_name: format!("agents/{id}"),
         agent_id: id.to_owned(),
         tip_oid: "a".repeat(40),

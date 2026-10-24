@@ -135,7 +135,19 @@ pub fn root_of(agents: &[Agent], agent_id: &str) -> Option<String> {
 /// well-formed subtree in its own right ([`expand`]).
 fn conversations(agents: &[Agent]) -> Vec<Vec<DescentRow>> {
     let mut out: Vec<Vec<DescentRow>> = Vec::new();
+    // A procedure child is not a conversation (`Agent::procedure`; lernie
+    // bl-454d): it and everything it forked leave the forest. Pre-order
+    // makes that one depth cut, the same shape as `expand::visible`.
+    let mut cut: Option<usize> = None;
     for r in descent_order(agents) {
+        match cut {
+            Some(depth) if r.depth > depth => continue,
+            _ => cut = None,
+        }
+        if agents.get(r.index).is_some_and(|a| a.procedure.is_some()) {
+            cut = Some(r.depth);
+            continue;
+        }
         if r.depth == 0 {
             out.push(vec![r]);
         } else if let Some(current) = out.last_mut() {

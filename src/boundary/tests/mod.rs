@@ -29,6 +29,7 @@ use std::path::Path;
 /// One agent row, the conversation-list fixture shape (§2.3).
 pub(crate) fn agent(id: &str, state: AgentState, ts: i64) -> Agent {
     Agent {
+        procedure: None,
         branch_name: format!("agents/{id}"),
         agent_id: id.to_string(),
         tip_oid: "a".repeat(40),

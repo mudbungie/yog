@@ -4178,7 +4178,11 @@ gain no boundary representation* is true of the letter and of the spirit.
   altitude ruling made structural. A seat holding no fold selects the **root
   subset**, which is byte for byte the list this query used to answer, so a
   machine reader that wants the old shape filters `depth == 0` and every existing
-  consumer keeps working.
+  consumer keeps working. **A procedure child is in no row of it** (bl-009a;
+  DESIGN §5.1 #8): an agent whose dispatch commit carries litany's
+  `Procedure:` trailer leaves the forest with its descent, and the rows above
+  it count it in neither `members` nor `direct`. No shape moves — rows leave
+  an answer — so neither `PROTOCOL` nor the corpus edition is touched.
 - **The §11 list reads it over the wire**, and `AppModel::conversations`,
   `visible_conversations` and `conversation_groups` are gone with it. One seat
   read (`shell::convs`) serves the paint, the ↑/↓ walk and the ← that pages to a

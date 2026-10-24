@@ -98,7 +98,10 @@ pub(super) fn row(
     let row = ConvRow {
         // The strict descent-id children (§5.1 #8) — the subagent field's
         // `direct`, read from the one home that answers it.
-        direct: children_of(agents, &root_id).len(),
+        direct: children_of(agents, &root_id)
+            .into_iter()
+            .filter(|&i| agents.get(i).is_none_or(|a| a.procedure.is_none()))
+            .count(),
         // The row's own §8.2 gates (bl-1eb0), through the same two predicates
         // the composer's buttons and the key bindings run — one implementation,
         // answered where the row is derived rather than re-derived per paint

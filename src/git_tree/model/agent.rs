@@ -13,6 +13,16 @@ use crate::git_tree::{AgentState, Stream};
 /// (§2.6), so the merged/unmerged framing is gone.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Agent {
+    /// **The workflow binding that forked this agent**, when one did (litany
+    /// ARCH §2.5, bl-2854): the `Procedure:` trailer of its own dispatch
+    /// commit — `user_message` for a titler, `worker_flush` for a compactor,
+    /// `worker_return` for a verifier. `None` for a root and for a subagent a
+    /// model or an operator dispatched. **A procedure child is not a
+    /// conversation** (lernie bl-454d): it leaves the §11 forest with its
+    /// whole descent, and counts in no `members` or `direct`. It stays an
+    /// agent everywhere else — addressable, stoppable with the cascade, and
+    /// on the attention queue for the marks it can wear.
+    pub procedure: Option<String>,
     /// Branch name (`agents/<agent-id>`). Held separately so the renderer
     /// can label rows without re-deriving.
     pub branch_name: String,

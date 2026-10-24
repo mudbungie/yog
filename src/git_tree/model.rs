@@ -70,6 +70,11 @@ pub struct StepCommit {
     /// delivery commit, or a work-product-transfer commit (§2.11, §2.6,
     /// §7.1 "delivery/result-message commits surfaced").
     pub subject: String,
+    /// The commit's `Procedure:` trailer (litany bl-2854; ARCH §2.5): on a
+    /// dispatch commit, the key of the workflow binding that fired the fork.
+    /// `None` on every other commit and on a dispatch a model or an operator
+    /// asked for — the absence is the fact that the child is a conversation.
+    pub procedure: Option<String>,
 }
 
 /// A single tool call surfaced to the renderer. The disk records carry

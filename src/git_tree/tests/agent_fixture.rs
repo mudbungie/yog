@@ -161,6 +161,28 @@ impl Fixture {
     /// carries the parent's dispatch file, so a fixed name and fixed content
     /// left git with nothing to commit and the fork failed one generation down.
     pub(crate) fn build_child(&self, parent_id: &str, child_id: &str) {
+        self.fork_child(parent_id, child_id, &format!("dispatch [{child_id}]"), None);
+    }
+
+    /// A **procedure child** (litany bl-2854): founded by the current
+    /// subject `dispatch: <role> [<id>]` and carrying the `Procedure:
+    /// <event>` trailer that names the binding which forked it.
+    pub(crate) fn build_procedure_child(
+        &self,
+        parent_id: &str,
+        child_id: &str,
+        role: &str,
+        event: &str,
+    ) {
+        self.fork_child(
+            parent_id,
+            child_id,
+            &format!("dispatch: {role} [{child_id}]"),
+            Some(&format!("Procedure: {event}")),
+        );
+    }
+
+    fn fork_child(&self, parent_id: &str, child_id: &str, subject: &str, trailer: Option<&str>) {
         let wt = self.path.join("agents").join(child_id);
         let wt_str = wt.to_string_lossy().to_string();
         let branch = format!("agents/{child_id}");
@@ -179,10 +201,11 @@ impl Fixture {
         let file = format!("{child_id}.md");
         fs::write(wt.join(&file), "child work\n").unwrap();
         run_git(&wt, &["add", file.as_str()]);
-        run_git(
-            &wt,
-            &["commit", "-q", "-m", &format!("dispatch [{child_id}]")],
-        );
+        let mut commit = vec!["commit", "-q", "-m", subject];
+        if let Some(trailer) = trailer {
+            commit.extend(["-m", trailer]);
+        }
+        run_git(&wt, &commit);
         run_git(&self.repo, &["worktree", "remove", wt_str.as_str()]);
     }
 }

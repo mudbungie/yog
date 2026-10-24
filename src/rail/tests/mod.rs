@@ -24,6 +24,7 @@ use crate::transcript::{Block, Entry, EntryKind, Transcript, Usage};
 /// A commit on a branch; oid and timestamp are the only fields the rail reads.
 pub(super) fn commit(oid: &str, at: i64) -> StepCommit {
     StepCommit {
+        procedure: None,
         oid: oid.to_owned(),
         short_oid: oid.chars().take(8).collect(),
         timestamp_unix: at,
