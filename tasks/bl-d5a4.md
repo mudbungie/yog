@@ -2,6 +2,7 @@
 title = "projects: a grouping of conversations under a workspace, with basic file storage and the tools to act in it — design (living), then the wire, then the seats"
 created = 1793585084
 updated = 1793585084
+claimant = "Occupation"
 priority = 1
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["design"]
