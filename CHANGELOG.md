@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.92](https://github.com/mudbungie/yog/compare/v0.0.91...v0.0.92) - 2026-11-11
+
+### Changes
+
+- Merge remote-tracking branch 'origin/main'
+- retire the punched wire and the envelope: delete src/wire/rendezvous, src/dht, the enroll act and its QR envelope, and section 13's material (REMOTE 15.4) [bl-7a14]
+
 ## [0.0.91](https://github.com/mudbungie/yog/compare/v0.0.90...v0.0.91) - 2026-11-11
 
 ### Changes
