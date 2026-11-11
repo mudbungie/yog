@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.90](https://github.com/mudbungie/yog/compare/v0.0.89...v0.0.90) - 2026-10-23
+
+### Changes
+
+- Merge remote-tracking branch 'origin/main'
+- litany pin → =0.0.15: the embedded litany writes the Procedure: trailer (litany bl-2854) and runs the marks at a child's verdict (litany bl-ef78); the pin steps so a workspace yog drives founds procedure children the forest can read [bl-e262]
+
 ### Changes
 
 - litany pin → `=0.0.15`: the embedded litany founds every procedure child with
