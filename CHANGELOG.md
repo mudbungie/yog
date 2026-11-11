@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.91](https://github.com/mudbungie/yog/compare/v0.0.90...v0.0.91) - 2026-11-11
+
+### Changes
+
+- the offer: offer/offers/approve/decline acts, and the certless registration door on the wire's own listener — one POST that signs a leaf for the device's own public key (REMOTE 15.1, 15.2) [bl-9ea6]
+- the server binds every interface on the stated port when its address is not loopback, and the address file is the whole WIRE_HOST list, one endpoint per line (REMOTE 15.3) [bl-52ae]
+
 ## [0.0.90](https://github.com/mudbungie/yog/compare/v0.0.89...v0.0.90) - 2026-10-23
 
 ### Changes
