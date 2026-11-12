@@ -31,7 +31,7 @@ fn a_connections_advertisement_lands_under_its_own_identity() {
     let data = tempdir().unwrap();
     let ctx = quiet(root.path(), data.path());
     let laptop = seat("laptop");
-    // Enrolled, and therefore registered: a set is presented into the
+    // Registered: a set is presented into the
     // workspaces its client is registered in, and a client in none is refused
     // before anything is stored (REMOTE §5.1, bl-6b14).
     crate::registry::register(root.path(), &laptop.client, "home").expect("seated");

@@ -167,9 +167,6 @@ pub enum Action {
     /// **The routing leg's two acts** (REMOTE §5, §9 step 7; bl-024b) over
     /// [`mailbox::Verb`](crate::registry::mailbox::Verb) ([`folds`]).
     Route(crate::registry::mailbox::Verb),
-    /// **Enroll a device** (REMOTE §1.4 as amended, §8.4; bl-f4e3) over
-    /// [`enroll::Request`](crate::registry::enroll::Request) ([`device`]).
-    Enroll(crate::registry::enroll::Request),
     /// **The offer's four acts** (REMOTE §15.1, bl-9ea6) over
     /// [`offer::Verb`](crate::registry::offer::Verb) ([`device`]).
     Offer(crate::registry::offer::Verb),

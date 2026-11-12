@@ -7,7 +7,7 @@
 //! approves the row whose word matches.
 //!
 //! **The values here are the vocabulary, not the acts** — the fold
-//! [`mailbox::Verb`](super::mailbox::Verb) and [`enroll`](super::enroll) take.
+//! [`mailbox::Verb`](super::mailbox::Verb) takes.
 //! The four operator acts execute in
 //! [`boundary::dispatch`](crate::boundary::dispatch); the claim is
 //! [`claim`]'s, reached only by the registration door and never by a gesture;

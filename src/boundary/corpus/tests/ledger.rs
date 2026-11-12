@@ -48,6 +48,7 @@ fn a_gained_field_is_stamped_the_next_edition_and_needs_no_bump() {
         19,
         19,
         &[],
+        &[],
     )
     .expect("additive");
     let stamps = &next.shapes["request/ack"].signature;
@@ -72,6 +73,7 @@ fn a_new_shape_is_stamped_the_next_edition() {
         &recorded(19, 18, ACK),
         19,
         19,
+        &[],
         &[],
     )
     .expect("additive");
@@ -100,17 +102,17 @@ fn a_vanished_field_demands_the_major_and_a_deprecation() {
         &[("/op:string", 1), (":object", 1), ("/gone:bool", 2)],
     );
     let shapes = [ack(json!({ "op": "ack" }))];
-    let held = advance(&shapes, &previous, 19, 19, &["request/ack/gone"])
+    let held = advance(&shapes, &previous, 19, 19, &["request/ack/gone"], &[])
         .expect_err("refused under the major");
     assert!(held.contains("request/ack/gone:bool vanished"), "{held}");
     assert!(held.contains("DEPRECATED"), "{held}");
     assert!(held.contains("PROTOCOL file"), "{held}");
     assert!(held.contains("make corpus"), "{held}");
-    let bumping = advance(&shapes, &previous, 20, 19, &[]).expect_err("refused undeprecated");
+    let bumping = advance(&shapes, &previous, 20, 19, &[], &[]).expect_err("refused undeprecated");
     assert!(bumping.contains("vanished undeprecated"), "{bumping}");
     // Deprecated by path, and across the bump: lawful, and the record says
     // what was deprecated so a consumer reads it where it reads the rest.
-    let next = advance(&shapes, &previous, 20, 19, &["request/ack/gone"]).expect("lawful");
+    let next = advance(&shapes, &previous, 20, 19, &["request/ack/gone"], &[]).expect("lawful");
     assert!(next.deprecated.contains("request/ack/gone"));
     assert!(
         !next.shapes["request/ack"]
@@ -127,10 +129,10 @@ fn a_vanished_field_demands_the_major_and_a_deprecation() {
 /// A whole shape that vanished is every path of it vanishing, named.
 #[test]
 fn a_vanished_shape_is_named_too() {
-    let refusal = advance(&[], &recorded(19, 18, ACK), 19, 19, &[]).expect_err("refused");
+    let refusal = advance(&[], &recorded(19, 18, ACK), 19, 19, &[], &[]).expect_err("refused");
     assert!(refusal.contains("request/ack:object vanished"), "{refusal}");
     // Deprecated by shape name, every path of it is licensed at once.
-    let gone = advance(&[], &recorded(19, 18, ACK), 20, 19, &["request/ack"]).expect("lawful");
+    let gone = advance(&[], &recorded(19, 18, ACK), 20, 19, &["request/ack"], &[]).expect("lawful");
     assert!(gone.shapes.is_empty());
 }
 
@@ -141,7 +143,7 @@ fn a_vanished_shape_is_named_too() {
 fn a_second_type_on_a_key_in_use_is_breaking() {
     let previous = recorded(19, 18, ACK);
     let shapes = [ack(json!({ "op": 7 }))];
-    let refusal = advance(&shapes, &previous, 19, 19, &[]).expect_err("re-typed");
+    let refusal = advance(&shapes, &previous, 19, 19, &[], &[]).expect_err("re-typed");
     assert!(
         refusal.contains("request/ack/op:number re-typed"),
         "{refusal}"
@@ -153,7 +155,7 @@ fn a_second_type_on_a_key_in_use_is_breaking() {
         name: "ack".to_owned(),
         frames: vec![json!({ "op": "ack" }), json!({ "op": Value::Null })],
     }];
-    let next = advance(&widened, &previous, 20, 19, &[]).expect("lawful across a bump");
+    let next = advance(&widened, &previous, 20, 19, &[], &[]).expect("lawful across a bump");
     assert_eq!(next.shapes["request/ack"].signature["/op:null"], 2);
 }
 
@@ -168,6 +170,7 @@ fn the_floor_is_set_by_the_bump_and_left_by_everything_else() {
         19,
         17,
         &[],
+        &[],
     )
     .expect("the bump");
     assert_eq!((bumped.protocol, bumped.floor), (19, 1));
@@ -177,6 +180,7 @@ fn the_floor_is_set_by_the_bump_and_left_by_everything_else() {
         19,
         19,
         &[],
+        &[],
     )
     .expect("additive");
     assert_eq!(later.floor, 1, "unmoved");
@@ -184,4 +188,46 @@ fn the_floor_is_set_by_the_bump_and_left_by_everything_else() {
         later.shapes["request/ack"].signature["/more:number"], 2,
         "post-floor"
     );
+}
+
+/// **A retirement is the one loss that needs no major** (REMOTE §3.2, §15.4):
+/// a listed path vanishes under the published major — a whole shape, or an
+/// object and everything inside it — and the record keeps the entry with the
+/// edition it went at, which a later regeneration leaves alone.
+#[test]
+fn a_retired_path_vanishes_without_a_bump_and_is_stamped_once() {
+    let previous = recorded(
+        19,
+        18,
+        &[
+            ("/op:string", 1),
+            (":object", 1),
+            ("/gone:object", 20),
+            ("/gone/in:bool", 21),
+        ],
+    );
+    let shapes = [ack(json!({ "op": "ack" }))];
+    let next = advance(&shapes, &previous, 19, 19, &[], &["request/ack/gone"]).expect("retired");
+    assert_eq!(next.retired["request/ack/gone"], 22);
+    assert_eq!(next.edition(), 22, "a retirement is an edition");
+    assert_eq!((next.protocol, next.floor), (19, 18));
+    let again = advance(
+        &shapes,
+        &Ledger::read(&next.render()),
+        19,
+        19,
+        &[],
+        &["request/ack/gone"],
+    )
+    .expect("standing");
+    assert_eq!(again.render(), next.render(), "stamped once");
+    // A neighbour whose name merely starts the same way is not inside it.
+    let refusal = advance(&shapes, &previous, 19, 19, &[], &["request/ack/go"]).expect_err("held");
+    assert!(
+        refusal.contains("request/ack/gone:object vanished"),
+        "{refusal}"
+    );
+    let shape = advance(&[], &recorded(19, 18, ACK), 19, 19, &[], &["request/ack"]).expect("shape");
+    assert!(shape.shapes.is_empty());
+    assert_eq!(shape.retired["request/ack"], 2);
 }

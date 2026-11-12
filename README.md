@@ -132,8 +132,8 @@ yog: wire: listening on 127.0.0.1:39271
 That line is the whole of how a port is learned on a box yog provisioned for
 itself. Its `wire/address` holds `127.0.0.1:0` — a *request* for whatever port
 is free, so two servers on one box never contend — and the port is the kernel's
-answer, which only the listener knows. A seat cannot dial that, and an
-enrollment refuses to put it in a QR, so **state the endpoint**:
+answer, which only the listener knows. A seat cannot dial that, and an offer
+refuses to build a URL from it, so **state the endpoint**:
 
 ```
 WIRE_HOST=127.0.0.1 WIRE_PORT=7737 yog wire-certs   # then restart the server
@@ -208,30 +208,13 @@ Copy `ca.pem`, `client.pem`, `client.key` and `address` out of
 `<yog-data-root>/wire/` into the seat's own `wire/` directory. That is the whole
 of a same-box install.
 
-**A foot or a seat on another box.** Mint it a leaf of its own, carry the three
-files by hand, and then **enrol the same common name** from a seat in the
-workspace it should serve:
-
-```
-WIRE_LEAF=builder WIRE_FOOT=1 yog wire-certs     # on the box that holds the CA
-# carry builder.pem, builder.key and ca.pem to that box
-yog gesture --ws ops '/enroll builder foot'      # or `/enroll builder foot` from any seat
-```
-
-The second act is not optional and is not a second certificate: a leaf on its
-own is **registered in no workspace**, and an advertisement reaches only the
-workspaces its client is registered in — so a foot provisioned by the mint alone
-connects, advertises to nobody and is refused with that sentence. `/enroll`
-**adopts** the leaf already minted under that name rather than issuing another,
-registers it, and hands back the material; on a device you can reach a screen or
-a shell on, `/enroll` alone does both halves.
-
-**A device that can reach the server: the offer** (REMOTE §15.1). No file is
+**A foot or a seat on another box: the offer** (REMOTE §15.1). No file is
 carried and no private key travels. From a seat in the workspace the device
 should serve:
 
 ```
 /offer phone            # answers one URL — good once, for ten minutes
+/offer builder foot     # the same, for a tools-only box
 /offers                 # open → claimed → proved, with the confirmation word
 /approve phone          # once the word matches the one on the device
 ```
@@ -245,9 +228,25 @@ certificate cannot be recalled. The URL is served by the wire's own port — a
 connection with no certificate may say that one request and nothing else — so
 a reverse proxy holding a public certificate forwards `/yog/register/` to it.
 
+**A box with no route to that URL: the hand-carried leaf.** Mint it a leaf on
+the box that holds the CA, carry the three files by hand, and write its
+registration there too — no gesture seats a certificate that already exists:
+
+```
+WIRE_LEAF=builder WIRE_FOOT=1 yog wire-certs     # on the box that holds the CA
+# carry builder.pem, builder.key and ca.pem to that box
+mkdir -p <state-root>/clients/builder/workspaces
+touch <state-root>/clients/builder/workspaces/ops
+```
+
+The last two lines are not optional: a leaf on its own is **registered in no
+workspace**, and an advertisement reaches only the workspaces its client is
+registered in — so a foot provisioned by the mint alone connects, advertises to
+nobody and is refused with a sentence naming that file.
+
 A foot carries a **foot-grade** leaf and nothing else — `thrall` refuses to open
-on an operator-grade certificate, and `WIRE_FOOT=1` is the only thing that mints
-one. Operator grade (the default) is a seat and a tool host under one name.
+on an operator-grade certificate, and only `/offer <name> foot` or `WIRE_FOOT=1`
+makes one. Operator grade (the default) is a seat and a tool host under one name.
 
 ## The world
 
@@ -942,7 +941,7 @@ least visible.
 - **No provider credentials, and no world at all.** Both are mounts. A
   credential baked into a layer is a credential published to everyone who can
   pull it.
-- **Nothing an agent runs.** A tool call routes to an enrolled thrall over the
+- **Nothing an agent runs.** A tool call routes to a registered thrall over the
   real wire or refuses in band (REMOTE §12's ship-inert posture); the server
   runs no tool itself. A toolchain in this layer for agents to use would be
   quietly undoing that.

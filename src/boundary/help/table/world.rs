@@ -175,7 +175,7 @@ pub const WORLD: &[HelpRow] = &[
                  spoke**, which is the fact that tells a machine asleep right now from one that \
                  has never once connected: presence reads false for both, and on a terminal \
                  seat it reads false for everything, since every verb opens and closes its own \
-                 connection. A row with no last-seen at all has never dialled — the enrolment \
+                 connection. A row with no last-seen at all has never dialled — the registration \
                  was minted and abandoned, and it is the row an operator can safely remove. A \
                  machine is registered by an operator's own act on the server, never over the \
                  wire.",

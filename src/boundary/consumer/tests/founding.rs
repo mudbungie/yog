@@ -60,7 +60,7 @@ fn a_workspace_founded_in_world_is_seen_by_the_boxs_own_seats() {
         ["fleet".to_owned()]
     );
     // §4 is otherwise untouched: a certificate this box did not mint sees
-    // nothing until it is enrolled.
+    // nothing until it is registered.
     assert!(listed(&ctx.answer_as(&seat("stranger"), &json!({"op": "workspaces"}))).is_empty());
 }
 

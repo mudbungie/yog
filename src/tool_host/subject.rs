@@ -25,7 +25,7 @@
 //! ([`performs`], REMOTE §5.4 as amended by bl-5710, operator ruling
 //! 2026-08-31: *ship some basic tools — a default install must be able to
 //! write a file*). The lane is a ladder, ordered by how explicit the
-//! operator's intent is: a consenting machine is an enrollment plus a
+//! operator's intent is: a consenting machine is a registration plus a
 //! `subject_cwd` key, so it wins; with no consenting machine the executing
 //! box is the one subject-locality already named — the server's own, which
 //! holds the worktree — and the act is performed at litany's own front
@@ -102,7 +102,7 @@ pub fn performs(name: &str) -> bool {
 
 /// Where one workspace-subject attempt is executed, once the roster has been
 /// read. Three outcomes because the lane has three: a machine the operator
-/// enrolled and consented, litany's own front door, or a sentence.
+/// registered and consented, litany's own front door, or a sentence.
 enum Lane {
     /// Route to this machine, with the conversation's cwd on the invocation.
     Machine(Box<loaded::Entry>),

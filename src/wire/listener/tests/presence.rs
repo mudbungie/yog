@@ -82,15 +82,13 @@ fn a_peer_that_goes_silent_is_reaped() {
     let held = presence.clone();
     let served = std::thread::spawn(move || {
         let (stream, _) = tcp.accept().expect("accept");
-        serve(
+        dialled(
             stream,
             &config,
             &watcher,
             &held,
-            Quiet {
-                gone: Duration::from_millis(50),
-                ping: None,
-            },
+            &door::Slots::default(),
+            Duration::from_millis(50),
         );
     });
     let mut tls = client(tmp.path(), &address);

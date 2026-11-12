@@ -31,7 +31,7 @@ macro_rules! act {
 }
 
 /// **The closed set itself** (bl-fe43): which names are server acts, and the
-/// two proofs that a machine cannot take one — the enrolled thrall whose
+/// two proofs that a machine cannot take one — the registered thrall whose
 /// mailbox stays empty, and the id every spawn carries. Its own file at §12's
 /// per-file budget, sharing this module's fixtures and `act!`.
 mod set;

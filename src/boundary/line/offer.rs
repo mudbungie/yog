@@ -2,7 +2,7 @@
 //! file beside the other per-family grammars:
 //!
 //! - `/offer <common-name> [foot|thrall]` — mint an offer in the seat's
-//!   workspace. Bare is operator grade, exactly as `/enroll`'s is.
+//!   workspace. Bare is operator grade.
 //! - `/offers` — the workspace's pending offers.
 //! - `/approve <common-name>` and `/decline <common-name>`.
 //!
@@ -60,7 +60,7 @@ fn parse(tail: &str, ctx: &Context, verb: &str) -> Result<Verb, String> {
 /// vocabularies read and one spells (bl-427b): the registry's own words
 /// (`foot`, and `operator` said outright) and the brands an operator says out
 /// loud (`thrall`, `lernie`). Anything else refuses naming the token rather
-/// than rounding to either grade. `/enroll` reads its grade here too.
+/// than rounding to either grade.
 pub(super) fn grade(rest: &str, verb: &str) -> Result<Grade, String> {
     match args::optional_word(rest, verb)?.as_deref() {
         None | Some("lernie") => Ok(Grade::default()),

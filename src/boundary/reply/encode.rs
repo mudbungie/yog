@@ -15,7 +15,7 @@ use super::board::{board_row, fleet_facts};
 use super::rows::{conv_row, join_row, lineage_row, provider_row, role_row, ws_row};
 use super::{Reply, prepared_value};
 use crate::registry::mailbox::{capture_value, invocation_value};
-use bodies::{delivered, enrolled_reply, governing, outcome_reply};
+use bodies::{delivered, governing, outcome_reply};
 
 /// The follow lane's reply kind (bl-73e7), named once for both directions.
 pub(super) const FOLLOW: &str = "follow";
@@ -23,10 +23,6 @@ pub(super) const FOLLOW: &str = "follow";
 /// The sign-in standing's reply kind (bl-c285), named once for both
 /// directions — one kind, because a receipt and a frame are one value.
 pub(super) const LOGIN: &str = "login";
-
-/// Enrollment's reply kind (bl-f4e3), named once for both directions — and the
-/// word REMOTE §1.4's QR envelope contract is written against.
-pub(super) const ENROLLED: &str = "enrolled";
 
 /// Encode a reply to its file body. `ok` is the one field every reply carries.
 pub fn encode(reply: &Reply) -> Value {
@@ -60,7 +56,6 @@ pub fn encode(reply: &Reply) -> Value {
         Reply::TrailCleared => json!({ "ok": true, "kind": "trail-cleared" }),
         Reply::Applied => json!({ "ok": true, "kind": "applied" }),
         Reply::Advertised { wrote } => json!({ "ok": true, "kind": "advertised", "wrote": wrote }),
-        Reply::Enrolled(enrolled) => enrolled_reply(enrolled),
         Reply::Offer(answer) => crate::registry::offer::wire::reply(answer),
         // The routing leg's asking side (bl-024b): the handle, and the capture
         // once there is one. `capture` is **absent** rather than empty while
@@ -163,7 +158,7 @@ pub fn encode(reply: &Reply) -> Value {
         // The tool set rides in its ONE spelling (`registry::tools::encode`),
         // the same bytes the client's own document holds (REMOTE §5, bl-4e08).
         Reply::Clients(rows) => rows_reply("clients", rows.iter().map(client_row)),
-        Reply::Doctor(report) => super::doctor::reply(report),
+        Reply::Doctor(rows) => super::doctor::reply(rows),
         // The §3.5 table, ceiling and ledger (bl-53d1), spelled beside its type.
         Reply::Prices(view) => super::prices::reply(view),
     }

@@ -1,13 +1,13 @@
 //! The reply spellings that are **bodies, not rows** — split from
 //! [`super`] at §12's cap on the seam that file's own text already draws: the
 //! roster there is a match of one-line arms, and an arm that assembles a
-//! four-key object is a body pretending to be a row. Five of them, and the
+//! four-key object is a body pretending to be a row. Four of them, and the
 //! roster still names each, so there is exactly one place to learn which reply
 //! is said where.
 
 use serde_json::{Value, json};
 
-use super::{ENROLLED, LOGIN, obj_reply};
+use super::{LOGIN, obj_reply};
 
 /// A captured run as its receipt (§7.3): the verb's own exit and streams,
 /// with `ok` derived from the exit rather than stored beside it.
@@ -36,23 +36,6 @@ pub(super) fn delivered(delivery: &crate::fan::Delivery) -> Value {
         map.insert("commit".to_owned(), json!(commit));
     }
     Value::Object(map)
-}
-
-/// The QR envelope's payload (REMOTE §8.4, bl-f4e3). The six facts are
-/// present always — a device handed five of them cannot dial, cannot verify,
-/// or cannot say who it is — and the three PEMs ride **verbatim**, newlines
-/// and all. The rendezvous pair rides beside them only when this box minted
-/// one (bl-9043), an edition a reader may ignore.
-pub(super) fn enrolled_reply(enrolled: &crate::registry::enroll::Enrolled) -> Value {
-    let mut value = json!({
-        "ok": true, "kind": ENROLLED, "grade": enrolled.grade.word(),
-        "name": enrolled.name, "address": enrolled.address,
-        "ca": enrolled.ca, "cert": enrolled.cert, "key": enrolled.key,
-    });
-    if let Value::Object(map) = &mut value {
-        crate::registry::enroll::handoff_into(map, enrolled.rendezvous.as_ref());
-    }
-    value
 }
 
 /// The which-config-governs answer (bl-13f9; follow-the-tip, bl-e654). The oid

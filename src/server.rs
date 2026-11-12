@@ -61,7 +61,6 @@ pub struct Server {
     /// and names the address. Held so it lives as long as the server and stops
     /// when it drops.
     _wire: crate::wire::listener::Listener,
-    _rendezvous: Option<crate::wire::rendezvous::Rendezvous>,
     _sentry: Sentry,
     _pilot: Pilot,
     /// **The world's one-server exclusion** ([`sole`], bl-1d9b), declared last
@@ -174,20 +173,8 @@ impl Server {
         // than printed, since one caller owns the saying and the exit code.
         let answerer = Arc::new(crate::wire::intake::Intake::new(Arc::clone(&intake)))
             as Arc<dyn crate::wire::listener::Answerer>;
-        let wire = crate::wire::listen(world, Arc::clone(&answerer), presence.clone())
+        let wire = crate::wire::listen(world, answerer, presence)
             .map_err(|reason| format!("wire: {reason}"))?;
-        // The punched wire's server end (REMOTE §13, bl-4263): a second door
-        // into the same answerer, started only where the mint grew rendezvous
-        // material — a loopback-only box starts no thread (REMOTE §13.4).
-        let rendezvous = crate::wire::rendezvous::start(
-            &crate::wire::material::dir(world),
-            answerer,
-            presence,
-            Arc::clone(&clock),
-            crate::wire::rendezvous::mainline(),
-            listening.rendezvous(),
-        )
-        .map_err(|reason| format!("wire: {reason}"))?;
         // **The server says what it bound** (REMOTE §8, bl-e058). A `:0` in
         // `address` is a request the kernel answers in RAM, and the in-process
         // consumer that used to be told the answer was the window, which left
@@ -246,7 +233,6 @@ impl Server {
             _worker: worker,
             _consumer: consumer,
             _wire: wire,
-            _rendezvous: rendezvous,
             _sentry: sentry,
             _pilot: pilot,
             _sole: sole,

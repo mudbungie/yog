@@ -20,12 +20,12 @@ use super::{Action, Gesture};
 mod balls;
 mod config;
 mod control;
-/// The two acts a REMOTE device makes on its own behalf — enrollment and the
-/// sign-in — split out at §12's cap (bl-b680) on the seam `action/device`
-/// already draws for their prose.
+/// The act a REMOTE device makes on its own behalf — the sign-in — split out
+/// at §12's cap (bl-b680) on the seam `action/device` already draws for its
+/// prose.
 mod device;
 pub(crate) use crate::registry::offer::wire as offer;
-pub(crate) use device::{ENROLL, LOGIN, grade_of};
+pub(crate) use device::{LOGIN, grade_of};
 /// The two **depositing** envelopes (bl-a33d), one family file on the seam
 /// every other family here is cut on: a plain send and send-and-interrupt carry
 /// the same three fields, and the only difference is what the server does once
@@ -137,9 +137,6 @@ fn encode_action(action: &Action) -> Value {
             goal,
         } => fork::encode(workspace, parent, attempt, goal),
         Action::Advertise { tools } => tools::encode(tools),
-        // The two acts a REMOTE device makes on its own behalf, spelled in the
-        // device family's file (bl-b680's split, on `action/device`'s seam).
-        Action::Enroll(request) => device::encode_enroll(request),
         // The offer family (REMOTE §15.1), spelled beside its vocabulary.
         Action::Offer(verb) => offer::encode(verb),
         Action::Route(verb) => tools::encode_route(verb),
@@ -236,8 +233,8 @@ pub fn decode(v: &Value) -> Result<Gesture, String> {
             workspace: str_of(o, "workspace")?,
             pinned: op == PIN,
         })),
-        // The device's own two acts (REMOTE §8.3, §1.4), in their family file.
-        LOGIN | ENROLL => device::decode(op.as_str(), o).map(act),
+        // The device's own act (REMOTE §8.3), in its family file.
+        LOGIN => device::decode(o).map(act),
         offer::OFFER | offer::OFFERS | offer::APPROVE | offer::DECLINE => {
             offer::decode(op.as_str(), o).map(|verb| act(Action::Offer(verb)))
         }

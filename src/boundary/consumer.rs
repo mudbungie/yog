@@ -156,7 +156,7 @@ impl ConsumerCtx {
         // **And a client registered NOWHERE is told so** (bl-2a84), rather
         // than being handed the empty projection of that fact — `{"rows": []}`
         // reads as a server holding nothing, and a first-time operator cannot
-        // tell it from their own missing enrolment. Two gestures pass anyway,
+        // tell it from their own missing registration. Two gestures pass anyway,
         // each for its own reason: one that FOUNDS a workspace is this
         // client's own bootstrap (§4 auto-registers its creator, and the raise
         // is the one resolution that may name what nothing enumerates), and

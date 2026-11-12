@@ -124,7 +124,7 @@ fn an_unusable_config_drops_the_connection() {
     let address = listener.local_addr().expect("addr").to_string();
     let peer = std::thread::spawn(move || {
         let (stream, _) = listener.accept().expect("accept");
-        serve(
+        dialled(
             stream,
             &Arc::new(config),
             &Echo {
@@ -132,7 +132,8 @@ fn an_unusable_config_drops_the_connection() {
                 chunks: 1,
             },
             &Presence::default(),
-            Quiet::dialled(),
+            &door::Slots::default(),
+            peer::IDLE_TIMEOUT,
         );
     });
     drop(TcpStream::connect(address).expect("connect"));

@@ -2,13 +2,13 @@
 //! writes a local CA and this box's leaves, and the one place `openssl` is
 //! spelled.
 //!
-//! **It is still out-of-channel, and that is the whole of the ruling.** REMOTE
-//! §1.4 forbids an *in-channel* bootstrap — no enrollment, pairing or account
-//! protocol, ever — and §8 already blessed this exact act as operator tooling
-//! (`make wire-certs`, shelling to `openssl`). The operator ruling 2026-08-14
-//! moved the trigger and nothing else: the server's own boot performs the act
-//! on the operator's own box, before anything has been dialled, so no byte
-//! crosses a wire unauthenticated and nothing about the channel changed. yog
+//! **The first seat of all is out-of-channel, and stays so.** REMOTE §1.4 as
+//! amended by §15.4: every later device joins by offer (§15.1), and what
+//! stays out of channel is the box's own material — which §8 already blessed
+//! as operator tooling (`make wire-certs`, shelling to `openssl`). The
+//! operator ruling 2026-08-14 moved the trigger and nothing else: the server's
+//! own boot performs the act on the operator's own box, before anything has
+//! been dialled, so no byte crosses a wire unauthenticated. yog
 //! still links no certificate library (AGENTS.md rule 6: no `rcgen`, no new
 //! dependency) — it shells to the same tool an operator would.
 //!
@@ -41,12 +41,10 @@
 //! no CA, writes no address and touches no other leaf, and the material it
 //! writes still leaves this box in the operator's hand.
 //!
-//! **Two callers reach that one issuance now** (bl-f4e3): `yog wire-certs
-//! WIRE_LEAF=…`, and the boundary's `enroll` act (REMOTE §8.4), which mints
-//! through this recipe, seats the registration, answers the material and
-//! shreds the key. §1.4 is unlifted either way — the enrolling device performs
-//! no channel act, an operator-grade seat does, and the material's last hop is
-//! still out of channel.
+//! **And it signs a leaf for a key somebody else made** ([`sign`], REMOTE
+//! §15.1): the offer's claim, through the same recipe with one flag more. The
+//! hand-carried `WIRE_LEAF` remains for a box with no route to the
+//! registration door (§15.4).
 //!
 //! **Nothing complete is ever overwritten.** Every step here asks whether its
 //! artifact is already there, so a second call mints nothing — which is what
@@ -113,7 +111,7 @@ pub fn mint(dir: &Path, address: &str, also: &[String], force: bool) -> Result<(
     std::fs::create_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
     private(dir, 0o700);
     if force {
-        for name in artifacts(address) {
+        for name in artifacts() {
             let _ = std::fs::remove_file(dir.join(name));
         }
     }
@@ -137,35 +135,17 @@ pub fn mint(dir: &Path, address: &str, also: &[String], force: bool) -> Result<(
         std::fs::write(dir.join(ADDRESS), listing(address, also))
             .map_err(|e| format!("{}: {e}", dir.join(ADDRESS).display()))?;
     }
-    rendezvous_for(dir, address)
+    Ok(())
 }
 
-/// **The rendezvous material grows with a stated host** (REMOTE §13.2, §13.4;
-/// bl-4263). A box only its own seat dials — `address` on loopback — has
-/// nothing to rendezvous for and must start no thread, so the ed25519 seed
-/// and the pairing salt are minted exactly when the address names another
-/// machine's way in, and only on the box that founded the trust root: a
-/// client box holds the server's public key, not a seed of its own. Called
-/// from every act that writes the address, so the two facts cannot drift.
-pub(crate) fn rendezvous_for(dir: &Path, address: &str) -> Result<(), String> {
-    if host_of(address) == LOOPBACK || !dir.join(CA_KEY).is_file() {
-        return Ok(());
-    }
-    super::rendezvous::material::mint(dir)
-}
-
-/// Every file a mint aimed at `address` writes — the rotation's delete list,
-/// and the summary a caller prints. The rendezvous pair rides only a stated
-/// host ([`rendezvous_for`]).
-pub fn artifacts(address: &str) -> Vec<String> {
+/// Every file a mint writes — the rotation's delete list, and the summary a
+/// caller prints.
+pub fn artifacts() -> Vec<String> {
     let mut names = vec![ANCHORS.to_owned(), CA_KEY.to_owned(), ADDRESS.to_owned()];
     for role in LEAVES {
         let leaf = role.leaf();
         names.push(format!("{leaf}.pem"));
         names.push(format!("{leaf}.key"));
-    }
-    if host_of(address) != LOOPBACK {
-        names.extend(super::rendezvous::material::artifacts());
     }
     names
 }

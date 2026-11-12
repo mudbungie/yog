@@ -91,7 +91,7 @@ fn the_partition_leaves_the_server_exactly_the_three_worktree_names() {
     // The subtraction is total in the other direction too: every built-in
     // litany ships is either a server act or a performed worktree name, so no
     // built-in falls through to a refusal that would tell the operator to
-    // enroll a machine for work the server can already do.
+    // register a machine for work the server can already do.
     for name in ::litany::cmd::BUILTIN_TOOLS {
         assert!(
             performs(name) || crate::tool_host::server_act::is(name),
@@ -101,7 +101,7 @@ fn the_partition_leaves_the_server_exactly_the_three_worktree_names() {
 }
 
 /// **The ladder's order, proved pure over the roster.** A consenting machine
-/// is an enrollment plus a `subject_cwd` key, so it wins even for a name the
+/// is a registration plus a `subject_cwd` key, so it wins even for a name the
 /// litany implements; with nothing consenting, a performed name is the
 /// server's and a pool name is a sentence.
 #[test]
@@ -203,7 +203,7 @@ fn an_empty_roster_performs_a_worktree_name_at_the_front_door() {
 }
 
 /// A pool name litany does not implement is unchanged by the rung: the
-/// empty roster still earns the sentence that names the enrollment, and no
+/// empty roster still earns the sentence that names the registration, and no
 /// child is spawned (the front door here does not exist, so a spawn would
 /// surface as a different sentence entirely).
 #[test]
@@ -232,7 +232,7 @@ fn an_empty_roster_still_refuses_a_name_the_server_cannot_perform() {
         said.contains("no machine of this workspace advertises it"),
         "{said}"
     );
-    assert!(said.contains("enrolls a thrall"), "{said}");
+    assert!(said.contains("offers a thrall"), "{said}");
     assert!(
         said.contains("clients tool is not a way to do this work"),
         "{said}"

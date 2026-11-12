@@ -82,6 +82,14 @@
 //! gained `accepted` — the streams the punch port's standing acceptor served
 //! with no call's window toward them. A seat below 22 ignores it; a seat at
 //! 22 reads its absence from a 21 server as `0`.
+//!
+//! **Edition 27 (bl-7a14, REMOTE §3.2, §15.4) — the first retirements.**
+//! `request/enroll`, `reply/enrolled` and the doctor's `rendezvous` object are
+//! gone, with the act and the punched wire they belonged to. No major: a
+//! retired op is refused by name in band, no ask earns the reply kind, and
+//! the object was stamped above the floor, so its absence already read as
+//! its default. The record keeps the three under `retired` with this stamp;
+//! entries 20 to 22 above stand as what they were when written.
 
 // The constant itself is GENERATED, not declared: `build.rs` reads the
 // repo-root `PROTOCOL` file — the number's one file-shaped home, at the one

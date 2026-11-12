@@ -41,7 +41,7 @@
 //! cwd on the invocation. Where no machine consents, the lane's last rung is
 //! litany's own front door for the three names litany implements
 //! ([`subject::performs`]), so a default install writes a file with nothing
-//! enrolled; every other name is refused in band, naming the way out.
+//! registered; every other name is refused in band, naming the way out.
 //!
 //! **Adjudication is untouched and still runs first.** `yog tool-control`
 //! (DESIGN §8.6) is consulted before the executor routes anything, so a routed

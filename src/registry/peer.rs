@@ -27,7 +27,7 @@
 //! adds no row anywhere. There is no table and nothing an operator writes.
 
 use crate::boundary::{Action, Gesture, Query};
-use crate::registry::Client;
+use crate::registry::{CLIENTS, Client, WORKSPACES};
 
 /// The organizational unit that spells the foot grade — the one word, shared by
 /// the mint that writes it into a subject
@@ -37,8 +37,7 @@ use crate::registry::Client;
 pub const FOOT: &str = "foot";
 
 /// The other grade's word — spelled only where a grade is *said*: the
-/// enrollment envelope, its line, and its reply (REMOTE §1.4 as amended,
-/// bl-f4e3). It is deliberately not what the mint writes into a subject:
+/// offer's envelope, its line, and its listing (REMOTE §15.1). It is deliberately not what the mint writes into a subject:
 /// operator grade is the **absence** of `OU=foot`, which is what
 /// default-operator means, so a certificate never carries this word.
 pub const OPERATOR: &str = "operator";
@@ -61,7 +60,7 @@ pub const REFUSAL: &str = "this certificate is a foot: it may advertise its tool
 /// and wrong about the caller's own registration, which is a fact about the
 /// caller: a seat registered nowhere got `{"rows": []}` with `ok: true`, which
 /// is indistinguishable from a server that holds nothing at all — so a
-/// first-time operator cannot tell their own missing enrolment from a broken
+/// first-time operator cannot tell their own missing registration from a broken
 /// server, and the sentence they need is the one nobody was saying. Nothing
 /// leaks: this says what THIS certificate may see, and names no workspace.
 pub fn unregistered(client: &Client) -> String {
@@ -69,10 +68,24 @@ pub fn unregistered(client: &Client) -> String {
     format!(
         "this certificate ({name:?}) is registered in no workspace on this server, so every \
          read here would be empty and every name unknown — that is what this client may see, \
-         not what the server holds. Enrol it where it should work: `/enroll {name}` from a seat \
-         already in that workspace (add `{FOOT}` for a tool host), which adopts the leaf already \
-         minted under that name rather than issuing a second one. A workspace this client \
-         founds itself registers it too."
+         not what the server holds. {} A workspace this client founds itself registers it too.",
+        seat_by_hand(&name)
+    )
+}
+
+/// **How a certificate that already exists is seated** (REMOTE §4.1, §15.4) —
+/// the one remedy every "registered in no workspace" sentence names. A device
+/// that joins by offer is seated by its approval (§15.1); the hand-carried
+/// leaf `yog wire-certs WIRE_LEAF=` mints is seated by nothing, and an offer
+/// refuses a name a leaf was already issued under. A registration is a file,
+/// so the act is the operator's own, on the box that holds the CA.
+pub fn seat_by_hand(name: &str) -> String {
+    format!(
+        "{name} is seated by hand, on the box that holds the CA — no gesture registers a \
+         certificate that already exists: `mkdir -p <state-root>/{CLIENTS}/{name}/{WORKSPACES} \
+         && touch <state-root>/{CLIENTS}/{name}/{WORKSPACES}/<workspace>`. A device that can \
+         reach the server's registration URL joins instead by `/offer <new-name>` from a seat \
+         in that workspace, which issues and seats in one flow."
     )
 }
 
@@ -103,8 +116,8 @@ impl Grade {
         }
     }
 
-    /// This grade's one word (bl-f4e3) — the token the enrollment envelope, its
-    /// line and its reply all carry. [`of`](Self::of) is its exact inverse, the
+    /// This grade's one word (bl-f4e3) — the token the offer's envelope, its
+    /// line and its listing all carry. [`of`](Self::of) is its exact inverse, the
     /// `Ruling::word`/`of` pair's shape: a match is the compile gate and a
     /// table is the parser, and one vocabulary serves every serialization.
     ///

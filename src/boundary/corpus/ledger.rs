@@ -12,6 +12,12 @@
 //! regenerating them makes any diff vanish; the record remembers what the
 //! shapes *were*.
 //!
+//! *A retirement is the one loss that needs no major* (REMOTE §3.2, §15.4):
+//! a path listed in [`super::RETIRED`] may vanish, and the record keeps the
+//! entry with the edition at which it went, so a seat that vendors the record
+//! reads "a server at or above this edition no longer speaks it" where it
+//! reads everything else.
+//!
 //! **Three integers, and what each is.** `protocol` is the major the corpus
 //! is for — the number the hello compares. The **edition** is the newest stamp
 //! in the record, computed and never stored: the old per-bump integer line
@@ -43,14 +49,16 @@ pub(super) struct Entry {
     pub(super) signature: BTreeMap<String, u32>,
 }
 
-/// Every shape's record, the major it is for, the floor of that major, and
-/// what is deprecated ([`super::DEPRECATED`], rendered so a consumer reads it
-/// where it reads the rest).
+/// Every shape's record, the major it is for, the floor of that major, what
+/// is deprecated ([`super::DEPRECATED`]) and what was retired, each with the
+/// edition it went at ([`super::RETIRED`]) — both rendered so a consumer reads
+/// them where it reads the rest.
 #[derive(Debug)]
 pub(super) struct Ledger {
     pub(super) protocol: u32,
     pub(super) floor: u32,
     pub(super) deprecated: BTreeSet<String>,
+    pub(super) retired: BTreeMap<String, u32>,
     pub(super) shapes: BTreeMap<String, Entry>,
 }
 
@@ -84,19 +92,29 @@ impl Ledger {
             .filter_map(Value::as_str)
             .map(str::to_owned)
             .collect();
+        let retired = value
+            .get("retired")
+            .and_then(Value::as_object)
+            .into_iter()
+            .flatten()
+            .map(|(name, at)| (name.clone(), number(Some(at))))
+            .collect();
         Self {
             protocol: number(value.get("protocol")),
             floor: number(value.get("floor")),
             deprecated,
+            retired,
             shapes,
         }
     }
 
-    /// The newest stamp in the record: the edition this corpus is at.
+    /// The newest stamp in the record — a path's arrival or a retirement:
+    /// the edition this corpus is at.
     pub(super) fn edition(&self) -> u32 {
         self.shapes
             .values()
             .flat_map(|entry| entry.signature.values().copied())
+            .chain(self.retired.values().copied())
             .max()
             .unwrap_or_default()
     }
@@ -112,6 +130,7 @@ impl Ledger {
             "deprecated": self.deprecated,
             "floor": self.floor,
             "protocol": self.protocol,
+            "retired": self.retired,
             "shapes": shapes,
         });
         super::canonical(&doc)
@@ -167,22 +186,26 @@ fn key_of(path: &str) -> &str {
     path.rsplit_once(':').map_or(path, |(key, _)| key)
 }
 
-/// Whether a vanished path, or its whole shape, was deprecated first.
-fn deprecated(list: &[&str], shape: &str, path: &str) -> bool {
+/// Whether a vanished path is named by `list` — itself, or anything above
+/// it: its shape, or an object it sits inside.
+fn listed(list: &[&str], shape: &str, path: &str) -> bool {
     let named = format!("{shape}{}", key_of(path));
-    list.contains(&shape) || list.contains(&named.as_str())
+    list.iter()
+        .any(|entry| named == *entry || named.starts_with(&format!("{entry}/")))
 }
 
 /// The record this boundary earns, or the refusal that says why it cannot
 /// have one. A gained path is stamped the next edition; a path that vanished
 /// or re-typed is refused unless `protocol` exceeds `published` — a major bump
-/// in flight — and, for a loss, the path is in `deprecated`.
+/// in flight — and, for a loss, the path is in `deprecated`; or the path is
+/// in `retired`, which needs neither and is stamped like a gain.
 pub(super) fn advance(
     shapes: &[Shape],
     previous: &Ledger,
     protocol: u32,
     published: u32,
     deprecated: &[&str],
+    retired: &[&str],
 ) -> Result<Ledger, String> {
     let fresh: BTreeMap<String, BTreeSet<String>> = shapes
         .iter()
@@ -194,10 +217,10 @@ pub(super) fn advance(
     for (name, entry) in &previous.shapes {
         let now = fresh.get(name);
         for path in entry.signature.keys() {
-            if now.is_some_and(|paths| paths.contains(path)) {
+            if now.is_some_and(|paths| paths.contains(path)) || listed(retired, name, path) {
                 continue;
             }
-            match (bumping, self::deprecated(deprecated, name, path)) {
+            match (bumping, listed(deprecated, name, path)) {
                 (true, true) => {}
                 (true, false) => breaking.push(format!("{name}{path} vanished undeprecated")),
                 (false, _) => breaking.push(format!("{name}{path} vanished")),
@@ -237,6 +260,15 @@ pub(super) fn advance(
         protocol,
         floor: previous.floor,
         deprecated: deprecated.iter().map(|&s| s.to_owned()).collect(),
+        retired: retired
+            .iter()
+            .map(|&s| {
+                (
+                    s.to_owned(),
+                    previous.retired.get(s).copied().unwrap_or(next),
+                )
+            })
+            .collect(),
         shapes: out,
     };
     let floor = if protocol > previous.protocol {

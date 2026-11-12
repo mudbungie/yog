@@ -223,8 +223,8 @@ one home, machine-checked, instead of prose.
   **`deliver` is `control`** — accepting one of `n` fanned candidates is an
   operator judgement and the sibling of `/fan` and `/retire`, which no reading
   makes machine; §2's `machine` is the foot's verbs and the routing leg's
-  machine ends, and `deliver` is neither. **`enroll` is `control`** — §1.4's
-  mint is an act at a seat, pairing a device that is not yet a peer. And
+  machine ends, and `deliver` is neither. **`offer`, `offers`, `approve` and `decline` are `control`** —
+  REMOTE §15.1's acts at a seat, about a device that is not yet a peer. And
   **yog's argv table is outside the ledger** — `yog env`, `yog exec`, `yog bl`
   and the rest share the row type for its text but cross no §8.5 boundary, so
   no seat can owe them a control and the generated roster never sees them.

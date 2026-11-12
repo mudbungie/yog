@@ -42,7 +42,7 @@ fn wire(dir: &std::path::Path) -> Row {
 
 /// The endpoint the server binds and a seat dials. A `:0` is the request a
 /// self-provisioning boot writes, and it is the one address nothing downstream
-/// can use: no seat can dial it and no enrolment can put it in a QR.
+/// can use: no seat can dial it and no offer can build a URL from it.
 fn address(dir: &std::path::Path) -> Row {
     // The first line is the address (REMOTE §15.3); the rest are further
     // spellings a client falls through to, and none of them is what binds.

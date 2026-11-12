@@ -25,6 +25,7 @@ fn rendered(protocol: u32, dir: &Path) -> Result<BTreeMap<String, String>, Strin
         protocol,
         super::published(),
         super::DEPRECATED,
+        super::RETIRED,
     )?;
     let mut out: BTreeMap<String, String> = shapes
         .iter()

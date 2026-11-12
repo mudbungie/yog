@@ -65,7 +65,7 @@ pub(crate) fn admissible(dir: &Path, cn: &str) -> Result<(), String> {
     let pair = [format!("{cn}.pem"), format!("{cn}.key")];
     if pair.iter().any(|name| dir.join(name).is_file()) {
         // The operator most likely to hit this is one act past done: they
-        // enrolled a device as a seat and are now enrolling its "tool side",
+        // registered a device as a seat and are now registering its "tool side",
         // which the first leaf already serves (REMOTE §5 — one identity, two
         // connections). The refusal teaches that, because without it the
         // block reads as arbitrary (bl-7a4a).
@@ -73,7 +73,7 @@ pub(crate) fn admissible(dir: &Path, cn: &str) -> Result<(), String> {
             "{} already holds {}: re-issuing distrusts nothing, so both would be live under one \
              identity. One device is one name and one leaf, whatever its grade — an \
              operator-grade leaf already serves the seat AND the tool host, so a device that \
-             chats and tools enrolls once; a foot leaf is for a tools-only device under its own \
+             chats and tools registers once; a foot leaf is for a tools-only device under its own \
              name. State another common name, or rotate the whole directory with FORCE=1",
             dir.display(),
             pair.join(" or ")
@@ -104,23 +104,16 @@ pub(crate) fn sign(
 }
 
 /// **Every file a client leaf's bundle is, and the name each lands under**
-/// (REMOTE §8.2, §13.2; bl-9043): the pair [`issue`] wrote — renamed to the
-/// client end's own names, since the common name inside is the identity — the
-/// anchors, and on a box holding rendezvous material `rendezvous.pub` and
-/// `pairing.salt`, under the names a seat reads them by. One out-of-channel
-/// hand-off then carries everything a seat or a foot needs; a loopback box
-/// minted no rendezvous material and hands off none.
-pub(crate) fn bundle(dir: &Path, cn: &str) -> Result<Vec<(PathBuf, String)>, String> {
+/// (REMOTE §8.2): the pair [`issue`] wrote — renamed to the client end's own
+/// names, since the common name inside is the identity — and the anchors. One
+/// out-of-channel hand-off carries everything a seat or a foot needs.
+pub(crate) fn bundle(dir: &Path, cn: &str) -> Vec<(PathBuf, String)> {
     let client = Role::Client.leaf();
-    let mut files = vec![
+    vec![
         (dir.join(format!("{cn}.pem")), format!("{client}.pem")),
         (dir.join(format!("{cn}.key")), format!("{client}.key")),
         (dir.join(ANCHORS), ANCHORS.to_owned()),
-    ];
-    for name in crate::wire::rendezvous::material::bundle(dir)? {
-        files.push((dir.join(&name), name));
-    }
-    Ok(files)
+    ]
 }
 
 /// Re-issue **this box's own server leaf** over the CA already here (REMOTE §8,
@@ -170,8 +163,8 @@ fn founded(dir: &Path) -> Result<(), String> {
 /// It exists because the fact had no non-destructive spelling. `address` is
 /// written once, by whichever mint founded the directory, and a boot that
 /// provisioned its own box wrote `127.0.0.1:0` — a request only the listener
-/// ever learns the answer to, which no seat can dial and no enrollment can put
-/// in a QR. The only act that could replace it was `FORCE=1`, which re-founds
+/// ever learns the answer to, which no seat can dial and no offer can build a
+/// URL from. The only act that could replace it was `FORCE=1`, which re-founds
 /// the CA and distrusts every leaf already carried to every other box. Saying
 /// where a server listens is not a rotation, so this is not one.
 ///
@@ -181,6 +174,5 @@ fn founded(dir: &Path) -> Result<(), String> {
 /// [`listing`](super::listing)).
 pub(crate) fn state(dir: &Path, address: &str, also: &[String]) -> Result<(), String> {
     std::fs::write(dir.join(ADDRESS), super::listing(address, also))
-        .map_err(|e| format!("{}: {e}", dir.join(ADDRESS).display()))?;
-    super::rendezvous_for(dir, address)
+        .map_err(|e| format!("{}: {e}", dir.join(ADDRESS).display()))
 }

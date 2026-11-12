@@ -125,9 +125,10 @@ const FOREIGN: &[&str] = &[
     // REMOTE.md's §15 family — §15.1 (the offer) and §15.2 (the registration
     // door), bl-9ea6, and §15.3 (what a server binds, and the address list a
     // client dials, bl-52ae) — cited prefixed ("REMOTE §15.3") like every
-    // other foreign key. DESIGN §15 is the retired implementation epic and
-    // has no subsections, which the sibling test keeps honest.
-    "15.1", "15.2", "15.3",
+    // other foreign key. §15.4 joins them (bl-7a14): what the offer retires.
+    // DESIGN §15 is the retired implementation epic and has no subsections,
+    // which the sibling test keeps honest.
+    "15.1", "15.2", "15.3", "15.4",
     // REMOTE.md's §5.4 — the thrall and the local execution corpus, and since
     // bl-dfce the home of the ruling that the compactor's procedure pair is an
     // server act yog answers itself. Cited "REMOTE §5.4" like the rest; DESIGN
@@ -144,20 +145,14 @@ const FOREIGN: &[&str] = &[
     // subsections at all, which the sibling test keeps honest: the day it
     // grows one, these entries fail rather than masking it.
     "6.3", "6.4",
-    // REMOTE.md's §13 family — §13.2 (the DHT rendezvous: both ends pure
-    // clients of the commons) and §13.5 (what the punched wire costs, whose
-    // last item is the fake DHT the coverage floor demands) — cited prefixed
-    // ("REMOTE §13.2") from the `dht` module (bl-df31). DESIGN §13 is
-    // "Deliberate interpretations" and has §13.0, §13.1 and §13.3 only, which
-    // the sibling test keeps honest: the day it grows a §13.2 or §13.5, these
-    // entries fail rather than masking it.
-    // §13.4, §13.7 and §13.8 join them (bl-4263): held connections and the
-    // severability-by-material rule, the open rulings (socket2 decided; the
-    // cadence defaults), and what the two NAT trials measured — cited
-    // prefixed ("REMOTE §13.4") from `wire::rendezvous` and the listener's
-    // held-connection mode. The same sibling test keeps DESIGN §13 at its
-    // three subsections.
-    "13.2", "13.4", "13.5", "13.7", "13.8",
+    // REMOTE.md's §13 family — the punched wire, retired by REMOTE §15.4
+    // (bl-7a14) and standing there as tombstone headings. What still cites
+    // it prefixed is the edition record in `wire::hello::version`, whose
+    // entries 20 to 22 name §13.2 and §13.4 as the sections they were built
+    // against. DESIGN §13 is "Deliberate interpretations" and has §13.0,
+    // §13.1 and §13.3 only, which the sibling test keeps honest: the day it
+    // grows a §13.2 or a §13.4, these entries fail rather than masking it.
+    "13.2", "13.4",
 ];
 
 /// Parse a section key (`digits`, optionally `.digits`) starting at `i`;

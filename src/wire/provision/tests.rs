@@ -7,7 +7,6 @@ mod issue;
 use super::openssl::{eku, run, san, tool};
 use super::*;
 use crate::git_env;
-use crate::test_support::wire::EPHEMERAL;
 use crate::wire::material::{self, Material};
 use tempfile::TempDir;
 
@@ -212,25 +211,16 @@ fn a_server_leaf_always_names_loopback_and_never_twice() {
 fn the_artifact_list_is_the_whole_of_what_is_written() {
     let tmp = TempDir::new().expect("tmp");
     ensure(tmp.path()).expect("mint");
-    for name in artifacts(EPHEMERAL) {
+    for name in artifacts() {
         assert!(tmp.path().join(&name).is_file(), "{name} was not written");
     }
-    assert_eq!(
-        artifacts(EPHEMERAL).len(),
-        9,
-        "a CA pair, an address, three leaves"
-    );
-    assert_eq!(
-        artifacts("192.0.2.1:7737").len(),
-        12,
-        "and a stated host adds the rendezvous seed, salt and public key"
-    );
+    assert_eq!(artifacts().len(), 9, "a CA pair, an address, three leaves");
     let mut left: Vec<String> = std::fs::read_dir(tmp.path())
         .expect("read the mint's directory")
         .filter_map(|entry| Some(entry.ok()?.file_name().to_string_lossy().into_owned()))
         .collect();
     left.sort();
-    let mut named = artifacts(EPHEMERAL);
+    let mut named = artifacts();
     named.sort();
     assert_eq!(left, named, "scratch was left behind");
 }

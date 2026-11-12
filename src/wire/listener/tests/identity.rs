@@ -48,10 +48,9 @@ fn an_uncertificated_peer_is_refused_by_tls() {
 }
 
 /// **A peer that completes the handshake with no certificate is not the wire**
-/// (REMOTE §15.2). On the dialled listener it is offered the registration door
-/// and nothing else — a wire frame there earns the door's bare `404`, never an
-/// answer — and on the punch port's entry it is hung up on with nothing said.
-/// Neither reaches `answer`.
+/// (REMOTE §15.2). It is offered the registration door and nothing else — a
+/// wire frame there earns the door's bare `404`, never an answer — and it
+/// never reaches `answer`.
 #[test]
 fn a_certless_peer_never_reaches_the_answerer() {
     use crate::test_support::wire::certless;
@@ -64,7 +63,7 @@ fn a_certless_peer_never_reaches_the_answerer() {
     );
     let anchors = tmp.path().join(crate::wire::material::ANCHORS);
     let asked = Arc::new(AtomicUsize::new(0));
-    let echo = || Echo {
+    let echo = Echo {
         asked: Arc::clone(&asked),
         chunks: 1,
     };
@@ -72,27 +71,11 @@ fn a_certless_peer_never_reaches_the_answerer() {
     crate::wire::hello::state(&mut frame).expect("preface");
     crate::wire::frame::write_value(&mut frame, &json!({"op": "workspaces"})).expect("frame");
 
-    let listener = Listener::bind(&server, Arc::new(echo()), Presence::default()).expect("bind");
+    let listener = Listener::bind(&server, Arc::new(echo), Presence::default()).expect("bind");
     let ended = [frame.as_slice(), b"\r\n\r\n"].concat();
     let said = certless(&anchors, &listener.address(), &ended);
     assert!(said.starts_with("HTTP/1.1 404 "), "{said}");
 
-    let config = crate::wire::tls::server_config(&server).expect("config");
-    let punched = std::net::TcpListener::bind("127.0.0.1:0").expect("bind");
-    let address = punched.local_addr().expect("addr").to_string();
-    let answerer = echo();
-    let acceptor = std::thread::spawn(move || {
-        let (stream, _) = punched.accept().expect("accept");
-        serve(
-            stream,
-            &config,
-            &answerer,
-            &Presence::default(),
-            Quiet::dialled(),
-        )
-    });
-    assert_eq!(certless(&anchors, &address, &frame), "", "nothing is said");
-    assert!(!acceptor.join().expect("served"), "and it was not admitted");
     assert_eq!(asked.load(Ordering::Relaxed), 0);
 }
 

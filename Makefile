@@ -134,7 +134,7 @@ beat-audit:
 # `WIRE_HOST=<host>[,<host>...]` on a directory that ALREADY holds material is
 # not a rotation and not a refusal (REMOTE §8, bl-52f4): it re-issues the server
 # leaf alone over the CA already there, so a box that gained a way in stops
-# costing every enrolled client a new certificate. No CA founded, no other leaf
+# costing every registered client a new certificate. No CA founded, no other leaf
 # touched. The `address` file is written to match: every host stated, on
 # WIRE_PORT, one per line (REMOTE §15.3) — and a first host that is not
 # loopback binds every interface on that port.

@@ -216,33 +216,4 @@ pub const STANDING: &[HelpRow] = &[
                  row, so the trail never lies about having been cut.",
         surface: Surface::Control,
     },
-    HelpRow {
-        verb: crate::boundary::codec::ENROLL,
-        usage: "/enroll <common-name> [foot] [--at <host>:<port>]",
-        summary: "mint or adopt a device's certificate here, register it, and hand back its \
-                  material",
-        detail: "Issues a leaf under the stated common name on this server's own CA, registers \
-                 that client in the focused workspace, and answers the whole of what the device \
-                 needs: the anchors, its certificate, its private key and the address it dials. \
-                 The key is shredded here before the answer leaves, so this box keeps none of \
-                 it. A name whose leaf `yog wire-certs WIRE_LEAF=` already minted is ADOPTED \
-                 rather than refused: registering is not issuing, so the standing certificate \
-                 is registered and handed over with nothing re-issued and nothing distrusted — \
-                 which is the repair for a leaf that was minted into no workspace and so \
-                 advertised into nothing. The grade then comes off that certificate, and an \
-                 enrollment asking for a grade the subject does not carry is refused. A name \
-                 already enrolled through this door has no key left to hand over and says so. \
-                 `--at <host>:<port>` states the address THIS device will dial, for a device \
-                 that does not share this server's own view of itself — an emulator reaching its \
-                 host through the emulator's alias, a phone on the LAN, a box on an overlay. \
-                 Unstated is the server's own `wire/address`. State one the server leaf already \
-                 answers to (`WIRE_HOST` is a list), because a route the certificate omits fails \
-                 verification at the device rather than here. \
-                 Bare is operator grade; add `foot` for a tool host that may advertise, take its \
-                 invocations and complete them and say nothing else. Refuses when this box holds \
-                 no CA, and when its address names no port a device can dial. The material \
-                 travels to the device out of channel — a QR on a screen, adb, a hand — never \
-                 over a connection the new device opened, which it could not open anyway.",
-        surface: Surface::Control,
-    },
 ];

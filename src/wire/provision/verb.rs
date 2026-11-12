@@ -31,7 +31,7 @@
 //! most needs an endpoint stated is the box that can least reach one: a boot
 //! that provisioned itself wrote `127.0.0.1:0`, a port only the listener ever
 //! learns, and every consumer downstream inherits it — a seat cannot dial it,
-//! and an enrollment refuses to mint a QR that names it. The only act that
+//! and an offer refuses to build a URL from it. The only act that
 //! could replace it was `FORCE=1`, a rotation, which distrusts every leaf
 //! already carried to every other box in order to change one line of text.
 //! Stating where a server listens distrusts nothing, so the two facts a stated

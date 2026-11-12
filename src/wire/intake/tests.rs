@@ -46,12 +46,12 @@ fn intake_in(world: crate::xdg::Env, state_root: &std::path::Path) -> Intake {
 }
 
 /// A seat as a peer, **registered somewhere** — which is what a certificate
-/// that has been enrolled is, and what an answer rather than the bl-2a84
+/// that has been registered is, and what an answer rather than the bl-2a84
 /// refusal needs. `local` stands in for a wire peer nowhere else because no
 /// certificate can carry that name (`Client::parse` refuses it).
 fn seated(state_root: &std::path::Path) -> crate::registry::Peer {
     let client = crate::registry::Client::parse("laptop").expect("identity");
-    crate::registry::register(state_root, &client, "home").expect("its enrolment's file");
+    crate::registry::register(state_root, &client, "home").expect("its registration's file");
     crate::registry::Peer {
         client,
         grade: crate::registry::Grade::Operator,
@@ -100,7 +100,7 @@ fn answering_a_request_stamps_the_client_as_seen() {
         client: crate::registry::Client::parse("laptop").expect("identity"),
         grade: crate::registry::Grade::Operator,
     };
-    crate::registry::register(root.path(), &peer.client, "home").expect("its enrolment's file");
+    crate::registry::register(root.path(), &peer.client, "home").expect("its registration's file");
     assert_eq!(crate::registry::seen::read(root.path(), &peer.client), None);
     let _ = intake(root.path())
         .answer(&peer, json!({"op": "workspaces"}))

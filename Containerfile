@@ -107,7 +107,7 @@ RUN cargo build --release --locked --bin yog
 # `cfg(target_os = "macos")`, so it is not compiled into this binary at all.
 #
 # **Nothing an AGENT runs is here, and that is the ship-inert posture**
-# (REMOTE §12, bl-37fd). A tool call routes to an enrolled thrall over the real
+# (REMOTE §12, bl-37fd). A tool call routes to a registered thrall over the real
 # wire or refuses in band; the server runs no tool itself. An image that
 # carried a toolchain for agents to use would be quietly undoing that.
 FROM docker.io/library/alpine:3.22@sha256:14358309a308569c32bdc37e2e0e9694be33a9d99e68afb0f5ff33cc1f695dce

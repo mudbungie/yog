@@ -20,13 +20,13 @@ fn tool(name: &str) -> Tool {
     }
 }
 
-/// The ordinary state of an advertising machine: enrolled, and therefore
+/// The ordinary state of an advertising machine: registered, and therefore
 /// **registered somewhere** (REMOTE §5.1) — a set is presented into the
 /// workspaces its client is registered in, so a client in none is refused
 /// before anything is stored (bl-6b14). Every beat below but the two about that
 /// refusal starts here.
 fn seated(state_root: &Path, client: &Client) -> Deps {
-    crate::registry::register(state_root, client, "alba").expect("the enrolment's own file");
+    crate::registry::register(state_root, client, "alba").expect("the registration's own file");
     deps(state_root, client.clone())
 }
 
@@ -187,13 +187,13 @@ fn an_unwritable_store_refuses() {
 /// refusal names the client and the act that seats it, and nothing is stored
 /// for nobody to read.
 #[test]
-fn a_client_registered_nowhere_is_refused_naming_the_enrolment() {
+fn a_client_registered_nowhere_is_refused_naming_the_registration() {
     let root = tempdir().expect("tempdir");
     let devbox = Client::parse("devbox").expect("identity");
     let deps = deps(root.path(), devbox.clone());
     let refusal = advertise(&deps, &[tool("Bash")]).expect_err("presented to nobody");
     assert!(refusal.contains("registered in no workspace"), "{refusal}");
-    assert!(refusal.contains("/enroll devbox foot"), "{refusal}");
+    assert!(refusal.contains("clients/devbox/workspaces"), "{refusal}");
     assert!(
         crate::registry::tools::read(root.path(), &devbox).is_empty(),
         "and nothing is stored for nobody to see"

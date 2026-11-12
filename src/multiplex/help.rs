@@ -94,9 +94,12 @@ pub(super) const COMMANDS: &[HelpRow] = &[
                  carried to a tool host is turned away by it. Unset is operator grade, which is \
                  a seat AND a tool host under one name.\n\
                  \nA leaf this act issues is registered in NO workspace, and an advertisement \
-                 reaches only the workspaces its client is registered in — so enrol the same \
-                 common name from a seat in the workspace it should serve (`/enroll <name> \
-                 [foot]`), which adopts this leaf rather than issuing a second one.\n\
+                 reaches only the workspaces its client is registered in. No gesture seats a \
+                 certificate that already exists: write the registration on this box, `mkdir \
+                 -p <state-root>/clients/<name>/workspaces && touch \
+                 <state-root>/clients/<name>/workspaces/<workspace>`. A device that can reach \
+                 this server's registration URL joins instead by `/offer <name>` from a seat, \
+                 which needs no leaf minted here at all.\n\
                  \nIt shells to `openssl`: provisioning is the operator's out-of-channel act \
                  and yog links no certificate library.",
         surface: Surface::Machine,

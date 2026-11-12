@@ -28,7 +28,8 @@
 //! **The edition is computed, never stored.** `shapes.json` carries no
 //! `edition` key on purpose (REMOTE §3.2: *"the corpus's edition is its newest
 //! stamp, computed and never stored"*), so this script takes the maximum over
-//! every stamp in every shape's signature — the same arithmetic
+//! every stamp in every shape's signature and every retirement's — the same
+//! arithmetic
 //! `Ledger::edition` does, held equal to it by a unit test on the committed
 //! record.
 //!
@@ -71,14 +72,17 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-/// Every edition stamp in the record: one per field path, over every shape.
+/// Every edition stamp in the record: one per field path, over every shape,
+/// and one per retirement.
 fn editions(record: &Value) -> Vec<u32> {
+    let retired = record.get("retired").and_then(Value::as_object);
     record
         .get("shapes")
         .and_then(Value::as_object)
         .into_iter()
         .flatten()
         .filter_map(|(_, entry)| entry.get("signature")?.as_object())
+        .chain(retired)
         .flatten()
         .filter_map(|(_, at)| stamp(Some(at)))
         .collect()

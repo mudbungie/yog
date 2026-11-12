@@ -102,10 +102,6 @@ fn receipt(kind: &str, o: &Map<String, Value>) -> Option<Result<Reply, String>> 
         "trail-cleared" => Ok(Reply::TrailCleared),
         "applied" => Ok(Reply::Applied),
         "advertised" => bool_of(o, "wrote").map(|wrote| Reply::Advertised { wrote }),
-        // The QR envelope's payload (bl-f4e3), strict on all six: a seat that
-        // read five of them and defaulted the sixth would draw a code that
-        // cannot dial, or one whose grade nobody asked for.
-        super::encode::ENROLLED => enrolled(o),
         // The routing leg's asking side (bl-024b): the handle always, the
         // capture only once there is one — `opt_val` is what makes "absent"
         // and "answered nothing" two readings rather than one.
@@ -159,21 +155,6 @@ fn outcome(o: &Map<String, Value>) -> Result<Reply, String> {
     }))
 }
 
-/// One enrollment's material, read back (bl-f4e3). The grade goes through the
-/// registry's own table, so an unknown word refuses here exactly as it refuses
-/// in the gesture that asked for it.
-fn enrolled(o: &Map<String, Value>) -> Result<Reply, String> {
-    Ok(Reply::Enrolled(crate::registry::enroll::Enrolled {
-        grade: crate::boundary::codec::grade_of(&str_of(o, "grade")?)?,
-        name: str_of(o, "name")?,
-        address: str_of(o, "address")?,
-        ca: str_of(o, "ca")?,
-        cert: str_of(o, "cert")?,
-        key: str_of(o, "key")?,
-        rendezvous: crate::registry::enroll::handoff_of(o)?,
-    }))
-}
-
 fn answered(o: &Map<String, Value>) -> Result<Reply, String> {
     let word = str_of(o, "verdict")?;
     let said = str_of(o, "scope")?;
@@ -211,7 +192,7 @@ fn listing(kind: &str, o: &Map<String, Value>) -> Option<Result<Reply, String>> 
             crate::proposals::wire::view_of(o).map(|v| config(A::Proposals(v)))
         }
         "clients" => rows_of(o, client_row).map(Reply::Clients),
-        super::doctor::KIND => super::doctor::report_of(o).map(Reply::Doctor),
+        super::doctor::KIND => super::doctor::rows(o).map(Reply::Doctor),
         "invocations" => rows_of(o, invocation_of).map(Reply::Invocations),
         // The §3.5 table, ceiling and ledger (bl-53d1), read by the module
         // that spells them.

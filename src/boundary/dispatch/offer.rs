@@ -1,5 +1,5 @@
 //! **The offer's executor** (REMOTE §15.1; bl-9ea6) — beside
-//! [`enroll`](super::enroll) and for its reason: everything else in the
+//! [`advertise`](super::advertise) and for its reason: everything else in the
 //! chokepoint routes, and these *gate*.
 //!
 //! **The grade gate is spent one layer up** (REMOTE §4.2): none of the four is

@@ -63,7 +63,7 @@ pub(super) fn advertise(deps: &Deps, tools: &[Tool]) -> Result<Reply, String> {
 /// closes: a foot's only reader is a program, and a program acts on an `ok`. It
 /// refuses **before the store**, so nothing is written for nobody to see; the
 /// host re-presents its set on its next connection, which is REMOTE §5's own
-/// traffic shape, so the enrolment and a reconnect are the whole remedy.
+/// traffic shape, so the registration and a reconnect are the whole remedy.
 fn presented(deps: &Deps) -> Result<(), String> {
     let client = &deps.caller.client;
     if !crate::registry::registered(&deps.state_root, client).is_empty() {
@@ -72,11 +72,9 @@ fn presented(deps: &Deps) -> Result<(), String> {
     Err(format!(
         "advertise: {:?} is registered in no workspace on this server, so this set would be \
          presented to nobody — an advertisement reaches the workspaces its client is registered \
-         in, and that set is empty. Enrol this name in the workspace it should serve: `/enroll \
-         {} foot` from a seat there, which ADOPTS the leaf already minted for it rather than \
-         issuing a second one. Then reconnect — a set is presented once per connection",
+         in, and that set is empty. {} Then reconnect — a set is presented once per connection",
         client.name(),
-        client.name()
+        crate::registry::peer::seat_by_hand(&client.name())
     ))
 }
 

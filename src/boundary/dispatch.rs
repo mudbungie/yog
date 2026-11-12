@@ -38,13 +38,9 @@ mod deps;
 /// `prompt`). The `Prepare`/`Prompt` arms delegate here, so a line, a deposit
 /// and a click all spend one body.
 mod doors;
-/// REMOTE §1.4's enrollment (bl-f4e3) — the third gating arm, beside
-/// [`advertise`] and [`delete_exec`]: it mints a certificate and seats a
-/// registration, so it re-derives every precondition at fire time and refuses
-/// fail-closed.
-mod enroll;
-/// REMOTE §15.1's offer (bl-9ea6) — the fourth gating arm: it decides which
-/// name may be offered and which offer may be approved.
+/// REMOTE §15.1's offer (bl-9ea6) — the third gating arm, beside
+/// [`advertise`] and [`delete_exec`]: it decides which name may be offered
+/// and which offer may be approved.
 mod offer;
 /// The one address resolution, and the §4.1 raise it carries — split off at
 /// §12's cap (bl-4e08); it stands ahead of the table rather than inside it.
@@ -215,13 +211,9 @@ pub fn dispatch(deps: &Deps, ui: &mut UiState, ts: &str, action: &Action) -> Res
         // identity the INTAKE carries, so the gate is who is asking rather than
         // what was named — an in-world caller has no client and is refused.
         Action::Advertise { tools } => advertise::advertise(deps, tools),
-        // REMOTE §1.4's enrollment (bl-f4e3): mint a device's leaf on this
-        // box's CA, seat its registration, answer the material and shred the
-        // key. Operator grade only, and no gate here says so — an act is
-        // outside the foot set, so `Grade::admits` refuses it one layer up.
-        Action::Enroll(request) => enroll::enroll(deps, ts, request),
-        // REMOTE §15.1's offer (bl-9ea6): mint, list, approve, decline —
-        // operator grade only, by the same enumeration one layer up.
+        // REMOTE §15.1's offer (bl-9ea6): mint, list, approve, decline.
+        // Operator grade only, and no gate here says so — an act is outside
+        // the foot set, so `Grade::admits` refuses it one layer up.
         Action::Offer(verb) => offer::dispatch(deps, ts, verb).map(Reply::Offer),
         // The §8.3 sign-in (REMOTE §8.3, bl-c285): a `bz --login` started on
         // THIS box inside the named workspace's wall, so the credential lands

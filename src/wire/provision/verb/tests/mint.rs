@@ -125,8 +125,8 @@ fn a_stated_host_over_standing_material_re_issues_the_server_leaf() {
 
 /// **The box a self-provisioned boot left behind is the one this act is for**
 /// (bl-98ef). Its `address` reads `127.0.0.1:0` — a request only the listener
-/// ever learns the answer to, which no seat can dial and no enrollment can put
-/// in a QR — and the only act that could replace it was the `FORCE=1` that
+/// ever learns the answer to, which no seat can dial and no offer can build a
+/// URL from — and the only act that could replace it was the `FORCE=1` that
 /// distrusts every leaf already carried away. A stated endpoint writes it, over
 /// the CA already here, and nothing stops verifying.
 #[test]

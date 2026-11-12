@@ -1,56 +1,13 @@
 //! The peer of one connection, seen from the server's side (bl-4263): who it
-//! is, how its silence is read, and how it is hung up on. Split from
-//! [`listener`](super) at §12's cap when the punched wire gave a connection a
-//! second way to be quiet.
-//!
-//! **A held connection is quiet on purpose** (REMOTE §13.4). A dialled seat
-//! asks and hangs up, so two minutes of nothing is a peer that vanished; a
-//! punched stream is *held* between asks, and the two NATs it crosses forget
-//! a mapping that carries nothing. So the server writes a ping frame into the
-//! silence at a 25-second cadence — a frame, because std exposes no keepalive
-//! and a frame is what a test can read — and the two-minute bound still says
-//! when the peer is gone. The frame is `{"ping":true}` and never the start of
-//! a reply stream: a client reading a held connection discards it.
+//! is, how long its silence is waited on, and how it is hung up on. Split from
+//! [`listener`](super) at §12's cap.
 
 use crate::registry::{Client, Peer};
-use crate::wire::frame;
 use rustls::pki_types::CertificateDer;
 use rustls::{ServerConnection, StreamOwned};
-use serde_json::{Value, json};
-use std::io::{self, Read, Write};
+use std::io::{Read, Write};
 use std::net::{Shutdown, TcpStream};
 use std::time::Duration;
-
-/// How a connection's silence is read.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) struct Quiet {
-    /// How long a read may find nothing, in all, before the peer counts as
-    /// gone.
-    pub(crate) gone: Duration,
-    /// On a held connection, how often the server pings into the silence;
-    /// `None` is a dialled connection, which is never pinged.
-    pub(crate) ping: Option<Duration>,
-}
-
-impl Quiet {
-    /// The socket's read timeout: one ping's worth of silence, or the whole
-    /// bound where nothing is pinged.
-    pub(crate) fn read_timeout(self) -> Duration {
-        self.ping.unwrap_or(self.gone)
-    }
-
-    /// Whether a read that found nothing for one more timeout is a moment to
-    /// ping rather than the end: only on a held connection, and only while
-    /// the silence so far — `quiet_for`, which the caller advances on a
-    /// `true` — is still inside the bound.
-    pub(crate) fn pings_at(self, quiet_for: Duration, e: &io::Error) -> bool {
-        let timed_out = matches!(
-            e.kind(),
-            io::ErrorKind::WouldBlock | io::ErrorKind::TimedOut
-        );
-        timed_out && self.ping.is_some_and(|ping| quiet_for + ping < self.gone)
-    }
-}
 
 /// How long an accepted connection may say nothing before the server treats it
 /// as gone (REMOTE §5.1, bl-1421). **A bound on the transport, not on the
@@ -68,40 +25,7 @@ impl Quiet {
 /// as readily as between them, and rustls has no clean resume from a half-read
 /// frame — so the read loop ends on it exactly as it ends on an EOF, which is
 /// what releases the presence guard and returns the thread.
-const IDLE_TIMEOUT: Duration = Duration::from_mins(2);
-
-/// How often a **held** connection is pinged through its silence (REMOTE
-/// §13.4, bl-4263) — under the shortest NAT mapping lifetime worth planning
-/// for, and a stated default to be revisited on evidence (REMOTE §13.7 ruling 3).
-pub(crate) const PING: Duration = Duration::from_secs(25);
-
-impl Quiet {
-    /// A dialled connection: two minutes of nothing is a peer that vanished.
-    pub(crate) fn dialled() -> Quiet {
-        Quiet {
-            gone: IDLE_TIMEOUT,
-            ping: None,
-        }
-    }
-
-    /// A punched connection, held between asks and pinged through its silence.
-    pub(crate) fn held() -> Quiet {
-        Quiet {
-            gone: IDLE_TIMEOUT,
-            ping: Some(PING),
-        }
-    }
-}
-
-/// The frame a held connection carries through its silence.
-pub(crate) fn ping_frame() -> Value {
-    json!({"ping": true})
-}
-
-/// Write one ping; a peer the write cannot reach is gone.
-pub(crate) fn ping(tls: &mut StreamOwned<ServerConnection, TcpStream>) -> bool {
-    frame::write_value(tls, &ping_frame()).is_ok()
-}
+pub(crate) const IDLE_TIMEOUT: Duration = Duration::from_mins(2);
 
 /// **A refusal is only a refusal if the peer can read it** (bl-e4c8).
 ///
@@ -118,7 +42,7 @@ pub(crate) fn ping(tls: &mut StreamOwned<ServerConnection, TcpStream>) -> bool {
 /// The server therefore half-closes and reads to EOF. `close_notify` and a FIN
 /// say there is nothing more coming; the read side stays open until the peer
 /// has said its own last word, so nothing it wrote is ever unread at the close.
-/// The wait is [`serve`](super::serve)'s quiet bound and not a new one — a
+/// The wait is the connection's own quiet bound ([`IDLE_TIMEOUT`]) and not a new one — a
 /// peer that will not hang up is a peer saying nothing, which is the case that
 /// clock is for.
 pub(crate) fn hang_up(tls: &mut StreamOwned<ServerConnection, TcpStream>) {
@@ -142,6 +66,3 @@ pub(crate) fn peer_client(chain: Option<&[CertificateDer<'_>]>) -> Option<Peer> 
         grade: crate::registry::leaf::grade(leaf),
     })
 }
-
-#[cfg(test)]
-mod tests;

@@ -131,10 +131,6 @@ pub enum Reply {
     Advertised {
         wrote: bool,
     },
-    /// **One device enrolled** (REMOTE §8.4, bl-f4e3): the QR envelope's whole
-    /// payload, and the only moment the minted key exists off the device it is
-    /// for — [`enroll::Enrolled`](crate::registry::enroll::Enrolled)'s fields.
-    Enrolled(crate::registry::enroll::Enrolled),
     /// **What an offer's act answers** (REMOTE §15.1, bl-9ea6) — four kinds
     /// under one variant, [`offer::Answer`](crate::registry::offer::Answer)'s.
     Offer(crate::registry::offer::Answer),
@@ -287,9 +283,8 @@ pub enum Reply {
     /// and the payload the navigator's clients section paints.
     Clients(Vec<crate::registry::roster::ClientRow>),
     /// **Is this box wired up?** — [`Doctor`](super::Query::Doctor)'s answer,
-    /// one row per check and the rendezvous loop's counters; the reasoning
-    /// is [`doctor`](crate::doctor)'s own.
-    Doctor(crate::doctor::Report),
+    /// one row per check; the reasoning is [`doctor`](crate::doctor)'s own.
+    Doctor(Vec<crate::doctor::Row>),
     /// **The price table, the ceiling and the world's ledger** (DESIGN §3.5;
     /// bl-53d1) — [`Prices`](super::Query::Prices)' answer and the receipt
     /// both spend acts earn, re-derived after the write rather than echoed

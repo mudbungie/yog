@@ -34,7 +34,6 @@ pub(crate) fn gestures() -> Vec<Gesture> {
         super::query::surface(),
         login(),
         pins(),
-        enroll(),
         offer(),
         spend(),
         crate::boundary::codec::config::tests::surface(),
@@ -138,30 +137,4 @@ fn offer() -> Vec<Gesture> {
     ]
     .map(|verb| Gesture::Act(crate::boundary::Action::Offer(verb)))
     .to_vec()
-}
-
-/// REMOTE §1.4's enrollment (bl-f4e3) — **one entry per grade**, because the
-/// grade is a two-armed vocabulary and a fixture that only ever spelled the
-/// default would prove only that the default crosses. And one more with the
-/// address the DEVICE will dial stated (bl-fec6, PROTOCOL 14), because an
-/// optional field that no fixture carries is a field the corpus cannot see.
-fn enroll() -> Vec<Gesture> {
-    let request = |grade, address: Option<&str>| {
-        Gesture::Act(crate::boundary::Action::Enroll(
-            crate::registry::enroll::Request {
-                workspace: "ws".to_owned(),
-                name: "phone-1".to_owned(),
-                grade,
-                address: address.map(str::to_owned),
-            },
-        ))
-    };
-    vec![
-        request(crate::registry::Grade::Operator, None),
-        request(crate::registry::Grade::Foot, None),
-        request(
-            crate::registry::Grade::Operator,
-            Some("engine.invalid:7737"),
-        ),
-    ]
 }

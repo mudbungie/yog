@@ -97,29 +97,6 @@ fn spell_action(action: &Action) -> String {
         Action::Advertise { tools } => {
             format!("/advertise {}", crate::registry::tools::encode(tools))
         }
-        // REMOTE §1.4's enrollment (bl-f4e3). The workspace is the seat's, as
-        // `/marks`' is; the name is stated because nothing on this side holds
-        // it; and operator grade spells **bare**, because that is what
-        // default-operator means at a keyboard (§4.2).
-        // …and `--at` rides only when the operator stated it (bl-fec6), for
-        // the reason the envelope omits it: absent IS the server's own address,
-        // and a spelled default would be a second statement of one fact.
-        Action::Enroll(request) => {
-            let grade = match request.grade {
-                crate::registry::Grade::Operator => String::new(),
-                grade @ crate::registry::Grade::Foot => format!(" {}", grade.word()),
-            };
-            let at = request
-                .address
-                .as_ref()
-                .map(|address| format!(" --at {address}"))
-                .unwrap_or_default();
-            format!(
-                "/{} {}{grade}{at}",
-                crate::boundary::codec::ENROLL,
-                request.name
-            )
-        }
         Action::Offer(verb) => super::offer::spell(verb),
         Action::Route(verb) => spell_route(verb),
         // The §3.5 spend family (bl-53d1): every word stated, nothing elided.

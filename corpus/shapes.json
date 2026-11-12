@@ -2,6 +2,11 @@
   "deprecated": [],
   "floor": 18,
   "protocol": 19,
+  "retired": {
+    "reply/doctor/rendezvous": 27,
+    "reply/enrolled": 27,
+    "request/enroll": 27
+  },
   "shapes": {
     "reply/acked": {
       "signature": {
@@ -378,14 +383,6 @@
       "signature": {
         "/kind:string": 13,
         "/ok:bool": 13,
-        "/rendezvous/accepted:number": 22,
-        "/rendezvous/active:bool": 21,
-        "/rendezvous/calls:number": 21,
-        "/rendezvous/last_poll_unix:number": 21,
-        "/rendezvous/published:number": 21,
-        "/rendezvous/punched:number": 21,
-        "/rendezvous/served:number": 21,
-        "/rendezvous:object": 21,
         "/rows/[]/check:string": 13,
         "/rows/[]/fact:string": 13,
         "/rows/[]/ok:bool": 13,
@@ -393,21 +390,6 @@
         "/rows/[]:object": 13,
         "/rows:array": 13,
         ":object": 13
-      }
-    },
-    "reply/enrolled": {
-      "signature": {
-        "/address:string": 1,
-        "/ca:string": 1,
-        "/cert:string": 1,
-        "/grade:string": 1,
-        "/key:string": 1,
-        "/kind:string": 1,
-        "/name:string": 1,
-        "/ok:bool": 1,
-        "/pairing_salt:string": 20,
-        "/rendezvous_pub:string": 20,
-        ":object": 1
       }
     },
     "reply/fanned": {
@@ -1317,16 +1299,6 @@
         "/role:string": 6,
         "/workspace:string": 6,
         ":object": 6
-      }
-    },
-    "request/enroll": {
-      "signature": {
-        "/address:string": 14,
-        "/grade:string": 14,
-        "/name:string": 14,
-        "/op:string": 14,
-        "/workspace:string": 14,
-        ":object": 14
       }
     },
     "request/fan": {

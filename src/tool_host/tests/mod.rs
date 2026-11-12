@@ -190,7 +190,7 @@ fn a_loaded_tool_is_declared_under_its_own_name() {
 /// loaded and no machine advertising the name, the worktree lane (bl-77be)
 /// renders the loadless sentence with both remedies — the ship-inert posture
 /// working — while the compactor's server acts still go through, so nothing
-/// about compaction depends on a machine being enrolled. `Read` is the name
+/// about compaction depends on a machine being registered. `Read` is the name
 /// under test precisely because litany does not implement it: the three
 /// that it does take the lane's last rung instead (bl-5710,
 /// `subject::performs`), which is that ball's whole subject.

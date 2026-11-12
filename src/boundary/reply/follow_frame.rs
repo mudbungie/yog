@@ -12,7 +12,7 @@
 //! the event lists the same way.
 //!
 //! **Why the second half exists** (bl-5305). The lane carried the model's prose
-//! alone, so a conversation that spent its life running commands on two enrolled
+//! alone, so a conversation that spent its life running commands on two registered
 //! boxes produced a thinking marker and two sentences while eight commands ran.
 //! For a conversation editing its own worktree that omission is defensible — the
 //! work is on disk and a diff is a read away. For one administering a MACHINE it

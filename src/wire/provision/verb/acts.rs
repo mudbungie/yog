@@ -118,18 +118,16 @@ fn restate(dir: &Path, hosts: &[String], port: Option<&str>) -> i32 {
 }
 
 /// One extra client leaf, and the out-of-channel act that follows it. What is
-/// printed is where the two files are and what to do with them — REMOTE §1.4 is
-/// verbatim and forever, so the carrying is the operator's and yog's last word
+/// printed is where the files are and what to do with them — this is the
+/// hand-carried leaf REMOTE §15.4 keeps for a box with no route to the
+/// registration door, so the carrying is the operator's and yog's last word
 /// on it is a sentence.
 fn leaf(dir: &Path, cn: &str, grade: Grade) -> i32 {
-    let files =
-        match super::super::issue(dir, cn, grade).and_then(|()| super::super::bundle(dir, cn)) {
-            Ok(files) => files,
-            Err(e) => {
-                eprintln!("yog {SUBCMD}: {e}");
-                return 1;
-            }
-        };
+    if let Err(e) = super::super::issue(dir, cn, grade) {
+        eprintln!("yog {SUBCMD}: {e}");
+        return 1;
+    }
+    let files = super::super::bundle(dir, cn);
     println!("yog {SUBCMD}: issued a {} leaf for {cn}", word(grade));
     for (file, name) in &files {
         println!("  {}  (as {name})", file.display());
@@ -138,7 +136,7 @@ fn leaf(dir: &Path, cn: &str, grade: Grade) -> i32 {
     // ([`ENTRY`]) among them, because that was the one token still written by
     // hand here and it is the one that drifted (bl-686c): it said `<leaf>`, and
     // a directory named for the leaf just issued is a channel no gesture routes
-    // to. Each file's own landing name is the bundle's (bl-9043).
+    // to. Each file's own landing name is the bundle's.
     println!(
         "  carry those to that box by hand, into its {DIR}/{ENTRIES}/{ENTRY}/ — named for the \
          WORKSPACE it will address, not for {cn} — each under the name shown, beside an \
@@ -149,16 +147,9 @@ fn leaf(dir: &Path, cn: &str, grade: Grade) -> i32 {
     // registered in — so a foot provisioned by following this page alone
     // dialled, advertised into the empty set and served nobody, with no
     // sentence anywhere. The server refuses that advertisement now; this is the
-    // half that stops it being reached.
-    println!(
-        "  {cn} is registered in NO workspace: enrol the same common name from a seat in the \
-         workspace it should serve (`/enroll {cn}{}`), which adopts this leaf rather than \
-         issuing a second one",
-        match grade {
-            Grade::Operator => String::new(),
-            Grade::Foot => format!(" {}", crate::registry::peer::FOOT),
-        }
-    );
+    // half that stops it being reached. No gesture seats a hand-carried leaf
+    // (REMOTE §15.4): the registration is a file, written where the CA lives.
+    println!("  {}", crate::registry::peer::seat_by_hand(cn));
     0
 }
 
@@ -168,7 +159,7 @@ fn report(dir: &Path, address: &str) {
     println!(
         "yog {SUBCMD}: {} holds {}",
         dir.display(),
-        super::super::artifacts(address).join(", ")
+        super::super::artifacts().join(", ")
     );
     println!(
         "  {} names {} — a client dials them in that order",

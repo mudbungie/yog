@@ -174,11 +174,11 @@ fn a_raise_naming_something_that_is_not_a_plain_component_refuses() {
     assert!(crate::registry::registered(root.path(), &client("phone")).is_empty());
 }
 
-/// **"Not enrolled" and "nothing here" stop being the same reply** (bl-2a84).
+/// **"Not registered" and "nothing here" stop being the same reply** (bl-2a84).
 /// A certificate the operator never seated completed the handshake, was
 /// answered `{"kind":"workspaces","ok":true,"rows":[]}` and could not tell that
 /// from a server holding nothing — so a first-time operator reads their own
-/// missing enrolment as a broken server. The registration is a fact about the
+/// missing registration as a broken server. The registration is a fact about the
 /// CALLER, so saying it leaks nothing: the sentence names no workspace.
 #[test]
 fn a_client_registered_nowhere_is_told_so_rather_than_answered_empty() {
@@ -196,7 +196,7 @@ fn a_client_registered_nowhere_is_told_so_rather_than_answered_empty() {
         assert_eq!(refusal["ok"], false, "{refusal}");
         let said = refusal["error"].as_str().unwrap_or_default();
         assert!(said.contains("registered in no workspace"), "{said}");
-        assert!(said.contains("/enroll stranger"), "{said}");
+        assert!(said.contains("clients/stranger/workspaces"), "{said}");
         assert!(!said.contains("home"), "it names no workspace: {said}");
     }
 

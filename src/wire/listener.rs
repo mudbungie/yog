@@ -42,14 +42,12 @@ const ACCEPT_POLL: Duration = Duration::from_millis(20);
 mod binding;
 pub(crate) use binding::binding;
 
-/// Who the peer is, how its silence is read, and how it is hung up on.
+/// Who the peer is, how long its silence is waited on, and how it is hung up on.
 pub(crate) mod peer;
-pub(crate) use peer::Quiet;
 
 /// One accepted connection: the handshake, then the wire or the door.
 mod connection;
 use connection::dialled;
-pub(crate) use connection::serve;
 
 /// What a connection with no certificate may say (REMOTE §15.2).
 pub(crate) mod door;
@@ -162,7 +160,14 @@ fn accept_loop(
                 let slots = slots.clone();
                 std::thread::spawn(move || {
                     let _ = stream.set_nonblocking(false);
-                    dialled(stream, &config, answerer.as_ref(), &presence, &slots);
+                    dialled(
+                        stream,
+                        &config,
+                        answerer.as_ref(),
+                        &presence,
+                        &slots,
+                        peer::IDLE_TIMEOUT,
+                    );
                 });
             }
             Err(_) => std::thread::sleep(ACCEPT_POLL),

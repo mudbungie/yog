@@ -36,9 +36,6 @@ use std::collections::BTreeSet;
 use std::io;
 use std::path::{Path, PathBuf};
 
-/// **Enrollment's two values** (REMOTE §1.4 as amended, §4.2; bl-f4e3) — what
-/// an operator asks for when a device joins, and what the server answers with.
-pub mod enroll;
 /// The certificate leaf name → client identity fold (REMOTE §2).
 pub mod leaf;
 /// The server-side invocation hand-off (REMOTE §5, bl-024b) — a queue per

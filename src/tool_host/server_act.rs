@@ -109,7 +109,7 @@ use crate::cli_outbound::{Chunk, Cli, StreamPoll};
 /// What is deliberately NOT here: `bash`, `read_file`, `apply_patch` — acts
 /// at the conversation's working directory, which take the worktree lane
 /// ([`super::subject`]) and reach a consenting machine when the operator
-/// enrolled one. The lane's last rung calls [`perform`] below on them
+/// registered one. The lane's last rung calls [`perform`] below on them
 /// ([`super::subject::performs`], bl-5710), so the mechanism is shared and
 /// the *ordering* is what separates the two sets: a server act never
 /// consults the roster, a worktree name always does. An eleventh row is a

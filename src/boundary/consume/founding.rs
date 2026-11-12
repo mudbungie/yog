@@ -9,15 +9,15 @@
 //! — which holds no certificate and is registered nowhere. So `yog gesture --ws
 //! ops '/prepare'`, the act both READMEs teach on a headless box, founded a
 //! workspace every seat then answered `unknown workspace` for, and no gesture
-//! could repair it: `/enroll` mints, and the workspace namespace is one global
+//! could repair it: `/offer` seats a new device, and the workspace namespace is one global
 //! set, so the name was spent on something nothing could reach, rename or
 //! delete.
 //!
 //! **What is registered is this box's own leaves, and that is the narrowest
 //! answer.** The alternatives were wider: registering *every* client that
 //! exists would hand a foot on another machine a workspace it was never
-//! enrolled in, and a `/register` gesture would be a second registrar beside
-//! `/enroll`. The `client` and `window` leaves are the material yog's own mint
+//! offered, and a `/register` gesture would be a second registrar beside
+//! `/approve`. The `client` and `window` leaves are the material yog's own mint
 //! writes into this box's `wire/` and never carries anywhere: they are the
 //! seats OF the box that holds the CA, which is the operator standing at it.
 //! §1.5's separation argument is about a leaf carried to another box, and this

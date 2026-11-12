@@ -10,7 +10,7 @@
 //! litany's own template and whose deletion-only confinement its
 //! `docs/PRINCIPLES.md` states as a guarantee, had `bash` refused correctly by
 //! that gate, then called `clients {"op":"load"}` and made thirty arbitrary
-//! shell calls on an enrolled machine, inside the server's own git worktrees.
+//! shell calls on a registered machine, inside the server's own git worktrees.
 //!
 //! **The ruling: a grant is a grant.** `clients` is part of it, not injected
 //! beside it — so a role that is not granted `clients` is declared nothing at

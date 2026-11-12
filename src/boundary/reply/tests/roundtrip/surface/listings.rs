@@ -17,7 +17,7 @@ mod chrome;
 mod config;
 /// The conversation rows, the widest row type here.
 mod convs;
-/// The doctor's answers, with and without the rendezvous counters.
+/// The doctor's answers.
 mod doctor;
 /// The §4.2 trail, whose rows only mean anything together (bl-4d81).
 mod trail;

@@ -153,35 +153,6 @@ pub(super) fn receipts() -> Vec<Reply> {
         // that decoded only the shape it usually sees would miss the event.
         Reply::Advertised { wrote: false },
         Reply::Advertised { wrote: true },
-        // REMOTE §1.4's enrollment (bl-f4e3), at both grades, the second with
-        // the rendezvous pair (bl-9043). **The material is
-        // fabricated and says so**: a real minted key must never enter this
-        // corpus, and what a client needs from the fixture is the shape — three
-        // opaque strings carrying newlines — never a certificate. The key's
-        // banner is deliberately not a private key's, because `make leak-scan`
-        // reads every committed byte in this tree and must never find one.
-        Reply::Enrolled(crate::registry::enroll::Enrolled {
-            grade: crate::registry::Grade::Operator,
-            name: "phone-1".into(),
-            address: "engine.invalid:7737".into(),
-            ca: "-----BEGIN CERTIFICATE-----\nnotreal\n-----END CERTIFICATE-----\n".into(),
-            cert: "-----BEGIN CERTIFICATE-----\nnotreal\n-----END CERTIFICATE-----\n".into(),
-            key: "-----BEGIN notreal KEY-----\nnotreal\n-----END notreal KEY-----\n".into(),
-            rendezvous: None,
-        }),
-        Reply::Enrolled(crate::registry::enroll::Enrolled {
-            grade: crate::registry::Grade::Foot,
-            name: "builder".into(),
-            address: "engine.invalid:7737".into(),
-            ca: "-----BEGIN CERTIFICATE-----\nnotreal\n-----END CERTIFICATE-----\n".into(),
-            cert: "-----BEGIN CERTIFICATE-----\nnotreal\n-----END CERTIFICATE-----\n".into(),
-            key: "-----BEGIN notreal KEY-----\nnotreal\n-----END notreal KEY-----\n".into(),
-            // The rendezvous hand-off (bl-9043): absent above, present here.
-            rendezvous: Some(crate::registry::enroll::Handoff {
-                public: "00".repeat(32),
-                salt: "11".repeat(32),
-            }),
-        }),
         // The routing leg's one answer at both of its moments (bl-024b): the
         // handle alone while the far machine runs it, and the capture once it
         // has answered — including a non-zero verdict and text on stderr, which

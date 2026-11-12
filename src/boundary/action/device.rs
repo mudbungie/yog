@@ -17,11 +17,6 @@
 //! refuses in band: it is a boundary verb like any other, and the wire gains
 //! nothing it does not (REMOTE §3).
 //!
-//! **[`Enroll`](super::Action::Enroll)** enrolls a device (REMOTE §1.4 as
-//! amended, §8.4; bl-f4e3) — one variant over
-//! [`enroll::Request`](crate::registry::enroll::Request), whose own doc carries
-//! the ruling and the §4.2 grade a foot is refused it by.
-//!
 //! **[`Offer`](super::Action::Offer)** is how a device joins with a key it
 //! made (REMOTE §15.1; bl-9ea6) — one variant over
 //! [`offer::Verb`](crate::registry::offer::Verb): mint, list, approve, decline.

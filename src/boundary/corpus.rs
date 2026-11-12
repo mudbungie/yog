@@ -49,6 +49,19 @@ const DESTINATION: &str = "YOG_CORPUS_OUT";
 /// of the entry here landing in one.
 pub(crate) const DEPRECATED: &[&str] = &[];
 
+/// **What was retired without a major** (REMOTE §3.2's retirement rule,
+/// §15.4): a shape or a field, spelled as [`DEPRECATED`] spells one, whose
+/// removal breaks no reader — a request op the server now refuses by name in
+/// band, the reply kind only that op ever earned, and a post-floor key whose
+/// absence every reader already reads as its default. The ledger lets a
+/// listed path vanish and stamps the entry with the edition it went at; an
+/// entry stays here for as long as the record should say so.
+pub(crate) const RETIRED: &[&str] = &[
+    "request/enroll",
+    "reply/enrolled",
+    "reply/doctor/rendezvous",
+];
+
 /// One wire shape: an `op` token on the request side, a reply `kind` on the
 /// answer side, and every fixture the boundary spells for it.
 pub(crate) struct Shape {

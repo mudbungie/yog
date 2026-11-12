@@ -45,26 +45,14 @@ id is cited, the path to the ruling is not narrated.
    named work, none on a decision.
 3. **The channel is mTLS**, and the wrapper must be strong enough to leave on
    the public internet. Both ends authenticate with certificates.
-4. **Bootstrapping is by offer** *(reversed 2026-11-11, §15; what follows is the
-   ruling as it stood)*. **Bootstrapping is explicitly out-of-channel.** The starting assumption is
-   an operator who administers both machines. Key and certificate provisioning
-   is an act the operator performs on the boxes; yog carries no enrollment,
-   pairing, or account protocol in the channel, ever.
-
-   **The `enroll` act does not lift this, and the distinction is exact**
-   (operator ruling 2026-08-30, bl-f4e3; §8.4). What this clause forbids is a
-   **device enrolling itself** — a machine holding no material opening a
-   connection and being handed some. That stays impossible rather than merely
-   forbidden: with no certificate there is no handshake, so the new device
-   performs no channel act of any kind. `enroll` is performed by an
-   **operator-grade seat**, over a channel already authenticated by material
-   that already moved out of channel, and what it produces is bytes the
-   operator then carries — a QR on a screen is a screen-shaped `scp`, and the
-   operator is standing in front of both machines. That is the same class as
-   the boot-time mint §8 already blessed: the operator's own tooling, reached
-   through the boundary because §3 forbids a capability that exists on the wire
-   and nowhere else. Nothing is *learned* in channel that the operator's own CA
-   did not mint one hop away, and no unauthenticated peer is ever answered.
+4. **Bootstrapping is by offer** *(operator ruling 2026-11-11, §15; this
+   clause read "explicitly out-of-channel … no enrollment, pairing, or account
+   protocol in the channel, ever" until then)*. A new device is offered by an
+   operator-grade seat and claims that offer once, with a key it made itself
+   (§15.1); it is seated only when the operator approves it. What stays out of
+   channel is the first seat of all — the box's own, which the boot provisions
+   (§8) — and `yog wire-certs WIRE_LEAF`, the hand-carried leaf, which remains
+   for a box with no route to the registration door (§15.4).
 5. **Client registration is per-workspace; the workspace is the trust
    domain — at both ends** *(amended bl-aaec)*. Server-side as always: a
    client registered in one workspace is invisible in another — the corporate
@@ -459,7 +447,7 @@ says — and adds no verb, no field and no envelope:
   world, disk is the bus. The wire is for cross-trust-domain callers; the
   inbox is for the world's own residents. One boundary, two intakes, each the
   religion of its domain. (Certificates for every spawned agent would be an
-  enrollment surface §1.4 forbids.) *(Landed, bl-b6fa: the two intakes are
+  issuance surface nobody approves, which §1.4 does not grant.) *(Landed, bl-b6fa: the two intakes are
   `yog gesture` and `yog seat`, and they share one argv reader and one
   answering function — `ConsumerCtx::answer` — so the second door opens onto
   the same room and can add no verb.)*
@@ -684,6 +672,27 @@ enforces the first two mechanically (a vanished path not listed is refused
 even across a bump); the third is the bump ball's checklist, checked against
 the tags.
 
+**A retirement is the one loss that is not a major** *(bl-7a14, §15.4)*.
+Three kinds of path may vanish with no bump and no deprecation window, because
+no reader of this major can be broken by their absence:
+
+- **a request op** — the server refuses what it cannot act on, by name, in
+  band (rule 4), so a seat that still sends it hears exactly what a seat
+  sending a new op to an old server hears;
+- **the reply kind only that op earned** — no ask produces it any more;
+- **a key stamped above the floor** — every reader already reads its absence
+  as its default (rule 2), because a server of an older edition never wrote
+  it.
+
+A pre-floor key of a reply still answered is none of these and stays a major.
+The ledger takes the author's word for which it is: a path listed in
+`corpus::RETIRED` may vanish, and `shapes.json` keeps the entry under
+`retired` **stamped with the edition it went at**, so the edition moves and a
+seat that vendors the record reads *a server at or above this edition no
+longer speaks it* — the same comparison that greys a control the server
+cannot yet spell. The first three are edition 27: `request/enroll`,
+`reply/enrolled`, and `reply/doctor`'s `rendezvous` object.
+
 **What this does not solve, named.** A meaning that changes under an
 unchanged spelling (5's `oid`, 10's follow-class `attention`) is as invisible
 to the ledger as it always was and is a major by rule, caught by the author.
@@ -725,10 +734,11 @@ the old.
   a caller's own registration is a fact about the caller, and saying it names
   nothing the server holds. Unsaid, it arrives as `{"kind":"workspaces",
   "ok":true,"rows":[]}`, which is byte-for-byte a server that holds nothing at
-  all — so a first-time operator cannot tell a missing enrolment from a broken
+  all — so a first-time operator cannot tell a missing registration from a broken
   server, and the two failures that cost the most in round 1 (a seat given the
   server's own leaf, a foot given a `WIRE_LEAF` one) both landed exactly there.
-  The refusal names the client and the act that enrols it. **Two gestures pass
+  The refusal names the client and the act that seats it (the registration
+  file, §8.4's note). **Two gestures pass
   anyway**: one that FOUNDS a workspace, because §4 auto-registers a creator
   and refusing it would leave a client that can never become a registered one
   over the wire; and the machine-addressed set (the three a foot may say),
@@ -804,7 +814,7 @@ holds no certificate and is registered nowhere — so `yog gesture --ws ops
 '/prepare'`, the act the README teaches, founded a workspace every seat then
 answered `unknown workspace` for. The name is global (§9.6), so it was spent on
 something nothing could reach, rename or delete, and no gesture repaired it:
-`/enroll` mints, and it refused a name whose leaf already existed.
+no gesture seats a leaf that already exists (§8.4's note).
 
 Three properties, each load-bearing:
 
@@ -813,7 +823,7 @@ Three properties, each load-bearing:
   the operator's `rm` would be undone by the next `/prepare`. The question
   asked is whether the name was addressable before the gesture ran.
 - **This box's own leaves, and no others.** Registering every client that
-  exists would hand a foot on another machine a workspace nobody enrolled it
+  exists would hand a foot on another machine a workspace nobody seated it
   in. §1.5's separation argument is about a leaf *carried to another box*, and
   the `client` and `window` leaves are the one class that is not: they are the
   seats of the box that holds the CA.
@@ -945,9 +955,10 @@ not subtracted from. §11's rejection is of a *policy layer*, and a policy layer
 is the thing with a place to put a rule; this has none. §11's entry stands
 unamended.
 
-**The enrollment act is the first proof of that construction, and it cost no
-row** (bl-f4e3, §8.4). `enroll` mints a certificate and seats a registration —
-the most privileged thing on the surface — and nothing about the grade was
+**The offer is the proof of that construction, and it cost no row** (§15.1;
+first proved by the retired `enroll`, bl-f4e3). `approve` seats a registration
+for a certificate the server just signed — the most privileged thing on the
+surface — and nothing about the grade was
 touched to keep a foot out of it. An act is not among the foot's enumerated
 three, so `answer_as` refuses it in band, naming the grade, ahead of the
 dispatch and ahead of the create's auto-registration; the executor writes no
@@ -1078,11 +1089,11 @@ where it is the same ruling it always was.
   designated. The server does not care where execution happens: it emits the
   invocation and waits on the capture.
 
-  **So a server with zero enrolled thralls refuses every tool call, in band.**
+  **So a server with zero registered thralls refuses every tool call, in band.**
   That is §12's ship-inert posture working, not an error state and not a
   degraded mode: with nowhere to route, use-is-attempt gives the model an error
   tool result it reacts to, exactly as it does for a tool a client no longer
-  carries. Enrolling a thrall — the local one included — is the explicit
+  carries. Registering a thrall — the local one included — is the explicit
   operator act that makes execution possible at all.
 
   **Six names reach that router and are not tool calls on a machine at all**
@@ -1105,7 +1116,7 @@ where it is the same ruling it always was.
   user on the server's disk — so a conversation in one workspace can *read*
   another workspace's goals, transcripts and worktrees, and DESIGN §16.2 says
   so in words. Filesystem confinement between workspaces is not claimed at that
-  rung; the foot is where confinement lives, which is why enrolling one is the
+  rung; the foot is where confinement lives, which is why registering one is the
   answer rather than a stricter classifier.
 - **The driver-side seam was a litany ask, and it landed.** litany's driver
   executes tools; routing a designated tool to a remote executor needed an
@@ -1170,7 +1181,7 @@ error worth naming, not an authentication failure worth hiding. The threading is
 the act-side twin of `ConsumerCtx::answer_as`: one `caller` on the dispatch
 `Deps`, carrying who is asking and who else is connected.
 
-**An advertisement into NO workspace is refused, naming the enrolment**
+**An advertisement into NO workspace is refused, naming the registration**
 *(bl-6b14)*. A set reaches the workspaces its client is registered in, so a
 client registered in none presents it to nobody — and that was answered `ok`,
 with the set stored, no line on stderr, no row on the trail and no row in any
@@ -1183,9 +1194,9 @@ at both ends, with its only stated remedy a CA rotation.
 It **refuses** rather than warning, because a foot's only reader is a program
 and a program acts on an `ok`; and it refuses **before the store**, so nothing
 is written for nobody to read. The remedy is one act and it is named in the
-sentence: enrol that common name in the workspace it should serve, which
-**adopts** the leaf already minted for it (§8.4) rather than issuing a second
-one, then reconnect — a set is presented once per connection, which is this
+sentence: write that common name's registration on the box that holds the CA
+(§8.4's note — the `enroll` act that used to adopt such a leaf is retired),
+then reconnect — a set is presented once per connection, which is this
 section's own traffic ruling. The mint's own success text now says the same
 thing from the other end: a leaf it issues is registered nowhere.
 
@@ -1329,8 +1340,7 @@ than left to the implementation.
 **A timeout is "the connection is gone", never a retry.** It fires mid-record
 as readily as between records and rustls has no clean resume from a half-read
 frame, so there is one arm and it is the EOF arm. The client's remedy is the
-ordinary one — dial again. It is not §13.4's idle ping, which is the punched
-wire's, needs both ends, and is unimplemented; and it is not a sweep over
+ordinary one — dial again. It is not a sweep over
 presence, which has no timestamp and would become stored state that can
 disagree with the map.
 
@@ -1350,12 +1360,12 @@ is not this — it is §5.2, and it is built on this read.
 triage ruling 3: *a grant is a grant*). litany's grant gate permits a name that
 is in the role's `providers.yaml` `tools:` grant **or** injected by the host —
 so a host that declares unconditionally is a host that grants unconditionally,
-and every role's grant was silently widened by whatever any enrolled machine
+and every role's grant was silently widened by whatever any registered machine
 advertised. Measured, and it is the worst case rather than a corner: a
 **compactor**, whose grant is empty in litany's own template and whose
 deletion-only confinement its `docs/PRINCIPLES.md` states as a guarantee, was
 correctly refused `bash` by that gate, then called `clients {"op":"load"}` and
-made thirty arbitrary shell calls on an enrolled machine inside the server's
+made thirty arbitrary shell calls on a registered machine inside the server's
 own git worktrees. The empty grant bought nothing.
 
 So yog's injection now declares **nothing at all** — `clients` and the loaded
@@ -1807,7 +1817,7 @@ today:
   measured against — nothing NEW goes into the server that a thrall could
   advertise.
 - **A thrall beside the server is the normal install, not a special case.** The
-  single-box operator runs both and enrolls the local one, and that enrollment
+  single-box operator runs both and registers the local one, and that registration
   is an explicit act (§12's "ship inert"). There is no in-process shortcut for
   the co-located case and no unix socket beside the wire: one transport, one
   code path, no place for a bug to hide (§12's "front door only"). The
@@ -1856,7 +1866,7 @@ moves.
 there is nothing to hand an unowned name back to, so the injection answers it
 itself: non-zero, the reason on stderr, indistinguishable from the "no such
 tool" an absent binary produced behind the front door. That is §12's ship-inert
-posture reaching its natural edge — a server with zero enrolled thralls refuses
+posture reaching its natural edge — a server with zero registered thralls refuses
 every ordinary call in band **and still compacts**, because compaction was
 never a machine's work. Since bl-5710 it also still **reads and writes its own
 worktrees**: the three names litany implements take the lane's last rung
@@ -1880,7 +1890,7 @@ but the subject-locality audit, name by name:
   lane below, whose consenting box holds that same filesystem.
 - **`bash`, `read_file`, `apply_patch`** are execution and filesystem acts at
   the conversation's working directory: they take the worktree lane below,
-  reaching a consenting machine where the operator enrolled one and
+  reaching a consenting machine where the operator registered one and
   litany's own front door where none consents (the lane's last rung, bl-5710).
   Never a server act, because a server act never consults the roster.
 - **`multi_tool`** never reached the router at all — litany's own step
@@ -2017,7 +2027,7 @@ above — *not server-side execution*, on the argument that answering `bash` at
 litany's front door would be the server executing machine work in its own
 process. **That rejection is reversed here**, and what it cost is the reason:
 the shipped worker grant offers `bash`, `read_file` and `apply_patch` to every
-model, a bare server is the default install, and with no foot enrolled every
+model, a bare server is the default install, and with no foot registered every
 one of those calls refused. A conversation on such an install opened with
 `apply_patch`, spent a step per refusal, and ended having written nothing —
 five refused calls and seven round trips, measured. A server that cannot act
@@ -2027,7 +2037,7 @@ to reach that far.
 So the lane is a **ladder**, and its rungs are ordered by how explicit the
 operator's intent is:
 
-1. **Exactly one consenting machine** — an enrollment plus a `subject_cwd`
+1. **Exactly one consenting machine** — a registration plus a `subject_cwd`
    key, both operator acts. It wins, unchanged: bl-77be's landing stands, and
    an operator who wants the work on a particular box still gets it there.
 2. **More than one** — the config ambiguity above, refused naming every
@@ -2040,7 +2050,7 @@ operator's intent is:
    resolved working directory as the child's cwd.
 4. **Anything else** — the refusals above. A pool name an operator granted
    has no litany implementation behind it, so it keeps the sentence that
-   names the enrollment.
+   names the registration.
 
 **A refusal names ways out, and a way out that lands the work somewhere else
 is not one** (bl-68e1). Rung 4's two sentences used to offer the loaded lane
@@ -2163,7 +2173,7 @@ Three consequences reach this document, and none of them moves the wire:
   field.
 - **Credentials stay on the box.** A server's token is in the server's own
   argv or the wrapper the operator wrote there, in the local half of the
-  document, which never crosses (§5.2). A foot is per box and per enrolment,
+  document, which never crosses (§5.2). A foot is per box and per registration,
   so a credential's reach is the foot's; a workspace that must not share one
   is served by its own foot.
 
@@ -2829,8 +2839,8 @@ the facts and was wrong about the act. The two amendments below stand together:
 - The fact with no non-destructive spelling was the **endpoint**. `address` is
   written once, by whichever mint founded the directory, and a boot that
   provisioned its own box wrote `127.0.0.1:0` — a request only the listener ever
-  learns the answer to. A seat cannot dial it, an enrollment refuses to put it
-  in a QR (§8.4), and a containerized server on it is reachable from nothing at
+  learns the answer to. A seat cannot dial it, an offer refuses to build a URL
+  from it (§15.1), and a containerized server on it is reachable from nothing at
   all. The only act that could replace it was `FORCE=1`: a rotation, distrusting
   every leaf already carried to every other box, to change one line of text.
   Saying where a server listens distrusts nothing, so it is not a rotation and
@@ -2844,7 +2854,7 @@ the facts and was wrong about the act. The two amendments below stand together:
 
 The server binds the address as it starts, so the act names the restart beside
 itself, and every refusal that used to spell `FORCE=1` for a `:0` — the
-enrollment's, and the verb's own — now spells this. Test material is
+offer's, and the verb's own — now spells this. Test material is
 minted the same way at test runtime (`src/test_support/wire.rs`) — **a
 certificate fixture is never committed**, which `make leak-scan` would refuse
 anyway and which would be a private key in a public repository whether or not
@@ -3177,10 +3187,10 @@ rather than carrying a relative spelling.
     **Locate — the path is the answer, all keep:** `Prepared::binding` (ruled
     above); `Reply::Files`' `working_dir`, the §3.3 cwd mark whose entire job
     is saying that the work went somewhere this listing does not reach and
-    where; `OpRow::cwd`/`argv`/drift `stderr`, above; the enrollment refusals
-    in `dispatch::enroll`, which name a file on the server box because the
-    remaining act is the operator's own (`run … where the CA lives`, `remove
-    it by hand`), and enrolment is operator-grade; and `Held::reason`, the
+    where; `OpRow::cwd`/`argv`/drift `stderr`, above; the offer's refusals
+    in `dispatch::offer`, which name a file on the server box because the
+    remaining act is the operator's own (`run … where the CA lives`), and an
+    offer is operator-grade; and `Held::reason`, the
     control's sentence about a parked call (`moves to <dest>`), where the path
     is the drone's own tool input under adjudication — rewriting it would put
     a different call in front of the operator.
@@ -3426,8 +3436,8 @@ material filed under the leaf's name is a channel no gesture can address —
 present, valid and unreachable. The two names are free to differ precisely
 because the identity is the name *inside* the certificate (§2), which is why
 the mint's instruction spells the destination from
-`material::ENTRY` and not by hand. No
-enrollment, no pairing, no first-connect ceremony. A workspace that does not
+`material::ENTRY` and not by hand. A hand-carried entry has no first-connect
+ceremony; an offered one has exactly §15.1's. A workspace that does not
 yet exist on the host is founded by the entry's own first `Prepare` (§4.1's
 raise), which auto-registers its creator — in-channel work, on material that
 moved out of channel.
@@ -3569,176 +3579,25 @@ not hold.
 - A provider with neither a device endpoint nor a reachable redirect: the same
   stated operator remedy. No paste-back arm — §11.
 
-### 8.4 Enrollment, and the QR envelope (bl-f4e3)
+### 8.4 Enrollment, and the QR envelope — retired (§15.4; bl-7a14)
 
-> **Superseded by §15.1** (operator rulings 2026-11-11): a device registers by
-> an offer it claims with its own key, and no private key travels. This section
-> stands as the record until the `enroll` act is deleted.
+**Retired by §15.1** (operator rulings 2026-11-11), and the code is deleted
+with it: the `enroll` act, its `enrolled` reply, and the envelope that reply
+was carried in — a QR symbol, a pasted line, or files written by `--into`.
+The envelope held the device's private key, so a copy of it was the device.
 
-**The ruling** (operator, 2026-08-30): the boundary gains one act, spelled
-`enroll` (American spelling, everywhere in this tree). It mints a new device's
-leaf on the server's own CA, seats that client's registration, answers the
-material, and keeps no private key. §1.4 is **not** lifted, for the reason
-that clause now states in place: the new device performs no channel act, an
-operator-grade seat does, and the material travels the last hop out of channel.
+A device now joins by an **offer** (§15.1): an operator-grade seat mints a
+one-time URL, the device claims it with a key it made itself, and the operator
+approves the row whose confirmation word matches. No private key travels.
+`enroll` sent to a server at edition 27 or later is refused in band as an
+unknown op, and `corpus/shapes.json` records the three retirements (§3.2).
 
-**The act.** `enroll` addresses a workspace like every other gesture (§8), and
-that is not decoration: the act *creates the registration*, and a registration
-is the pair `(client, workspace)` — an enrollment naming no workspace would
-mint a certificate that authenticates and sees nothing, leaving the operator to
-finish the job with a `touch`. One act, one pair.
-
-| Field | Meaning |
-|---|---|
-| `workspace` | the workspace the new client is seated in — `clients/<name>/workspaces/<workspace>` (§4.1) |
-| `name` | the subject common name, which **is** the client identity (§2); refused on §4.1's own rule — one path component, never `local` |
-| `grade` | `operator` or `foot` (§4.2), minted into the subject by the operator's own CA |
-
-The reply kind is `enrolled` and carries six fields: `grade`, `name`,
-`address`, `ca`, `cert`, `key`. `address` is **the address the DEVICE will
-dial** — by default the server's own, read from `wire/address` where the boot
-records it (§8), never the port a `:0` request became, which only the listener
-knows and which is a different number after the next boot. An `address` whose
-port is `0` therefore **refuses**, naming `yog wire-certs WIRE_HOST=…
-WIRE_PORT=…`: a QR carrying a runtime port would be stale before it was
-scanned.
-
-**The request may state that address, and often must** *(amended bl-fec6,
-PROTOCOL 14)*. The device being enrolled is by definition not this box, so the
-route it reaches this server by is not necessarily the one this box wrote for
-itself: an Android emulator reaches its host only through the emulator's own
-alias, a phone reaches it on the LAN, an overlay peer by name. The envelope
-carried `wire/address` verbatim, so a scan was correct only for a device sharing
-this box's own loopback view — and the workaround was an adb reverse tunnel,
-which exists on an emulator and on nothing else. `enroll` therefore takes an
-optional **`address`** (`/enroll <name> [foot] --at <host>:<port>`), and it is a
-field of the REQUEST rather than a setting because it is a fact about the device
-being enrolled: two devices enrolled a minute apart can rightly need two
-different routes. Absent is the server's own, and both go through one
-judgement — a stated `:0` refuses exactly as the file's does.
-
-**What it is NOT checked against is the server leaf's SAN**, and that is the
-residual. The mint already understands the same problem — `WIRE_HOST` is a list
-and every entry rides the leaf (§8) — so what an operator states here should be
-one of the spellings they minted; a route the certificate omits fails
-*verification* at the device rather than here. Reading the SAN back would mean
-parsing X.509 extensions, where `registry::leaf` walks only the subject, and the
-failure it would catch is already loud on the device. The refusal that names
-`--at` says so.
-
-**A leaf that already exists is ADOPTED, not refused** *(amended bl-bd48,
-bl-6b14)*. `yog wire-certs WIRE_LEAF=<name>` is the act the binary's own help
-teaches for provisioning another box, and it registers the leaf in **nothing**:
-§5.1's advertisement then presents into the empty set, so the foot dials,
-handshakes, advertises and is useless, silently at both ends. The one act that
-registers was this one, and it refused a name whose pair already existed —
-correctly, on the ground that re-issuing distrusts nothing and two live
-certificates under one identity is the hazard. Both halves were right and the
-conclusion was wrong: **registering is not issuing.** So an enrollment naming a
-leaf that is already here mints nothing, distrusts nothing and creates no second
-certificate — it seats the registration the leaf was always missing and hands
-over the material the operator was going to carry by hand anyway. The four
-states of a name are the whole rule:
-
-| on disk | what enrollment does |
-|---|---|
-| neither `<name>.pem` nor `<name>.key` | mints, as it always has |
-| both | **adopts**: registers, answers that certificate, shreds the key |
-| `.pem` only, and the client has **never dialled** | **re-mints** *(bl-f867)*: supersedes the standing certificate and issues a fresh pair under the same name |
-| `.pem` only, and the client **has** dialled | refuses — enrolled through this door already, the device took it up, and the key left the box then; the refusal says when it last spoke and names §4.1's `touch` for a second workspace |
-| `.key` only | refuses — debris from a mint that did not finish; the refusal names the file |
-
-**A name is burnt by a device, never by a typo** *(amended bl-f867)*. The
-`.pem`-only arm above used to be one refusal, and it made an operator who typed
-the box's name wrong — or closed the envelope before it reached the device —
-lose that name for the life of the CA: the only remedy on offer was `FORCE=1`,
-which rotates the trust root and distrusts **every** device this box ever
-enrolled, to repair one that was never used. The question the refusal never
-asked is whether the enrollment was ever **taken up**, and §5's own third fact
-answers it durably — `clients/<name>/seen` is stamped the first time that
-client's bytes reach the intake, so its absence means no device has ever
-presented this identity. Never adopted, the certificate is superseded here and a
-fresh pair is minted under the same name; adopted, the name stays sealed.
-
-The cost is stated rather than hidden: the CA has then signed two certificates
-for one common name and the first is not revoked, there being no CRL here. That
-matters only if the superseded envelope is *also* used, and this arm is reached
-exactly when nothing ever used it and the operator is asking for another. The
-alternative destroys more — every other device's trust — to undo less.
-
-**The grade comes off the certificate, never off the gesture.** A grade is
-minted into the subject by the operator's own CA (§4.2), so an adoption that
-believed the word typed at a seat would be a promotion granted by registration —
-exactly what default-operator exists to make impossible. An enrollment asking
-for a grade the standing subject does not carry is refused naming both.
-
-**What is retained and what is not.** The server mints the pair, reads it,
-answers it and **shreds the key** — mint → answer → shred, the pattern the
-manual recipe already follows, made unconditional so a failed read leaves no key
-either. What stays on disk is the **certificate**, deliberately: it is public
-material, and its presence is what makes a second enrollment under one name an
-adoption, a supersession or a refusal rather than a blind re-issue (`provision::issue` still refuses a
-standing pair outright, which is `wire-certs`' own guard).
-Keeping it is the guard; keeping the key would be the leak. Custody after the
-answer is the transport's, and the two intakes differ: over the wire the answer
-is TLS bytes and a seat's RAM (§6), while a deposit through the `gestures/`
-inbox lands it in a reply file inside the world — on the operator's own box,
-beside a CA that can mint the same leaf again at will, so it discloses nothing
-to anyone who could not already mint. It does *persist*, and the remedy is `rm`.
-The shipped path is the wire one, because the seat is what draws the code.
-
-**The payload contract — this section is its authority.** The QR envelope is
-**compact JSON** (no whitespace), the reply's six fields under a version marker:
-
-```json
-{"yog-enroll":1,"grade":"foot","name":"phone-1","address":"engine.invalid:7737","ca":"-----BEGIN CERTIFICATE-----\n…","cert":"-----BEGIN CERTIFICATE-----\n…","key":"-----BEGIN …-----\n…"}
-```
-
-(`key` carries the leaf's own PEM verbatim; its banner is elided above because
-the disclosure gate reads this file too, and must never find one.)
-
-`ok` and `kind` do not travel: they say what a *wire answer* is, and a
-photograph is not one. `yog-enroll` is the marker a scanner recognizes it by and
-the version it will be told about if the fields ever move. The seat and the
-Android app build to this envelope; the server returns the JSON and draws
-nothing — QR rendering is the seat's job, on the seat's screen.
-
-**PEM rides verbatim, and that is measured rather than assumed.** With the
-certificates `wire/provision` actually mints — P-256 keys, 825-day leaves, one
-`OU=foot` on the larger of the two subjects — the envelope is **1567 bytes** of
-compact JSON (`ca` 570, `cert` 623, `key` 241, plus the JSON escaping of every
-newline). A version-40 QR code in byte mode carries 2953 bytes at
-error-correction level L, 2331 at M, 1663 at Q and 1273 at H, so the envelope
-fits at L, M and Q and overflows only at H. DER-plus-base64 per field was the
-fallback and is **not taken**: it measures 1359 bytes, buys ~13%, and costs the
-one property worth keeping — a field an operator can paste into `openssl x509
--text`. The rule is therefore **PEM as minted, at level M or lower**; H needs a
-smaller envelope and there is no payer for one. `boundary::dispatch::enroll`'s
-`envelope` test takes that measurement against a real mint on every run, so a
-recipe that moved to RSA would fail there rather than in a photograph.
-
-**The rendezvous pair rides beside the six facts** *(amended bl-9043,
-edition 20)*. On a box holding rendezvous material (§13.2 — a stated host,
-on the box that founded the root) the envelope carries two more keys,
-`rendezvous_pub` and `pairing_salt`: the server's public rendezvous key and
-the pairing salt, 32 bytes of lowercase hex each, exactly as the files
-`rendezvous.pub` and `pairing.salt` hold them. They are present together or
-absent together — a loopback-only server has nothing to rendezvous for and
-the envelope omits both — and a decoder refuses one without the other. They
-are an **edition**, not a `PROTOCOL` bump: a seat below 20 ignores two keys.
-The server reads them before it mints, so half a pair refuses with nothing
-issued. The cost is measured by the same test: with the pair the envelope is
-~1730 bytes, which fits L and M and no longer fits Q; a loopback envelope is
-the ~1567 it was. The rule above — PEM as minted, at level M or lower — is
-unchanged.
-
-**The corpus carries the shapes and none of the material** (§3). `request/enroll`
-and `reply/enrolled` are additions, so `PROTOCOL` is **not** bumped — strict
-decode already refuses an unknown op in band, and the drift ledger records both
-at the standing version. Their fixture strings are fabricated and marked
-`notreal`; a real minted key must never enter the corpus, and the key fixture
-deliberately carries no private-key banner, because the leak gate reads every
-committed byte in this tree and must never find one.
+**What did not move with it.** The act also *adopted* a leaf `yog wire-certs
+WIRE_LEAF=` had already minted, seating its registration. No gesture does
+that now: `offer` refuses a name a leaf was issued under (§15.1), so a
+hand-carried leaf is seated by hand, on the box that holds the CA —
+`<state-root>/clients/<name>/workspaces/<workspace>` (§4.1). Every sentence
+that used to name `/enroll` as the remedy names that file.
 
 ## 9. Build sequence
 
@@ -5368,8 +5227,8 @@ the routing leg's own ends.
   for want of anything to batch it with, and this is the thing to batch it
   with — the re-vendor it did not want to force happens once, for both, inside
   the same unreleased cycle.
-- **`enroll` carries a class like every other op**, being an ordinary help row
-  (§1.4's mint is an operator act at a seat, so `control`). What carries no
+- **`offer` and its three siblings carry a class like every other op**, being
+  ordinary help rows (an operator act at a seat, so `control`). What carries no
   class is yog's **argv** surface — `yog env`, `yog bl`, `yog exec` and the
   rest are process-level words crossing no §8.5 boundary, so no seat can owe
   one a control; they share the row type for its text and never reach this
@@ -6080,32 +5939,17 @@ Recorded so they are not relitigated:
   the front door instead. The window is a wire client of localhost, nothing
   in-process was added, and this entry stands as written.
 - **Any in-channel authentication besides the client certificate** —
-  passwords, bearer tokens, OAuth flows: each is an enrollment or secret
-  surface §1.3–§1.4 exist to exclude.
-- **An in-channel pairing/enrollment protocol** — bootstrap is out-of-channel
-  by ruling; convenience flows reopen the exact surface mTLS closed. **What is
-  rejected is the DEVICE enrolling itself**, and bl-f4e3 sharpened that rather
-  than lifting it (§1.4, §8.4). The banned shape is a machine holding no
-  material opening a connection and being handed some — a pairing code, a
-  claim token, a first-connect ceremony, a "trust on first use" window, any of
-  which is an unauthenticated peer the server must answer. The `enroll` act is
-  none of those: the new device says nothing, an **operator-grade seat**
-  performs the act over a channel already authenticated by material that
-  already moved out of channel, and the result leaves the wire in the
-  operator's hand. It is the operator's own tooling reached through the
-  boundary — the same class as §8's server-boot mint — and it is on the
-  boundary rather than in the wire because §3 forbids a capability that exists
-  on one face and not the others. The unlifted half is the one that matters:
-  **no gesture will ever be answered to a peer that could not already
-  connect.**
-- ~~**A separate client crate or binary for v1**~~ — **lifted by the bl-37fd
-  ruling (§12)**: the four-component split makes the seat its own crate and
-  repo. The rejection's reasoning — no payer for a split — held until the
-  ruling became the payer. **Landed (bl-0716):** the seat crate exists and
-  reimplements this document, as §12's authority ruling requires and as the
-  android client already did. yog keeps its window for one deprecated release
-  (bl-7942 deletes it), so §8's old paragraph survives there era-stamped
-  rather than deleted.
+  passwords, bearer tokens, OAuth flows: each is a secret surface §1.3 exists
+  to exclude.
+- **A device that joins on its own word** — a pairing code that seats, a
+  first-connect ceremony, a "trust on first use" window. *(Amended by §15,
+  operator rulings 2026-11-11: this entry rejected every in-channel
+  enrollment, and §15.1's offer is one.)* What stays rejected is the half that
+  mattered: nothing a device says seats it. An offer is minted by an
+  operator-grade seat, its claim earns a certificate that is **held** and
+  refused everything, and only the operator's `approve` — against a
+  confirmation word both ends compute — creates the registration. The one
+  certless thing the listener answers is that single claim (§15.2).
 - **A wrapper meta-tool — one declared tool carrying an untyped payload**
   (bl-71d0, reasons in §5.2). It loses emission-time validation, since the
   provider validates the wrapper and not the call inside it, and it makes the
@@ -6213,9 +6057,9 @@ Two invariants ride with the ruling:
    from the window to execution itself. No in-process executor, and no
    unix-socket second transport in v1: one transport, one code path, no
    place to hide the bug.
-2. **Ship inert.** A yog with zero enrolled thralls is valid and is the
+2. **Ship inert.** A yog with zero registered thralls is valid and is the
    default. The server is structurally incapable of executing anything until
-   a thrall is enrolled — even a single-box install enrolls its local thrall
+   a thrall is registered — even a single-box install registers its local thrall
    as an explicit operator act. A tool call with no thrall to route to
    refuses in band (§5's use-is-attempt), which is the posture working, not
    an error state.
@@ -6264,8 +6108,8 @@ The 2026-08-30 ruling named the app yog, and that half is withdrawn here, in
 place, so the authority does not keep a sentence the consumer has left; the
 package id stays `dev.yog` on the consumer's own §9 reasoning (a release
 channel makes an id a one-way door), and nothing on the wire moves. The default
-bootstrap is mTLS client enrollment: a seat or a foot dialing a host server on
-material provisioned out of channel (§1.4). Running the server *on the phone*
+bootstrap is the offer: a seat or a foot dialing a host server on material it
+claimed with its own key (§1.4, §15.1). Running the server *on the phone*
 is allowed, and is the deliberate non-default choice.
 
 **This document is not amended by it, and that is the point.** A phone is one
@@ -6278,7 +6122,7 @@ ships three components does *not* get to invent:
 
 - **Which component a launch runs is derived, never stored.** No material and
   nothing runs; the grade on the certificate says seat or foot (§4.2). So
-  enrolling a phone as a tool host is **minting it a foot-grade leaf**, not
+  making a phone a tool host is **offering it at foot grade**, not
   tapping a setting on the phone — there is no stored choice that could
   disagree with the certificate. The first-run surface has no button, on
   purpose: §1.4 stands on a phone exactly as it stands on a laptop, and a
@@ -6319,845 +6163,73 @@ other client. Deliberate absences are cited exemption config in the client's
 repo, loud and machine-checked in both directions.
 
 
-## 13. The punched wire — dynamic reachability (bl-4d56, reworked bl-aad5; operator rulings 2026-08-31)
+## 13. The punched wire — retired (§15.4; bl-7a14)
 
-> **Superseded by §15** (operator rulings 2026-11-11). The server listens on a
-> public port and this whole section is retired; it stands as the record of
-> what was built and measured until the code that implements it is deleted.
+**Retired entire by §15** (operator rulings 2026-11-11), and the code is
+deleted with it: the rendezvous loop, the punch, the held connection and its
+ping, the DHT client, and the files `rendezvous.key`, `rendezvous.pub` and
+`pairing.salt`. A server whose wire root still holds those files ignores them.
+The headings below stand so that every citation of this section still
+resolves; the text they held is in this file's history.
 
-§8 makes the address one fact with one home, and §1's canonical scene puts the
-server on a home box behind residential NAT: its public address is not its
-own fact, it cannot accept an unsolicited inbound connection, and the phone
-seat dialing it sits behind a cellular NAT stricter still. The deployed answer
-today is a third-party overlay network, and removing that dependency is this
-section's reason to exist — the same sovereignty argument §4 makes for the CA.
-
-The first cut (bl-4d56) stood the design on a rented public anchor performing
-presence, introduction and carriage. **Three operator rulings, same day,
-reshaped it**, and each is stronger than a cost preference:
-
-1. **No rented anchor.** The operator's reachability stands on no box rented
-   for the purpose. Discovery rides a commons instead (§13.2).
-2. **No port-forward — and no publicly dialable listener at all.** Not merely
-   "the router cannot be asked": a server that *cannot* be dialed unsolicited
-   is desirable in itself. §4's posture — the open-internet surface is the TLS
-   handshake and nothing behind it — is superseded upward for the roving case:
-   the surface is **nothing**. The server's NAT drops unsolicited SYNs; there
-   is no port to scan, no handshake to probe, no listener to fingerprint.
-3. **The data path is hole-punched.** Both ends send outbound; a connection
-   exists only between peers that arranged it. A client on a stable, public
-   connection is simply the easy case of the same mechanism — the punch is
-   symmetric, and whichever end's SYN lands first wins.
-
-What survives the rework untouched: the inner wire crosses byte for byte —
-mTLS on the entry's material, the §3 preface, §4's identity and scoping — and
-severability at every layer. What the rework deletes: the splice, the
-TLS-in-TLS, the moor. A punched TCP stream carries the wire *directly*; the
-server's serving loop takes it exactly as it takes an accepted connection.
+What the section was: three rulings of 2026-08-31 — no rented anchor, no
+publicly dialable listener, a hole-punched data path — and the design that
+followed from them. What ended it is what it measured (§13.8): the pair the
+design existed for, a phone on cellular CGNAT reaching a home box on
+residential NAT, punches over UDP and does not punch over TCP on the
+operator's carrier, and the wire is TCP. A path that cannot be re-made is not
+reachability, so §15 reverses ruling 2 and the server listens on a stated,
+forwarded port.
 
 ### 13.1 The physics, restated under the rulings
 
-The anchor's three functions decompose differently than the first cut assumed.
-**Presence and signaling can ride a commons** — the BitTorrent mainline DHT, a
-public keyed store nobody owns, with no account, no coordination plane, and
-bootstrap nodes that are third parties only in the sense root DNS servers are.
-**Carriage cannot**: bytes need a mutually reachable box, and by ruling 1
-there is none. This design therefore ships **without carriage, and says so**:
-a NAT pair that refuses a punch has no path — not a slow one, none. That is
-accepted with open eyes, and §13.6 parks the first cut's relay as the named
-exit if it bites where it matters. The pair this was written to worry about —
-cellular CGNAT to residential — was measured twice (§13.8): over UDP it
-punches, and over TCP, on the operator's carrier, it does not. The TCP result
-is the one the wire rides, so the caution stands and §13.6's criterion has
-fired for that carrier (bl-d185).
+*Retired.* Presence and signalling rode a commons; carriage had no box to ride
+and was shipped without.
 
 ### 13.2 The DHT rendezvous
 
-**Both ends are pure clients of the mainline DHT.** Outbound-UDP iterative
-lookups and BEP 44 get/put — never a node: no routing answers, no storage
-offered, no listener, nothing for the commons to dial back. The
-implementation is bencode, the KRPC query shapes, and BEP 44's
-ed25519-signed mutable items; `ring` (already in the graph under rustls)
-signs, std UDP carries, and the expectation is **zero new crates** — a
-proposed dependency here is a rule-6 ruling, not a default.
-
-**Built (bl-df31): yog's `src/dht`, and the shape the rest of this section
-consumes.** The expectation held — the one manifest change was `ring` named
-directly, a crate rustls already linked (AGENTS.md rule 6). The client is
-synchronous over `std::net::UdpSocket` with socket timeouts, and its whole
-interface is the module root:
-
-- `Dht::new(transport, bootstrap, config)` — a `Box<dyn Transport>` (the
-  std UDP socket, or a stand-in), the bootstrap addresses **as already
-  resolved socket addresses** (resolving the mainline's bootstrap hostnames
-  is the caller's act, not the client's), and a `Config` of α (the window), K,
-  the deadline per query and a cap on queries per walk — every duration a test can
-  shorten. The client's own id is random per run; nobody routes by it.
-- `lookup(target) → Vec<Node>` — the nodes nearest a 160-bit id, closest
-  first; `get(key, salt) → Option<Mutable>` — the newest item under an
-  ed25519 public key and salt **that verifies**, an unsigned or forged item
-  being nothing rather than a value; `put(item) → usize` — how many of the K
-  closest token holders acknowledged, zero being an error naming the first
-  refusal (a stale `seq`, a bad signature) or the silence.
-- `observed() → Vec<SocketAddr>` (bl-efae) — where the last walk's answering
-  nodes said they saw this client (BEP 42's `ip`), voted per family; see the
-  presence paragraph below for the vote and what it does not reach.
-- `Keypair::{generate, from_seed}` mint or reload the rendezvous key,
-  `Keypair::sign(salt, seq, value) → Mutable` seals one item under it, and
-  `Mutable::{target, verify}` plus `target_of(key, salt)` name where it lives.
-  The value is always a byte string — both items above are sealed opaque
-  bytes — and one over BEP 44's 1000-byte cap is refused before it leaves.
-- `Err(String)` throughout, the same shape every wire failure already
-  arrives in: a dark commons (nobody answered), no bootstrap at all, or the
-  socket itself failing. A node that answers an error, stays silent, or
-  answers noise is skipped, never fatal.
-
-A walk costs at most `max_queries` datagrams and blocks the calling thread
-until its window drains — each query waits at most its own deadline — so the hourly republish and the 15-second poll
-run on the thread §13.4 gives them, never on a request path. What the suite
-measures is loopback: a fake DHT of one thread per node, scripted routing
-and a BEP 44 store that checks what a real node checks. **The walk against
-the live mainline is measured** (bl-5d8d, from the deployed server box;
-§13.7 ruling 3 holds the numbers): a `find_node` walk took about 7 s at the
-1 s round, since the frontier (below, bl-d00f) about 12 s, with `put`
-and `get` near 20 s at the query cap — and since the **sliding window**
-(bl-d9c1) about 6.5 s, with `put` and `get` about 7.5 s. **The walk is a
-window, not lockstep rounds**: up to α queries in the air, each with its
-own deadline (1 s, the measured p99), and the next node is asked the
-moment any of them answers or times out, reading the one socket with a
-timeout equal to the nearest outstanding deadline. A silent node costs its
-own slot for one deadline and never delays an answer beside it, and the
-walk ends without waiting out a query no longer on the frontier. **The bootstrap is asked `find_node` whatever the walk's verb**
-(bl-f6e1): the mainline's routers answer `find_node` and never BEP 44's
-`get`, so `get` and `put` are one walk that asks the bootstrap `find_node`
-and every node it opens onto `get` — the tokens `put` spends come from
-nodes near the target, never from the roster. The fake DHT's `Router` mood
-is that router, and the rendezvous bench stands behind one. **And the
-bootstrap is a door, never a result** (bl-9408): its answers seed the walk
-and its BEP 42 claims vote, but no bootstrap address is ever returned as a
-node near the target, and a walk whose learned nodes were all silent is the
-same `Err` as a silent bootstrap — a dark commons — rather than an `Ok` a
-caller cannot tell from success. A node is one `(id, address)`: a router's
-repeated entry is learned once, and one id at two addresses is two nodes.
-**The walk converges on a frontier, not on everything it has heard of**
-(bl-d00f): the K closest nodes that *replied* or are not yet asked. A node
-asked and silent, one that answered only an error, and one this socket cannot
-send to (a v6 address from the v4 socket the server binds) all leave it, so
-the walk ends when the K closest responsive nodes have been asked — or at
-`max_queries` — and a refused send spends no query and no slot in the window.
-**And the door is asked again** whenever the frontier runs dry with fewer
-than K replies past it, as long as it has ever named anyone, bounded by the
-same cap: the one router that answers from the deployed server box names one
-random node per query, so its two seeds are both silent about one walk in
-three, and a second ask draws fresh ones. The fake DHT's `Rotor` mood is
-that router. The server's roster (`mainline()`) names the four standard routers —
-`router.bittorrent.com`, `dht.transmissionbt.com`, `router.utorrent.com`,
-`dht.aelitis.com`, all at 6881 — so one silent router is a quarter of it.
-**A re-ask knocks only where the door answered** (bl-f519): a bootstrap
-address silent past its first deadline leaves the door for the rest of the
-walk, as a silent node leaves the frontier. From the deployed server box the
-roster resolves to five addresses of which three never answer, so re-asking
-all five spent three of every five door queries on nothing — in the walks
-that ended dark, most of the cap (§13.7 ruling 3).
-
-**Built (bl-4263): the server's loop, `src/wire/rendezvous`, and the two
-item formats the client side mirrors.** The mint grows `rendezvous.key`
-(a 32-byte ed25519 seed, hex) and `pairing.salt` (32 random bytes, hex)
-beside `ca.pem` — for a box whose `address` names a host other than
-loopback, and only on the box that founded the trust root — **and, since
-bl-9043, `rendezvous.pub`**: the seed's public half, 32 bytes of hex, mode
-0644, derived rather than drawn, so every mint re-derives it where it is
-absent and a box minted before the file existed gains it on its next boot.
-That file and `pairing.salt` are what a client carries, under those names:
-`yog wire-certs WIRE_LEAF=…` lists them in the bundle beside the leaf and
-`ca.pem`, and the §8.4 envelope answers them as `rendezvous_pub` and
-`pairing_salt`. A loopback box minted none and hands off none. Everything else
-both ends need is HKDF-SHA256 over the pairing salt (salt `yog rendezvous`,
-one info label each): `presence salt` and `inbox salt` are the DHT salts the
-two items are filed under, `seal key` is the ChaCha20-Poly1305 key both are
-sealed with, and `inbox key` is a second ed25519 **seed** — the inbox is
-signed under a keypair *derived from the pairing salt*, so a client needs no
-keypair of its own to write it and the server holds no client key to poll
-it. Presence lives at `(server public key, presence salt)`; the inbox at
-`(inbox public key, inbox salt)`. A sealed item is `nonce(12) ‖ ciphertext ‖
-tag(16)`; the presence plaintext is one endpoint list, a call's is an
-8-byte big-endian nonce then one; an endpoint list is a count byte and per
-endpoint a family byte (`4`/`6`), the address bytes and a big-endian port.
-The server remembers the last nonce it punched, so one call is one punch
-and a poll that reads the same item again is quiet. Presence carries the
-box's **route-local** addresses at the punch port — the direct, LAN and
-port-preserving cases — **and, since bl-efae, the observed one**. The commons
-already reflects it: a KRPC reply may carry the querier's address as that
-node saw it (BEP 42's top-level `ip`, six or eighteen compact bytes), and
-the walk keeps every answering node's claim. `Dht::observed() →
-Vec<SocketAddr>` is the vote over the last walk's claims, per address
-family: the endpoint the most nodes named, and nothing on a tie, because one
-node's `ip` is one node's claim and a lone liar must outvote nobody. The
-vote is over the whole endpoint — nodes that agree on the address and not
-the port are seeing a mapping that moves per destination, and no port of it
-is ours. Publish takes the observed **address**, drops it where it is
-already a local one, and puts it at the **punch port**: the observed port is
-the DHT socket's UDP mapping, not the punch port's TCP one, so this trusts
-port preservation, which §13.8 measured on the residential NAT. **The
-carrier case stays open**: §13.8's cellular path rewrote the port, and an
-observed address at the punch port does not reach a NAT that does that. The
-loop polls before it publishes when both are due, so even the first
-publish has a walk behind it. **The item format did not change** — presence
-was always an endpoint list, and the observed address is one more entry in
-it; a client that reads the list reads it.
-
-**The material grows three facts, all minted out of channel** (§1.4's posture
-byte for byte): an ed25519 rendezvous keypair per server, one per client, and
-a random **pairing salt** per entry. Public keys and the salt cross inside
-the entry exactly as `ca.pem` does. The durable fact an entry holds stops
-being an address and becomes *the key that finds one*.
-
-**Presence** is the server's mutable item: its observed endpoints (v4 and v6,
-and the fixed local port it punches from), sealed under the pairing material
-so the commons stores opaque bytes — a DHT node, or anyone walking the
-keyspace, learns neither that this is a server nor where it lives. Signed,
-sequenced, republished on an hourly cadence against the DHT's storage decay.
-**The observed port is a separate fact from the local one and presence must
-carry the observed one** (§13.8): port preservation is best-effort even on a
-NAT that has it, and a second host behind the same NAT already holding that
-external port is enough to make the two differ — measured.
-
-**The inbox** is the signaling half: a client that wants a connection writes
-a signed, sealed item at a key derived from the pairing salt — *"call me:
-these observed endpoints, this nonce"* — and the server polls that key at a
-15-second cadence. Sealing and signing close the two abuses the commons
-invites: an item the server cannot verify never draws a SYN (so nobody can
-make the server disclose its address by writing garbage), and without the
-salt an observer can neither find the inbox nor read a client's endpoints
-from it. Both cadences are stated defaults, revisited on evidence, and both
-live in frames and files tests can speak — no socket options, no timers the
-suite cannot fake.
+*Retired.* Both ends were pure clients of the BitTorrent mainline DHT, finding
+each other through signed, sealed BEP 44 items keyed from a shared salt.
 
 ### 13.3 The punch is the data path
 
-**The precondition, stated (bl-d185):** a TCP simultaneous open lands only
-when **both** ends' NATs give the punch port an **endpoint-independent,
-port-preserving TCP mapping** — the external port a peer aims its SYNs at must
-be the one the call published, whoever the SYNs come from. The design cannot
-repair a side that lacks it: a NAT that mints a fresh external port per
-destination leaves the peer's SYNs aimed at a port that maps nowhere, and its
-own SYNs arrive from a port the other NAT holds no mapping for. That is
-measured, not hypothetical — the operator's carrier does exactly this for TCP,
-and the pair does not cross (§13.8's table). A UDP mapping is no evidence for
-the TCP one; the same carrier preserved the port for UDP.
-
-**The precondition is also why a one-sided re-punch cannot land (bl-278f).**
-A mapping is not a property of the port; it is state the NAT holds for a flow
-it has seen leave, and a home NAT drops a TCP flow's state soon after that
-flow ends. While a punch window is open the server's own SYNs keep its
-mapping fresh; once the served stream has ended the server sends nothing from
-the punch port, so its NAT holds no mapping a peer's SYN could arrive
-through, and a client that re-punches alone — from the very port its call
-named — is aiming at a port that maps nowhere. Measured (bl-65dc, §13.8): on
-Wi-Fi, ~36 s after the served stream ended, a re-punch from the landed port
-put SYNs on the wire for 35 s and not one reached the server's kernel. A punch
-lands only while **both** ends are sending, and only a fresh call makes the
-server send.
-
-Both ends bind their fixed punch port and TCP-simultaneous-open toward each
-other's observed endpoints — listen and connect from one port, SYNs retried
-across a bounded window, v6 tried first where both ends published it
-(a stateful v6 firewall punches far more reliably than a v4 NAT, having no
-ports to rewrite). **"Both ends" is the whole of that rung and it is the end
-most likely to fail** — bl-a9b0 measured a residential server path with no
-routable v6 at all facing a cellular seat path that is v6-native, so the rung
-cannot fire and the pair falls to v4 (§13.8).
-
-**The v6 rung is the most reliable one, not the only one that works, and the
-difference is now measured.** The premise that survived bl-a9b0 — that on v4
-the server has no address to aim a SYN at, so simultaneous open degenerates
-into one unanswered SYN — was a Wi-Fi artefact of that window and is false
-(bl-0da2). With the phone actually on cellular the server box's overlay
-established and held a **direct v4 path to a carrier-observed endpoint**, on
-the first probes and still direct minutes later. The cellular end does hold
-an address a SYN can be aimed at; it is simply an address the phone itself
-never publishes, because the carrier's translator mints it and only the peer
-receiving the packets can read it off the wire. So the v4 rung is live on the
-pair §13.1 called the risk case, and the correct statement of the residual is
-narrower: what is measured is a **UDP** punch. **TCP simultaneous open across
-that same pair has since been run and fails** (bl-65dc, §13.8): the carrier's
-TCP mapping is per destination, which breaks the precondition above, so this
-paragraph's optimism holds for UDP only and the v4 rung does not land on that
-carrier. Presence carrying the
-*observed* endpoint rather than the local one (§13.2) is not an optimisation
-here — on this path it is the only endpoint that exists.
-
-The first SYN pair that crosses is the connection; the
-seat's inner mTLS runs over it against the same `ca.pem`, verifying the same
-server name a direct dial verifies, and the server reads the same client
-leaf. §4 is untouched. A client that is publicly reachable is the degenerate
-case: the server's outbound SYN simply lands, and the wire neither knows nor
-cares which end's SYN won.
-
-**Source-port reuse is now on the critical path** — the punch needs
-`SO_REUSEADDR` (and on some platforms `SO_REUSEPORT`), which std does not
-expose. The first cut deferred this ruling behind a criterion; the criterion
-is spent, and the choice is the same two doors: a `socket2` dependency
-(rule 6: explicit approval required) or `setsockopt` beside the four effects
-in `sys.rs` (rule 3: a location-rule amendment). **Ruled: `socket2`**
-(operator, 2026-09-23; §13.7 ruling 1) — pure Rust over libc, no C
-toolchain, one lockfile line, and it dissolves a rule-3 widening for calls
-that, unlike the four residents, run per-connection at runtime rather than
-once at the process edge. `src/wire/rendezvous/punch.rs` is where the two
-options are set: a listener per family on the punch port and, per target, a
-third socket bound to the same port that connects — every stream that lands
-inside the window is served, because two hosts that can each reach the
-other's listener form two connections and which one the peer keeps is the
-peer's choice, so the server serves all and lets the unspoken ones die in
-the handshake. The punch port is chosen by the kernel once per run and
-published; a fixed number was a second file for a fact the presence item
-already carries.
-
-**The ladder a dial runs** (bl-278f; §13.4 says why each rung costs what it
-does): **the held line** — the live held connection, which costs nothing;
-**the direct address** — the entry's `address` where one exists (a LAN, a
-stable client, loopback); **the re-call** — with the server's presence cached
-from the last rendezvous (its endpoints and punch port), the client writes a
-fresh call and punches, one DHT walk instead of two, about eight seconds
-cheaper than a full rendezvous; **the full rendezvous** — presence read, call
-written, punch. The re-call is what the retired rung — a client-only re-punch
-at the cached endpoints, "a NAT mapping that outlives the window" — was
-reaching for, and it is what every client already fell to after that rung
-failed; the paragraph above says why it failed. A call that expires
-unanswered invalidates the cached presence, so the next dial reads it fresh.
-
-**The server serves what lands on its punch port at any time** (bl-5276) —
-the standing acceptor. A stream can reach the punch port outside any window:
-from a client whose own NAT-side mapping and the server's are both still live,
-from any client that can reach the punch port directly, or as a SYN that beat
-the server's poll — and the kernel completes that handshake whether anybody
-is reading; while a window was the only reader of the listeners, such a stream
-was a connected socket that never heard an opening frame. It does **not**
-rescue a one-sided re-punch through a mapping that has already expired
-(above); nothing on the server can. So the punch port has **one acceptor, for the whole
-run**, on the loop's own thread family, and every stream it accepts goes to
-the same serve path a window feeds. mTLS authenticates it there (§5,
-fail-closed), which is why an unsolicited stream is exactly as safe as one the
-front door accepts. A live window tells the acceptor which addresses it
-punches toward, and a stream from one of them is handed to that window — so a
-call still says what landed for it and stops its SYNs — over a channel that
-holds nothing, so a stream is either taken or refused back, never buffered into
-a window that is ending. Everything else is served by the acceptor itself and
-counted `accepted`; the one acceptor is the point, since two loops polling one
-socket race for the same accepted stream. A client's guard (a bound on the
-preface, a failed dial falling to the next rung) stays as its own safety.
+*Retired.* TCP simultaneous open from one fixed port, carrying the wire
+directly.
 
 ### 13.4 Held connections — §10's criterion is met
 
-§10 has refused every held connection for want of a payer; the punch is the
-payer, and the criterion is met in its own stated terms: a dial stops costing
-milliseconds. First contact costs an inbox write, a poll period and a punch
-window — seconds — so the punched connection is **held and reused**, with
-idle ping frames at a 25-second cadence keeping both NATs' mappings alive
-(frames, again, because std exposes no keepalive and a frame is testable).
-**Those pings are the only thing that keeps a mapping alive** (bl-278f): once
-the held connection ends, the server's NAT forgets the flow within seconds and
-no re-punch can reach it (§13.3), so keeping the held line up — not a faster
-way back after dropping it — is the fast-return path, and a client that can
-hold its line through a background spell should. The ladder a dial runs is
-§13.3's: the held line; the direct `address`; the re-call from cached
-presence, which spends one DHT walk instead of two; the full rendezvous. The
-server's standing acceptor is not a rung — it is the server end of whatever
-reaches the punch port, and it serves a client whose mapping is still live or
-that can reach the port directly. What worked stays RAM for the run — the runtime half of §8's `:0` discipline,
-never disk. Per-request identity is unchanged in the only sense that matters:
-the certificate is read at the handshake and the scope is spent per request,
-exactly the terms the follow lane already holds its connection on.
-
-Severability, per end: a server whose wire root holds no rendezvous material
-punches nothing, polls nothing, starts no thread — it is today's listener,
-byte for byte. An entry with `address` and no rendezvous material is today's
-entry. The phone pays nothing for the machinery when idle: only the server
-polls; a client touches the DHT only at the moment it wants a connection.
-
-**The operator's view of the loop** (bl-355c). A loop that fails silently is
-indistinguishable from one that was never called, so the server says each
-event on its stderr, one line apiece in the `yog: wire: listening on …`
-shape, and nothing else is needed to tell which step a seat's call stopped
-at:
-
-    yog: rendezvous: started — punch port <p>, DHT socket port <q>
-    yog: rendezvous: presence published — seq <s>, <n> endpoint(s), <a> ack(s)
-    yog: rendezvous: presence not published — the DHT walk failed (reason withheld: it names nodes)
-    yog: rendezvous: inbox poll failed — the DHT walk failed (reason withheld: it names nodes)
-    yog: rendezvous: inbox item seq <s> did not verify under the pairing's seal key — no punch
-    yog: rendezvous: inbox item seq <s> verified but is not a call — no punch
-    yog: rendezvous: call nonce <n> already punched — no punch
-    yog: rendezvous: call nonce <n> opened — <k> endpoint(s) (1 v6, 1 v4) — punch started
-    yog: rendezvous: punch for nonce <n> landed <m> stream(s) (1 v4)
-    yog: rendezvous: punch for nonce <n> expired after <w>s with no stream
-    yog: rendezvous: served stream for nonce <n> ended
-    yog: rendezvous: stream accepted on the punch port (v4) — served
-    yog: rendezvous: stream on the punch port (v4) refused at the handshake — dropped
-
-A line carries counts, sequence numbers, nonces and address families, and
-never an address, a key, a salt or a sealed byte: a server's log is public
-in some deployments. That is why a DHT failure is said without its reason —
-the walk's refusals name the nodes asked and the target walked toward, a
-derivation of the key and the salt. An empty inbox says nothing, and a poll
-says its outcome only when it differs from the last poll's, since an item
-stays in the inbox until the commons forgets it and a call already punched
-would otherwise be said every fifteen seconds. A stream the acceptor serves is
-said once per burst — streams landing within the punch's linger of the last
-are one arrival — and a refusal once per stream, by family alone.
-
-The same facts are asked for, not only said: `/doctor`'s reply carries a
-`rendezvous` object beside its rows — `active`, `published`, `calls`,
-`punched`, `served` and `last_poll_unix` — present from any process with a
-listener (all zero and `active: false` on a loopback-only box, which started
-no loop) and absent otherwise. It is an edition (21), not a bump (§3.2).
-`accepted` joined it at edition 22 (bl-5276): of the streams `served`, those
-the acceptor took with no window toward their peer — a re-punch through a
-still-live mapping, a plain connect to the punch port, a SYN that beat the
-server's poll — read as `0` from a server that predates it. It is what made
-the retired re-punch rung measurable live, and the measurement retired it
-(§13.8).
+*Retired.* A punched stream was held between asks and pinged through its
+silence. A connection is dialled, and one that says nothing for two minutes is
+gone (§5.1); a client keeps the line that worked for the run (§15.3).
 
 ### 13.5 What it costs, named
 
-- **First contact is seconds, not milliseconds** — the poll period bounds it.
-  Held connections hide it from every ask but the first; the cold open of a
-  seat is where it shows.
-- **No carriage.** A punch-refusing NAT pair has no path. Accepted by ruling;
-  §13.6 is the exit. bl-a9b0 measured the residential half as green on every
-  property a punch needs, and bl-0da2 then measured the pair itself: the
-  server box punches a **direct UDP path over IPv4 to the phone on cellular**
-  (§13.8). Neither of the two risks this design named has materialised — not a
-  symmetric cellular mapping, and not the "no common address family" reframe
-  bl-a9b0 offered in its place. What remains open is one protocol and one
-  asymmetry: TCP simultaneous open on that pair is unmeasured, and a second
-  residential host behind the same NAT reached the same phone **by relay
-  only**, which is a fact about a NAT shared by two punchers rather than about
-  the cellular end.
-- **The commons is a dependency, honestly smaller.** Bootstrap nodes are
-  third parties (cached routing tables outlive them); a network that blocks
-  outbound UDP blocks the rendezvous itself, and the ladder's direct-address
-  rung is the only fallback there.
-- **The server emits, quietly.** Hourly republish, a 15-second poll, pings on
-  held connections. Nothing listens, but the box is not silent — a traffic
-  observer on the local network sees DHT chatter where the first cut showed a
-  single TLS stream to a known anchor.
-- **The coverage floor meets a distributed system.** The DHT client is tested
-  against a fake DHT the suite runs on loopback UDP — designed for that from
-  the first line, or it cannot be built (QUALITY's rule, not a hope).
+*Retired.*
 
 ### 13.6 The carriage rung, parked
 
-The first cut's relay — one stateless process on a public box, outer mTLS on
-the operator's CA, `moor`/`reach`/`back`, dial-back and splice (bl-4d56's
-§13.2, in the store's history) — remains the designed exit, unbuilt. Its
-criterion: **a client the operator actually needs measurably cannot punch**
-— bl-a9b0's verdict, or a live pairing that fails where it matters.
-
-**The criterion has fired for the operator's carrier** (bl-65dc, bl-d185;
-§13.8's table). The phone on cellular cannot punch the server over TCP — the
-carrier's TCP mapping is symmetric per destination, 0 of 3 attempts crossed —
-and no IPv6 route exists around it, because the phone's internet APN carries
-none. The same phone on Wi-Fi behind a home NAT lands every time. **Two exits,
-and choosing is the operator's ruling, not the builder's:**
-
-1. **Wi-Fi-only roving.** Accept that the phone reaches the server only from a
-   network whose NAT meets §13.3's precondition; on cellular it has no path,
-   and the seat says so rather than spending a window it cannot win. Nothing
-   is built.
-2. **Stand up this rung** — the relay above. bl-89d2 is its build ball and is
-   claimable on this ruling; it gives cellular a path at the cost of one
-   public box, which ruling 1 otherwise refuses.
-
-Until the operator rules, the relay stays unbuilt and the cellular phone has
-no path. What follows is the reasoning that held before the TCP trial, kept
-because its caution is what the trial confirmed.
-
-**The criterion was NOT met on the UDP evidence** (§13.8).
-bl-a9b0 left it open — the residential end measured green and the cellular
-end could not be measured at all — and bl-0da2 ran the trial it was waiting
-on: with the phone on cellular, the server box established a direct path to a
-carrier-observed IPv4 endpoint and held it. A client the operator actually
-needs *can* punch, so the relay stays parked.
-
-Read the evidence for exactly what it is, because the criterion is per
-protocol and per pair. What was measured then is a **UDP** punch by an overlay
-whose discovery is not this design's; TCP simultaneous open on the same pair
-was unmeasured, and §13.3's data path is TCP — the gap bl-65dc closed, the
-wrong way. A UDP result is strong
-evidence about the carrier's *mapping* — the property a punch turns on — and
-no evidence at all about its *filtering* of TCP. And one pair measured green
-does not generalise: the second residential host reached the same phone by
-relay only, so the trial the criterion really wants is the one run from the
-server that will carry the wire, over TCP, on the day it is stood up.
-
-Standing one up then is severable in both directions: one file per entry opts
-in, and no code the punched path runs knows the relay exists.
+*Retired.* The relay was never built. §15.2 names the exit a TLS-intercepting
+network would need instead.
 
 ### 13.7 Rejections and open rulings
 
-Rejected, with the rulings that decided them:
-
-- **A port-forward plus dynamic DNS** — the boring answer, and it was asked
-  (2026-08-31): rejected not on CGNAT fragility but on posture — ruling 2
-  *wants* the unsolicited-inbound surface to be nothing.
-- **A rented anchor as the primary path** — the whole first cut; superseded
-  by ruling 1, preserved as §13.6's exit.
-- **DNS as the discovery layer beside the DHT** — redundant: signaling needs
-  the DHT regardless, and two homes for one fact is the drift rule 6 of the
-  house exists to refuse; a registrar API credential on every client is its
-  own disqualification.
-- **A QUIC/UDP data plane, an embedded wireguard, UPnP/NAT-PMP,
-  stream-multiplexing** — all stand rejected as in the first cut, for the
-  recorded reasons (rules 6/8; a second key universe; a router favor; a
-  framing protocol nobody needs).
-
-Open, awaiting operator ruling:
-
-1. **`socket2` versus `sys.rs`** for source-port reuse (§13.3) — **ruled
-   `socket2`, 2026-09-23**, the one approved exception to rule 6's
-   zero-new-dependencies line: `socket2 =0.6.5` with the `all` feature (which
-   is where `set_reuse_port` lives), MIT OR Apache-2.0, no new license value
-   and no new advisory, pinned exact in the lockfile. The `sys.rs` door was
-   refused for the reason §13.3 gave: the four residents there run once at
-   the process edge, and these calls run per connection.
-2. **Where the DHT client lives.** Each component reimplements the wire by
-   §8's no-shared-crate rule — but that rule guards the *protocol authority*,
-   and a DHT client is substrate, not protocol. Recommended: build it inside
-   yog first, measure its true size, then decide whether the seat, the foot
-   and the app reimplement (a Kotlin half exists regardless) or consume it as
-   a published crate of its own. **The measurement is in** (bl-df31, §13.2):
-   at landing, 859 lines of production Rust over seven files — bencode 185,
-   the KRPC shapes 133, the signed item 142, the walk 130, the two BEP 44
-   verbs 67, the socket seam 73, the root 129 — and 880 of corpus, a fifth
-   of it the fake node. Nothing in it is yog-shaped: no world, no boundary,
-   no wire type crosses its interface, and its one dependency is `ring`.
-   That is a size a Rust consumer copies in an afternoon and a Kotlin one
-   in a day, and small enough that a published crate would cost more in
-   release machinery (a fifth repository's gate, REMOTE §3's ordering
-   hold widened to a crate nobody's protocol depends on) than the copy
-   costs. **Still open, now with a number**: reimplement per component is
-   the recommendation this measurement supports; the ruling is the
-   operator's.
-3. **Cadence defaults** (15 s poll, hourly republish, 25 s ping; and the
-   punch's 20 s window, 2 s per SYN, 300 ms linger after the first stream) —
-   stated so they can be wrong in public; revisit on evidence, not taste.
-   **The `dht::Config` evidence is in (bl-5d8d), and it moved one default:
-   the round is 1 s, down from 2 s.** bl-4263's first walk, from the
-   development box, measured only that box's egress (every bootstrap node
-   silent to a raw KRPC `ping` too). bl-5d8d ran the walk again from the
-   deployed server box — the box that carries the wire, §13.6's own
-   criterion — whose egress passes UDP/6881: a throwaway static binary
-   under `/tmp`, deleted after, driving `Dht` through `lookup` of a random
-   id, then `put` and `get` of a throwaway signed item, three runs of each
-   configuration, twice over, and a twenty-walk diagnostic trace at the
-   default. `find_node` walks, nine per configuration:
-
-   | config | converged on K = 8 | median walk | median queries sent / answered | stalled on the bootstrap |
-   |---|---|---|---|---|
-   | defaults (α 3, 2 s round, 64 queries) | 5 of 9 | 12.5 s | 22 / 13 | 4 (4.1 s each) |
-   | α = 5 | 8 of 9 | 14.6 s | 33 / 22 | 1 |
-   | 1 s round | 8 of 9 | 7.1 s | 26 / 15.5 | 1 (2.0 s) |
-   | 128 queries | 7 of 9 | 14.7 s | 25 / 12 | 2 |
-
-   BEP 44, seeded from the nodes a `find_node` walk toward the item's
-   target returned (see the defect below for why seeded):
-
-   | config | `put` time, acks | `get` time, read back |
-   |---|---|---|
-   | defaults | 6.4 s, 5 acks (1 of 3 runs; 2 seed walks stalled) | 6.2 s, seq 1 |
-   | α = 5 | 6.4 / 6.6 / 6.4 s, 4 / 4 / 7 acks | 6.1 s, seq 1, all three |
-   | 1 s round | 4.4 / 3.5 / 6.1 s, 4 / 6 / 5 acks | 4.1 / 3.2 / 4.3 s, seq 1, all three |
-   | 128 queries | 6.3 s, 3 acks (1 of 3 runs; 2 seed walks stalled) | 6.1 s, seq 1 |
-
-   Three things the numbers say. **Silence sets the pace, not distance**:
-   about 40% of queried nodes never answer (260 answers to 436 queries in
-   the trace), and a synchronous round waits out its whole deadline
-   whenever one query in it is silent, so a walk costs rounds × `round`
-   almost exactly. The answers that do come are fast — p50 153 ms, p90
-   233 ms, p95 327 ms, p99 0.9 s, and 2 of 260 (0.8%) past 1 s. **So the
-   round is the lever, and 1 s is the evidence's value**: it halves every
-   verb (walk 12.5 → 7.1 s, `put` and `get` about 6.3 → 4 s) and lost no
-   result — acks 4-6 against 3-7, every `get` read the item back. **α = 5
-   and a 128-query cap buy nothing**: α 5 sends half again as many queries
-   for a slower walk and no more acks, and no walk came near 64 queries
-   (the most any sent was 40), so the cap never bound. α, K and the cap
-   stay BEP 5's; `Config::default().round` is 1 s, pinned by
-   `the_defaults_are_bep5_and_the_measured_round`.
-
-   **Two defects the walk found, filed rather than fixed here.** *The BEP 44
-   verbs were dark on the live mainline* (bl-f6e1, **fixed**: the bootstrap
-   is now asked `find_node` and only the nodes it opens onto `get`, §13.2 —
-   the seeded runs above are that walk done by hand): `get` and `put` walked
-   `get` straight from the bootstrap list, and the bootstrap routers
-   answer `ping`, `find_node` and `get_peers` but never `get` — so unseeded,
-   every `put` and `get` failed after exactly one round, 24 of 24, in every
-   configuration. The rendezvous loop calls exactly those verbs, so on the
-   live commons presence never publishes and the inbox never reads; the
-   suite cannot see it because its fake node answers `get` from the
-   bootstrap position. *A walk stalled on the bootstrap about one time in
-   five* (bl-9408, **fixed** in what it reports, §13.2: such a walk is now a
-   dark-commons `Err` that never names a router, and the roster is four
-   routers, not two — the added two are the standard ones, not re-measured
-   from this box, where `router.utorrent.com` was already silent): from this box only one of the three bootstrap hosts
-   answers, and it answers `find_node` with one node repeated eight times,
-   so a first round learns two fresh nodes; when both are silent the walk
-   ends in two rounds and `lookup` returns the routers themselves as the
-   nearest nodes — an `Ok` a caller cannot tell from success. The cadence
-   defaults above (poll, republish, ping, punch) are untouched by this
-   measurement and still stated to be wrong in public.
-
-   **The stall's cause, measured, and its fix** (bl-d00f). A traced re-run
-   of the walk from the same box settled what bl-9408 had only reported:
-   each of the router's two answering addresses names ONE node eight times
-   — a random node, not one near the target, often the same several
-   queries running — so the pool after the bootstrap round holds two
-   nodes, and when both are silent nothing is left to ask. The suspected
-   cause — silent nodes holding slots among the K closest while live ones
-   waited past them — was real in principle but was not this stall: the
-   pool held nothing past the two seeds. The fix is both halves of §13.2's
-   frontier: silent, refusing and unreachable nodes leave it, and a dry
-   frontier short of K replies asks the door again. The live traces also
-   showed nodes near a target answering `get` with `204 Unknown query
-   type` — heard, but no reply to walk on. Ten trials per verb, default
-   `Config`, a fresh client per verb, `put` of a fresh `Keypair::generate`
-   item and `get` of it from a third client:
-
-   | build | `lookup` | `put` | `get` (after a good `put`) | acks |
-   |---|---|---|---|---|
-   | bl-65dc verification (after bl-f6e1, bl-9408) | 7/10, median 5.8 s, p90 7.4 s | 6/10, 8.8 s, 10.8 s | 5/6 hits, 7.9 s, 8.6 s | 6,8,8,7,8,8 |
-   | the same build, re-measured for bl-d00f | 5/10, 5.9 s, 9.6 s | 6/10, 8.2 s, 8.9 s | 3/6 hits, 9.2 s, 9.5 s | 8,7,6,8,7,8 |
-   | bl-d00f | **10/10**, 12.6 s, 18.1 s | **10/10**, 19.2 s, 21.3 s | **9/10 hits**, 16.5 s, 20.7 s | 8,8,7,7,8,8,7,8,7,7 |
-
-   Every failure before the fix ended at ~2.05 s — two rounds, the dark
-   door. After it none did; the one `get` miss ran to the query cap without
-   reaching any of the eight nodes that had acknowledged the `put`. **The
-   price is time**: a walk now keeps asking until K responsive nodes near
-   the target have answered, and near a target most nodes are silent, so
-   walks run about twice as long and `put` and `get` usually reach the
-   64-query cap — which, contrary to bl-5d8d's reading above, now binds.
-   Every silent query costs a whole synchronous round; that is the lever
-   for the latency, filed as its own ball, not taken here.
-
-   **The lever, taken** (bl-d9c1). The lockstep round became a sliding
-   window (§13.2): α queries in the air, each with its own 1 s deadline,
-   and a slot refilled the moment its query answers or times out. The
-   frontier and termination rules above are unchanged, except that a node
-   in the air stays on the frontier until its deadline, and the door's
-   queries hold no α slot. Measured the same way — ten trials per verb from
-   the deployed server box, a throwaway static probe under `/tmp`, deleted
-   after — at α 3 and α 8, and α 8 twice more (the third run with trace
-   lines in a throwaway build):
-
-   | build | `lookup` | `put` | `get` (after a good `put`) | acks |
-   |---|---|---|---|---|
-   | bl-d00f (lockstep, α 3), from above | 10/10, 12.6 s, 18.1 s | 10/10, 19.2 s, 21.3 s | 9/10 hits, 16.5 s, 20.7 s | 8,8,7,7,8,8,7,8,7,7 |
-   | bl-d9c1 window, α 3 | 10/10, 7.8 s, 13.3 s | 9/10, 11.4 s, 16.9 s | 9/9 hits, 11.8 s, 12.7 s | 8,8,8,8,8,7,8,8,8 |
-   | **bl-d9c1 window, α 8 (the default)** | **10/10**, 6.7 s, 8.1 s | **10/10**, 7.7 s, 8.9 s | **9/10 hits**, 7.5 s, 9.8 s | 8,8,8,7,8,7,7,8,8,8 |
-   | the same, second run | 10/10, 6.5 s, 8.8 s | 9/10, 6.7 s, 12.7 s | 9/9 hits, 7.8 s, 9.5 s | 8,8,8,8,8,8,7,7,8 |
-   | the same, traced | 10/10, 6.5 s, 10.9 s | 10/10, 7.5 s, 8.2 s | 9/10 hits, 6.8 s, 8.0 s | 8,8,8,8,8,8,7,8,8,8 |
-
-   (Median, then p90.) **The window alone cut every verb by 30-40%, and α 8
-   cut `put` and `get` by about as much again**: with ~40% of queried nodes
-   silent a slot is held a whole deadline two queries in five, so a walk's
-   pace is its window's width over the mean slot time, and the walks still
-   send close to the cap (traced: `get` walks 48-64 queries, `find_node`
-   23-64) — so the pace is the time. A typical `get` now fits inside the
-   15 s inbox poll with room to spare. **α moved from BEP 5's 3 to 8**,
-   pinned by `the_defaults_are_the_measured_window_and_deadline`; K, the
-   1 s deadline and the 64-query cap stay — the cap still nearly binds, and
-   nothing here measured a different one. A `put` whose walk succeeded and
-   whose flight drew no acknowledgement and no refusal was seen once in
-   each of the α 3 run and the second α 8 run, and not at all in a further
-   40 traced puts at α 8 (every one acknowledged by 7 or 8 holders within
-   0.6 s), so its cause is not measured; the one `get` miss per run is
-   bl-d00f's, unchanged.
-
-   **That zero-acknowledgement `put`, measured: it was a dark walk, not a
-   silent `put`** (bl-f519). Five hundred traced `put`s from the deployed
-   server box — a throwaway static probe under `/tmp`, deleted after,
-   default `Config`, a fresh client and keypair per `put`, one run of 100
-   and one of four clients × 100 — logged every holder (address, token
-   age, send, reply or deadline, transaction id) and, for any walk with
-   fewer than four token holders, every query of the walk. The holders
-   were not the problem: of 3,949 `put` queries 3,809 were acknowledged,
-   93 went unanswered and 47 were refused — 42 of them `203 invalid token`,
-   uncorrelated with the token's age (mean 4.0 s since the holder's `get`
-   reply, against 3.7 s for the acknowledged) — and no reply was matched to
-   the wrong query (17 came from another port of the asked host, under the
-   right transaction). Every failure was in the walk. Three of the 500 ended at ~11.4 s at the query cap: two with no
-   node answering (the dark `Err`), and one whose only answer was a
-   `204 Unknown query type` — an `Ok` walk with no token holder, so `put`
-   sent nothing and reported *no DHT node stored the item*, the symptom
-   bl-d9c1 saw twice in 70. Its trace names the cause: the roster resolves
-   to five addresses from that box, two answer (each naming one node) and
-   three never do, and the door re-asked all five every round — 50 of the
-   walk's 67 queries went to the door, 30 of them to the three silent
-   routers, leaving 17 for the random seeds, all of which were silent. The
-   fix is the frontier's own rule applied to the door (§13.2): a re-ask
-   knocks only at addresses that answered, so a round costs two queries
-   instead of five; and a `put` that reached no token holder now says so
-   (*no DHT node near T offered a write token*) instead of the silent-put
-   message it used to borrow.
-
-   | build | `put`s | failed | of which no token holder | acks (count of `put`s) | median, p90 |
-   |---|---|---|---|---|---|
-   | before (α 8, window) | 500 | 3 (0.6%) | 1 | 8: 369, 7: 107, 6: 14, 5: 2, 4: 2, 3: 1, 2: 1, 1: 1 | 7.7 s, 9.7 s |
-   | bl-f519 (door sheds silent routers) | 400 | **0** | 0 | 8: 301, 7: 85, 6: 12, 5: 1, 2: 1 | 8.3 s, 10.4 s |
-
-   After the fix 220 of the 400 walks re-asked the door at least once and
-   one re-asked it 14 times (33 door queries; 75 under the old rule, past
-   the cap). The failure was rare enough that 0 in 400 against 3 in 500 is
-   not by itself significant; the trace, and the fake-DHT test that ends
-   dark under the old door and converges under the new
-   (`a_silent_router_leaves_the_door_after_its_first_deadline`), carry the
-   argument. Walks are about half a second slower at the median, because
-   the queries the door no longer burns are spent walking.
+*Retired.* Its first rejection — a forwarded port and a dynamic name — is now
+the design (§15).
 
 ### 13.8 What bl-a9b0, bl-0da2 and bl-65dc measured
 
-Three paths were probed: the operator's laptop and the deployed server box,
-both behind one residential NAT, and the phone seat. The full table and method
-live in bl-a9b0's body; the cellular rows below are bl-0da2's, measured a day
-later with the phone off Wi-Fi. What §13 turns on is this.
-
-**The residential NAT is the best case a punch can ask for.** Its UDP mapping
-is endpoint-independent — one socket on one bound source port, five distinct
-STUN servers across five destination addresses and three destination ports,
-one external port every time — and its TCP mapping is endpoint-independent
-too, measured with three *concurrent* held TCP connections from a single bound
-source port to three distinct servers, twice, once from each host. Both
-protocols preserve the port when the external port is free, so the fixed punch
-port §13.2 publishes is the port a peer sees. No port-mapping protocol is
-offered (UPnP, NAT-PMP and PCP all absent) and none is needed.
-
-**Two negative facts about it, both load-bearing.** It does not hairpin: a
-synchronized TCP simultaneous open between the two hosts through the public
-address, retried for twenty seconds, connected in neither direction, and a UDP
-trial over fifteen seconds was silent too. Two devices behind one NAT
-therefore reach each other only by §13.4's direct-address rung, never by a
-punch — which is what that rung is for. And its filtering is **not**
-endpoint-independent: with an outbound TCP mapping held open from a port, three
-independent third-party fetchers aimed at that port from addresses the mapping
-had never seen all timed out while a listener bound to it accepted nothing (the
-host's own firewall is not the cause — its input policy accepts and only the
-overlay's interface chain is installed). A punch here must be a real
-simultaneous open; a "one side just listens" shortcut has no chance.
-
-**The cellular half was measured second, and it reverses the verdict.** In
-bl-a9b0's window the phone offered no shell — every port tried over the
-overlay answered connection-refused, `adb` could not connect and discovered no
-service — and it sat on the residential Wi-Fi throughout, so every direct path
-the overlay held to it was a LAN path and proved nothing. bl-0da2 got the
-missing half without a shell, by putting the phone on cellular with the
-overlay still running and reading the path the overlay's own punch settled on
-from each residential host. Two rows, and they disagree:
-
-| pair | result |
-|---|---|
-| server box — phone on cellular | **direct**, over carrier IPv4, within the first probes and still direct on re-checks minutes later |
-| laptop — phone on cellular | **relay only** — forty probes over about three minutes, every reply relayed, no direct connection established |
-
-**The carrier does publish a v4 endpoint — the earlier "no carrier-observed
-public IPv4" line was a Wi-Fi artefact and is corrected here.** bl-a9b0 read
-the phone's *advertised* endpoint set and found only a 464XLAT translator
-address (RFC 7335, not routable), a residential LAN address, the residential
-public v4, and two global IPv6 addresses whose prefixes RDAP attributes to a
-US mobile carrier — and concluded the cellular path offers no v4 to aim at.
-The advertised set is still exactly that; what it never carried is the
-endpoint that actually works. **A carrier-observed v4 endpoint exists, is
-usable, and is not advertised by the phone at all** — the translator mints it,
-and only the peer receiving the packets can read it off the wire. That is a
-design fact, not a curiosity: it is precisely why §13.2 makes presence carry
-the *observed* endpoint and not the local one, and on a cellular path the
-observed endpoint is the only one there is. **Since bl-efae the server
-publishes it** — the address the DHT's own replies agree they saw, at the
-punch port; for the phone's half, a client writing its inbox item wants the
-same vote, and it is the port rewrite below that this does not yet answer.
-
-**The shape of the carrier's port allocation, described and not classified.**
-The server box's view of the phone was stable: one external port, unchanged
-across twenty-one probes in two runs minutes apart, round trips in the
-low hundreds of milliseconds. Two things about that port are worth recording.
-It is **not** the phone's own port — every address in the phone's advertised
-set shares one high five-figure local port, and the carrier rewrote it, so the
-port preservation the residential NAT offers is absent here. And the port it
-was rewritten to is **very low, a handful above 1024** — the bottom of the
-assignable range, where a random ephemeral allocator would essentially never
-land. That is the shape of an allocator handing each subscriber a contiguous
-block anchored at the bottom of the port space, which is how carrier-grade NAT
-is usually built. It is an observation from one subscriber: a low, stable port
-is what a block allocation looks like, but one sample cannot show a cluster,
-and nothing here classifies the mapping as endpoint-independent — the
-overlay's punch succeeding is the evidence, not the port number.
-
-**Neither residential host holds routable IPv6** — no global address, no
-default v6 route, a connect to a public v6 address returns ENETUNREACH — so
-§13.3's v6-first rung is still dead on the residential side, and it is dead
-there rather than on the carrier's. That much of bl-a9b0 stands. What does not
-stand is the conclusion drawn from it: the pair is not without a usable
-address family, it simply falls to v4 and v4 works. Routable IPv6 on the
-residential side remains the cheapest thing that would make the path the easy
-case §13.3 describes; it is no longer the thing that makes a path exist.
-
-**The asymmetry between the two residential hosts is unexplained, and is the
-one result that should worry a builder.** Both sit behind the same NAT, which
-bl-a9b0 measured endpoint-independent for UDP and TCP, port-preserving, with
-no v6 and no port-mapping protocol — so the home NAT's class cannot be the
-reason one host punched and the other did not. Two candidates are worth one
-look each and neither is asserted: the laptop's overlay daemon logged a
-gateway/self-address change mid-run, which would have moved its mapping
-underneath the probe; and two hosts behind one NAT contend for the same
-preserved external port, which bl-a9b0 saw the NAT resolve by rewriting the
-second host's port. Either would make this a fact about a shared NAT rather
-than about the carrier.
-
-**The punched wire itself, measured (bl-65dc, 2026-09-28/29, server 0.0.74).**
-Everything above is a UDP result read off an overlay. bl-65dc ran the real
-thing — the phone app's rendezvous against the deployed server, the entry's
-direct address closed — and it supersedes the UDP optimism for TCP:
-
-| client path | TCP simultaneous open | cause, measured |
-|---|---|---|
-| phone on Wi-Fi behind a home NAT | **lands every time** — six dials, each landing 1–2 streams ~30 s after launch; mTLS completed, roster rendered | both NATs endpoint-independent and port-preserving (§13.3's precondition holds); only the phone's *observed* public address ever connected, never its LAN address |
-| phone on the phone's carrier | **0 of 3** — both ends SYN'd together for ~20 s; no SYN-RECV at either end | the carrier maps one local TCP port to a **different random external port per destination** (TCP STUN, 12 probes, never preserved) — symmetric for TCP, though its UDP mapping preserved the port |
-| phone on the phone's carrier, over IPv6 | **no path** | the phone's internet APN is v4-only; its global v6 addresses belong to the carrier's IMS network, which apps cannot use — a server with v6 would have nothing to aim at |
-| laptop using the server's own box as its overlay exit node | **no punch possible** (the server punched correctly) | the overlay exit-node trap, below |
-| phone on Wi-Fi, re-punching from its landed port on return to the foreground (bl-278f) | **0 of 2** — SYNs left the phone for 35 s; nothing reached the server's kernel (no SYN-RECV, no row on the punch port) | ~36 s after the served stream ended the server's home NAT held no mapping for it, and the server sends no SYNs outside a call's window — a re-punch is one-sided, so §13.3 retires that rung for the re-call |
-
-So the risk pair is decided for this carrier: **the punch cannot cross it**,
-and §13.6's criterion has fired. Giving the server routable IPv6 — named
-above as the cheapest improvement — is no exit here, because the phone's
-usable internet path has no v6 either.
-
-**The overlay exit-node trap** (bl-f612, measured on the laptop leg). A
-client whose default route is a tunnel through the server's own box
-advertises addresses that are not really its own: its local address toward a
-public destination is the overlay's (v4 and v6), and the DHT-observed address
-is the *server box's* public address, because the client's UDP leaves through
-it. The server read the call and punched within a second — at overlay
-addresses the overlay drops for server-initiated connections (SYN-SENT on the
-server's punch port, nothing arriving at the client; a plain connect and a
-ping from the server box fail while the reverse works) and at its own router.
-Nothing in yog is wrong; §13.3's assumption that a client advertises
-addresses that are really its own does not hold under an exit node. What it
-means for the operator: a client tunnelled through the server's own box needs
-no punch — its direct address works (§13.4's direct rung); a client tunnelled
-through a *third* box publishes that box's address and cannot be punched at
-all; and the overlay's ACLs decide server→client reachability separately from
-anything here. Whether `local_ips` should skip tunnel interfaces, and the
-seat refusing a rendezvous it can predict cannot land, stay bl-f612's.
-
-**Component impact.** yog: the DHT client, the rendezvous loop (publish,
-poll, verify, punch), held-connection serving, and the mint growing the
-ed25519 pairs and pairing salt. lernie: the client rendezvous (presence get,
-inbox put, punch) and the four-rung ladder. thrall and the app: the same —
-and thrall's redial discipline (bl-0a74) becomes load-bearing, since a foot
-that does not come back has no roving value. The app's half is Kotlin and
-lands in its own repository (§12.1 holds). Deploy: prove the punched path
-live from a laptop and from the phone, then walk the server off the overlay.
+*Retired, and the finding stands:* cellular CGNAT to residential NAT punches
+over UDP and not over TCP on the operator's carrier. It is the evidence §15's
+first ruling cites.
 
 ## 14. Attention without a push path — the pocketed phone (bl-80d0)
+
+> **Read against §15** (bl-7a14). This section was reasoned while §13's
+> punched wire stood. Where it says a *held* or *punched* connection, read a
+> dialled one a client keeps for the run (§15.3); there is no idle ping. Its
+> rulings stand as ruled. One of its refusals (§14.3, a dialable box for
+> push) leans on §13's rulings 1 and 2, of which §15 reversed the second —
+> that refusal is the operator's to re-rule, and is not re-ruled here.
 
 Attention is DESIGN §6's derived predicate — an unacked notify, a
 conversation that failed in a way the loop cannot mend at a tip you have not
@@ -7523,8 +6595,7 @@ header (any case; a request without one is refused, so chunked bodies are),
 and that many bytes of body. The answer is `200` with
 `Content-Type: application/json`, a `Content-Length` and `Connection: close`,
 or a bare `404` — which is also what every malformed request earns, so the
-parser has no refusal of its own. The punch port (§13.3) does not serve the
-door: a certless peer there is hung up on with nothing said.
+parser has no refusal of its own.
 
 **A public certificate is the edge's, not the server's.** The URL is `https`
 on the standard port, which a client verifies against the public web's roots,
@@ -7586,3 +6657,19 @@ restating `WIRE_HOST` — configuration, and no code.
   seat and claimed once. What stays out of channel is the first seat of all —
   the box's own, which the boot provisions — and `yog wire-certs WIRE_LEAF`,
   the hand-carried leaf, which remains for a box with no route to the door.
+
+*(As built, bl-7a14.)* All three are deleted, and `socket2` left the manifest
+with the punch. Two things this section did not foresee:
+
+- **§3.2 had no rule for a removal that is not a major**, and its ledger
+  refused one. It has the rule now — *retirement*, above — and the ledger
+  stamps the three paths at **edition 27**: `request/enroll`, `reply/enrolled`
+  and `reply/doctor`'s `rendezvous` object, which went with the loop whose
+  counters it carried.
+- **`enroll` was also the only gesture that seated a `WIRE_LEAF` leaf**, by
+  adopting it, and `offer` refuses a name a leaf was issued under. The
+  hand-carried leaf this section keeps is therefore seated by hand —
+  `<state-root>/clients/<name>/workspaces/<workspace>` on the box that holds
+  the CA — and every refusal that named `/enroll` names that file instead. A
+  gesture for it is open, and is not this section's to add.
+

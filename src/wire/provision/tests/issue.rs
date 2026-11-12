@@ -5,7 +5,7 @@
 //! Real `openssl` at test runtime, like every other test of the mint — a
 //! certificate fixture is never committed (REMOTE §8).
 
-use super::super::{CA_KEY, bundle, ensure, issue, mint};
+use super::super::{CA_KEY, bundle, ensure, issue};
 use super::described;
 use crate::git_env;
 use crate::registry::{Grade, LOCAL};
@@ -159,41 +159,25 @@ fn an_identity_the_registry_would_refuse_is_refused_here() {
         assert!(refusal.contains(LOCAL), "{name:?} → {refusal}");
         assert_eq!(
             std::fs::read_dir(tmp.path()).expect("dir").count(),
-            super::super::artifacts(crate::test_support::wire::EPHEMERAL).len(),
+            super::super::artifacts().len(),
             "{name:?} wrote something"
         );
     }
 }
 
-/// **The bundle is everything a visiting box needs, under the names it reads**
-/// (bl-9043): the pair renamed to the client end's own, the anchors, and on a
-/// box with a stated host the rendezvous pair — `rendezvous.pub` derived on
-/// the way if the box was minted before it existed. A loopback box has none.
+/// **The bundle is everything a visiting box needs, under the names it
+/// reads**: the pair renamed to the client end's own, and the anchors.
 #[test]
-fn the_bundle_carries_the_rendezvous_pair_exactly_when_minted() {
-    use crate::wire::rendezvous::material::{PUBLIC, SALT};
-    let names = |dir: &Path| -> Vec<String> {
-        bundle(dir, VISITOR)
-            .expect("bundle")
-            .into_iter()
-            .map(|(file, name)| {
-                assert!(file.is_file(), "{} is there to carry", file.display());
-                name
-            })
-            .collect()
-    };
+fn the_bundle_is_the_pair_and_the_anchors_under_the_client_ends_names() {
     let tmp = TempDir::new().expect("tmp");
-    let stated = tmp.path().join("stated");
-    mint(&stated, "192.0.2.1:7737", &[], false).expect("mint");
-    std::fs::remove_file(stated.join(PUBLIC)).expect("a box minted before bl-9043");
-    issue(&stated, VISITOR, Grade::Operator).expect("issue");
-    assert_eq!(
-        names(&stated),
-        ["client.pem", "client.key", ANCHORS, PUBLIC, SALT]
-    );
-
-    let local = tmp.path().join("local");
-    ensure(&local).expect("mint");
-    issue(&local, VISITOR, Grade::Operator).expect("issue");
-    assert_eq!(names(&local), ["client.pem", "client.key", ANCHORS]);
+    ensure(tmp.path()).expect("mint");
+    issue(tmp.path(), VISITOR, Grade::Operator).expect("issue");
+    let names: Vec<String> = bundle(tmp.path(), VISITOR)
+        .into_iter()
+        .map(|(file, name)| {
+            assert!(file.is_file(), "{} is there to carry", file.display());
+            name
+        })
+        .collect();
+    assert_eq!(names, ["client.pem", "client.key", ANCHORS]);
 }

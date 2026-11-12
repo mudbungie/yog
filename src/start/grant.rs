@@ -8,7 +8,7 @@
 //! name `clients`, because litany's permit gate is *in the grant OR injected by
 //! the host*, and injecting beside a grant is granting. It is the right law —
 //! a compactor whose grant is empty had `bash` refused and then ran thirty
-//! shell calls on an enrolled machine through `clients {"op":"load"}` — and it
+//! shell calls on a registered machine through `clients {"op":"load"}` — and it
 //! left every workspace on the wrong side of it: `clients` is **yog's** tool,
 //! litany's shipped template cannot name it, so after bl-52b7 no role in any
 //! workspace, new or existing, could reach a foot.

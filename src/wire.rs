@@ -49,9 +49,6 @@ pub mod material;
 /// The mint (REMOTE §1.4, §8; bl-ae05) — the one `openssl` recipe, spent by the
 /// server's boot and by `yog wire-certs` alike.
 pub mod provision;
-/// The punched wire's server end (REMOTE §13, bl-4263): presence, the inbox
-/// poll, the punch, and held-connection serving.
-pub mod rendezvous;
 pub mod tls;
 
 /// **How often a seat re-asks its standing set** — human cadence (REMOTE §3),
@@ -122,14 +119,9 @@ pub fn listen(
 /// same sentence, kept in RAM so it can be *asked for*: never written, never
 /// derived from, and empty in every process that did not bind (a test, the §4.3
 /// pilot, a server whose bind was refused), which is the honest reading.
-///
-/// **It carries the punched wire's counters too** (REMOTE §13.4, bl-355c) —
-/// the second door's facts about this process, shared with the loop by handle
-/// for the same reason, and all zero where no loop started.
 #[derive(Clone, Default)]
 pub struct Listening {
     bound: Arc<std::sync::OnceLock<String>>,
-    rendezvous: Arc<rendezvous::Stats>,
 }
 
 impl Listening {
@@ -143,17 +135,6 @@ impl Listening {
     /// What was bound, or `None` where nothing did.
     pub fn address(&self) -> Option<String> {
         self.bound.get().cloned()
-    }
-
-    /// The handle the rendezvous loop counts into.
-    pub(crate) fn rendezvous(&self) -> Arc<rendezvous::Stats> {
-        Arc::clone(&self.rendezvous)
-    }
-
-    /// The loop's standing as `/doctor` hands it over — `None` where nothing
-    /// bound, since only a server has a loop to speak of.
-    pub(crate) fn standing(&self) -> Option<rendezvous::Standing> {
-        self.address().map(|_| self.rendezvous.standing())
     }
 }
 

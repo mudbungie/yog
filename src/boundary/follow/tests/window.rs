@@ -33,7 +33,7 @@ fn capture(dir: &Path, exit_code: i32) {
     .expect("output");
 }
 
-/// **The beat this ball exists for.** A command dispatched to an enrolled box
+/// **The beat this ball exists for.** A command dispatched to a registered box
 /// is on a frame as it is posted — naming the tool, the machine and the command
 /// line — and its status is on the frame after the capture lands, while the
 /// prose says nothing at all. Gated on the fold moving, neither frame exists.

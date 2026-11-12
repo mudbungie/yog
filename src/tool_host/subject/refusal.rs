@@ -42,7 +42,7 @@ pub fn unconsented(name: &str, advertisers: &[String]) -> String {
         return format!(
             "no tool of that name is loaded in this conversation, this server \
              does not implement {name}, and no machine of this workspace \
-             advertises it; the operator enrolls a thrall on the box that holds \
+             advertises it; the operator offers a thrall on the box that holds \
              this server's worktrees, with \"subject_cwd\": true on a {name} \
              entry in its tools.json — {NOT_A_REMEDY}"
         );

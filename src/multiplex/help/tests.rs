@@ -176,7 +176,8 @@ fn the_mint_page_names_every_setting_it_reads() {
     }
     // And the half a mint cannot perform: a leaf is issued into no workspace,
     // so the page names the act that seats it (bl-6b14).
-    assert!(text.contains("/enroll"), "the enrolment is unnamed: {text}");
+    assert!(text.contains("/offer"), "the offer is unnamed: {text}");
+    assert!(text.contains("clients/<name>/workspaces"), "{text}");
 }
 
 /// The probe is recognized only when the whole argv *is* the flag (§8.5's

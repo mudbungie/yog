@@ -1,5 +1,5 @@
 //! **The closed set, and the two facts that keep a machine out of it**
-//! (bl-fe43, bl-81cc): the enumeration itself, an enrolled thrall that
+//! (bl-fe43, bl-81cc): the enumeration itself, a registered thrall that
 //! advertises a server act and still never hears about the call, and the
 //! invocation id every spawn carries.
 
@@ -41,12 +41,12 @@ fn the_ten_names_are_server_acts_and_nothing_else_is() {
     assert!(!is("write_summary_2"));
 }
 
-/// **Compaction never reaches a thrall's mailbox**, even with one enrolled and
+/// **Compaction never reaches a thrall's mailbox**, even with one registered and
 /// its tools loaded: the pair's subject is the conversation, so no invocation
 /// is queued at the server at all. The loaded set is present precisely so the
 /// beat can say the router had a machine to route to and did not use it.
 #[test]
-fn a_server_act_never_reaches_an_enrolled_thralls_mailbox() {
+fn a_server_act_never_reaches_a_registered_thralls_mailbox() {
     let root = TempDir::new().expect("tmp");
     loaded::add(
         root.path(),

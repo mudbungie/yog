@@ -98,7 +98,6 @@ impl Action {
             | Action::Pin { .. }
             | Action::ClearTrail
             | Action::Advertise { .. }
-            | Action::Enroll(_)
             | Action::Offer(_)
             | Action::Route(_)
             // A sign-in writes a credential into a wall, not a ref in a

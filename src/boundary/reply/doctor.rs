@@ -1,49 +1,23 @@
-//! **The doctor's answer in both directions** (bl-28f4, bl-355c): the rows,
-//! and the punched wire's counters as one `rendezvous` object beside them —
-//! cut off the roster on `prices`' seam once the answer grew a key of its own.
-//!
-//! `rendezvous` is **absent, never null**, for its two readings: the answering
-//! process has no listener and so no loop to speak of, or the server predates
-//! edition 21. Present, every one of its six edition-21 keys is required;
-//! `accepted` (edition 22, bl-5276) is read as `0` where an older server
-//! leaves it out, and typed where it is said.
+//! **The doctor's answer in both directions** (bl-28f4): one row per check,
+//! cut off the roster on `prices`' seam.
 
 use serde_json::{Map, Value, json};
 
 use super::rows::decode::rows_of;
-use crate::boundary::codec::fields::{bool_of, opt, opt_val, str_of, u64_of};
-use crate::doctor::{Report, Row};
-use crate::wire::rendezvous::Standing;
+use crate::boundary::codec::fields::{bool_of, opt, str_of};
+use crate::doctor::Row;
 
 /// The reply kind, named once for both directions.
 pub(super) const KIND: &str = "doctor";
 
 /// The whole answer as one object.
-pub(super) fn reply(report: &Report) -> Value {
-    let mut map = Map::new();
-    map.insert("ok".to_owned(), json!(true));
-    map.insert("kind".to_owned(), json!(KIND));
-    map.insert(
-        "rows".to_owned(),
-        Value::Array(report.rows.iter().map(row).collect()),
-    );
-    if let Some(s) = &report.rendezvous {
-        map.insert(
-            "rendezvous".to_owned(),
-            json!({ "active": s.active, "published": s.published, "calls": s.calls,
-                    "punched": s.punched, "served": s.served, "accepted": s.accepted,
-                    "last_poll_unix": s.last_poll_unix }),
-        );
-    }
-    Value::Object(map)
+pub(super) fn reply(rows: &[Row]) -> Value {
+    json!({ "ok": true, "kind": KIND, "rows": rows.iter().map(row).collect::<Vec<_>>() })
 }
 
 /// The inverse of [`reply`].
-pub(super) fn report_of(o: &Map<String, Value>) -> Result<Report, String> {
-    Ok(Report {
-        rows: rows_of(o, row_of)?,
-        rendezvous: opt_val(o, "rendezvous", standing_of)?,
-    })
+pub(super) fn rows(o: &Map<String, Value>) -> Result<Vec<Row>, String> {
+    rows_of(o, row_of)
 }
 
 /// One check, as every seat renders it (bl-28f4): what was examined, whether
@@ -70,20 +44,5 @@ fn row_of(v: &Value) -> Result<Row, String> {
         ok: bool_of(o, "ok")?,
         fact: str_of(o, "fact")?,
         remedy: opt(o, "remedy", str_of)?,
-    })
-}
-
-/// The loop's standing, read back strictly: every key, each of its type —
-/// the one post-21 key defaulted where absent.
-fn standing_of(v: &Value) -> Result<Standing, String> {
-    let s = v.as_object().ok_or("doctor: rendezvous is not an object")?;
-    Ok(Standing {
-        active: bool_of(s, "active")?,
-        published: u64_of(s, "published")?,
-        calls: u64_of(s, "calls")?,
-        punched: u64_of(s, "punched")?,
-        served: u64_of(s, "served")?,
-        accepted: opt(s, "accepted", u64_of)?.unwrap_or(0),
-        last_poll_unix: u64_of(s, "last_poll_unix")?,
     })
 }
