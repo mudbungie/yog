@@ -93,9 +93,16 @@ said=$(docker exec yog yog --version 2>&1 || true)
 address=$(docker exec yog cat /state/yog/wire/address 2>/dev/null || true)
 [ -n "$address" ] || fail 'the server bound no wire: no address in its data root'
 
-probe=$(docker exec yog timeout 10 openssl s_client -connect "$address" 2>&1 || true)
-printf '%s\n' "$probe" | grep -q 'Server certificate' \
-    || fail "nothing answered TLS at $address"
+# The address file is a LIST, one endpoint per line in dial order (REMOTE 15.3),
+# and the listener is one socket behind all of them: the first endpoint that
+# answers proves it. A public name may not route from inside the box that
+# serves it, so an endpoint that does not answer is passed over, not a verdict.
+answered=
+for endpoint in $address; do
+    probe=$(docker exec yog timeout 10 openssl s_client -connect "$endpoint" 2>&1 || true)
+    case $probe in *'Server certificate'*) answered=$endpoint; break ;; esac
+done
+[ -n "$answered" ] || fail "nothing answered TLS at any of: $(echo $address)"
 
-printf 'server answering: %s, wire at %s\n' "$image" "$address"
+printf 'server answering: %s, wire at %s\n' "$image" "$answered"
 REMOTE
