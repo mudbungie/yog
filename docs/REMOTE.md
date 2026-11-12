@@ -45,7 +45,8 @@ id is cited, the path to the ruling is not narrated.
    named work, none on a decision.
 3. **The channel is mTLS**, and the wrapper must be strong enough to leave on
    the public internet. Both ends authenticate with certificates.
-4. **Bootstrapping is explicitly out-of-channel.** The starting assumption is
+4. **Bootstrapping is by offer** *(reversed 2026-11-11, §15; what follows is the
+   ruling as it stood)*. **Bootstrapping is explicitly out-of-channel.** The starting assumption is
    an operator who administers both machines. Key and certificate provisioning
    is an act the operator performs on the boxes; yog carries no enrollment,
    pairing, or account protocol in the channel, ever.
@@ -3566,6 +3567,10 @@ not hold.
 
 ### 8.4 Enrollment, and the QR envelope (bl-f4e3)
 
+> **Superseded by §15.1** (operator rulings 2026-11-11): a device registers by
+> an offer it claims with its own key, and no private key travels. This section
+> stands as the record until the `enroll` act is deleted.
+
 **The ruling** (operator, 2026-08-30): the boundary gains one act, spelled
 `enroll` (American spelling, everywhere in this tree). It mints a new device's
 leaf on the server's own CA, seats that client's registration, answers the
@@ -6312,6 +6317,10 @@ repo, loud and machine-checked in both directions.
 
 ## 13. The punched wire — dynamic reachability (bl-4d56, reworked bl-aad5; operator rulings 2026-08-31)
 
+> **Superseded by §15** (operator rulings 2026-11-11). The server listens on a
+> public port and this whole section is retired; it stands as the record of
+> what was built and measured until the code that implements it is deleted.
+
 §8 makes the address one fact with one home, and §1's canonical scene puts the
 server on a home box behind residential NAT: its public address is not its
 own fact, it cannot accept an unsolicited inbound connection, and the phone
@@ -7333,3 +7342,151 @@ not price: `PROTOCOL` is 10 (§14.1). lernie: nothing — the window never sleep
 mid-ask, and it reads attention off `Query::Workspaces`' rollups rather than
 this lane. The app: rungs 1 and 2, filed and tracked in its own repository
 (§12.1); rung 1 needs nothing from anyone and can land today.
+
+## 15. The public wire and the offer (bl-54d3; operator rulings 2026-11-11)
+
+Three rulings, same day, and each reverses something this document held:
+
+1. **The server listens on a public port.** §13's ruling 2 — *no publicly
+   dialable listener at all* — is reversed. The punch measured out as
+   unreliable where it mattered (§13.8: the cellular pair does not punch over
+   TCP) and a held line that cannot be re-made is not stability. A forwarded
+   port and a dynamic name are the boring answer §13.7 rejected; they are now
+   the answer.
+2. **A new device registers itself, by an offer.** §1.4's *yog carries no
+   enrollment, pairing, or account protocol in the channel, ever* is reversed,
+   and §8.4's carried envelope is retired with it. The envelope put a private
+   key in a QR symbol and on a clipboard; a copy of it was the device.
+3. **Smaller, not layered.** §13's rendezvous, each component's DHT client and
+   §8.4's envelope are deleted in the act that lands this, not kept beside it.
+
+What survives untouched: the wire is mTLS on the operator's own CA (§4), every
+gesture is scoped by the certificate (§4.1), and the boundary gains acts, never
+a second surface (§3).
+
+### 15.1 The offer, in the order it happens
+
+**1. An operator seat mints the offer.** `offer` names a workspace, a client
+name and a grade — §8.4's three fields, judged by §4.1's same rule — and the
+server records a pending offer: a **code** of eight characters from a 32-symbol
+alphabet (40 bits, drawn from the system's random source), an expiry ten
+minutes out, and nothing else. The reply kind is `offered` and carries the
+**registration URL**, `https://<host>/yog/register/<code>`, where `<host>` is
+the first host the server states (§15.3). That string is the whole of what
+travels to the new device, by eye, by paste or as a QR symbol. It carries no
+key and no certificate.
+
+**2. The new device claims it, with a key it made.** The device generates its
+own P-256 key pair and POSTs the public half, as PEM, to the URL. The server
+finds the open offer, signs a leaf for that public key under the offered name
+and grade, marks the offer **claimed**, and answers one JSON object:
+
+| Field | Meaning |
+|---|---|
+| `workspace` | what the entry is filed under on the device |
+| `name`, `grade` | as offered |
+| `address` | the list a client dials, in order (§15.3) |
+| `ca` | the operator CA, PEM |
+| `cert` | the leaf just signed, PEM |
+
+The private key never leaves the device. A code that is unknown, expired or
+already claimed answers the same `404` with no body: a claim is single-use, and
+which of the three it was is not said to a stranger.
+
+**3. Both ends show one confirmation word.** It is the first six characters, in
+the code's own alphabet, of SHA-256 over the device's public key (DER) followed
+by the CA certificate (DER). The device computes it from what it sent and what
+it was handed; the server computes it from what it signed and what it holds.
+An impostor between them — a hijacked name, a proxy that answered the claim
+itself — cannot make the two agree, because it does not hold the operator's CA
+key and cannot make the device's key its own.
+
+**4. The device dials the wire with its new certificate.** The leaf
+authenticates and is registered in no workspace, which is a state this
+document already has (§8.4's *registered in nothing*): every gesture answers
+§4.1's refusal. The server marks the offer **proved** — the holder of the
+private key has spoken, which a copy of the URL never could.
+
+**5. The operator approves, and only then is the client seated.** `offers`
+lists a workspace's pending offers with each one's state and confirmation word.
+`approve` names one; it is refused unless the offer is proved, and it seats the
+registration `(client, workspace)` exactly as §8.4's act did. `decline` deletes
+the offer and the leaf it issued. The operator's whole job is to read the word
+off the new device and approve the row that matches.
+
+**What a stolen URL buys.** Claimed before the device: the device's own claim
+answers `404`, the operator sees a row whose word matches nothing in front of
+them, and declines it — the thief holds a certificate seated nowhere. Claimed
+after: `404`. There is no state in which two parties hold what one offer
+issued.
+
+**No rate limiter, by arithmetic.** Forty bits against a ten-minute life is
+beyond any request rate this listener serves; what is bounded instead is
+resource — a small fixed number of certless connections at once, a request of
+at most a few kilobytes, a few seconds to say it.
+
+### 15.2 The registration door is the wire's own listener
+
+**A connection that presents no certificate may say exactly one thing.** The
+listener's client verification becomes optional: a peer with a certificate is
+the wire, byte for byte as before; a peer with none is offered one HTTP/1.1
+request, `POST /yog/register/<code>`, answered and closed. Nothing else is
+routed, and a certless peer never reaches `frame` or `dispatch`. One port, one
+listener, no second process and no setting.
+
+**A public certificate is the edge's, not the server's.** The URL is `https`
+on the standard port, which a client verifies against the public web's roots,
+and that certificate is held and renewed by whatever fronts the box — a
+reverse proxy that forwards the one path to the wire port over TLS, trusting
+the operator CA. yog acquires nothing, renews nothing and links no ACME
+client. A deployment with no such edge states the wire port in the URL and the
+confirmation word carries the whole of the server's authentication, which it
+is sufficient for on its own (§15.1 step 3); the public certificate is a
+second layer and the first-contact route that crosses a network permitting
+only the standard port.
+
+**Residual, named.** A network that intercepts TLS cannot carry the wire at
+all: mutual TLS does not survive a proxy that terminates it. Registration
+crosses such a network; the wire does not. The exit, if it is ever needed, is
+the wire inside the edge's HTTPS with the client proving its key by signature
+— a different transport authentication, not built, and to be measured before
+it is designed.
+
+### 15.3 What a server binds, and the list a client dials
+
+§8 made `address` one line that named both what the server binds and what a
+seat dials. They are two facts and this section separates them.
+
+**The server binds every interface on the stated port** whenever its address
+names anything other than loopback; reach is the firewall's question. A
+loopback address binds loopback, as it always has. The bind no longer resolves
+a name at boot, so a box whose resolver is down still serves.
+
+**`address` is a list, one endpoint per line, and `WIRE_HOST` writes all of
+it.** §8 already made `WIRE_HOST` a list for the certificate; the file now
+carries the same list, each host on the stated port, in the order stated. The
+first is the public name and the one a URL is built from.
+
+**A client dials the list in order and keeps what worked for the run.** That
+is the whole ladder: the held line, then each endpoint in turn. It is also the
+answer to a router that will not hairpin — a box on the server's own network
+cannot reach the public name, so the operator states the LAN address second
+and a client at home falls through to it. Dialling a private address from
+somebody else's network is harmless: whatever answers there cannot present the
+operator's CA. Removing the fallback, the day the router is fixed, is
+restating `WIRE_HOST` — configuration, and no code.
+
+### 15.4 What this retires
+
+- **§13 entire** — the rendezvous, the punch, the held-line pings as NAT
+  keepalive, `rendezvous.key`/`rendezvous.pub`/`pairing.salt`, and the DHT
+  client in every component. A server whose wire root still holds the three
+  files ignores them.
+- **§8.4's `enroll` act and its envelope**, in all three takings (the QR, the
+  pasted line, `--into`). `offer`/`offers`/`approve`/`decline` replace the one
+  act; they are additions and the removal answers in band, so `PROTOCOL` does
+  not move (§3.2) and the ledger stamps an edition.
+- **§1.4** now reads: bootstrapping is by offer, minted by an operator-grade
+  seat and claimed once. What stays out of channel is the first seat of all —
+  the box's own, which the boot provisions — and `yog wire-certs WIRE_LEAF`,
+  the hand-carried leaf, which remains for a box with no route to the door.
