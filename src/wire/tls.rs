@@ -5,9 +5,9 @@
 //! authentication story.** The server requires a client certificate that chains
 //! to the operator CA; the client requires the same of the server and presents
 //! its own. There is no password, token or account anywhere in the channel — so
-//! there is nothing in it to phish, rotate or leak, and an unauthenticated
-//! connection gets a **TLS refusal, not a yog reply**: the handshake fails
-//! inside rustls and no byte of the boundary is ever reached.
+//! there is nothing in it to phish, rotate or leak, and a connection with no
+//! certificate gets **no yog reply**: no byte of the boundary is ever reached,
+//! and the one thing it may say is the registration door's (REMOTE §15.2).
 //!
 //! **The provider is named, never defaulted.** `ServerConfig::builder()` reads a
 //! process-global default and *panics* when none is installed or two are — a
@@ -23,14 +23,22 @@ use std::path::Path;
 use std::sync::Arc;
 
 /// The server's end: verify a client certificate against the operator CA, and
-/// present the server leaf. A connection presenting nothing, or a leaf the CA
-/// did not issue, never completes the handshake.
+/// present the server leaf. A leaf the CA did not issue never completes the
+/// handshake.
+///
+/// **A connection presenting nothing does complete it** (REMOTE §15.2,
+/// bl-9ea6), and is then not the wire: the listener asks what the peer
+/// presented before it reads a byte, and a peer with no certificate is offered
+/// the registration door's one request and nothing else. Verification is
+/// optional here so that there is one port and one listener; what a certless
+/// peer may reach is decided there, not here.
 pub fn server_config(m: &Material) -> Result<Arc<ServerConfig>, String> {
     let provider = Arc::new(rustls::crypto::ring::default_provider());
     let verifier = rustls::server::WebPkiClientVerifier::builder_with_provider(
         Arc::new(anchors(&m.anchors)?),
         Arc::clone(&provider),
     )
+    .allow_unauthenticated()
     .build()
     .map_err(|e| format!("{}: client verifier: {e}", m.anchors.display()))?;
     let (chain, key) = identity(&m.chain, &m.key)?;

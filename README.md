@@ -226,6 +226,25 @@ connects, advertises to nobody and is refused with that sentence. `/enroll`
 registers it, and hands back the material; on a device you can reach a screen or
 a shell on, `/enroll` alone does both halves.
 
+**A device that can reach the server: the offer** (REMOTE §15.1). No file is
+carried and no private key travels. From a seat in the workspace the device
+should serve:
+
+```
+/offer phone            # answers one URL — good once, for ten minutes
+/offers                 # open → claimed → proved, with the confirmation word
+/approve phone          # once the word matches the one on the device
+```
+
+The device makes its own key pair and POSTs the public half to the URL; the
+server signs a leaf for it and both ends show one six-character word. The
+device then dials the wire, which is what proves it holds the key, and
+`/approve` seats it. Until then everything it says is refused. `/decline`
+voids an offer; one somebody already claimed keeps its name spent, because a
+certificate cannot be recalled. The URL is served by the wire's own port — a
+connection with no certificate may say that one request and nothing else — so
+a reverse proxy holding a public certificate forwards `/yog/register/` to it.
+
 A foot carries a **foot-grade** leaf and nothing else — `thrall` refuses to open
 on an operator-grade certificate, and `WIRE_FOOT=1` is the only thing that mints
 one. Operator grade (the default) is a seat and a tool host under one name.

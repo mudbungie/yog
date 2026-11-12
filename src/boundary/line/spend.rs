@@ -27,14 +27,15 @@ pub const CEILING_USAGE: &str = "/ceiling <usd> | /ceiling off";
 const OFF: &str = "off";
 
 /// Read one of the family's three lines, or hand a verb that is not one of
-/// them on to the populating reads — the grammar's one dead end — so the
-/// router's table stays inside its own line budget.
+/// them on — to the offer family, and through it to the populating reads, the
+/// grammar's one dead end — so the router's table stays inside its own line
+/// budget.
 pub(super) fn read(verb: &str, tail: &str, ctx: &Context) -> Result<Gesture, String> {
     match verb {
         PRICES => args::none(tail, verb).map(|()| ask(Query::Prices)),
         PRICE => price(tail),
         CEILING => ceiling(tail),
-        _ => super::queries::queries(verb, tail, ctx),
+        _ => super::offer::read(verb, tail, ctx),
     }
 }
 

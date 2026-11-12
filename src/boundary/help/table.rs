@@ -12,6 +12,7 @@ use super::{HelpRow, Surface};
 pub mod capability;
 pub mod driving;
 pub mod following;
+pub mod offer;
 pub mod queries;
 /// The §3.5 spend family's three (bl-53d1), joined back after the standing
 /// verbs, whose subject they share.

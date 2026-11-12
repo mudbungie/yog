@@ -172,6 +172,8 @@ fn every_workspace_bearing_action_answers_with_its_name() {
             address: None,
         }),
     ];
+    // The offer's four name the workspace the client will be seated in.
+    named.extend(offers().map(Action::Offer));
     named.extend(nested());
     for action in named {
         assert_eq!(action.workspace().as_deref(), Some(WS), "{action:?}");
@@ -261,4 +263,25 @@ fn the_query_table_answers_both_ways() {
     ] {
         assert_eq!(query.workspace(), None, "{query:?}");
     }
+}
+
+/// REMOTE §15.1's four acts, each naming [`WS`].
+fn offers() -> [crate::registry::offer::Verb; 4] {
+    use crate::registry::offer::Verb;
+    let (workspace, name) = (WS.to_owned(), "phone-1".to_owned());
+    [
+        Verb::Mint {
+            workspace: workspace.clone(),
+            name: name.clone(),
+            grade: crate::registry::Grade::Foot,
+        },
+        Verb::List {
+            workspace: workspace.clone(),
+        },
+        Verb::Approve {
+            workspace: workspace.clone(),
+            name: name.clone(),
+        },
+        Verb::Decline { workspace, name },
+    ]
 }

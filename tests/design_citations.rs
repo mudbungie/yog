@@ -122,11 +122,12 @@ const FOREIGN: &[&str] = &[
     // "Rejections" and has no subsections at all, which the sibling test keeps
     // honest: the day it grows a §14.1, this entry fails rather than masking it.
     "14.1",
-    // REMOTE.md's §15 family — §15.3 (what a server binds, and the address
-    // list a client dials, bl-52ae) — cited prefixed ("REMOTE §15.3") like
-    // every other foreign key. DESIGN §15 is the retired implementation epic
-    // and has no subsections, which the sibling test keeps honest.
-    "15.3",
+    // REMOTE.md's §15 family — §15.1 (the offer) and §15.2 (the registration
+    // door), bl-9ea6, and §15.3 (what a server binds, and the address list a
+    // client dials, bl-52ae) — cited prefixed ("REMOTE §15.3") like every
+    // other foreign key. DESIGN §15 is the retired implementation epic and
+    // has no subsections, which the sibling test keeps honest.
+    "15.1", "15.2", "15.3",
     // REMOTE.md's §5.4 — the thrall and the local execution corpus, and since
     // bl-dfce the home of the ruling that the compactor's procedure pair is an
     // server act yog answers itself. Cited "REMOTE §5.4" like the rest; DESIGN

@@ -46,6 +46,7 @@ mod config;
 mod enroll;
 mod fan;
 mod fork;
+mod offer;
 mod parse;
 mod queries;
 mod spell;

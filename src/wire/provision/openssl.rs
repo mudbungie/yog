@@ -11,12 +11,16 @@
 //! yog links no certificate library (AGENTS.md rule 6) — this shells to the
 //! tool an operator would use, through the crate's one command constructor.
 
-use super::{ANCHORS, CA_KEY, CURVE, DAYS, LOOPBACK, private};
+use super::{ANCHORS, CA_KEY, CURVE, DAYS, private};
 use crate::git_env;
 use crate::registry::Grade;
 use crate::wire::material::Role;
-use std::net::IpAddr;
 use std::path::Path;
+
+/// What a certificate says — its subject, its alternative names, its usage.
+mod says;
+use says::subject;
+pub(super) use says::{eku, san};
 
 /// The extension file's suffix. Scratch, deleted with the request it rode
 /// beside.
@@ -61,12 +65,14 @@ pub(super) fn ca(dir: &Path) -> Result<(), String> {
 /// X.509 facts below. `hosts` is every way in the server answers to; a client
 /// leaf ignores it, because nothing dials a client.
 pub(super) fn leaf(dir: &Path, role: Role, hosts: &[String]) -> Result<(), String> {
+    let subject = format!("/CN={}", role.common_name());
     issue(
         dir,
         &role.leaf(),
-        &format!("/CN={}", role.common_name()),
+        &subject,
         &san(role, hosts),
         eku(role),
+        None,
     )
 }
 
@@ -91,24 +97,33 @@ pub(super) fn leaf(dir: &Path, role: Role, hosts: &[String]) -> Result<(), Strin
 /// is the bare common name it always was, so every leaf minted before the grade
 /// existed reads back exactly as it did.
 pub(super) fn stated_leaf(dir: &Path, cn: &str, grade: Grade) -> Result<(), String> {
-    issue(
-        dir,
-        cn,
-        &subject(cn, grade),
-        &format!("DNS:{cn}"),
-        eku(Role::Client),
-    )
+    let (subject, san) = (subject(cn, grade), format!("DNS:{cn}"));
+    issue(dir, cn, &subject, &san, eku(Role::Client), None)
 }
 
-/// The subject a stated leaf is minted under. Most-general attribute first,
-/// which is DER's own order and the reverse of how RFC 4514 renders it — so
-/// `OU=foot` precedes the common name, and the walk that reads the name back
-/// (which takes the LAST one) is unaffected either way.
-fn subject(cn: &str, grade: Grade) -> String {
-    match grade {
-        Grade::Operator => format!("/CN={cn}"),
-        Grade::Foot => format!("/OU={}/CN={cn}", crate::registry::peer::FOOT),
+/// [`stated_leaf`] for a public key **somebody else made** (REMOTE §15.1,
+/// bl-9ea6): the same subject, SAN and EKU, signed over `public` — a PEM
+/// `SubjectPublicKeyInfo` — instead of over a key minted here. The recipe is
+/// the one above with one flag more: the request is still made with a scratch
+/// key, because `x509 -req` wants a request to read the subject from, and
+/// `-force_pubkey` then replaces what the certificate binds. That spelling is
+/// the one OpenSSL and LibreSSL both have; `x509 -new` is OpenSSL 3 alone.
+///
+/// The scratch key authenticates nothing and is removed whether or not the
+/// signature was made, with the rest of the scratch: a `<cn>.key` left behind
+/// would read as half a pair to every later act under that name.
+pub(super) fn offered_leaf(
+    dir: &Path,
+    cn: &str,
+    grade: Grade,
+    public: &Path,
+) -> Result<(), String> {
+    let (subject, san) = (subject(cn, grade), format!("DNS:{cn}"));
+    let signed = issue(dir, cn, &subject, &san, eku(Role::Client), Some(public));
+    for scratch in ["key", "csr", EXT] {
+        let _ = std::fs::remove_file(dir.join(format!("{cn}.{scratch}")));
     }
+    signed
 }
 
 /// The issuance itself: a key, a bare request, then the signature that carries
@@ -124,7 +139,14 @@ fn subject(cn: &str, grade: Grade) -> String {
 /// model besides: what a certificate asserts is decided by whoever signs it,
 /// not by whoever asked. One recipe, both toolsets — never a second recipe and
 /// never a platform gate.
-fn issue(dir: &Path, name: &str, subject: &str, san: &str, eku: &str) -> Result<(), String> {
+fn issue(
+    dir: &Path,
+    name: &str,
+    subject: &str,
+    san: &str,
+    eku: &str,
+    forced: Option<&Path>,
+) -> Result<(), String> {
     let key = dir.join(format!("{name}.key"));
     let csr = dir.join(format!("{name}.csr"));
     let ext = dir.join(format!("{name}.{EXT}"));
@@ -146,29 +168,44 @@ fn issue(dir: &Path, name: &str, subject: &str, san: &str, eku: &str) -> Result<
         "-out",
         &csr.to_string_lossy(),
     ])?;
-    tool(&[
+    let paths = [
+        ext.clone(),
+        csr.clone(),
+        dir.join(ANCHORS),
+        dir.join(CA_KEY),
+        dir.join(format!("{name}.pem")),
+        forced.map(Path::to_path_buf).unwrap_or_default(),
+    ]
+    .map(|path| path.to_string_lossy().into_owned());
+    let [ext_s, csr_s, ca, ca_key, out, public] = &paths;
+    // `-CAcreateserial`: LibreSSL's `x509` refuses to sign when the CA's
+    // serial file is absent and it was not told it may make one; OpenSSL 3
+    // accepts the flag and does the same thing. Portable, and the file is
+    // scratch.
+    let mut sign = vec![
         "x509",
         "-req",
         "-sha256",
         "-days",
         DAYS,
         "-extfile",
-        &ext.to_string_lossy(),
+        ext_s,
         "-extensions",
         SECTION,
         "-in",
-        &csr.to_string_lossy(),
+        csr_s,
         "-CA",
-        &dir.join(ANCHORS).to_string_lossy(),
+        ca,
         "-CAkey",
-        &dir.join(CA_KEY).to_string_lossy(),
-        // LibreSSL's `x509` refuses to sign when the CA's serial file is
-        // absent and it was not told it may make one; OpenSSL 3 accepts the
-        // flag and does the same thing. Portable, and the file is scratch.
+        ca_key,
         "-CAcreateserial",
         "-out",
-        &dir.join(format!("{name}.pem")).to_string_lossy(),
-    ])?;
+        out,
+    ];
+    if forced.is_some() {
+        sign.extend(["-force_pubkey", public.as_str()]);
+    }
+    tool(&sign)?;
     // Issuance scratch, not material: the request, the extension file and the
     // serial counter are all inputs to one signature and nothing reads them
     // afterwards, so the directory is left holding exactly what
@@ -180,58 +217,6 @@ fn issue(dir: &Path, name: &str, subject: &str, san: &str, eku: &str) -> Result<
     }
     private(&key, 0o600);
     Ok(())
-}
-
-/// A leaf's subject alternative name. The **server**'s names every way in the
-/// box answers to, because a seat verifies what it dialled against this list —
-/// an IP literal is an IP identity and anything else a DNS one, the same rule
-/// [`client`](super::client) reads it back by, applied to each entry alike. A
-/// client leaf's names itself: nothing dials a client.
-///
-/// **A box is reachable more than one way, and saying so is not a rotation**
-/// (bl-52f4). A host on an overlay network has a resolvable name, an overlay
-/// address and a LAN address, and different clients reach it differently — a
-/// device whose resolver is its emulator's cannot use the name, and an address
-/// the certificate omits fails *verification* rather than routing, so the error
-/// names trust where the fact is reachability. One host per certificate made
-/// the remedy `FORCE=1`, which re-founds the CA and strands every client leaf
-/// already carried away. The list is the dissolution: state every spelling
-/// once.
-///
-/// **Loopback is always on the server leaf** (bl-ae05). The local window is a
-/// client of `127.0.0.1` unconditionally — that is what the ruling means by the
-/// front door — so a server certificate that only named an operator's public
-/// host would refuse the one seat that is certain to be there. It costs one
-/// SAN entry and removes a whole class of "the window cannot reach its own
-/// server". It is appended, and the whole list is de-duplicated as it is built,
-/// so a box stated as loopback says it once.
-pub(super) fn san(role: Role, hosts: &[String]) -> String {
-    match role {
-        Role::Server => {
-            let mut names: Vec<String> = Vec::new();
-            for host in hosts.iter().map(String::as_str).chain([LOOPBACK]) {
-                let entry = if host.parse::<IpAddr>().is_ok() {
-                    format!("IP:{host}")
-                } else {
-                    format!("DNS:{host}")
-                };
-                if !names.contains(&entry) {
-                    names.push(entry);
-                }
-            }
-            names.join(",")
-        }
-        _ => format!("DNS:{}", role.common_name()),
-    }
-}
-
-/// A leaf's extended key usage: the server end authenticates as a server, and
-/// both client ends as clients.
-pub(super) fn eku(role: Role) -> &'static str {
-    match role {
-        Role::Server => "serverAuth",
-        _ => "clientAuth",
-    }
 }
 
 /// One `openssl` run. The tool is named once, here — [`run`] takes it as a

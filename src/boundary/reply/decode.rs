@@ -63,6 +63,7 @@ pub fn decode(v: &Value) -> Result<Result<Reply, String>, String> {
     receipt(kind, o)
         .or_else(|| listing(kind, o))
         .or_else(|| inspector::decode(kind, o))
+        .or_else(|| crate::registry::offer::wire::answer_of(kind, o).map(|a| a.map(Reply::Offer)))
         .unwrap_or_else(|| Err(format!("unknown reply kind {kind:?}")))
         .map(Ok)
 }

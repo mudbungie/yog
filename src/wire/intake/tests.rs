@@ -9,6 +9,9 @@ use serde_json::json;
 use std::path::PathBuf;
 use tempfile::tempdir;
 
+/// The offer, end to end over a real listener (REMOTE §15.1, §15.2).
+mod offer;
+
 /// The in-world caller as a peer — operator grade, which every intake without
 /// a certificate is (REMOTE §4.2).
 fn local() -> crate::registry::Peer {
@@ -19,10 +22,14 @@ fn local() -> crate::registry::Peer {
 }
 
 fn intake(state_root: &std::path::Path) -> Intake {
+    intake_in(crate::test_support::no_world(), state_root)
+}
+
+fn intake_in(world: crate::xdg::Env, state_root: &std::path::Path) -> Intake {
     let snap = Arc::new(crate::app::Snapshot::empty(0));
     Intake::new(Arc::new(ConsumerCtx {
         yog_binary: PathBuf::from("/no/such/yog"),
-        world: crate::test_support::no_world(),
+        world,
         litany: Cli::new("/no/such/litany"),
         bl: Cli::new("/no/such/bl"),
         state_root: state_root.to_path_buf(),

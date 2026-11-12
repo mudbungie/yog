@@ -35,6 +35,7 @@ pub(crate) fn gestures() -> Vec<Gesture> {
         login(),
         pins(),
         enroll(),
+        offer(),
         spend(),
         crate::boundary::codec::config::tests::surface(),
     ]
@@ -108,6 +109,35 @@ fn login() -> Vec<Gesture> {
         workspace: "ws".to_owned(),
         provider: "acme".to_owned(),
     })]
+}
+
+/// REMOTE §15.1's offer family (bl-9ea6) — the mint at both grades, because
+/// the grade is a two-armed vocabulary, and the three that name an offer.
+fn offer() -> Vec<Gesture> {
+    use crate::registry::offer::Verb;
+    let (workspace, name) = ("ws".to_owned(), "phone-1".to_owned());
+    [
+        Verb::Mint {
+            workspace: workspace.clone(),
+            name: name.clone(),
+            grade: crate::registry::Grade::Operator,
+        },
+        Verb::Mint {
+            workspace: workspace.clone(),
+            name: name.clone(),
+            grade: crate::registry::Grade::Foot,
+        },
+        Verb::List {
+            workspace: workspace.clone(),
+        },
+        Verb::Approve {
+            workspace: workspace.clone(),
+            name: name.clone(),
+        },
+        Verb::Decline { workspace, name },
+    ]
+    .map(|verb| Gesture::Act(crate::boundary::Action::Offer(verb)))
+    .to_vec()
 }
 
 /// REMOTE §1.4's enrollment (bl-f4e3) — **one entry per grade**, because the

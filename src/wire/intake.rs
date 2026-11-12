@@ -60,10 +60,33 @@ impl super::listener::Answerer for Intake {
         // parks for thirty seconds is stamped when it arrives rather than when
         // it ends.
         self.ctx.seen(peer);
+        // **A leaf an offer issued and nobody approved is answered nothing**
+        // (REMOTE §15.1 step 4, bl-9ea6) — ahead of both arms, and ahead of
+        // the one gesture a client registered nowhere may otherwise make:
+        // founding a workspace, which would seat it as the creator. Speaking
+        // is still what proves the offer, which is why the stamp above comes
+        // first.
+        let root = &self.ctx.state_root;
+        if crate::registry::offer::store::held(root, &peer.client) {
+            let refusal = crate::registry::offer::store::refusal(&peer.client);
+            return Box::new(std::iter::once(crate::boundary::reply::refusal(&refusal)));
+        }
         match self.ctx.follow(peer, &request) {
             Some(frames) => frames,
             None => Box::new(std::iter::once(self.ctx.answer_as(peer, &request))),
         }
+    }
+    /// **The registration door's one request** (REMOTE §15.2, bl-9ea6): a
+    /// certless peer's code and body, handed to the claim with this server's
+    /// own roots and clock. It meets no codec and no dispatch.
+    fn register(&self, code: &str, body: &[u8]) -> Option<Value> {
+        crate::registry::offer::claim::claim(
+            &self.ctx.state_root,
+            &crate::wire::material::dir(&self.ctx.world),
+            self.ctx.clock.unix(),
+            code,
+            body,
+        )
     }
 }
 

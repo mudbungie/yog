@@ -49,16 +49,7 @@ pub(super) fn enroll(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, S
             crate::registry::peer::FOOT
         ));
     }
-    let grade = match args::optional_word(&rest, verb)?.as_deref() {
-        None | Some("lernie") => crate::registry::Grade::default(),
-        Some("thrall") => crate::registry::Grade::Foot,
-        Some(word) => crate::boundary::codec::grade_of(word).map_err(|e| {
-            format!(
-                "/{verb}: {e} — say thrall or foot for a tools-only device, lernie or \
-                     operator (the bare default) for a seat"
-            )
-        })?,
-    };
+    let grade = super::offer::grade(&rest, verb)?;
     Ok(Gesture::Act(Action::Enroll(
         crate::registry::enroll::Request {
             workspace: args::workspace(ctx, verb)?,

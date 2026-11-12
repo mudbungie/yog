@@ -40,3 +40,101 @@ pub(crate) fn material(dir: &Path, role: Role, address: &str) -> Material {
         address: address.to_owned(),
     }
 }
+
+/// **A device's own key pair, made the way a device makes it** (REMOTE §15.1):
+/// by the device, never by this box's mint. `ring` generates it at test
+/// runtime, so no key is committed here either.
+pub(crate) struct Device {
+    /// The private half, PKCS#8 DER — what a TLS client presents with.
+    pub(crate) pkcs8: Vec<u8>,
+    /// The public half, DER `SubjectPublicKeyInfo` — what the word is over.
+    pub(crate) public: Vec<u8>,
+}
+
+impl Device {
+    /// A fresh P-256 pair.
+    pub(crate) fn new() -> Self {
+        use ring::signature::{ECDSA_P256_SHA256_ASN1_SIGNING, EcdsaKeyPair, KeyPair};
+        let rng = ring::rand::SystemRandom::new();
+        let pkcs8 = EcdsaKeyPair::generate_pkcs8(&ECDSA_P256_SHA256_ASN1_SIGNING, &rng)
+            .expect("a key pair")
+            .as_ref()
+            .to_vec();
+        let pair = EcdsaKeyPair::from_pkcs8(&ECDSA_P256_SHA256_ASN1_SIGNING, &pkcs8, &rng)
+            .expect("the pair just made");
+        // The prefix ends in the point's own leading `04`, which ring's
+        // encoding of the point also carries — so all but that last byte.
+        let prefix = &crate::registry::offer::claim::P256[..26];
+        let public = [prefix, pair.public_key().as_ref()].concat();
+        Self { pkcs8, public }
+    }
+
+    /// The registration request's body: `{"public_key": "<PEM>"}`.
+    pub(crate) fn body(&self) -> Vec<u8> {
+        serde_json::json!({ "public_key": crate::wire::provision::pem::public_key(&self.public) })
+            .to_string()
+            .into_bytes()
+    }
+}
+
+impl Device {
+    /// This device's wire material once a claim has answered: the anchors and
+    /// the leaf it was handed, and its own key, written under `dir` the way a
+    /// client files an entry.
+    pub(crate) fn material(
+        &self,
+        dir: &Path,
+        claimed: &serde_json::Value,
+        address: &str,
+    ) -> Material {
+        let text = |key: &str| claimed[key].as_str().expect("a PEM").to_owned();
+        std::fs::create_dir_all(dir).expect("entry");
+        std::fs::write(dir.join(ANCHORS), text("ca")).expect("anchors");
+        std::fs::write(dir.join("client.pem"), text("cert")).expect("leaf");
+        let label = ["PRIVATE", "KEY"].join(" ");
+        let key = crate::wire::provision::pem::block(&label, &self.pkcs8);
+        std::fs::write(dir.join("client.key"), key).expect("key");
+        material(dir, Role::Client, address)
+    }
+}
+
+/// **A peer with no certificate, saying `request` and reading to the close**
+/// (REMOTE §15.2): TLS against `anchors`, no client identity, the bytes
+/// written verbatim. What comes back is everything the server said — empty
+/// when it said nothing.
+pub(crate) fn certless(anchors: &Path, address: &str, request: &[u8]) -> String {
+    use rustls::pki_types::pem::PemObject;
+    use std::io::{Read, Write};
+    let mut roots = rustls::RootCertStore::empty();
+    for anchor in rustls::pki_types::CertificateDer::pem_file_iter(anchors).expect("anchors") {
+        roots.add(anchor.expect("anchor")).expect("root");
+    }
+    let provider = std::sync::Arc::new(rustls::crypto::ring::default_provider());
+    let config = rustls::ClientConfig::builder_with_provider(provider)
+        .with_safe_default_protocol_versions()
+        .expect("versions")
+        .with_root_certificates(roots)
+        .with_no_client_auth();
+    let name = rustls::pki_types::ServerName::IpAddress(std::net::Ipv4Addr::LOCALHOST.into());
+    let conn = rustls::ClientConnection::new(std::sync::Arc::new(config), name).expect("tls");
+    let tcp = std::net::TcpStream::connect(address).expect("connect");
+    tcp.set_read_timeout(Some(std::time::Duration::from_secs(20)))
+        .expect("timeout");
+    let mut tls = rustls::StreamOwned::new(conn, tcp);
+    let _ = tls.write_all(request);
+    let mut said = Vec::new();
+    let _ = tls.read_to_end(&mut said);
+    String::from_utf8_lossy(&said).into_owned()
+}
+
+/// The registration request a device sends: the one line, the one header that
+/// matters, the body.
+pub(crate) fn registration(code: &str, body: &[u8]) -> Vec<u8> {
+    let head = format!(
+        "POST {}{code} HTTP/1.1\r\nHost: engine.invalid\r\nContent-Type: application/json\r\n\
+         content-length: {}\r\n\r\n",
+        crate::registry::offer::PATH,
+        body.len()
+    );
+    [head.as_bytes(), body].concat()
+}

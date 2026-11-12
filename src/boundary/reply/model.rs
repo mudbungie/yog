@@ -135,6 +135,9 @@ pub enum Reply {
     /// payload, and the only moment the minted key exists off the device it is
     /// for — [`enroll::Enrolled`](crate::registry::enroll::Enrolled)'s fields.
     Enrolled(crate::registry::enroll::Enrolled),
+    /// **What an offer's act answers** (REMOTE §15.1, bl-9ea6) — four kinds
+    /// under one variant, [`offer::Answer`](crate::registry::offer::Answer)'s.
+    Offer(crate::registry::offer::Answer),
     /// **One routed invocation, and its capture if it has one yet** (REMOTE §5,
     /// bl-024b) — the answer to all three gestures of the routing leg's asking
     /// side, because they are one subject at three moments: `invoke` has just

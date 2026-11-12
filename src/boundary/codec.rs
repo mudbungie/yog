@@ -24,6 +24,7 @@ mod control;
 /// sign-in — split out at §12's cap (bl-b680) on the seam `action/device`
 /// already draws for their prose.
 mod device;
+pub(crate) use crate::registry::offer::wire as offer;
 pub(crate) use device::{ENROLL, LOGIN, grade_of};
 /// The two **depositing** envelopes (bl-a33d), one family file on the seam
 /// every other family here is cut on: a plain send and send-and-interrupt carry
@@ -139,6 +140,8 @@ fn encode_action(action: &Action) -> Value {
         // The two acts a REMOTE device makes on its own behalf, spelled in the
         // device family's file (bl-b680's split, on `action/device`'s seam).
         Action::Enroll(request) => device::encode_enroll(request),
+        // The offer family (REMOTE §15.1), spelled beside its vocabulary.
+        Action::Offer(verb) => offer::encode(verb),
         Action::Route(verb) => tools::encode_route(verb),
         Action::Login {
             workspace,
@@ -235,6 +238,9 @@ pub fn decode(v: &Value) -> Result<Gesture, String> {
         })),
         // The device's own two acts (REMOTE §8.3, §1.4), in their family file.
         LOGIN | ENROLL => device::decode(op.as_str(), o).map(act),
+        offer::OFFER | offer::OFFERS | offer::APPROVE | offer::DECLINE => {
+            offer::decode(op.as_str(), o).map(|verb| act(Action::Offer(verb)))
+        }
         // REMOTE §5's tool-host family (bl-4e08, bl-024b): the presentation,
         // and the routing leg's two halves.
         tools::ADVERTISE | tools::INVOKE | tools::COMPLETE => {

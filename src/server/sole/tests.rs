@@ -23,6 +23,14 @@ fn a_second_server_on_one_world_is_refused() {
     // for the next server — a restart is a stop and a start, with nothing to
     // reap in between.
     drop(first);
+    // Awaited rather than assumed: a child forked on another test's thread
+    // holds a copy of the descriptor until its own exec closes it, and the
+    // lock is the descriptor's. Measured as one failure in four whole-suite
+    // runs once the suite forked `openssl` more often (bl-9ea6).
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+    while take(&state).is_err() && std::time::Instant::now() < deadline {
+        std::thread::sleep(std::time::Duration::from_millis(10));
+    }
     take(&state).expect("the world is free once its server has gone");
 }
 

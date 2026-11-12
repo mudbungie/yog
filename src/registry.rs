@@ -44,6 +44,8 @@ pub mod leaf;
 /// The server-side invocation hand-off (REMOTE §5, bl-024b) — a queue per
 /// client and a slot per invocation, RAM beside [`presence`] for its reason.
 pub mod mailbox;
+/// The offer (REMOTE §15.1): how a new device joins with a key it made.
+pub mod offer;
 /// **What a certificate authorizes** (REMOTE §4.2, bl-1dd3) — the grade its
 /// subject carries, and the [`Peer`] an intake answers as.
 pub mod peer;

@@ -61,6 +61,7 @@ pub fn encode(reply: &Reply) -> Value {
         Reply::Applied => json!({ "ok": true, "kind": "applied" }),
         Reply::Advertised { wrote } => json!({ "ok": true, "kind": "advertised", "wrote": wrote }),
         Reply::Enrolled(enrolled) => enrolled_reply(enrolled),
+        Reply::Offer(answer) => crate::registry::offer::wire::reply(answer),
         // The routing leg's asking side (bl-024b): the handle, and the capture
         // once there is one. `capture` is **absent** rather than empty while
         // the far machine still runs it — a reader must not have to tell "not

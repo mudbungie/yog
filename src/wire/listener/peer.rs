@@ -12,8 +12,8 @@
 //! when the peer is gone. The frame is `{"ping":true}` and never the start of
 //! a reply stream: a client reading a held connection discards it.
 
-use super::frame;
 use crate::registry::{Client, Peer};
+use crate::wire::frame;
 use rustls::pki_types::CertificateDer;
 use rustls::{ServerConnection, StreamOwned};
 use serde_json::{Value, json};
@@ -49,6 +49,47 @@ impl Quiet {
             io::ErrorKind::WouldBlock | io::ErrorKind::TimedOut
         );
         timed_out && self.ping.is_some_and(|ping| quiet_for + ping < self.gone)
+    }
+}
+
+/// How long an accepted connection may say nothing before the server treats it
+/// as gone (REMOTE §5.1, bl-1421). **A bound on the transport, not on the
+/// wait** — thrall's channel states the same two minutes from the other end,
+/// and for the same reason: the server's longest legitimate quiet is a
+/// follow-class hold, which is thirty seconds
+/// ([`slots`](crate::registry::mailbox), [`follow`](crate::boundary::follow),
+/// and [`attend`](crate::boundary::attend), which holds on the follow lane's
+/// own two constants rather than a third pair)
+/// and then an answer, so a client parked for hours is a sequence of answered
+/// reads and never one read held for hours. No client idles past it: a foot
+/// re-asks immediately, a seat dials per gesture.
+///
+/// **A timeout is "the connection is gone", never a retry.** It fires mid-record
+/// as readily as between them, and rustls has no clean resume from a half-read
+/// frame — so the read loop ends on it exactly as it ends on an EOF, which is
+/// what releases the presence guard and returns the thread.
+const IDLE_TIMEOUT: Duration = Duration::from_mins(2);
+
+/// How often a **held** connection is pinged through its silence (REMOTE
+/// §13.4, bl-4263) — under the shortest NAT mapping lifetime worth planning
+/// for, and a stated default to be revisited on evidence (REMOTE §13.7 ruling 3).
+pub(crate) const PING: Duration = Duration::from_secs(25);
+
+impl Quiet {
+    /// A dialled connection: two minutes of nothing is a peer that vanished.
+    pub(crate) fn dialled() -> Quiet {
+        Quiet {
+            gone: IDLE_TIMEOUT,
+            ping: None,
+        }
+    }
+
+    /// A punched connection, held between asks and pinged through its silence.
+    pub(crate) fn held() -> Quiet {
+        Quiet {
+            gone: IDLE_TIMEOUT,
+            ping: Some(PING),
+        }
     }
 }
 

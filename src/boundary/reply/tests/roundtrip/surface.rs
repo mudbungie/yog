@@ -49,6 +49,38 @@ pub(crate) fn surface() -> Vec<Reply> {
         inspector::inspector(),
         agent::agent(),
         agent::governing(),
+        offers(),
     ]
     .concat()
+}
+
+/// REMOTE §15.1's offer family (bl-9ea6): the four kinds, and under `offers`
+/// one row per state — the open one with no word, because a word that is
+/// absent and a word that is empty are different facts — and the empty list.
+fn offers() -> Vec<Reply> {
+    use crate::registry::Grade;
+    use crate::registry::offer::{Answer, Row, State};
+    let row = |name: &str, grade, state, word: Option<&str>| Row {
+        name: name.to_owned(),
+        grade,
+        state,
+        expires: 1_700_000_600,
+        word: word.map(str::to_owned),
+    };
+    [
+        Answer::Offered {
+            url: "https://engine.invalid/yog/register/ABCD2345".to_owned(),
+            expires: 1_700_000_600,
+        },
+        Answer::Offers(vec![
+            row("phone-1", Grade::Operator, State::Open, None),
+            row("tablet", Grade::Operator, State::Claimed, Some("K7M2QX")),
+            row("builder", Grade::Foot, State::Proved, Some("2LFTUR")),
+        ]),
+        Answer::Offers(Vec::new()),
+        Answer::Approved,
+        Answer::Declined,
+    ]
+    .map(Reply::Offer)
+    .to_vec()
 }

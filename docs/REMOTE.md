@@ -7374,14 +7374,28 @@ a second surface (§3).
 name and a grade — §8.4's three fields, judged by §4.1's same rule — and the
 server records a pending offer: a **code** of eight characters from a 32-symbol
 alphabet (40 bits, drawn from the system's random source), an expiry ten
-minutes out, and nothing else. The reply kind is `offered` and carries the
+minutes out, and nothing else. The alphabet is
+`ABCDEFGHJKLMNPQRSTUVWXYZ23456789` — capitals and digits without `I`, `O`,
+`0` and `1`, because a code and a word are read by a person. The reply kind is `offered` and carries the
 **registration URL**, `https://<host>/yog/register/<code>`, where `<host>` is
 the first host the server states (§15.3). That string is the whole of what
 travels to the new device, by eye, by paste or as a QR symbol. It carries no
 key and no certificate.
 
+**A name is offerable only while nothing was ever issued under it** *(as
+built, bl-9ea6)*. The operator CA has no revocation, so a leaf once issued is
+good for the CA's life and the only thing between it and a workspace is that
+its *name* is seated nowhere. `offer` therefore refuses a name that has a leaf
+on this box, a registration, a claim still held, or that is one of this box's
+own seats (`yog-client`, `yog-window`, `yog-server`): approving an offer for
+such a name would seat whoever already holds a certificate under it. Minting
+again under a name whose offer is still open replaces the code. It also
+refuses, ahead of the code, a box with no CA key and an address whose port is
+`0` — a request only the listener learns the answer to names no host.
+
 **2. The new device claims it, with a key it made.** The device generates its
-own P-256 key pair and POSTs the public half, as PEM, to the URL. The server
+own P-256 key pair and POSTs the public half, as PEM, to the URL — the body
+is the one JSON object `{"public_key": "<PEM SubjectPublicKeyInfo>"}`. The server
 finds the open offer, signs a leaf for that public key under the offered name
 and grade, marks the offer **claimed**, and answers one JSON object:
 
@@ -7395,39 +7409,104 @@ and grade, marks the offer **claimed**, and answers one JSON object:
 
 The private key never leaves the device. A code that is unknown, expired or
 already claimed answers the same `404` with no body: a claim is single-use, and
-which of the three it was is not said to a stranger.
+which of the three it was is not said to a stranger. A body that is not that
+object, and a key that is not P-256, answer the same `404` and spend nothing.
+
+*(As built, bl-9ea6.)* The leaf is the one `WIRE_LEAF` mints — the same
+subject (a foot's carries `OU=foot`), `DNS:<name>` and `clientAuth` — signed
+by the one `openssl` recipe with one flag more: `x509 -req … -force_pubkey`
+over a request made with a scratch key that is then deleted. That spelling
+rather than `x509 -new`, because OpenSSL and LibreSSL both have it. The
+device's PEM is read to DER once; that DER is judged, re-encoded for the tool,
+and hashed for the word, so no second parser reads the device's own text.
 
 **3. Both ends show one confirmation word.** It is the first six characters, in
 the code's own alphabet, of SHA-256 over the device's public key (DER) followed
-by the CA certificate (DER). The device computes it from what it sent and what
+by the CA certificate (DER). Exactly: the public key is the DER
+`SubjectPublicKeyInfo` (91 bytes for P-256) and the certificate is the DER of
+the first `CERTIFICATE` block of `ca`; the digest's first thirty bits are read
+five at a time, most significant first, each as an index into the alphabet.
+`src/registry/offer/tests.rs` pins it with a vector — a public key and a CA
+certificate as PEM, a digest beginning `c2 8b 19 3c`, the word `2LFTUR` — and
+every other implementation reproduces that vector. The device computes it from what it sent and what
 it was handed; the server computes it from what it signed and what it holds.
 An impostor between them — a hijacked name, a proxy that answered the claim
 itself — cannot make the two agree, because it does not hold the operator's CA
 key and cannot make the device's key its own.
 
 **4. The device dials the wire with its new certificate.** The leaf
-authenticates and is registered in no workspace, which is a state this
-document already has (§8.4's *registered in nothing*): every gesture answers
-§4.1's refusal. The server marks the offer **proved** — the holder of the
-private key has spoken, which a copy of the URL never could.
+authenticates and is **held**: every gesture it sends is refused, in band,
+naming the approval it is waiting for. The offer is **proved** — the holder
+of the private key has spoken, which a copy of the URL never could.
+
+*(Amended as built, bl-9ea6.)* This step said the leaf was merely *registered
+in nothing* (§8.4), and that state is not closed: §4 lets a client registered
+nowhere **found** a workspace and auto-registers it as the creator, so an
+unapproved operator-grade leaf — a stolen URL's — could have founded one and
+run agents in it. Held is stricter and is its own fact: the wire's intake
+refuses a held client everything, the founding gesture included, ahead of the
+codec. And `proved` is derived rather than marked: it is a claimed offer whose
+client has been *seen* (§5's stamp, written at the one door every connection's
+bytes pass) at or after the claim. The device proves itself by sending any
+request at all — the refusal it earns is the proof.
 
 **5. The operator approves, and only then is the client seated.** `offers`
 lists a workspace's pending offers with each one's state and confirmation word.
 `approve` names one; it is refused unless the offer is proved, and it seats the
-registration `(client, workspace)` exactly as §8.4's act did. `decline` deletes
-the offer and the leaf it issued. The operator's whole job is to read the word
+registration `(client, workspace)` exactly as §8.4's act did, which ends the
+hold. `decline` voids the offer. The operator's whole job is to read the word
 off the new device and approve the row that matches.
+
+*(Amended as built, bl-9ea6.)* This step said `decline` *deletes the offer and
+the leaf it issued*. Deleting the server's copy recalls nothing — the
+claimant still holds a certificate the CA signed — and it would free the name
+for a second offer whose approval then seats the declined holder too. So a
+decline of an **open** offer forgets it and frees the name, and a decline of
+a **claimed** one keeps both the hold and the leaf on disk for good: that
+certificate is refused forever and the name is spent. Offer the device again
+under another name.
+
+**The expiry is the code's.** Ten minutes bounds an *open* offer; a claimed
+one waits for the operator however long that takes, because expiring it would
+be a decline nobody chose.
+
+**Pending offers live on disk**, one small file per name under the state root
+(`offers/open/<name>`, `offers/held/<name>`), not in RAM. The hold must
+outlive the process that issued the leaf — a restart that forgot it would be
+the founding hole above, reopened — so it fails closed across one, and an
+open offer survives a restart for what is left of its ten minutes. A claim is
+the `rename` from the first directory to the second, which the filesystem
+performs for exactly one of two racing claimants: that is the single use.
+
+**The four acts on the wire** *(edition 26; `PROTOCOL` unmoved)*:
+
+| Request | Reply |
+|---|---|
+| `{"op":"offer","workspace":W,"name":N,"grade":"operator"\|"foot"}` | `{"ok":true,"kind":"offered","url":U,"expires":T}` |
+| `{"op":"offers","workspace":W}` | `{"ok":true,"kind":"offers","rows":[{"name":N,"grade":G,"state":"open"\|"claimed"\|"proved","expires":T,"word":"…"}]}` |
+| `{"op":"approve","workspace":W,"name":N}` | `{"ok":true,"kind":"approved"}` |
+| `{"op":"decline","workspace":W,"name":N}` | `{"ok":true,"kind":"declined"}` |
+
+`T` is unix seconds. A row's `word` is absent until a device has claimed.
+All four are operator grade — none is in the set a foot may say (§4.2) — and
+each is typable: `/offer <name> [foot]`, `/offers`, `/approve <name>`,
+`/decline <name>`.
 
 **What a stolen URL buys.** Claimed before the device: the device's own claim
 answers `404`, the operator sees a row whose word matches nothing in front of
-them, and declines it — the thief holds a certificate seated nowhere. Claimed
+them, and declines it — the thief holds a certificate that is held for good,
+and the name is spent. Claimed
 after: `404`. There is no state in which two parties hold what one offer
 issued.
 
 **No rate limiter, by arithmetic.** Forty bits against a ten-minute life is
 beyond any request rate this listener serves; what is bounded instead is
 resource — a small fixed number of certless connections at once, a request of
-at most a few kilobytes, a few seconds to say it.
+at most a few kilobytes, a few seconds to say it. As built: eight connections
+per listener, 8 KiB for the head and body together, and five seconds from the
+end of the handshake for the whole exchange, one deadline rather than a
+timeout per read. Past the eighth, a certless peer is closed with nothing
+said.
 
 ### 15.2 The registration door is the wire's own listener
 
@@ -7438,6 +7517,15 @@ request, `POST /yog/register/<code>`, answered and closed. Nothing else is
 routed, and a certless peer never reaches `frame` or `dispatch`. One port, one
 listener, no second process and no setting.
 
+*(As built, bl-9ea6.)* The request is read by a parser written for exactly
+this: the line `POST /yog/register/<code> HTTP/1.1`, a `Content-Length`
+header (any case; a request without one is refused, so chunked bodies are),
+and that many bytes of body. The answer is `200` with
+`Content-Type: application/json`, a `Content-Length` and `Connection: close`,
+or a bare `404` — which is also what every malformed request earns, so the
+parser has no refusal of its own. The punch port (§13.3) does not serve the
+door: a certless peer there is hung up on with nothing said.
+
 **A public certificate is the edge's, not the server's.** The URL is `https`
 on the standard port, which a client verifies against the public web's roots,
 and that certificate is held and renewed by whatever fronts the box — a
@@ -7445,7 +7533,11 @@ reverse proxy that forwards the one path to the wire port over TLS, trusting
 the operator CA. yog acquires nothing, renews nothing and links no ACME
 client. A deployment with no such edge states the wire port in the URL and the
 confirmation word carries the whole of the server's authentication, which it
-is sufficient for on its own (§15.1 step 3); the public certificate is a
+is sufficient for on its own (§15.1 step 3) — *open as built (bl-9ea6): the
+server cannot tell whether an edge stands in front of it, and this section
+rules out a setting, so `offered` always answers the standard-port URL built
+from the first stated host. An operator with no edge adds the port by hand
+until this is ruled;* the public certificate is a
 second layer and the first-contact route that crosses a network permitting
 only the standard port.
 

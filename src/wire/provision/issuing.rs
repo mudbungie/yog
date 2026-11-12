@@ -45,6 +45,16 @@ use std::path::{Path, PathBuf};
 /// reason the grade is not a registration field a gesture over the wire could
 /// widen, nor a config file on the box being trusted.
 pub(crate) fn issue(dir: &Path, cn: &str, grade: crate::registry::Grade) -> Result<(), String> {
+    admissible(dir, cn)?;
+    openssl::stated_leaf(dir, cn, grade)
+}
+
+/// [`issue`]'s three refusals, asked on their own: whether a leaf under `cn`
+/// may be issued here at all. One guard for the leaf minted with its key and
+/// the leaf signed for a key somebody else made ([`sign`]), and for the offer
+/// that will lead to the second (REMOTE §15.1) — which asks at the mint, so an
+/// operator is refused a spent name before a code exists for it.
+pub(crate) fn admissible(dir: &Path, cn: &str) -> Result<(), String> {
     crate::registry::Client::parse(cn).map_err(|refusal| {
         format!(
             "{refusal} — a common name is one path component, and {:?} is reserved for the              in-world callers; state another one",
@@ -69,7 +79,28 @@ pub(crate) fn issue(dir: &Path, cn: &str, grade: crate::registry::Grade) -> Resu
             pair.join(" or ")
         ));
     }
-    openssl::stated_leaf(dir, cn, grade)
+    Ok(())
+}
+
+/// **Sign a leaf for a public key the device made** (REMOTE §15.1 step 2,
+/// bl-9ea6): [`issue`]'s act and guard with the key pair's other half never
+/// on this box. `public` is the DER `SubjectPublicKeyInfo` the caller already
+/// judged; it is handed to `openssl` as the PEM of exactly those bytes, so
+/// what is signed is what was judged and no second parser reads the device's
+/// own text.
+pub(crate) fn sign(
+    dir: &Path,
+    cn: &str,
+    grade: crate::registry::Grade,
+    public: &[u8],
+) -> Result<(), String> {
+    admissible(dir, cn)?;
+    let scratch = dir.join(format!("{cn}.pub"));
+    let signed = std::fs::write(&scratch, super::pem::public_key(public))
+        .map_err(|e| format!("{}: {e}", scratch.display()))
+        .and_then(|()| openssl::offered_leaf(dir, cn, grade, &scratch));
+    let _ = std::fs::remove_file(&scratch);
+    signed
 }
 
 /// **Every file a client leaf's bundle is, and the name each lands under**

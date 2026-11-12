@@ -78,6 +78,7 @@ impl Action {
             | Action::Config(_)
             | Action::Advertise { .. }
             | Action::Enroll(_)
+            | Action::Offer(_)
             | Action::Route(_)
             // A pin is about the workspace itself (§4.1) — the tab, not
             // anything inside it.

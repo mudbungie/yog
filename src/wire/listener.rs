@@ -16,18 +16,18 @@
 //! — and it costs one thread per live seat, which is the number of seats an
 //! operator has.
 //!
-//! **An unauthenticated connection gets a TLS refusal, not a yog reply**
-//! (REMOTE §4). The handshake happens inside the first `read`, so a peer with
-//! no certificate never reaches [`frame`](super::frame) and the connection is
-//! dropped with nothing said.
+//! **A connection with no certificate is not the wire** (REMOTE §4, §15.2).
+//! The handshake is driven to its end before anything is read, and a peer that
+//! presented nothing never reaches [`frame`](super::frame): it is offered the
+//! registration [`door`] — one HTTP request, answered and closed — and a peer
+//! whose certificate the operator CA did not issue fails the handshake itself.
 
-use super::frame;
 use super::material::Material;
 use crate::registry::Peer;
 use crate::registry::presence::Presence;
-use rustls::{ServerConfig, ServerConnection, StreamOwned};
+use rustls::ServerConfig;
 use serde_json::Value;
-use std::net::{TcpListener, TcpStream};
+use std::net::TcpListener;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread::JoinHandle;
@@ -38,36 +38,21 @@ use std::time::Duration;
 /// until the next look.
 const ACCEPT_POLL: Duration = Duration::from_millis(20);
 
-/// How long an accepted connection may say nothing before the server treats it
-/// as gone (REMOTE §5.1, bl-1421). **A bound on the transport, not on the
-/// wait** — thrall's channel states the same two minutes from the other end,
-/// and for the same reason: the server's longest legitimate quiet is a
-/// follow-class hold, which is thirty seconds
-/// ([`slots`](crate::registry::mailbox), [`follow`](crate::boundary::follow),
-/// and [`attend`](crate::boundary::attend), which holds on the follow lane's
-/// own two constants rather than a third pair)
-/// and then an answer, so a client parked for hours is a sequence of answered
-/// reads and never one read held for hours. No client idles past it: a foot
-/// re-asks immediately, a seat dials per gesture.
-///
-/// **A timeout is "the connection is gone", never a retry.** It fires mid-record
-/// as readily as between them, and rustls has no clean resume from a half-read
-/// frame — so the read loop ends on it exactly as it ends on an EOF, which is
-/// what releases the presence guard and returns the thread.
-const IDLE_TIMEOUT: Duration = Duration::from_mins(2);
-
-/// How often a **held** connection is pinged through its silence (REMOTE
-/// REMOTE §13.4, bl-4263) — under the shortest NAT mapping lifetime worth planning
-/// for, and a stated default to be revisited on evidence (REMOTE §13.7 ruling 3).
-pub(crate) const PING: Duration = Duration::from_secs(25);
-
 /// What an address asks the server to bind (REMOTE §15.3).
 mod binding;
 pub(crate) use binding::binding;
 
 /// Who the peer is, how its silence is read, and how it is hung up on.
 pub(crate) mod peer;
-pub(crate) use peer::{Quiet, peer_client};
+pub(crate) use peer::Quiet;
+
+/// One accepted connection: the handshake, then the wire or the door.
+mod connection;
+use connection::dialled;
+pub(crate) use connection::serve;
+
+/// What a connection with no certificate may say (REMOTE §15.2).
+pub(crate) mod door;
 
 /// What answers a request frame: the reply stream it becomes, one [`Value`] per
 /// frame. Most answers are one element long; a follow-class read is the same
@@ -90,6 +75,16 @@ pub(crate) use peer::{Quiet, peer_client};
 /// certificate says.
 pub trait Answerer: Send + Sync {
     fn answer(&self, peer: &Peer, request: Value) -> Box<dyn Iterator<Item = Value>>;
+
+    /// **What a certless peer's one registration earns** (REMOTE §15.2,
+    /// bl-9ea6): the claim's JSON object, or `None` — which the door says as a
+    /// bare `404`. The default is `None`, so an answerer that holds no offers
+    /// is a door that opens for nobody. It is a second method rather than a
+    /// request through [`answer`](Self::answer) because that one takes a
+    /// [`Peer`], and this caller is not one.
+    fn register(&self, _code: &str, _body: &[u8]) -> Option<Value> {
+        None
+    }
 }
 
 /// The listener thread. Owns its join handle and a stop flag; [`Drop`] signals
@@ -157,130 +152,21 @@ fn accept_loop(
     presence: &Presence,
     stop: &Arc<AtomicBool>,
 ) {
+    let slots = door::Slots::default();
     while !stop.load(Ordering::Relaxed) {
         match tcp.accept() {
             Ok((stream, _)) => {
                 let config = Arc::clone(config);
                 let answerer = Arc::clone(answerer);
                 let presence = presence.clone();
+                let slots = slots.clone();
                 std::thread::spawn(move || {
                     let _ = stream.set_nonblocking(false);
-                    serve(
-                        stream,
-                        &config,
-                        answerer.as_ref(),
-                        &presence,
-                        Quiet::dialled(),
-                    );
+                    dialled(stream, &config, answerer.as_ref(), &presence, &slots);
                 });
             }
             Err(_) => std::thread::sleep(ACCEPT_POLL),
         }
-    }
-}
-
-impl Quiet {
-    /// A dialled connection: two minutes of nothing is a peer that vanished.
-    pub(crate) fn dialled() -> Quiet {
-        Quiet {
-            gone: IDLE_TIMEOUT,
-            ping: None,
-        }
-    }
-
-    /// A punched connection, held between asks and pinged through its silence.
-    pub(crate) fn held() -> Quiet {
-        Quiet {
-            gone: IDLE_TIMEOUT,
-            ping: Some(PING),
-        }
-    }
-}
-
-/// One connection: handshake (inside the first read), then request → reply
-/// stream → terminator, until the peer goes away or a frame refuses.
-///
-/// `quiet` is how long a read may find nothing before the peer counts as gone
-/// — [`Quiet::dialled`] is the production bound, and a test names a short one
-/// rather than sleeping for real ([`Mailbox::holding`](crate::registry::mailbox::Mailbox::holding)'s
-/// own shape) — and, on a held connection, how often the silence is pinged
-/// ([`peer`]). A socket that refuses the timeout is served without one: the
-/// server having no bound is the behaviour it had before, never a reason to
-/// hang up on a peer that has done nothing wrong.
-///
-/// Answers whether the peer was **admitted** — `false` for a handshake or a
-/// preface that refused it, which the punch port's acceptor says (bl-5276).
-pub(crate) fn serve(
-    tcp: TcpStream,
-    config: &Arc<ServerConfig>,
-    answerer: &dyn Answerer,
-    presence: &Presence,
-    quiet: Quiet,
-) -> bool {
-    let _ = tcp.set_read_timeout(Some(quiet.read_timeout()));
-    let Ok(conn) = ServerConnection::new(Arc::clone(config)) else {
-        return false;
-    };
-    let mut tls = StreamOwned::new(conn, tcp);
-    // The §3 version preface, stated and checked before any gesture (bl-a670).
-    // What an admitted peer hands back is its corpus EDITION (REMOTE §3.2,
-    // bl-1be7) — stated, never adjudicated — which rides on the presence entry
-    // below because that is where this connection's identity already lives.
-    let Some(edition) = super::hello::admit(&mut tls) else {
-        peer::hang_up(&mut tls);
-        return false;
-    };
-    let _ = converse(&mut tls, answerer, presence, quiet, edition);
-    true
-}
-
-/// An admitted connection's requests, answered until the peer goes away.
-/// It returns only then, so its one answer is `None` — and every way the peer
-/// can be gone is a `?` onto it, rather than an exit apiece.
-fn converse(
-    tls: &mut StreamOwned<ServerConnection, TcpStream>,
-    answerer: &dyn Answerer,
-    presence: &Presence,
-    quiet: Quiet,
-    edition: u32,
-) -> Option<std::convert::Infallible> {
-    // **Presence is this scope** (REMOTE §5, bl-4e08): the guard is taken when
-    // the connection first names its client and released when this function
-    // leaves, however it leaves — a clean close, a refused frame, a peer that
-    // vanished without a FIN (which is [`IDLE_TIMEOUT`] expiring, and was the
-    // one case this list claimed and did not hold — bl-1421). There is no
-    // leave verb to forget, which is what makes
-    // "connected right now" true rather than aspirational. It cannot be taken
-    // any earlier: the handshake completes inside the first read, so before it
-    // there is no certificate to read an identity off.
-    let mut live = None;
-    let mut quiet_for = Duration::ZERO;
-    loop {
-        let request = match frame::read_value(tls) {
-            Ok(Some(request)) => request,
-            // A held connection's silence is pinged, one timeout at a time,
-            // until the bound says the peer is gone; every other end is the
-            // peer's own — an EOF, a refused frame, a vanished socket.
-            Err(e) if quiet.pings_at(quiet_for, &e) && peer::ping(tls) => {
-                quiet_for += quiet.read_timeout();
-                continue;
-            }
-            _ => return None,
-        };
-        quiet_for = Duration::ZERO;
-        // **The identity is derived per request, not held** (REMOTE §4,
-        // bl-8bbc): the handshake completes inside the first read, so there is
-        // no earlier moment to read a certificate at, and re-reading it is a
-        // DER walk over bytes already in memory. A peer whose certificate
-        // carries no name yog can use is dropped without a reply, on exactly
-        // the terms an unauthenticated peer is — a connection that cannot be
-        // authorized gets nothing said to it.
-        let peer = peer_client(tls.conn.peer_certificates())?;
-        let _ = live.get_or_insert_with(|| presence.enter(&peer.client, edition));
-        for chunk in answerer.answer(&peer, request) {
-            frame::write_value(tls, &chunk).ok()?;
-        }
-        frame::write_end(tls).ok()?;
     }
 }
 

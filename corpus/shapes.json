@@ -126,6 +126,13 @@
         ":object": 1
       }
     },
+    "reply/approved": {
+      "signature": {
+        "/kind:string": 26,
+        "/ok:bool": 26,
+        ":object": 26
+      }
+    },
     "reply/armed": {
       "signature": {
         "/armed:bool": 1,
@@ -340,6 +347,13 @@
         "/rows/[]:object": 3,
         "/rows:array": 3,
         ":object": 3
+      }
+    },
+    "reply/declined": {
+      "signature": {
+        "/kind:string": 26,
+        "/ok:bool": 26,
+        ":object": 26
       }
     },
     "reply/deleted": {
@@ -581,6 +595,29 @@
         "/kind:string": 1,
         "/ok:bool": 1,
         ":object": 1
+      }
+    },
+    "reply/offered": {
+      "signature": {
+        "/expires:number": 26,
+        "/kind:string": 26,
+        "/ok:bool": 26,
+        "/url:string": 26,
+        ":object": 26
+      }
+    },
+    "reply/offers": {
+      "signature": {
+        "/kind:string": 26,
+        "/ok:bool": 26,
+        "/rows/[]/expires:number": 26,
+        "/rows/[]/grade:string": 26,
+        "/rows/[]/name:string": 26,
+        "/rows/[]/state:string": 26,
+        "/rows/[]/word:string": 26,
+        "/rows/[]:object": 26,
+        "/rows:array": 26,
+        ":object": 26
       }
     },
     "reply/ops": {
@@ -1072,6 +1109,14 @@
         ":object": 18
       }
     },
+    "request/approve": {
+      "signature": {
+        "/name:string": 26,
+        "/op:string": 26,
+        "/workspace:string": 26,
+        ":object": 26
+      }
+    },
     "request/arm": {
       "signature": {
         "/model:string": 1,
@@ -1206,6 +1251,14 @@
         "/project:string": 1,
         "/title:string": 1,
         ":object": 1
+      }
+    },
+    "request/decline": {
+      "signature": {
+        "/name:string": 26,
+        "/op:string": 26,
+        "/workspace:string": 26,
+        ":object": 26
       }
     },
     "request/delete-agent": {
@@ -1457,6 +1510,22 @@
         "/op:string": 1,
         "/workspace:string": 1,
         ":object": 1
+      }
+    },
+    "request/offer": {
+      "signature": {
+        "/grade:string": 26,
+        "/name:string": 26,
+        "/op:string": 26,
+        "/workspace:string": 26,
+        ":object": 26
+      }
+    },
+    "request/offers": {
+      "signature": {
+        "/op:string": 26,
+        "/workspace:string": 26,
+        ":object": 26
       }
     },
     "request/ops": {

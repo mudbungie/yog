@@ -170,6 +170,9 @@ pub enum Action {
     /// **Enroll a device** (REMOTE §1.4 as amended, §8.4; bl-f4e3) over
     /// [`enroll::Request`](crate::registry::enroll::Request) ([`device`]).
     Enroll(crate::registry::enroll::Request),
+    /// **The offer's four acts** (REMOTE §15.1, bl-9ea6) over
+    /// [`offer::Verb`](crate::registry::offer::Verb) ([`device`]).
+    Offer(crate::registry::offer::Verb),
     /// **The sign-in, as an act** (REMOTE §8.3; DESIGN §8.3 as amended by
     /// bl-61bf): `bz --login` on the SERVER, inside the named workspace's wall
     /// ([`device`]).

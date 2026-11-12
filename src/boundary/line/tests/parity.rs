@@ -14,6 +14,7 @@ use std::path::PathBuf;
 mod balls;
 mod config;
 mod inspector;
+mod offer;
 mod policy;
 mod tools;
 mod workflow;

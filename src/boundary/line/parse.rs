@@ -177,7 +177,8 @@ pub fn parse(input: &str, ctx: &Context) -> Result<Gesture, String> {
         // are — a seat with no panes still has to be able to look. Split out
         // at the §12 line budget; an unknown verb refuses there too, so this
         // stays the whole grammar's one dead end.
-        // …behind the §3.5 spend family (bl-53d1), which falls through to them.
+        // …behind the §3.5 spend family (bl-53d1) and the §15.1 offer family
+        // (bl-9ea6), each of which falls through to the next.
         other => spend::read(other, tail, ctx),
     }
 }

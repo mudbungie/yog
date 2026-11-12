@@ -89,6 +89,9 @@ impl Action {
             // other gesture, scoped like one, and renamed at a §8.2 entry's
             // channel boundary like one.
             Action::Enroll(request) => Some(&mut request.workspace),
+            // An offer names the workspace its client will be seated in, on
+            // enrollment's terms exactly (REMOTE §15.1).
+            Action::Offer(verb) => Some(verb.workspace_slot()),
             Action::Monitor(verb) => Some(verb.workspace_slot()),
             Action::Fleet(verb) => Some(verb.workspace_slot()),
             // The §9 config family answers through its destination (bl-523f):

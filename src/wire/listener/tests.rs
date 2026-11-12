@@ -6,7 +6,9 @@ use crate::registry::presence::Presence;
 use crate::test_support::seat::Seat;
 use crate::test_support::wire::{material, mint};
 use crate::wire::material::Role;
+use rustls::StreamOwned;
 use serde_json::json;
+use std::net::TcpStream;
 use std::sync::atomic::AtomicUsize;
 use tempfile::TempDir;
 

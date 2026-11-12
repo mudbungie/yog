@@ -22,6 +22,11 @@
 //! [`enroll::Request`](crate::registry::enroll::Request), whose own doc carries
 //! the ruling and the §4.2 grade a foot is refused it by.
 //!
+//! **[`Offer`](super::Action::Offer)** is how a device joins with a key it
+//! made (REMOTE §15.1; bl-9ea6) — one variant over
+//! [`offer::Verb`](crate::registry::offer::Verb): mint, list, approve, decline.
+//! The device's own half, the claim, is not a gesture and is not here.
+//!
 //! **[`Login`](super::Action::Login)** is the sign-in, as an act (REMOTE §8.3;
 //! DESIGN §8.3 as amended by bl-61bf): start `bz --login` on the SERVER inside
 //! the named workspace's wall, so the credential lands where that workspace's
