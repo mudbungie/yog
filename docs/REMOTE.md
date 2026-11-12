@@ -2784,7 +2784,9 @@ leaf always carries `IP:127.0.0.1` beside whatever host it is minted for,
 because the window is a client of loopback unconditionally and a certificate
 that named only an operator's public host would refuse the one seat certain to
 be there.
-`WIRE_HOST`/`WIRE_PORT` name what the server binds and a seat dials; the SAN
+`WIRE_HOST`/`WIRE_PORT` name what the server binds and a seat dials *(two
+facts since §15.3, which separates them: a non-loopback address binds every
+interface on the port)*; the SAN
 and the address file are derived from the same `WIRE_HOST`, because two
 spellings of one host is the drift §8's name resolution removed from the
 boundary. The verb refuses to overwrite: a rotation distrusts every
@@ -2806,6 +2808,8 @@ remedy:
   the first host stated, on `WIRE_PORT` — because what a box binds and what a
   certificate covers are two facts, not one twice: the address is the endpoint,
   the SAN is the set of spellings a seat may verify what it dialled against.
+  *(Superseded by §15.3, bl-52ae: the address file is now the same list, one
+  endpoint per line on `WIRE_PORT`, and its first line is this endpoint.)*
 - `WIRE_HOST` on a directory that **already holds material** re-issues the
   server leaf over the CA already there, and refuses nothing: no CA founded, no
   other leaf touched — `WIRE_LEAF`'s guard, not the mint's,

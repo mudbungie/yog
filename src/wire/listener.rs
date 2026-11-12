@@ -61,6 +61,10 @@ const IDLE_TIMEOUT: Duration = Duration::from_mins(2);
 /// for, and a stated default to be revisited on evidence (REMOTE §13.7 ruling 3).
 pub(crate) const PING: Duration = Duration::from_secs(25);
 
+/// What an address asks the server to bind (REMOTE §15.3).
+mod binding;
+pub(crate) use binding::binding;
+
 /// Who the peer is, how its silence is read, and how it is hung up on.
 pub(crate) mod peer;
 pub(crate) use peer::{Quiet, peer_client};
@@ -97,14 +101,16 @@ pub struct Listener {
 }
 
 impl Listener {
-    /// Bind `m`'s address and serve `answerer` over mTLS until dropped.
+    /// Bind what `m`'s address asks for ([`binding`]) and serve `answerer` over
+    /// mTLS until dropped.
     pub fn bind(
         m: &Material,
         answerer: Arc<dyn Answerer>,
         presence: Presence,
     ) -> Result<Self, String> {
         let config = super::tls::server_config(m)?;
-        let tcp = TcpListener::bind(&m.address).map_err(|e| format!("bind {}: {e}", m.address))?;
+        let tcp = TcpListener::bind(binding(&m.address)?)
+            .map_err(|e| format!("bind {}: {e}", m.address))?;
         // The bound address, not the requested one: a `:0` in the file is a
         // request for whatever port is free, and the answer is what a seat
         // needs to be told.

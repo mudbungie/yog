@@ -144,10 +144,12 @@ fn founded(dir: &Path) -> Result<(), String> {
 /// the CA and distrusts every leaf already carried to every other box. Saying
 /// where a server listens is not a rotation, so this is not one.
 ///
-/// It writes rather than adds, unlike everything else here: the endpoint is the
-/// one fact this file is the home of, and stating it is the whole act.
-pub(crate) fn state(dir: &Path, address: &str) -> Result<(), String> {
-    std::fs::write(dir.join(ADDRESS), format!("{address}\n"))
+/// It writes rather than adds, unlike everything else here: the endpoint list
+/// is the one fact this file is the home of, and stating it is the whole act —
+/// `address` first, then each of `also` on its port (REMOTE §15.3,
+/// [`listing`](super::listing)).
+pub(crate) fn state(dir: &Path, address: &str, also: &[String]) -> Result<(), String> {
+    std::fs::write(dir.join(ADDRESS), super::listing(address, also))
         .map_err(|e| format!("{}: {e}", dir.join(ADDRESS).display()))?;
     super::rendezvous_for(dir, address)
 }

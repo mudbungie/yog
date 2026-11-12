@@ -143,7 +143,12 @@ On a box that already holds material that is not a rotation and distrusts
 nothing: it re-issues the server leaf over the CA already there and writes
 `wire/address` to match, so every leaf already carried to another box still
 verifies. `WIRE_HOST` is a comma-separated list — every entry rides the server
-leaf, and the first one, on `WIRE_PORT`, is the address. An unstated
+leaf and is written to `wire/address`, one `host:port` per line on `WIRE_PORT`,
+in the order stated: the order a client dials them, the first being the public
+name (state a LAN address second and a client at home falls through to it).
+When the first host is not loopback the server binds **every interface** on
+that port and resolves no name to do it — reach is the firewall's question; a
+loopback address binds loopback. An unstated
 `WIRE_PORT` keeps the port `address` already names. A box whose `address` names
 a host and port prints that same line naming what it stated. A wire that
 could not come up prints its refusal on the same stream, and the server runs on
@@ -181,8 +186,8 @@ an environment reading, so it goes before the verb**:
 
 | reading | what it says |
 |---|---|
-| `WIRE_HOST=<host>[,<host>…]` | every host the server leaf answers to; the first, on `WIRE_PORT`, is the address. `127.0.0.1` always rides beside them |
-| `WIRE_PORT=<port>` | what the server binds and a seat dials (default `7737`). Unstated over material already here, the port `address` already names is kept |
+| `WIRE_HOST=<host>[,<host>…]` | every host the server leaf answers to, and every line of `address` — each on `WIRE_PORT`, in the order a client dials them; the first is the public name. `127.0.0.1` always rides the leaf beside them |
+| `WIRE_PORT=<port>` | the port the server binds and a client dials (default `7737`). A first host that is not loopback binds every interface on it; a loopback one binds loopback. Unstated over material already here, the port `address` already names is kept |
 | `WIRE_DIR=<dir>` | the material directory (default: this world's own) |
 | `FORCE=1` | rotate — delete every artifact and found a new trust root, distrusting every certificate already issued, everywhere |
 | `WIRE_LEAF=<common-name>` | issue ONE extra client leaf under that name, over the CA already here |

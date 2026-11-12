@@ -100,13 +100,12 @@ pub fn ensure(dir: &Path) -> Result<(), String> {
 /// every artifact first, which is what makes a rotation a rotation: the CA that
 /// issued the old leaves is gone, so nothing holding one connects again.
 ///
-/// `also` is **every further host the server leaf answers to** (bl-52f4). The
-/// address and the SAN are two facts, not one twice: the address is the single
-/// endpoint the server binds and a local seat dials, while the SAN is the set
-/// of spellings a client may verify what it dialled against — so the address's
-/// own host leads the list and each further one is stated beside it. `&[]` is
-/// the box that is reachable exactly one way, which is every caller but the
-/// operator's own verb.
+/// `also` is **every further host the box answers to** (bl-52f4, REMOTE
+/// §15.3). It feeds two facts: the server leaf's SAN — the spellings a client
+/// may verify what it dialled against — and the `address` file, which carries
+/// the same list, each host on the address's own port, the address first
+/// ([`listing`]). `&[]` is the box that is reachable exactly one way, which is
+/// every caller but the operator's own verb.
 pub fn mint(dir: &Path, address: &str, also: &[String], force: bool) -> Result<(), String> {
     std::fs::create_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
     private(dir, 0o700);
@@ -132,7 +131,7 @@ pub fn mint(dir: &Path, address: &str, also: &[String], force: bool) -> Result<(
         }
     }
     if address_at(dir).is_none() {
-        std::fs::write(dir.join(ADDRESS), format!("{address}\n"))
+        std::fs::write(dir.join(ADDRESS), listing(address, also))
             .map_err(|e| format!("{}: {e}", dir.join(ADDRESS).display()))?;
     }
     rendezvous_for(dir, address)
@@ -168,13 +167,30 @@ pub fn artifacts(address: &str) -> Vec<String> {
     names
 }
 
-/// The address `dir` already names, if it names one — the same read
-/// [`material::read`](super::material::read) performs, so a half-written or
-/// empty file is no address here either.
+/// The address `dir` already names, if it names one — the first line of the
+/// list, by the same read [`material::read`](super::material::read) performs,
+/// so a half-written or empty file is no address here either.
 fn address_at(dir: &Path) -> Option<String> {
-    let text = std::fs::read_to_string(dir.join(ADDRESS)).ok()?;
-    let text = text.trim().to_owned();
-    (!text.is_empty()).then_some(text)
+    super::material::addresses(dir).into_iter().next()
+}
+
+/// **The `address` file's whole text** (REMOTE §15.3): `address`, then every
+/// further host on `address`'s own port, one endpoint per line in the order
+/// stated. One assembly point, so the founding mint and [`state`] cannot
+/// disagree about what the file is. A bare IPv6 host is bracketed, because an
+/// endpoint that cannot be told from its port is no endpoint.
+pub(crate) fn listing(address: &str, also: &[String]) -> String {
+    let port = address.rsplit_once(':').map_or("", |(_, port)| port);
+    let mut lines = vec![address.to_owned()];
+    lines.extend(also.iter().map(|host| {
+        let host = host.trim_start_matches('[').trim_end_matches(']');
+        if host.contains(':') {
+            format!("[{host}]:{port}")
+        } else {
+            format!("{host}:{port}")
+        }
+    }));
+    lines.join("\n") + "\n"
 }
 
 /// The port the `address` file already names, or [`PORT`] when it names none

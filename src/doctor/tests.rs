@@ -79,8 +79,17 @@ fn a_self_provisioned_box_passes_the_material_and_fails_the_endpoint() {
     assert!(row(&rows, "address").fact.contains("127.0.0.1:0"));
 
     // …and a stated endpoint passes, which is bl-98ef's act read back.
-    crate::wire::provision::state(&dir, "127.0.0.1:7737").expect("stated");
-    assert!(row(&examine(&deps, None), "address").ok);
+    // The address is the list's first line (REMOTE §15.3); a further endpoint
+    // is a spelling a client falls through to and no part of this row.
+    crate::wire::provision::state(&dir, "127.0.0.1:7737", &["192.0.2.7".to_owned()])
+        .expect("stated");
+    let stated = examine(&deps, None);
+    assert!(row(&stated, "address").ok);
+    assert!(
+        row(&stated, "address")
+            .fact
+            .ends_with("names 127.0.0.1:7737")
+    );
 }
 
 /// **What the listener bound is the fact the file cannot give** (REMOTE §8):

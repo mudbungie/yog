@@ -44,10 +44,12 @@ fn wire(dir: &std::path::Path) -> Row {
 /// self-provisioning boot writes, and it is the one address nothing downstream
 /// can use: no seat can dial it and no enrolment can put it in a QR.
 fn address(dir: &std::path::Path) -> Row {
-    let stated = std::fs::read_to_string(dir.join(ADDRESS))
-        .unwrap_or_default()
-        .trim()
-        .to_owned();
+    // The first line is the address (REMOTE §15.3); the rest are further
+    // spellings a client falls through to, and none of them is what binds.
+    let stated = material::addresses(dir)
+        .into_iter()
+        .next()
+        .unwrap_or_default();
     let dialable = stated
         .rsplit_once(':')
         .is_some_and(|(host, port)| !host.is_empty() && !port.is_empty() && port != "0");

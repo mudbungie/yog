@@ -56,6 +56,31 @@ fn an_empty_address_refuses() {
     assert!(err.contains(REMEDY), "{err}");
 }
 
+/// **The address file is a list, one endpoint per line** (REMOTE §15.3): the
+/// first is the address, a file written before the list existed is a list of
+/// one, and blank lines and stray space are not endpoints.
+#[test]
+fn the_address_file_is_a_list_whose_first_line_is_the_address() {
+    let dir = TempDir::new().expect("tmp");
+    assert_eq!(addresses(dir.path()), Vec::<String>::new(), "absent");
+    crate::test_support::wire::mint(dir.path());
+    std::fs::write(dir.path().join(ADDRESS), "engine.example:7737").expect("write");
+    assert_eq!(addresses(dir.path()), ["engine.example:7737"], "one line");
+    std::fs::write(
+        dir.path().join(ADDRESS),
+        " engine.example:7737 \n\n192.0.2.7:7737\n",
+    )
+    .expect("write");
+    assert_eq!(
+        addresses(dir.path()),
+        ["engine.example:7737", "192.0.2.7:7737"]
+    );
+    let read = read_dir(dir.path(), Role::Server)
+        .expect("read")
+        .expect("provisioned");
+    assert_eq!(read.address, "engine.example:7737");
+}
+
 /// The material directory hangs off the yog data root, beside the world and
 /// never inside it: a reseed of the world must not be a revocation.
 #[test]

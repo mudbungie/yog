@@ -14,7 +14,7 @@
 //!   misconfiguration that silently degrades to *no encryption* is the failure
 //!   mode this design exists to exclude.
 //! - **Provisioned** — `Ok(Some(Material))`: the anchors, this role's leaf and
-//!   key, and the one address.
+//!   key, and the address — the first line of a list (REMOTE §15.3).
 //!
 //! **An address is one fact with one home, and the home is the relationship**
 //! (REMOTE §8 as amended, bl-aaec). A server binds its own `wire/address` and a
@@ -23,7 +23,10 @@
 //! address still has exactly one file and no flag — two spellings of one
 //! address is exactly the drift §8's name-resolution ruling removed from the
 //! boundary — and one address per relationship is what a client of many
-//! servers needs, no more.
+//! servers needs, no more. **The file is a list since REMOTE §15.3** — the
+//! same host's further spellings, dialled in order — and what the server binds
+//! is derived from its first line, never stated beside it
+//! ([`listener::binding`](super::listener::binding)).
 //!
 //! **It sits beside the world, not inside it** (`<yog-data-root>/wire`, the
 //! sibling of `<yog-data-root>/world`). The world subtree is a *generated*
@@ -41,7 +44,9 @@ use std::path::{Path, PathBuf};
 pub const DIR: &str = "wire";
 /// The operator CA both ends verify against — one anchor set, both directions.
 pub const ANCHORS: &str = "ca.pem";
-/// The file naming the address the server binds and a seat dials.
+/// The file naming every endpoint a client dials, one `host:port` per line
+/// (REMOTE §15.3). The first is *the* address — what the bind is derived from
+/// and what every single-address consumer is handed.
 pub const ADDRESS: &str = "address";
 
 /// The directory a **client** box files one host's material under, inside its
@@ -140,7 +145,9 @@ pub struct Material {
     pub chain: PathBuf,
     /// This end's private key, PEM.
     pub key: PathBuf,
-    /// `host:port` — bound by the server, dialled by a seat.
+    /// `host:port` — the first line of the `address` file (REMOTE §15.3): what
+    /// the server's bind is derived from and a seat dials first. The whole
+    /// list is [`addresses`]'s, read where it is wanted and held nowhere.
     pub address: String,
 }
 
@@ -181,22 +188,34 @@ pub fn read_dir(dir: &Path, role: Role) -> Result<Option<Material>, String> {
     // A file that will not read yields no address, and no address is the same
     // refusal an empty one earns: one branch, because "unreadable" and "empty"
     // are one fact about what this box can be told to dial.
-    let address = std::fs::read_to_string(dir.join(ADDRESS))
-        .unwrap_or_default()
-        .trim()
-        .to_owned();
-    if address.is_empty() {
+    let Some(address) = addresses(dir).into_iter().next() else {
         return Err(format!(
-            "{} names no address; it must hold one host:port — run `{REMEDY}`",
+            "{} names no address; it must hold one host:port per line — run `{REMEDY}`",
             dir.join(ADDRESS).display()
         ));
-    }
+    };
     Ok(Some(Material {
         anchors: dir.join(ANCHORS),
         chain: dir.join(format!("{leaf}.pem")),
         key: dir.join(format!("{leaf}.key")),
         address,
     }))
+}
+
+/// **Every endpoint `dir`'s `address` file names, in the order stated**
+/// (REMOTE §15.3): one `host:port` per line, blank lines and surrounding space
+/// dropped. A file written before the list existed is a list of one, and a
+/// file that is absent, unreadable or blank is the empty list — the one read
+/// every consumer of the file goes through, so "the address" is always this
+/// list's first entry and never a second parse.
+pub fn addresses(dir: &Path) -> Vec<String> {
+    std::fs::read_to_string(dir.join(ADDRESS))
+        .unwrap_or_default()
+        .lines()
+        .map(str::trim)
+        .filter(|line| !line.is_empty())
+        .map(str::to_owned)
+        .collect()
 }
 
 #[cfg(test)]

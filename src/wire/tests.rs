@@ -150,6 +150,29 @@ fn a_half_provisioned_box_the_mint_cannot_heal_does_not_listen() {
     assert!(refusal.contains("half-provisioned"), "{refusal}");
 }
 
+/// **An address naming another machine's way in binds every interface**
+/// (REMOTE §15.3), and resolves nothing to do it: the name here resolves
+/// nowhere, and the further endpoints in the list are a client's, not the
+/// bind's.
+#[test]
+fn an_address_that_is_not_loopback_binds_every_interface() {
+    let tmp = TempDir::new().expect("tmp");
+    let world = crate::test_support::world_under(tmp.path());
+    let dir = material::dir(&world);
+    mint(&dir);
+    std::fs::write(
+        dir.join(material::ADDRESS),
+        "engine.example:0\n192.0.2.7:0\n",
+    )
+    .expect("write");
+    let listener = listen(&world, Arc::new(Silent), Presence::default()).expect("listening");
+    assert!(
+        listener.address().starts_with("0.0.0.0:"),
+        "{}",
+        listener.address()
+    );
+}
+
 /// An address no socket can take is a refusal, returned. The consequence is the
 /// boot's — fatal since bl-1d9b — and this asserts only the half that is this
 /// module's: the sentence exists and names the bind.
@@ -159,8 +182,11 @@ fn an_unbindable_address_refuses() {
     let world = crate::test_support::world_under(tmp.path());
     let dir = material::dir(&world);
     mint(&dir);
-    std::fs::write(dir.join(material::ADDRESS), "256.256.256.256:1").expect("write");
-    assert!(listen(&world, Arc::new(Silent), Presence::default()).is_err());
+    std::fs::write(dir.join(material::ADDRESS), "engine.example:wire").expect("write");
+    let refusal = listen(&world, Arc::new(Silent), Presence::default())
+        .err()
+        .expect("no port to bind");
+    assert!(refusal.contains("bind engine.example:wire"), "{refusal}");
 }
 
 /// A mint failure on a box whose server material is already readable is a

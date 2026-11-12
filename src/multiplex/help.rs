@@ -51,11 +51,14 @@ pub(super) const COMMANDS: &[HelpRow] = &[
                   one leaf for another box",
         detail: "Every setting is an environment reading, so it goes BEFORE the verb — a \
                  `VAR=value` after it is argv and is refused.\n\
-                 \n  WIRE_HOST=<host>[,<host>…]  every host the server leaf answers to. The \
-                 first, on WIRE_PORT, is the address; 127.0.0.1 always rides beside them, so a \
-                 box reachable by name, by overlay address and on the LAN says so once.\n  \
-                 WIRE_PORT=<port>            what the server binds and a seat dials \
-                 (default 7737). Unstated over material already here, the port `address` \
+                 \n  WIRE_HOST=<host>[,<host>…]  every host the server leaf answers to, and \
+                 every line of `address`: each host on WIRE_PORT, in the order stated, which is \
+                 the order a client dials them. The first is the public name. 127.0.0.1 always \
+                 rides the leaf beside them, so a box reachable by name, by overlay address and \
+                 on the LAN says so once.\n  \
+                 WIRE_PORT=<port>            the port the server binds and a client dials \
+                 (default 7737). A first host that is not loopback binds EVERY interface on it — \
+                 reach is the firewall's question; a loopback one binds loopback. Unstated over material already here, the port `address` \
                  already names is kept.\n  \
                  WIRE_DIR=<dir>              the material directory (default: this world's own).\n  \
                  FORCE=1                     rotate: delete every artifact and found a new trust \

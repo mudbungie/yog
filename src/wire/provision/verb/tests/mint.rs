@@ -117,8 +117,8 @@ fn a_stated_host_over_standing_material_re_issues_the_server_leaf() {
     );
     assert_eq!(
         std::fs::read_to_string(dir.join(ADDRESS)).expect("address"),
-        "server.example.com:7737\n",
-        "the first host stated, on the port stated"
+        "server.example.com:7737\n192.0.2.7:7737\n",
+        "every host stated, in order, on the port stated (REMOTE §15.3)"
     );
     assert!(Role::Server.leaf() == "server");
 }
@@ -182,16 +182,16 @@ fn an_unstated_port_keeps_the_standing_endpoint() {
         },
     };
     assert_eq!(perform(&widen(&[])), 0, "minted at the default port");
-    super::super::super::state(&dir, "127.0.0.1:7752").expect("an operator's own endpoint");
+    super::super::super::state(&dir, "127.0.0.1:7752", &[]).expect("an operator's own endpoint");
 
     assert_eq!(perform(&widen(&["127.0.0.1", "192.0.2.7"])), 0);
     assert_eq!(
         std::fs::read_to_string(dir.join(ADDRESS)).expect("address"),
-        "127.0.0.1:7752\n",
-        "the port the operator stated, not the default"
+        "127.0.0.1:7752\n192.0.2.7:7752\n",
+        "the port the operator stated, not the default — for every host"
     );
 
-    super::super::super::state(&dir, "127.0.0.1:0").expect("a self-provisioned request");
+    super::super::super::state(&dir, "127.0.0.1:0", &[]).expect("a self-provisioned request");
     assert_eq!(perform(&widen(&["127.0.0.1"])), 0);
     assert_eq!(
         std::fs::read_to_string(dir.join(ADDRESS)).expect("address"),
@@ -218,4 +218,16 @@ fn a_re_issue_a_client_box_cannot_perform_exits_one() {
         }),
         1
     );
+}
+
+/// **The mint says what the server will bind** (REMOTE §15.3), in the
+/// listener's own terms: loopback for a loopback address, every interface for
+/// anything else, and the refusal a boot would give for an address it cannot
+/// read a port from.
+#[test]
+fn the_report_says_what_the_address_binds() {
+    use super::super::acts::reach;
+    assert!(reach("127.0.0.1:7737").contains("binds 127.0.0.1:7737"));
+    assert!(reach("engine.example:7737").contains("every interface on port 7737"));
+    assert!(reach("engine.example:wire").contains("refuse"));
 }

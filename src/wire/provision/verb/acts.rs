@@ -92,7 +92,9 @@ fn restate(dir: &Path, hosts: &[String], port: Option<&str>) -> i32 {
         hosts.first().map_or(LOOPBACK, String::as_str),
         port.unwrap_or(&standing)
     );
-    let acted = super::super::reissue(dir, hosts).and_then(|()| super::super::state(dir, &address));
+    let also = hosts.get(1..).unwrap_or_default();
+    let acted =
+        super::super::reissue(dir, hosts).and_then(|()| super::super::state(dir, &address, also));
     if let Err(e) = acted {
         eprintln!("yog {SUBCMD}: {e}");
         return 1;
@@ -107,8 +109,9 @@ fn restate(dir: &Path, hosts: &[String], port: Option<&str>) -> i32 {
     }
     println!("  it answers to {}", hosts.join(", "));
     println!(
-        "  {} names {address} — restart the server, which binds it as it starts",
-        dir.join(ADDRESS).display()
+        "  {} names {} — restart the server, which binds that port as it starts",
+        dir.join(ADDRESS).display(),
+        crate::wire::material::addresses(dir).join(", ")
     );
     println!("  the CA is untouched, so every leaf already issued still verifies");
     0
@@ -167,12 +170,32 @@ fn report(dir: &Path, address: &str) {
         dir.display(),
         super::super::artifacts(address).join(", ")
     );
-    println!("  the server binds and a local seat dials {address}");
+    println!(
+        "  {} names {} — a client dials them in that order",
+        dir.join(ADDRESS).display(),
+        crate::wire::material::addresses(dir).join(", ")
+    );
+    println!("  {}", reach(address));
     println!(
         "  issue another client with: WIRE_LEAF=<common-name> yog {SUBCMD}, and a tool host's \
          with {}=1 beside that",
         READS[5]
     );
+}
+
+/// What the server will bind for `address`, in the operator's words (REMOTE
+/// §15.3) — the listener's own decision
+/// ([`binding`](crate::wire::listener::binding)), said at the moment the
+/// address is written rather than discovered at the next boot.
+pub(super) fn reach(address: &str) -> String {
+    match crate::wire::listener::binding(address) {
+        Ok(bound) if bound.ip().is_unspecified() => format!(
+            "the server binds every interface on port {}; reach is the firewall's question",
+            bound.port()
+        ),
+        Ok(bound) => format!("the server binds {bound}, which only this box can dial"),
+        Err(refusal) => format!("the server will refuse it: {refusal}"),
+    }
 }
 
 /// The word a grade is reported under — the mint's own spelling for a foot

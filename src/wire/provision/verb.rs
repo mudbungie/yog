@@ -22,6 +22,10 @@
 //! distrusts every leaf already carried away. Nothing stated is still the
 //! standing refusal — a bare re-run asks for nothing this act could perform.
 //!
+//! **And the whole list is the `address` file's** (REMOTE §15.3, bl-52ae): every
+//! host stated, on the stated port, one per line in the order stated — the
+//! order a client dials them.
+//!
 //! **That statement is the `address` file's too** (REMOTE §8 as amended,
 //! bl-98ef). It said the endpoint and left the file alone, and the box that
 //! most needs an endpoint stated is the box that can least reach one: a boot

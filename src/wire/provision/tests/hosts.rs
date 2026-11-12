@@ -6,7 +6,7 @@
 //! that went in.
 
 use super::super::openssl::san;
-use super::super::{ANCHORS, CA_KEY, LOOPBACK, ensure, hosts_of, issue, mint, reissue};
+use super::super::{ANCHORS, CA_KEY, LOOPBACK, ensure, hosts_of, issue, listing, mint, reissue};
 use super::{described, provisioned};
 use crate::wire::material::{self, ADDRESS, Role};
 use std::path::Path;
@@ -77,9 +77,41 @@ fn the_mint_covers_the_address_and_every_further_host() {
         names(tmp.path(), Role::Server).contains("192.0.2.7"),
         "the further host rode the server leaf"
     );
+    assert_eq!(
+        std::fs::read_to_string(tmp.path().join(ADDRESS)).expect("address"),
+        "server.example.com:7737\n192.0.2.7:7737\n",
+        "and the address file carries the same list, each on the stated port (REMOTE §15.3)"
+    );
+    assert_eq!(
+        material::read_dir(tmp.path(), Role::Server)
+            .expect("read")
+            .expect("provisioned")
+            .address,
+        "server.example.com:7737",
+        "the first line is the address every single-address consumer is handed"
+    );
     assert!(
         !names(tmp.path(), Role::Client).contains("192.0.2.7"),
         "and no client leaf names a host at all"
+    );
+}
+
+/// **The address file's text is the stated list, one endpoint per line**
+/// (REMOTE §15.3): the address first, each further host on its port, and a
+/// bare IPv6 host bracketed so its port can be told from it.
+#[test]
+fn the_listing_is_every_host_on_the_address_port() {
+    assert_eq!(listing("127.0.0.1:0", &[]), "127.0.0.1:0\n");
+    assert_eq!(
+        listing(
+            "engine.example:7737",
+            &[
+                "192.0.2.7".to_owned(),
+                "2001:db8::7".to_owned(),
+                "[2001:db8::8]".to_owned()
+            ]
+        ),
+        "engine.example:7737\n192.0.2.7:7737\n[2001:db8::7]:7737\n[2001:db8::8]:7737\n"
     );
 }
 
