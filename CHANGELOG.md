@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.94](https://github.com/mudbungie/yog/compare/v0.0.93...v0.0.94) - 2026-11-18
+
+### Changes
+
+- Merge remote-tracking branch 'origin/main'
+- brazen pin → =0.0.21 and litany pin → =0.0.16: the linked brazen parses the header_commands row key (brazen bl-0839), so a wall's config may derive the claude-cli user-agent from the installed CLI instead of a hand-copied version [bl-ee09]
+
 ## [0.0.93](https://github.com/mudbungie/yog/compare/v0.0.92...v0.0.93) - 2026-11-18
 
 ### Changes
