@@ -66,7 +66,9 @@ id is cited, the path to the ruling is not narrated.
    advertise.** Client presence and tool availability are rendered facts of
    the workspace and enter agent context.
 7. **Agents run on the server, in the background**, independent of any client
-   connection. Seats attach and detach; the work does not.
+   connection. Seats attach and detach; the work does not. *(The loop is the
+   server's; since bl-0369 the model call a turn makes may be an invocation a
+   registered machine serves — §5.7.)*
 8. **A client is a client of many servers, and the client-side workspace is
    what names one** *(operator ruling 2026-08-24, bl-aaec)*. The unit of
    participation is the workspace, never the server: a box holds one entry
@@ -896,6 +898,12 @@ this box can run, wait for work addressed to it, and hand back what happened.
 Note which of §5.3's four verbs is absent — `invoke`, the asking side's. A foot
 is invoked; it never invokes.
 
+**The set is what a foot may say, not what it may be told** (bl-0369). A foot
+whose box advertises `bz` and is named in a role is handed whole model requests
+and authors the model's output; §5.7 states that reach plainly. The grade is
+unchanged — the same three verbs — and the trust is granted by the role's
+config, not by the leaf.
+
 **The grade is on the leaf, not in a registration and not in a config.** It is
 issued out of channel with the certificate, by the operator's own CA, on the
 same act §1.4 already requires — so making a foot into an operator is minting
@@ -1679,9 +1687,11 @@ host and not yet re-queued — or sitting on the queue with nobody having asked
 for work since. Those separate *"nobody has picked this up in N seconds"* from
 *"a host took it N seconds ago and has not come back"*, which is the operator's
 actual question, and the mailbox holds both already. They are **fields gained
-on a shape in use**, so they wait for the next `PROTOCOL` bump rather than
-being smuggled in; and since bl-bca2 that bump is a four-repository act (§3),
-which is the reason this is written down here instead of landed.
+on a shape in use** — which, when this was written, meant a `PROTOCOL` bump
+and a four-repository act (§3). *(Corrected by bl-0369: since bl-e598 a gained
+field is an edition and bumps nothing (§3.2), so that reason expired. §5.7
+designs the lease half — `partial`'s presence on `reply/routed` — and the
+slot's age is still unsaid.)*
 
 Until then the standing answer is the one the routing module already states:
 **the patience belongs to the caller**, who is the only party that knows how
@@ -1783,14 +1793,17 @@ host's own bound terminates the child (SIGTERM then SIGKILL, the cascade the
 crate already owns) and answers the shell's `timeout` verdict with a sentence;
 the driver's longer patience stands behind it for the case where the whole host
 process went away. Neither is a knob: a server that has not answered is down,
-and a tool that has not answered is working.
+and a tool that has not answered is working. *(§5.7 designs the successor for
+a foot that streams: the host's fixed bound gives way to the asker's own
+listening, and a refused post is what terminates the child.)*
 
 ### 5.4 The thrall, and the local execution corpus (bl-1dd3)
 
 **A thrall is §5.3's executor, severed into a separately installed component**
 (§12) and carrying a foot-grade leaf (§4.2). Its entire wire surface is the
 three gestures a foot may send: advertise once, wait on `invocations`, post
-each capture with `complete`. **The transport is unchanged in every
+each capture with `complete` — in one post today, and in N ≥ 1 under §5.7,
+which is also where a model call becomes one of the invocations it serves. **The transport is unchanged in every
 particular** — it dials per ask and holds a connection only while it is
 *waiting*, so a busy thrall is absent (§5's presence amendment), and **nothing
 in the path is the server speaking first** (§3's routing ruling). Founding the
@@ -2407,7 +2420,10 @@ world that may have moved. The one property this design needs from a tool is
 none; what it needs from the *path* is that a run whose capture the foot still
 holds is never run again, and that is Ruling 1.
 
-**Ruling 2 — three hand-offs, then the server answers the slot in doubt.** A
+**Ruling 2 — three hand-offs, then the server answers the slot in doubt**
+*(narrowed by §5.7 for a foot that streams: a slot that has received a post is
+answered in doubt at once rather than handed out again; the three hand-offs
+stand for a slot nobody acknowledged)*. A
 slot counts how many follow-class reads it has been handed to. The second
 hand-off is the redelivery bl-e658 bought — the at-least-once leg, kept. The
 third separates a blip from a poison invocation: a box that dropped twice
@@ -2515,6 +2531,274 @@ delivered once carries nothing, and the restart sentence at both readers. Foot: 
 next dial and the driver-side slot is never re-run, and a refused re-post is
 dropped and the channel reads on. The two suites meet only at the wire's
 existing spellings, which is why neither needs the other to run.
+
+### 5.7 A provider call is an invocation (bl-0369)
+
+**The ruling** (operator, 2026-11-17): *the thrall becomes the way brazen is
+called. It is the execution channel and therefore the inference channel.* Every
+conversation stays in the one server; the model call of a turn may run on any
+registered machine, on that machine's own provider configuration and
+credentials — a phone sends the message, the server holds the conversation, a
+laptop whose sign-in works nowhere else makes the model call, and a third box
+runs the tool the model asked for. No third grade, no third role and no second
+channel: it is the foot's three gestures (§4.2, §5.4), and the one thing they
+lacked was a capture that arrives while it is being produced. **This section is
+the design; nothing in it has landed.** The balls that land it amend it in
+place.
+
+**What is true today, read off the code.** litany makes a model call by
+spawning its adapter once per attempt as `<adapter> --json --provider <row>`,
+writing one canonical request (the model, the system slot, the whole assembled
+context, the tool definitions) to its stdin and reading canonical events, one
+JSON object per line, from its stdout; it appends each line to the step's
+`response.json` as it arrives, which is the file §5.5's follow lane reads. The
+adapter litany is handed is yog's own `bz` arm — brazen linked into the server
+and run inside the workspace's directory, so the configuration and the
+credentials are the server's, per workspace. `providers`, `catalog`, `models`
+and the sign-in (§8.3, §9.27) are that same arm run with a different command
+line. So every use the server makes of brazen is one shape: **a command line and
+a standard input in; standard output, standard error and an exit code out.**
+That is §5.2's tool contract already.
+
+**So `bz` is an advertised tool, and nothing about it is special.** A box that
+will serve model calls carries one more entry in its own tool document (§5.2):
+
+```json
+{"name": "bz",
+ "description": "this box's model access",
+ "input_schema": {"type": "object",
+                  "properties": {"args": {"type": "array", "items": {"type": "string"}},
+                                 "stdin": {"type": "string"}},
+                  "required": ["args"]},
+ "command": ["bz", "<brazen's envelope flag>"]}
+```
+
+The input **is** the command line: `args` is what the server would have typed
+after `bz`, `stdin` what it would have piped in. The command is brazen's
+envelope mode — it reads that one object from its standard input, **refuses
+every flag outside the set a far caller may send**, and otherwise behaves
+exactly as `bz <args>` fed `stdin`. The flag's name and the refused set are
+brazen's and are not restated here; the reason the set exists is this
+section's: an unfiltered command line could name a file to attach, another
+configuration, or the flag that prints one, and *nothing credential-shaped
+crosses the wire* (§8.3) has to hold against the server too. Deleting the entry
+deletes the capability (§5.4's severability). The executing end's environment
+is its own (§5): which rows exist and which credentials answer for them is
+whatever brazen resolves in the foot's own environment, and a workspace that
+must not share a sign-in is served by its own foot — §5.4's sentence about
+MCP credentials, unchanged.
+
+Weighed and refused: **one entry per provider row with a fixed command line.**
+It needs no brazen change for the model call, whose command line is fixed per
+row. But the listings and the sign-in are five more command lines, so a box
+would hand-author several entries per row and the server would find each by a
+naming convention — a second inventory of what brazen already knows. And
+**a wrapper in thrall**, which would put brazen's flag grammar in a second
+repository.
+
+**Selection rides in the row's name, and there is no second place to say it.**
+A role's `provider` (the workspace's `providers.yaml`, §9.4, §9.14) is either a
+bare row — the server's own brazen, exactly as today — or **`<row>@<client>`**:
+that row, on that registered machine. It is §5's locality-rides-in-the-name
+applied to the one call that had an implicit location. The joiner is `@` rather
+than §5.2's underscore because nothing here is bound by a provider's tool-name
+grammar, and a row name may itself carry an underscore; it is the qualification,
+not the punctuation, that is the rule. The server reads the client off the name
+by matching the workspace's own registered clients (§1.5 — a machine registered
+elsewhere is absent, and its name is then just a row the server's brazen has
+never heard of); where two registered names both fit, the longer wins. No
+flag, no verb, no per-workspace "inference host", and litany changes nothing:
+it passes the name to the adapter it was handed and records it in the step,
+and the server's `bz` arm is where the name is read.
+
+Three things fall out of the name and cost nothing. A role is routed
+independently of every other, so a worker can think on the laptop while the
+titler stays on the server's cheap row. The model picker needs no new control:
+a qualified row is one more row. And **the price table already keys on
+`(provider, model)`** (§9.23), so a far machine's row is priced by its own
+entry — a subscription row at zero beside the same model metered on the
+server — with nothing added to the ledger.
+
+**A bare row is still the server's own brazen, and that is the one path this
+does not dissolve.** The seam is single — one runner taking a command line and a
+standard input, answering the three streams — and behind it are two executors:
+brazen linked into the server for a bare row, the routed leg for a qualified
+one. It stays for §5.4's last-rung reason (bl-5710): a default install has no
+foot, and a server that cannot answer a message is dead rather than inert.
+What removes it is the same thing that would remove that rung — a default
+install that founds and registers its own co-located foot — and that is an
+operator ruling this section does not take. **A bare row never resolves to "the
+one machine that advertises `bz`"**: registering a laptop must not move every
+workspace's model calls onto it.
+
+**The turn, in the order it happens.**
+
+1. A seat deposits a message; the server drives the conversation as it always
+   has. litany assembles the request and spawns the adapter with `--json
+   --provider <row>@<client>`.
+2. The server's `bz` arm reads the qualification and, instead of running
+   brazen, posts `invoke` for tool `bz` on that client with `{"args": ["--json",
+   "--provider", "<row>"], "stdin": <the request>}` — through the `gestures/`
+   inbox, exactly as §5.2's router does, because it too runs inside the driver.
+3. The foot, parked on `invocations`, is handed the row, runs its entry, and
+   **posts what the child writes while it writes it** (below).
+4. The arm polls `capture` and writes each appended piece to its own stdout.
+   litany appends it to `response.json` as it does for a local call, so every
+   watching seat's `follow` (§5.5) streams with no change at either end, and
+   usage, the step record and the transcript are litany's as before.
+5. The model's tool call is adjudicated and routed as §5 describes — to the
+   same machine, another, or a server act. The inference host and the tool host
+   are independent choices.
+
+The model call is **not adjudicated**: `yog tool-control` judges what a model
+asks for, and this is the loop's own act. The operator's consent is the row's
+name in the role, and the far operator's is the entry in the tool document.
+
+**A capture is N ≥ 1 posts, and the streamed form is not a second form.** This
+is §3's framing ruling said of `complete`. Three additions, one edition, **no
+`PROTOCOL` bump** (§3.2 — each is a key a reader may ignore):
+
+- **`complete` carries `partial` or `capture`.** `{"op": "complete",
+  "invocation": …, "partial": {"stdout": "…", "stderr": "…"}}` appends to the
+  slot and says the run is not over; either string may be empty, and a post of
+  two empty strings says only *still running*. The post carrying `capture`
+  ends the run, and its `stdout`/`stderr` are what was not yet posted. Absorb
+  every post in order and the result is the capture — §5.5's rule. A foot that
+  posts once, with `capture`, is today's foot unchanged.
+- **`capture` takes `since`**, `{"stdout": <bytes held>, "stderr": <bytes
+  held>}`: the asker's own count of what it already has. Asked with it, the
+  answer carries text from those offsets on — under **`partial`** on
+  `reply/routed` while the run is live, under `capture` when it is over.
+  Asked without it, the read is exactly what it was: nothing until the end,
+  then the whole. An offset is an idempotent ask (§3: asks re-ask freely), and
+  it is also the acknowledgement that lets the server drop what was read.
+- **`partial`'s presence is the lease fact.** Absent, nobody has posted for
+  this slot; present — empty included — a machine is running it. That is the
+  half of bl-6023's question (§5.3) a new foot can now answer.
+
+A foot posts when its child has written something or ten seconds have passed,
+whichever is first, and holds one connection for the posts of a run (the
+listener already serves request after request on a connection). It streams
+only to a server whose hello states an edition at or above these stamps
+(§3.2's discovery); to an older server it posts once, as now. **Every tool
+streams, not only `bz`** — there is no per-entry switch, because a switch would
+be a second form. An ordinary tool's asker never sends `since` and reads the
+whole at the end, as it does today.
+
+**What the stream changes about the leg, in four rules.**
+
+- **A run lives while its asker listens.** Every `capture` poll stamps the
+  slot. A post for a slot nobody has polled in thirty seconds — or one already
+  collected or swept — is refused in band, and **the refusal is the stop**: the
+  foot terminates the child (its own cascade, §5.3) and reads on. No cancel
+  verb exists and none is added; §3.1's `stop` kills the driver, the arm dies
+  with it, its polls end, and the far model call ends within one silence and
+  one post. This is §5.3's *"the patience belongs to the caller"* made
+  enforceable, and for a streaming foot it **replaces the box's fixed
+  two-minute bound**: a model call outlasts two minutes routinely, and the
+  only party that knows how long a call is worth is the one waiting for it.
+  The box keeps a bound for the case the asker cannot cover — a server it
+  cannot reach for a post ends the child.
+- **The first post is the acknowledgement, and an acknowledged run is never
+  handed out again** *(this narrows §5.6's ruling 2)*. Redelivery was bought
+  for the hand-off nobody received; a slot that holds a post was received. If
+  its machine asks for work again without finishing it, or goes thirty seconds
+  without a post, the server answers the slot in doubt at once — §5.6's
+  sentence, naming how much had arrived — instead of handing it out a second
+  time. A reader has already consumed part of the first run, and a second
+  spliced behind it is a capture no run produced. An unacknowledged slot keeps
+  §5.6's three hand-offs unchanged.
+- **The cap is per post, and the slot holds what is unread.** thrall's
+  per-stream capture limit was sized to a frame; it now bounds a post. The
+  server drops what an asker's `since` has passed and bounds what it holds
+  unread at the old figure, saying so on stderr in the old words.
+- **Nothing is retried on the wire.** A run that ends in doubt after output
+  reached the arm ends the arm's stream without its terminator; litany already
+  reads that as a call that died and does not retry it, and the conversation
+  rests with the failure where every provider failure lands. A call nobody
+  took — the machine asleep, or busy past the arm's patience (§5.6's two
+  minutes) — has relayed nothing, so the arm answers it as a canonical `error`
+  event naming the client and when it last spoke (§5.1's `last_seen`),
+  non-retryable: a retry would queue a second call behind the first.
+
+**The listings and the sign-in are the same runner.** Nothing is added to any
+of their shapes; what changes is which rows the answers carry.
+
+- **`providers` and `catalog`** answer the server's own rows as today, then,
+  for each client registered in the workspace that advertises `bz` **and is
+  parked on its read at that moment** (the mailbox's own `serving`), run the
+  same listing there and append its rows with their names qualified. A machine
+  that is asleep or busy contributes no rows and costs no wait; the roster
+  (§5.1) is where a seat reads why. The rows describe **that machine's
+  credentials as that machine's brazen reports them** — "signed in" on a
+  qualified row is a statement about the laptop.
+- **A qualified name is judged by its qualification.** The config gates
+  (§9.4's unknown-row judgement) accept `<row>@<client>` when the client is
+  registered here and advertises `bz` — both durable facts (§5) — whether or
+  not it is awake. The row half is the far machine's to refuse at the call:
+  use is attempt.
+- **`models`** with a qualified provider runs the listing on that machine.
+- **`login`** with a qualified provider starts the same run §8.3 describes,
+  as an invocation rather than a local spawn, and `login-tail` reads its lines
+  off the slot's stream — which is why standard error streams too: brazen
+  prints the device code there. The credential is minted and stored on the
+  machine that will use it and never leaves; what crosses is the human-facing
+  line, as §8.3 already ruled. A device-capable row completes from any seat,
+  a phone's included. A browser-only row opens its browser **on the far
+  machine**, which is the one box where that redirect can land — §8.3's
+  *the browser follows the human* holds only if the human is at that box, and
+  the pane says so.
+
+Each wait here is bounded and short, because these are reads answered in place:
+a machine that is `serving` takes the row at once, and one that does not answer
+within a few seconds contributes nothing.
+
+**What a foot serving `bz` can now see and do, stated plainly.** §4.2's
+sentence — *no ask, no act* — still describes what a foot may **say**; this
+changes what it is **told**. Before, a foot saw the input of each call
+addressed to it and authored that call's capture. A foot that serves a role's
+model calls is handed, on every turn of every conversation routed to it, the
+whole request: the system slot, the entire assembled transcript — including
+what other machines' tools returned — the tool definitions, and the operator's
+messages. And it **authors the model's output**: the prose the operator reads,
+and the tool calls the server then adjudicates and routes to other machines.
+Adjudication still judges every call, but it judges a call, and a machine that
+writes the calls can write ones that pass. It also reports its own usage, so
+the spend figures for those turns are its word. A foot-grade leaf is therefore
+no longer always the box the operator trusts least: **naming a machine in a
+role is trusting it with the conversation**, a grant made in the workspace's
+config by an operator-grade act, and revoked by editing the name out. The foot
+still cannot ask for anything it was not sent.
+
+**What this does not solve.**
+
+- **One call at a time per foot.** A foot runs serially (§5.3), so two
+  conversations routed to one machine queue, and a tool call for that box
+  waits behind a model call on it. The remedy that exists today is a second
+  foot on the box under its own leaf. Concurrency inside one foot would need
+  §5.3's redelivery predicate — *it asked for work again, so it did not
+  finish* — restated, and is not attempted.
+- **The poll is the stream's grain.** The arm polls at the router's cadence,
+  so text reaches a seat in half-second pieces rather than per token.
+- **A machine that is absent is a turn that fails**, in band, after the arm's
+  patience. There is no fallback row: a call that silently ran on the server's
+  credential instead would be an implicit location, which the name exists to
+  forbid.
+- **Version skew between two brazens.** The far `bz` answers for its own
+  version; what holds the two together is brazen's canonical protocol number
+  on the stream's first event, which litany already checks for an adapter it
+  did not vet.
+- **A human typing `invoke` at a seat** must keep asking `capture`, or a
+  streaming foot stops the run after thirty seconds.
+
+**What proves it, when it lands.** Server: the mailbox suite — posts absorb in
+order, `since` is idempotent, an acknowledged slot is answered in doubt rather
+than re-handed, a post for an unlistened slot is refused; and a driven turn
+against a real foot process on loopback whose `bz` entry is a fixture script,
+asserting `response.json` grows before the child exits. Foot: a slow child's
+output is posted before it exits, a refused post kills the child, an older
+server is posted to once. brazen: the envelope mode runs an allowed command
+line byte-for-byte as the direct one and refuses each flag outside the set.
 
 ## 6. What lives where
 
@@ -3491,7 +3775,11 @@ construction, and the spawn was the window's, so no spelling existed that put
 the browser at the seat and the credential in the host's workspace directory.
 
 **The ruling: the sign-in is an act on the boundary, executed by the SERVER
-inside the named workspace's directory, streamed to the invoking seat.** bz runs
+inside the named workspace's directory, streamed to the invoking seat.**
+*(Generalised by §5.7, bl-0369: executed by the brazen the row names — the
+server's for a bare row, a registered machine's for `<row>@<client>` — and
+the rest of this section reads unchanged with "the server's box" taken as
+"the box that holds the credential".)* bz runs
 where the workspace is, so the credential lands where the agents that need it run,
 and the custody stance survives unchanged at both ends: DESIGN §5.1 #22 holds
 — yog pipes the flow's lines and never a credential — and **nothing
@@ -5932,6 +6220,18 @@ said — so nothing is read twice and the landed file is named, never copied.
 
 Recorded so they are not relitigated:
 
+- **A third remote role, grade or channel for inference** (bl-0369, operator
+  ruling 2026-11-17). A model call is an invocation a foot serves (§5.7): the
+  execution channel is the inference channel. A dedicated "model host" leaf,
+  verb family or held connection would be a second executor surface with its
+  own lease, its own stop and its own trust story.
+- **Sending a provider credential, or a provider's HTTP exchange, across the
+  wire** so the server's brazen can use a far machine's sign-in (bl-0369).
+  brazen can hand its HTTP to a transport program, and tunnelling that through
+  a foot would need no streaming change — but it is the server's brazen that
+  signs the request, so the token would have to live on the server, which is
+  §8.3's custody line crossed in the other direction.
+
 - **A second in-process face for the local window** — the split is the point;
   one method, one channel (§1.2). Challenged by bl-ccf7 (§9.7) and **upheld by
   operator ruling 2026-08-14 (bl-ae05)**: the challenge was that an in-process
@@ -6017,7 +6317,8 @@ Recorded so they are not relitigated:
 
 Operator ruling: the harness becomes four separately installed components
 meeting only at the wire; brazen stays the provider adapter beneath the
-server. This section is the ruling's home — the components, the invariants and
+server *(and, by the 2026-11-17 ruling, beneath any foot that advertises it —
+§5.7; it is still no fifth component and has no wire presence of its own)*. This section is the ruling's home — the components, the invariants and
 the order live here; every other section keeps describing the tree as it
 stands and is amended by the ball that moves it.
 
