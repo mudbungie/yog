@@ -148,7 +148,17 @@ balls = "=0.5.13"
 # was shipped first so the seats could land against the fixtures, and this pin
 # is what makes it answer. 0.0.20 is a docs-only release (changelog curation)
 # and the pin stays on 0.0.19 because litany's does (below).
-brazen = { version = "=0.0.19", features = ["native-host"] }
+# 0.0.21 (upstream bl-0839) gives a provider row `header_commands`: header name
+# -> argv, whose trimmed stdout is that header's value on every request the row
+# makes, the same-named `beta_headers` entry standing when the command yields
+# nothing. yog calls none of it, but it PARSES it: a wall's `config.toml` is
+# read by the brazen linked here, the row table refuses an unknown key, and so
+# a wall config carrying the key was a `MalformedFile` — every chat on that
+# workspace dead — under any earlier pin. This pin is what lets the operator's
+# claude-session row ask the installed CLI for its version instead of carrying
+# a hand-copied one that rots when the backend raises its floor (bl-ee09, ops
+# bl-048a). litany steps to the same pin in 0.0.16 (below).
+brazen = { version = "=0.0.21", features = ["native-host"] }
 clap = { version = "4", features = ["derive"] }
 # The embedded agent harness (DESIGN §16.7 W11): the multiplex arm `yog litany
 # <argv…>` reproduces litany's own thin exec binding over `litany::cmd`, and the
@@ -367,7 +377,14 @@ clap = { version = "4", features = ["derive"] }
 # `notify_ui` / `mark_abandoned` run at a child's verdict (litany bl-ef78), so a
 # guard's `INJECTED` marks the dispatcher and lands on the attention queue. Its
 # brazen pin is still `=0.0.19`.
-litany = "=0.0.15"
+# 0.0.16 is litany's brazen pin walking to `=0.0.21` (litany bl-5491) — the
+# parity move, so the lockfile resolves exactly ONE brazen — and it carries the
+# per-agent model mark (litany bl-246f): `litany model <ws> <agent> …` writes
+# `refs/litany/model/<agent>`, a role-assignment blob resolution overlays on
+# that agent alone, and each step's `meta.json` gains `model_mark`, which rides
+# `steps_view::meta_field` unread like every other grows-only field. yog spends
+# none of the new verb here.
+litany = "=0.0.16"
 libc = "0.2"
 notify = "6"
 # The REMOTE §9.5 wire's TLS (bl-b6fa, approved by operator ruling 2026-08-13).
