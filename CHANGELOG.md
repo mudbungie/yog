@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.98](https://github.com/mudbungie/yog/compare/v0.0.97...v0.0.98) - 2026-11-18
+
+### Changes
+
+- Driven proof on two machines: a message from a seat, the model call on one registered foot, the tool call on another [bl-faf3]
+
 ## [0.0.97](https://github.com/mudbungie/yog/compare/v0.0.96...v0.0.97) - 2026-11-18
 
 ### Changes
