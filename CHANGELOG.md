@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.97](https://github.com/mudbungie/yog/compare/v0.0.96...v0.0.97) - 2026-11-18
+
+### Changes
+
+- bz arm: a role whose provider is <row>@<client> makes its model call as an invocation on that machine [bl-e0c9]
+
 ## [0.0.96](https://github.com/mudbungie/yog/compare/v0.0.95...v0.0.96) - 2026-11-18
 
 ### Changes
