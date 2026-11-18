@@ -1122,7 +1122,7 @@ dependencies = [
 
 [[package]]
 name = "yog"
-version = "0.0.93"
+version = "0.0.94"
 dependencies = [
  "balls",
  "brazen",
