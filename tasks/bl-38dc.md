@@ -1,7 +1,8 @@
 +++
 title = "ingest a litany release unattended: an hourly workflow moves the litany pin to the newest published litany and the brazen pin to the one that litany names, proves it through ci.yml on a branch, lands it on main, and the release follows"
 created = 1794984548
-updated = 1794984548
+updated = 1794984572
+claimant = "Knuckled-Y"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
