@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.93](https://github.com/mudbungie/yog/compare/v0.0.92...v0.0.93) - 2026-11-18
+
+### Changes
+
+- ingest a litany release unattended: an hourly workflow moves the litany pin to the newest published litany and the brazen pin to the one that litany names, proves it through ci.yml on a branch, lands it on main, and the release follows [bl-38dc]
+
 ## [0.0.92](https://github.com/mudbungie/yog/compare/v0.0.91...v0.0.92) - 2026-11-11
 
 ### Changes
