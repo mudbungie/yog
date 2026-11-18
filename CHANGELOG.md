@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.96](https://github.com/mudbungie/yog/compare/v0.0.95...v0.0.96) - 2026-11-18
+
+### Changes
+
+- the pins step to litany =0.0.18, brazen =0.0.22, ingested from the registry
+- a red unattended run reaches the operator once per streak: scripts/alarm.sh opens one issue per scheduled workflow on the first red run and the next green run closes it; and the landing refuses without the release token instead of dispatching a workflow that cannot release [bl-3102]
+
 ## [0.0.95](https://github.com/mudbungie/yog/compare/v0.0.94...v0.0.95) - 2026-11-18
 
 ### Changes
