@@ -308,7 +308,7 @@ demotion removes an internal API from the boundary's obligations. Reach for
 
 `make check` is the complete gate, and every judge runs exactly it:
 
-    fmt-check → lint (line-cap + beat-audit + deploy-selftest + protocol-gate + leak-scan + clippy + ast-grep scan + cargo-deny) → scripts/check-coverage.sh
+    fmt-check → lint (line-cap + beat-audit + deploy-selftest + ingest-selftest + protocol-gate + leak-scan + clippy + ast-grep scan + cargo-deny) → scripts/check-coverage.sh
 
 **This machine does not run it.** The pre-commit hook (`.githooks/pre-commit`,
 seated by `make install-hooks`, the mainline refusal) execs `scripts/pre-commit`,
@@ -335,7 +335,7 @@ lint`) still work here; they are just not the gate.
 
 - `make lint` — `make line-cap` (sub-second, so it fails first), then
   `make beat-audit` (milliseconds), then `make deploy-selftest`, then
-  `make protocol-gate` (milliseconds), then `make leak-scan` (~5s), then
+  `make ingest-selftest`, then `make protocol-gate` (milliseconds), then `make leak-scan` (~5s), then
   `cargo clippy --all-targets -- -D warnings` (picks up the manifest
   `[lints]`), then `make rules-audit`, then `cargo deny check bans licenses sources`.
 - `make line-cap` — the 300-line cap over every tracked non-exempt file. Prints
@@ -438,6 +438,19 @@ so `make deny` judges bans, licences and sources, and
 finding it runs `make mend-advisories`, proves the lockfile move with
 `ci.yml` on a branch, fast-forwards `main` and re-judges the release. A
 gate failure on `deny` is about the tree, never about the calendar.
+
+**The litany and brazen pins are moved by a workflow, not by a ball**
+(bl-38dc). `.github/workflows/ingest.yml` runs `make ingest` hourly:
+`scripts/ingest.sh` steps the litany pin to the registry's newest live litany
+and the brazen pin to the one THAT litany names (never brazen's own newest —
+the lockfile must resolve one brazen), and an empty diff ends the run. A move
+is landed exactly as an advisory mend is — `scripts/land-through-gate.sh` is
+the one definition both workflows call, and `make ingest-selftest` drives both
+scripts under fake tools in `lint` — and the ordinary release follows. **A red
+run of `ingest.yml` is the hand's case**: the upstream release needs a change
+here, so file a ball that lands the pin move WITH the code it needs; the run
+goes green by itself once `main` carries the pins. The `balls` pin is not
+ingested: `bl-speculate` on every box must match it (below).
 
   **It reads index BLOBS, not the worktree.** `git checkout-index`
   materializes the index into a scratch tree and the scan reads that, so the

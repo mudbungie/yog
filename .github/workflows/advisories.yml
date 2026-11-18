@@ -17,8 +17,10 @@ name: Advisories
 #      prose), then the question asked again. An advisory with no fixed
 #      version leaves it failing, which fails this run — the ONE case that is
 #      a hand's, and the run says so rather than guessing.
-#   3. The lockfile committed on a branch, and `ci.yml` dispatched on that
-#      branch. That workflow is the one definition of green (`make ci` is
+#   3. `scripts/land-through-gate.sh` — the one definition of steps 3 to 5,
+#      shared with `ingest.yml` (bl-38dc) and self-tested in the gate (`make
+#      ingest-selftest`). The lockfile committed on a branch, and `ci.yml`
+#      dispatched on that branch. That workflow is the one definition of green (`make ci` is
 #      `make check`), and this file restates no step of it: the mend is proved
 #      by the same gate every other change is proved by, on a runner.
 #   4. On a pass, `main` fast-forwarded to the branch; the branch deleted
@@ -108,28 +110,5 @@ jobs:
             exit 1
           fi
           moved=$(git diff -- Cargo.lock | sed -nE 's/^[ +]name = "(.*)"/\1/p' | sort -u | paste -sd, -)
-          branch="advisories/$(date -u +%Y%m%d-%H%M)"
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git switch -c "$branch"
-          git commit -qm "the lockfile moves past the day's advisories: $moved" -- Cargo.lock
-          git push -u origin "$branch"
-          # The branch was only the run's seat: gone whichever way this ends.
-          trap 'git push origin --delete "$branch" || true' EXIT
-          gh workflow run ci.yml --ref "$branch"
-          # A dispatch answers before its run exists; find the run by its branch.
-          run=""
-          for _ in $(seq 1 30); do
-            run=$(gh run list --workflow ci.yml --branch "$branch" --event workflow_dispatch --limit 1 --json databaseId --jq '.[0].databaseId // empty')
-            [ -n "$run" ] && break
-            sleep 5
-          done
-          [ -n "$run" ] || { echo "ci.yml never started on $branch" >&2; exit 1; }
-          gh run watch "$run" --exit-status
-          git push origin "$branch:main" || {
-            echo "main moved while the gate ran: nothing landed; the next run begins from the new main" >&2
-            exit 1
-          }
-          if [ -z "$PAT" ]; then
-            gh workflow run release-plz.yml --ref main
-          fi
+          scripts/land-through-gate.sh advisories \
+            "the lockfile moves past the day's advisories: $moved" Cargo.lock

@@ -1,6 +1,6 @@
 .PHONY: all build release test coverage lint fmt fmt-check check install-hooks install uninstall print-install-stamp ci publish clean rules-audit line-cap leak-scan protocol-gate deny advisories mend-advisories image image-scan print-image-tag \
         corpus drive drive-preflight drive-cleanroom drive-seed drive-log wire-certs fixture \
-        deploy deploy-status
+        deploy deploy-status ingest ingest-selftest
 
 # Install location for `make install`. Defaults to the XDG-ish user-local
 # convention; override for system-wide installs or packaging:
@@ -87,6 +87,7 @@ lint:
 	$(MAKE) line-cap
 	$(MAKE) beat-audit
 	$(MAKE) deploy-selftest
+	$(MAKE) ingest-selftest
 	$(MAKE) protocol-gate
 	$(MAKE) leak-scan
 	cargo clippy --all-targets -- -D warnings
@@ -462,6 +463,22 @@ deploy-local:
 # up beside `beat-audit` at the head of `lint`.
 deploy-selftest:
 	@scripts/deploy/local-selftest.sh
+
+# Step the litany and brazen pins to the registry's newest live litany and the
+# brazen THAT litany names (bl-38dc): Cargo.toml's two pin lines and the
+# lockfile, nothing else, and an empty diff when nothing is newer. Hourly from
+# `.github/workflows/ingest.yml`, which lands a non-empty diff through the gate;
+# `scripts/ingest.sh` carries the reasoning. Its stdout is one line, the pins
+# the tree now states.
+ingest:
+	@scripts/ingest.sh
+
+# The regression half of that, and of `scripts/land-through-gate.sh` (the one
+# definition of how ingest.yml and advisories.yml write to `main`): both real
+# scripts under fake curl/cargo and fake git/gh, both directions. Seconds, no
+# network, so it sits beside `deploy-selftest` at the head of `lint`.
+ingest-selftest:
+	@scripts/ingest-selftest.sh
 
 # What that server is running right now: the unit, and the immutable tag it was
 # pointed at — the box's own answer to "what version is this".

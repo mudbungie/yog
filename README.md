@@ -14,7 +14,10 @@ deliberately outside the litany and balls workspaces: both ship as composable
 components and yog composes on top of them. The batteries-included direction is
 **landed**: balls, brazen and litany are all linked crates, exact-pinned in
 `Cargo.toml` — which is the pin authority, so no version is restated here or in
-any doc. Ball reads run in-process, and every substrate spawn targets yog's own
+any doc. The litany and brazen pins follow the registry unattended: the hourly
+`ingest.yml` workflow runs `make ingest`, proves the move through CI on a
+branch and lands it, and the ordinary release follows; a red run is an upstream
+change that needs a hand. Ball reads run in-process, and every substrate spawn targets yog's own
 executable under a verb namespace — `yog bl <verb…>`, `yog bz <args…>`, `yog
 litany <argv…>` — dispatched to the embedded crate exactly as each upstream's
 own thin binary does (DESIGN §16.7). Nothing is installed alongside: there is no
@@ -421,6 +424,7 @@ config, so removing the space deletes config, not code.
 | `make test` | Run the test suite (parallel; see the Makefile note on spawn discipline) |
 | `make coverage` | Enforce the 100% coverage floor via pinned tarpaulin (see `tarpaulin.toml`) |
 | `make lint` / `make fmt` | Clippy `-D warnings` + ast-grep rules audit + `cargo deny check bans licenses sources` (advisories: the daily `advisories.yml`) / rustfmt |
+| `make ingest` | Step the litany and brazen pins (and the lockfile) to the registry's newest live litany and the brazen it names; an empty diff when nothing is newer. Run hourly by `ingest.yml`, which lands a move through CI |
 | `make rules-audit` | Run the pinned ast-grep rules (`rules/`) over `src` and verify the `rules/fixtures` negatives still fire |
 | `make check` | fmt-check + lint + coverage — the complete gate CI and the pre-commit hook mirror |
 | `make drive` [`DRIVE_RUNS="…"`] | Drive the real-substrate ladder (`docs/STORIES.md`): release build, host preflight, one **scratch** world per run verb, a PASS/FAIL line and a `verdicts.jsonl` row per beat, and a pre-filled drive-log skeleton. Never the live world — an overlap with `$XDG_DATA_HOME` is refused |
