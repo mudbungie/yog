@@ -1,7 +1,8 @@
 +++
 title = "Driven proof on two machines: a message from a seat, the model call on one registered foot, the tool call on another"
 created = 1794985624
-updated = 1794985624
+updated = 1794986807
+claimant = "Rabid-yog3"
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["inference"]
 
