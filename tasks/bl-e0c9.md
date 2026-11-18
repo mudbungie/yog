@@ -1,7 +1,8 @@
 +++
 title = "bz arm: a role whose provider is <row>@<client> makes its model call as an invocation on that machine"
 created = 1794985623
-updated = 1794985623
+updated = 1794986027
+claimant = "Rabid-yog2"
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["inference"]
 
