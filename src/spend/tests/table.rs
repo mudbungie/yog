@@ -160,3 +160,23 @@ fn a_figure_typed_and_a_figure_written_agree_to_the_micro() {
         );
     }
 }
+
+/// **A far machine's row is one more provider name** (REMOTE §5.7, bl-e0c9):
+/// `<row>@<client>` is what the step records, so it is priced by its own entry
+/// — a subscription row at zero beside the same model metered on the server —
+/// and a qualified name with no entry is unpriced rather than borrowing the
+/// bare row's rate.
+#[test]
+fn a_qualified_row_is_priced_by_its_own_entry() {
+    let mut t = table();
+    t.set("anthropic@laptop", "opus", Some(Price::default()));
+    assert_eq!(
+        t.of(Some("anthropic@laptop"), Some("opus")),
+        Some(Price::default())
+    );
+    assert_eq!(
+        t.of(Some("anthropic"), Some("opus")).map(|p| p.input),
+        Some(15_000_000)
+    );
+    assert_eq!(t.of(Some("anthropic@phone"), Some("opus")), None);
+}

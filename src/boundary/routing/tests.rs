@@ -232,3 +232,32 @@ fn the_door_reaches_both_ends_of_the_hand_off() {
         "the complete end answers its own refusal"
     );
 }
+
+/// **A connection queues work only for a machine it shares a workspace with**
+/// (REMOTE §4, §5.7; bl-e0c9). A seat registered in one workspace is answered
+/// the staleness sentence for a box registered only in another — the same
+/// words a box carrying no such tool earns, so the refusal confirms nothing —
+/// and the same seat reaches the box once the two share a registration.
+#[test]
+fn a_connection_cannot_reach_a_machine_registered_only_elsewhere() {
+    let root = tempdir().expect("tmp");
+    let mail = Mailbox::holding(2, Duration::from_millis(1));
+    let (laptop, phone) = (
+        Client::parse("laptop").expect("identity"),
+        Client::parse("phone").expect("identity"),
+    );
+    tools::store(root.path(), &laptop, &[tool("Bash")]).expect("advertise");
+    crate::registry::register(root.path(), &laptop, "alba").expect("register");
+    crate::registry::register(root.path(), &phone, "brine").expect("register");
+
+    let seat = deps(root.path(), "phone", &mail);
+    assert_eq!(
+        invoke(&seat, "100", &call("laptop", "Bash")),
+        Err("client \"laptop\" advertises no tool \"Bash\" right now".to_owned())
+    );
+    crate::registry::register(root.path(), &phone, "alba").expect("register");
+    assert_eq!(
+        handle(invoke(&seat, "100", &call("laptop", "Bash"))),
+        "inv-1"
+    );
+}

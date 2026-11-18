@@ -45,11 +45,26 @@ pub(super) fn route(deps: &Deps, ts: &str, verb: &Verb) -> Result<Reply, String>
 /// waiting, so a presence test would refuse the second call of a busy host
 /// (see [`crate::registry::mailbox`]). What makes a vanished client visible is
 /// the asker's own deadline.
+///
+/// **And a connection reaches only a machine it shares a workspace with**
+/// (REMOTE §4, §5.7; bl-e0c9). A call addresses a machine and names no
+/// workspace, so before this a scoped client could queue work for a box in a
+/// workspace it was never registered in. The registrations of the two are both
+/// files, so the test is their intersection, and a machine outside it is
+/// answered in the staleness sentence — absent-shaped, as §4 requires. An
+/// in-world caller is unscoped (§3) and is held to its workspace where it
+/// resolves the name: the loaded set, the worktree lane and the `bz` arm each
+/// read the calling workspace's own roster.
 fn invoke(deps: &Deps, ts: &str, call: &Call) -> Result<Reply, String> {
     let client = Client::parse(&call.client)?;
-    if !tools::read(&deps.state_root, &client)
-        .iter()
-        .any(|tool| tool.name == call.tool)
+    let caller = &deps.caller.client;
+    let shared = caller.is_local()
+        || !crate::registry::registered(&deps.state_root, caller)
+            .is_disjoint(&crate::registry::registered(&deps.state_root, &client));
+    if !shared
+        || !tools::read(&deps.state_root, &client)
+            .iter()
+            .any(|tool| tool.name == call.tool)
     {
         return Err(format!(
             "client {:?} advertises no tool {:?} right now",

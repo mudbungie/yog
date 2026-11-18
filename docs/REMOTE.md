@@ -1654,7 +1654,8 @@ the `gestures/` deposit inbox and `yog gesture` (§4.1; the window is a
 certificate-bearing client since bl-ae05) — **refuses in band**
 on the two that are a tool host's, with a sentence. `invoke` is the exception
 and names its client, because there the identity is the **addressee** rather
-than the author.
+than the author. *(Since bl-e0c9 a connection's `invoke` reaches only a machine
+it shares a registered workspace with — §5.7,* The `bz` arm, as landed*.)*
 
 **A handle that is not yours is absent, not forbidden** (§4). A completion
 quoting an invocation addressed to another machine, and a poll on a handle this
@@ -2546,9 +2547,10 @@ laptop whose sign-in works nowhere else makes the model call, and a third box
 runs the tool the model asked for. No third grade, no third role and no second
 channel: it is the foot's three gestures (§4.2, §5.4), and the one thing they
 lacked was a capture that arrives while it is being produced. **This section is
-the design, and one part of it has landed: the server half of the stream**
-(bl-d414, edition 28 — *The stream, as landed* below). The `bz` arm, the
-listings and the sign-in have not. The balls that land it amend it in place.
+the design, and two parts of it have landed: the server half of the stream**
+(bl-d414, edition 28 — *The stream, as landed* below) **and the `bz` arm**
+(bl-e0c9 — *The `bz` arm, as landed*). The listings and the sign-in have not.
+The balls that land it amend it in place.
 
 **What is true today, read off the code.** litany makes a model call by
 spawning its adapter once per attempt as `<adapter> --json --provider <row>`,
@@ -2789,6 +2791,63 @@ rules above left open, and the one place it corrects them:
   still asking about is not an abandoned one, and a model call may outlast the
   hour.
 
+**The `bz` arm, as landed** (bl-e0c9; `src/bz_host.rs` the seam,
+`src/bz_host/far.rs` the routed leg). No shape moved, no edition was stamped
+and `PROTOCOL` stands at 19: the arm spends bl-d414's three keys and adds none.
+
+- **The seam is `bz_host::run`**, the one function every use of brazen in the
+  server already passes — the `yog bz` arm and the in-process runner alike. It
+  asks the routed leg whether the command line is its own and otherwise runs
+  the linked brazen, whose body is unchanged.
+- **What is routed is the model call, and only it.** The command line must
+  take brazen's data-plane route and carry `--provider <name>` as two
+  arguments — the one spelling litany sends. A listing or a sign-in naming a
+  qualified row still reaches the linked brazen, which has never heard of it;
+  widening that is the listings ball's.
+- **The name is read off disk, with no ask.** The workspace is the arm's own
+  wall leaf (DESIGN §16.2) and its clients are the registration files (§4.1),
+  so reading a name costs no round trip and cannot fail on a slow server. An
+  arm outside any wall routes nothing.
+- **The patience is spent only while nobody has taken the call.** The arm
+  polls every half second and counts a poll only while the reply carries no
+  `partial`; two hundred and forty such polls is the two minutes. Once a
+  machine has posted, the call is worth as long as it runs, and a run that
+  stalls is ended by the server's own thirty-second rule at the arm's next
+  poll. **A foot that does not stream is therefore held to two minutes for the
+  whole call**, which is what its own fixed bound already was.
+- **Corrected here — the in-band error covers every failure before a byte was
+  relayed**, not only the machine that never took the call. A refused `invoke`
+  (the client advertises no `bz`) and a server that did not answer have
+  relayed nothing either, and a second failure shape for them would be a
+  half stream with nothing in it. The event's `kind` is `far_call` — a tag
+  outside brazen's taxonomy, which passes through verbatim and is never
+  retryable — and the exit code is the one brazen's table gives an unknown
+  kind. For the call nobody took the message names the client, the wait, and
+  `last_seen` as a date or *it has never connected*.
+- **A run the server ended in doubt is relayed as the capture it is**: the
+  text that had arrived is already on stdout, the server's sentence goes to
+  stderr, and the exit code is the capture's 1. After a relayed byte nothing
+  is ever added to stdout, so litany reads the half stream.
+- **A stop is the process dying.** The arm installs no handler; §3.1's stop
+  signals the driver's group and the polls end with the process.
+- **`invoke` could reach a machine outside the caller's workspaces, and for a
+  connection it no longer can.** A call names a machine and no workspace
+  (§5.3), so a scoped client could queue work for a box registered only
+  elsewhere. `invoke` now requires that the caller and the addressee share a
+  registration, and answers the staleness sentence otherwise — absent-shaped
+  (§4). An in-world caller stays unscoped (§3) and is held to its workspace
+  where it resolves the name: the loaded set, the worktree lane and this arm
+  each read the calling workspace's roster.
+- **Found, and the listings ball's to close: a conversation cannot yet be
+  *born* on a qualified role through a seat.** §9.19's `prompt` door refuses a
+  role whose row the wall does not declare, and a qualified name is such a
+  row until *a qualified name is judged by its qualification* (below) lands.
+  A turn on a conversation that already exists, and litany driven directly,
+  pass. Nothing in litany's config grammar or in a role block refuses `@`.
+- **The price table needed nothing.** The step records the qualified name and
+  the lookup is exact on `(provider, model)`, so `<row>@<client>` is priced by
+  its own entry and is unpriced without one.
+
 **The listings and the sign-in are the same runner.** Nothing is added to any
 of their shapes; what changes is which rows the answers carry.
 
@@ -2863,9 +2922,19 @@ still cannot ask for anything it was not sent.
 (`src/registry/mailbox/slots/tests/stream.rs`, landed with bl-d414) — posts
 absorb in order, `since` is idempotent, an acknowledged slot is answered in
 doubt rather than re-handed, a `partial` for an unlistened slot is refused and
-a `capture` for one lands, the unread bound holds; and a driven turn
-against a real foot process on loopback whose `bz` entry is a fixture script,
-asserting `response.json` grows before the child exits. Foot: a slow child's
+a `capture` for one lands, the unread bound holds. The arm
+(`src/bz_host/far/tests.rs`, landed with bl-e0c9): the four readings of a
+name, the stream relayed in its pieces with `since` advancing, the error
+event for a call nobody took and for a refused ask, nothing added after a
+relayed byte. And a driven turn (`tests/bz_far_turn.rs`): the shipped binary
+runs `litany prompt` on a workspace whose roles name a foot, the fixture
+foot's `bz` entry is a script that holds half its stream until the test has
+seen `response.json` grow, and the step commits with the far usage and the
+qualified row; a second case sends the arm `SIGTERM` and sees no poll after
+it. **That fixture is not a wire client**: its intake answers the arm's two
+gestures out of the real mailbox and the foot posts to that mailbox directly,
+so the TLS leg and the dispatch arms are proven by their own suites and the
+two-machine drive remains the live proof's. Foot: a slow child's
 output is posted before it exits, a refused post kills the child, an older
 server is posted to once. brazen: the envelope mode runs an allowed command
 line byte-for-byte as the direct one and refuses each flag outside the set.

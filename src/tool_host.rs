@@ -283,4 +283,4 @@ impl ToolInjection for Injection {
 }
 
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;

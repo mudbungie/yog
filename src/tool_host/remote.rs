@@ -36,6 +36,7 @@
 //! still "ends early on litany's stop flag" (REMOTE §5) by two orders of
 //! magnitude of its bound.
 
+use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use serde_json::{Value, json};
@@ -43,7 +44,7 @@ use serde_json::{Value, json};
 use super::ask::{self, Budget};
 use super::{Site, loaded};
 use crate::boundary::reply::{self, Reply};
-use crate::registry::mailbox::Capture;
+use crate::registry::mailbox::{Capture, Standing};
 
 /// Run one loaded remote name on the machine that advertised it, and answer
 /// what it captured — or the sentence saying why nothing did.
@@ -62,10 +63,12 @@ pub fn invoke(
     if let (Some(cwd), Some(map)) = (cwd, ask.as_object_mut()) {
         map.insert("cwd".to_owned(), Value::String(cwd.to_owned()));
     }
-    let invocation = routed(site, &ask, &entry.client, stop)?.0;
+    let routed =
+        |request: &Value| routed(&site.state_root, site.budget, request, &entry.client, stop);
+    let invocation = routed(&ask)?.0;
     let poll = json!({ "op": "capture", "invocation": invocation });
     for _ in 0..site.patience.waits {
-        if let (_, Some(capture)) = routed(site, &poll, &entry.client, stop)? {
+        if let Some(capture) = routed(&poll)?.1.capture {
             return Ok(capture);
         }
         std::thread::sleep(site.patience.tick);
@@ -77,8 +80,10 @@ pub fn invoke(
     ))
 }
 
-/// One `Reply::Routed` round trip: the handle, and the capture if there is one
-/// yet. A refusal envelope and an envelope of another kind are the same class
+/// One `Reply::Routed` round trip: the handle, and the slot as it stands — the
+/// capture if there is one yet, and what has arrived of it for an asker that
+/// stated its offsets (REMOTE §5.7; the `bz` arm's relay is the second caller,
+/// which is why this takes the two facts it needs and not a [`Site`]). A refusal envelope and an envelope of another kind are the same class
 /// of answer — the server did not say what was asked — and both name what came
 /// back, exactly as [`ask::roster`] does.
 ///
@@ -87,13 +92,14 @@ pub fn invoke(
 /// only layer that reads the flag (see the module note). Only the *wait* is
 /// rewritten: an answer that arrived is decoded and reported as itself, stop or
 /// no stop.
-fn routed(
-    site: &Site,
+pub(crate) fn routed(
+    state_root: &Path,
+    budget: Budget,
     request: &Value,
     client: &str,
     stop: &AtomicBool,
-) -> Result<(String, Option<Capture>), String> {
-    let envelope = ask::ask(&site.state_root, request, site.budget, stop).map_err(|e| {
+) -> Result<(String, Standing), String> {
+    let envelope = ask::ask(state_root, request, budget, stop).map_err(|e| {
         if stop.load(Ordering::Relaxed) {
             format!("stopped while waiting on {client}")
         } else {
@@ -104,7 +110,7 @@ fn routed(
         Ok(Ok(Reply::Routed {
             invocation,
             standing,
-        })) => Ok((invocation, standing.capture)),
+        })) => Ok((invocation, standing)),
         Ok(Ok(other)) => Err(format!(
             "server answered {other:?}, not a routed invocation"
         )),

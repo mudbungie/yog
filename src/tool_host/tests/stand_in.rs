@@ -39,7 +39,7 @@ pub(in crate::tool_host) fn server(
 
 /// A budget that answers fast when a server is there and gives up fast when
 /// it is not.
-pub(in crate::tool_host) fn budget() -> ask::Budget {
+pub(crate) fn budget() -> ask::Budget {
     ask::Budget {
         waits: 4000,
         tick: Duration::from_millis(1),
@@ -47,7 +47,7 @@ pub(in crate::tool_host) fn budget() -> ask::Budget {
 }
 
 /// A budget with no patience at all — the "no server" path, without the wait.
-pub(in crate::tool_host) fn impatient() -> ask::Budget {
+pub(crate) fn impatient() -> ask::Budget {
     ask::Budget {
         waits: 1,
         tick: Duration::ZERO,
@@ -88,10 +88,7 @@ pub(in crate::tool_host) fn site(root: &Path, budget: ask::Budget) -> Site {
 /// A stand-in server that answers `replies` in order, one per deposit — the
 /// routing leg needs two round trips (queue, then poll) and [`server`] answers
 /// exactly one. Hands every request back over the channel.
-pub(in crate::tool_host) fn scripted(
-    root: &Path,
-    replies: &[Value],
-) -> (JoinHandle<()>, Receiver<Value>) {
+pub(crate) fn scripted(root: &Path, replies: &[Value]) -> (JoinHandle<()>, Receiver<Value>) {
     let root = root.to_path_buf();
     let replies = replies.to_vec();
     let (tx, rx) = std::sync::mpsc::channel();

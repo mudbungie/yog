@@ -51,16 +51,27 @@ pub struct ClientRow {
 /// presence and its advertised set.
 pub fn roster(state_root: &Path, presence: &Presence, workspace: &str) -> Vec<ClientRow> {
     let live = presence.live();
-    names(state_root)
+    members(state_root, workspace)
         .into_iter()
-        .filter_map(|name| Client::parse(&name).ok())
-        .filter(|client| super::registered(state_root, client).contains(workspace))
         .map(|client| ClientRow {
             present: live.contains(&client.name()),
             tools: tools::read(state_root, &client),
             last_seen: super::seen::read(state_root, &client),
             client: client.name(),
         })
+        .collect()
+}
+
+/// **Who is registered in `workspace`** — the durable half of the roster, read
+/// off disk with no server to ask (REMOTE §4.1, §5.7; bl-e0c9). The `bz` arm
+/// reads a role's `<row>@<client>` against exactly this set, so a machine
+/// registered in another workspace is absent from the name as it is from the
+/// roster — one listing, two readers.
+pub fn members(state_root: &Path, workspace: &str) -> Vec<Client> {
+    names(state_root)
+        .into_iter()
+        .filter_map(|name| Client::parse(&name).ok())
+        .filter(|client| super::registered(state_root, client).contains(workspace))
         .collect()
 }
 

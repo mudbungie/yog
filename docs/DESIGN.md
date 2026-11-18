@@ -8266,6 +8266,7 @@ that named one of its files; the rule it taught is not.)
 | `src/boundary/sugar/argv.rs` | `yog gesture`'s own argv (§8.5): the one payload — a JSON envelope **or** a slash line — and the context flags a terminal line states its elided targets with, the terminal holding no selection to read them off |
 | `src/budgets/{mod,bills,last}.rs` | the Usage-event vocabulary, parsed in one place (§5.1 #16) — the fold of every attempt segment beside `last`, the final reading per field, last wins (§5.1 #35, bl-9c8a: brazen's usage events are partial; its own file on the seam this row already drew), `context_window` off the same lines (the §5.1 #35 denominator, stated in band by brazen and never tabled by yog), and the **one home of the prompt reading** every figure above shares (`prompt_tokens` / `uncached_prompt_tokens` / `total_tokens`, bl-6621: the counters overlap, so a total is a fold and never a sum — and since brazen 0.0.10 `input_total_tokens` IS the prompt where a line carries it, which makes the `max` rule a per-line fallback for older records rather than the fold's rule, bl-bf8b); the one `steps/` walk every figure shares — per-step fold beside the model that billed it, the conv that owns it and its own `seq`, so a `Scope` applies after the walk and "which step is the latest" is asked in memory (§3.5, bl-9dd4; bl-a48b); since bl-53d1 a `StepBill` carries the **provider row** off the same `meta.json` read as its wall span (litany bl-4c1c, VISION §6 item 8) — the other half of the §3.5 table's key, `None` for every record written before litany said it |
 | `src/bz_host.rs` | the entry to the linked brazen (§16.7): the wall fold, the snapshot brazen reads, the route decision, and the no-wall refusal (§16.2) |
+| `src/bz_host/far.rs` | **a provider call is an invocation** (REMOTE §5.7, bl-e0c9): the second executor behind `bz_host::run`'s runner seam — reading `<row>@<client>` against the workspace's registered clients, posting the model call as an `invoke` of that machine's `bz`, relaying the stream by `since`, and the one in-band error a call nobody took earns |
 | `src/bz_host/routes.rs` | the six `bz` routes and their seam bundles — `bz`'s own `main.rs`, one layer in |
 | `src/bz_host/store.rs` | yog's wall-rooted `CredStore`/`ModelCache` (§16.2): brazen's shim, rooted at a path instead of the process env |
 | `src/cli_outbound/{mod,run,detach,chunk}.rs` | what a `Cli` *is* — the physical/logical split parametric binary resolution turns on (§8); `run` the streamed spawn class, cut on the same seam every other shape already sits behind; the detached spawn and its stderr sink (§8.1); the stream-chunk framing |
@@ -9072,6 +9073,25 @@ bare `yog bz …` at a shell a bare hatch (§8.4) dropped into: a hatch with no
 WORKSPACE` / `yog exec --ws WORKSPACE …` is how a headless seat names one
 (bl-b589) — the supported sign-in spelling, and the only way a `bz` outside the
 window reaches a wall at all.
+
+**The wall is the linked brazen's, and a qualified row leaves it (REMOTE §5.7,
+bl-e0c9).** Everything above describes one of two executors behind one seam.
+`bz_host::run` takes a command line and a standard input and answers the three
+streams; for a bare row it runs the brazen linked into this process inside the
+wall, exactly as described. For a model call whose `--provider` is
+`<row>@<client>` — the suffix read against the clients registered in the
+calling workspace, which the arm knows as its wall's leaf — it runs nothing
+here: the call is posted as an invocation of that machine's advertised `bz`
+tool and its output relayed (`bz_host/far.rs`). **That call reads no wall at
+all.** The provider table, the credential and the model cache are whatever
+brazen resolves in the far machine's own environment, so "this workspace's
+sign-ins" stops being a statement about that role, and the wall keeps only
+what the name could not move: which machine a role is allowed to think on is
+still a fact in the workspace's own `providers.yaml`. A name whose suffix is
+no client registered here is not qualified — it falls through to the linked
+brazen as a row it has never heard of — and there is no fallback in the other
+direction either: a machine that does not take the call fails the turn in
+band rather than borrowing the wall's row.
 Because `$XDG_DATA_HOME` is *not* overridden, re-deriving the anchor through
 the world `Env` yields the same path — the composition is self-consistent, one
 lens, no bootstrap special case.

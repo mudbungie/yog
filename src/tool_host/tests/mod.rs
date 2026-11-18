@@ -8,7 +8,8 @@
 /// shared subject rather than this file's own scaffolding.
 mod stand_in;
 
-pub(super) use stand_in::{budget, front_door, impatient, scripted, server, site, tool};
+pub(crate) use stand_in::{budget, impatient, scripted};
+pub(super) use stand_in::{front_door, server, site, tool};
 
 use super::*;
 use crate::boundary::deposit;

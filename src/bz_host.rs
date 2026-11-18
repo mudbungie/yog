@@ -51,6 +51,8 @@ use std::io::{IsTerminal as _, Read, Write};
 use crate::config_edit::brazen::BrazenPaths;
 use crate::xdg::Env;
 
+/// The routed leg: a role whose provider is `<row>@<client>` (REMOTE §5.7).
+pub(crate) mod far;
 mod routes;
 pub(crate) mod store;
 use routes::Seams;
@@ -110,10 +112,32 @@ impl Tty {
     }
 }
 
-/// Run one `bz` invocation in-process and return its exit code. `argv` is
-/// brazen's argv **without** a program name (what `yog bz …` slices off, and
-/// what `std::env::args().skip(1)` gives `bz` itself).
+/// Run one `bz` invocation and return its exit code. `argv` is brazen's argv
+/// **without** a program name (what `yog bz …` slices off, and what
+/// `std::env::args().skip(1)` gives `bz` itself).
+///
+/// **This is the runner seam** (REMOTE §5.7, bl-e0c9): a command line and a
+/// standard input in; standard output, standard error and an exit code out.
+/// Two executors stand behind it and the provider's name picks one — the
+/// brazen linked into this process for a bare row ([`linked`], every caller's
+/// path until now and unchanged), and the routed leg for `<row>@<client>`
+/// ([`far`]). Nothing above this function knows which ran.
 pub(crate) fn run(
+    argv: Vec<String>,
+    env: &Env,
+    tty: Tty,
+    stdin: &mut dyn Read,
+    stdout: &mut dyn Write,
+    stderr: &mut dyn Write,
+) -> i32 {
+    match far::of(&argv, env) {
+        Some(far) => far.run(stdin, stdout, stderr),
+        None => linked(argv, env, tty, stdin, stdout, stderr),
+    }
+}
+
+/// The linked brazen, in this process, inside the workspace's own wall.
+fn linked(
     argv: Vec<String>,
     env: &Env,
     tty: Tty,
