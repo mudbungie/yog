@@ -5,7 +5,7 @@ use super::*;
 use crate::boundary::dispatch::Caller;
 use crate::boundary::tests::snapshot;
 use crate::cli_outbound::Cli;
-use crate::registry::mailbox::{Capture, Mailbox};
+use crate::registry::mailbox::{Capture, Mailbox, Post};
 use serde_json::json;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -63,6 +63,17 @@ fn ran() -> Capture {
     }
 }
 
+/// The streamed form through the same arms (REMOTE §5.7).
+mod stream;
+
+/// The slot once [`ran`] has landed on it.
+fn over() -> Standing {
+    Standing {
+        partial: None,
+        capture: Some(ran()),
+    }
+}
+
 /// The handle an `invoke` answered with.
 fn handle(reply: Result<Reply, String>) -> String {
     match reply {
@@ -99,30 +110,30 @@ fn a_call_crosses_and_the_capture_comes_back() {
     );
 
     assert_eq!(
-        capture(&driver, &id),
+        capture(&driver, 100, &id, None),
         Ok(Reply::Routed {
             invocation: id.clone(),
-            capture: None,
+            standing: Standing::default(),
         }),
         "nothing captured while it runs"
     );
     let done = Completion {
         invocation: id.clone(),
-        capture: ran(),
+        post: Post::Capture(ran()),
     };
     assert_eq!(
-        complete(&host, &done),
+        complete(&host, "100", &done),
         Ok(Reply::Routed {
             invocation: id.clone(),
-            capture: Some(ran()),
+            standing: over(),
         }),
         "the receipt is the slot re-read"
     );
     assert_eq!(
-        capture(&driver, &id),
+        capture(&driver, 100, &id, None),
         Ok(Reply::Routed {
             invocation: id,
-            capture: Some(ran()),
+            standing: over(),
         })
     );
 }
@@ -162,9 +173,10 @@ fn an_in_world_caller_has_no_invocations_and_completes_nothing() {
         invocations(&inbox),
         complete(
             &inbox,
+            "100",
             &Completion {
                 invocation: "inv-1".to_owned(),
-                capture: ran(),
+                post: Post::Capture(ran()),
             },
         ),
     ] {
@@ -184,7 +196,7 @@ fn an_empty_hold_and_an_unheld_handle_are_both_ordinary_answers() {
     let host = deps(root.path(), "laptop", &mail);
     assert_eq!(invocations(&host), Ok(Reply::Invocations(Vec::new())));
     assert!(
-        capture(&host, "inv-404").is_err_and(|e| e.contains("inv-404")),
+        capture(&host, 100, "inv-404", None).is_err_and(|e| e.contains("inv-404")),
         "the handle is named"
     );
 }
@@ -212,11 +224,7 @@ fn the_door_reaches_both_ends_of_the_hand_off() {
         "TS",
         &Verb::Complete(crate::registry::mailbox::Completion {
             invocation: "inv-404".to_owned(),
-            capture: Capture {
-                stdout: String::new(),
-                stderr: String::new(),
-                exit_code: 0,
-            },
+            post: Post::Capture(Capture::default()),
         }),
     );
     assert!(

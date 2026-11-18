@@ -33,7 +33,8 @@ pub(super) fn encode(set: &[tools::Tool]) -> Value {
 /// §5.1) — yog neither validates nor rewrites what a host declared it takes —
 /// and a completion carries the capture in its ONE spelling
 /// ([`mailbox::capture_value`]), the same bytes both replies that carry one
-/// spend and the same the client-side executor writes.
+/// spend and the same the client-side executor writes — or, while the run is
+/// not over, a `partial` in its place (REMOTE §5.7).
 pub(super) fn encode_route(verb: &mailbox::Verb) -> Value {
     match verb {
         mailbox::Verb::Invoke(call) => {
@@ -45,8 +46,11 @@ pub(super) fn encode_route(verb: &mailbox::Verb) -> Value {
             o
         }
         mailbox::Verb::Complete(done) => {
-            json!({ "op": COMPLETE, "invocation": done.invocation,
-                    "capture": mailbox::capture_value(&done.capture) })
+            let mut o = Map::new();
+            o.insert("op".to_owned(), json!(COMPLETE));
+            o.insert("invocation".to_owned(), json!(done.invocation));
+            mailbox::stream::post_into(&mut o, &done.post);
+            Value::Object(o)
         }
     }
 }
@@ -66,7 +70,7 @@ pub(super) fn decode(op: &str, o: &Map<String, Value>) -> Result<Action, String>
         COMPLETE => Ok(Action::Route(mailbox::Verb::Complete(
             mailbox::Completion {
                 invocation: str_of(o, "invocation")?,
-                capture: mailbox::capture_of(o.get("capture").ok_or("complete: missing capture")?)?,
+                post: mailbox::stream::post_of(o)?,
             },
         ))),
         // The caller's own table matched one of the three tokens above, so the

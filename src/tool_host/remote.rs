@@ -103,8 +103,8 @@ fn routed(
     match reply::decode(&envelope) {
         Ok(Ok(Reply::Routed {
             invocation,
-            capture,
-        })) => Ok((invocation, capture)),
+            standing,
+        })) => Ok((invocation, standing.capture)),
         Ok(Ok(other)) => Err(format!(
             "server answered {other:?}, not a routed invocation"
         )),

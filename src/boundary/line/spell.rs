@@ -108,7 +108,8 @@ fn spell_action(action: &Action) -> String {
 /// addressee and the model's arguments, the handle and the bytes that came
 /// back — and both end in their document, verbatim.
 fn spell_route(verb: &crate::registry::mailbox::Verb) -> String {
-    use crate::registry::mailbox::{Verb, capture_value};
+    use crate::registry::mailbox::stream::piece_value;
+    use crate::registry::mailbox::{Post, Verb, capture_value};
     match verb {
         Verb::Invoke(call) => match &call.cwd {
             // The subject's location rides as a word between the tool and the
@@ -121,11 +122,18 @@ fn spell_route(verb: &crate::registry::mailbox::Verb) -> String {
             ),
             None => format!("/invoke {} {} {}", call.client, call.tool, call.input),
         },
-        Verb::Complete(done) => format!(
-            "/complete {} {}",
-            done.invocation,
-            capture_value(&done.capture)
-        ),
+        Verb::Complete(done) => match &done.post {
+            Post::Capture(capture) => {
+                format!("/complete {} {}", done.invocation, capture_value(capture))
+            }
+            Post::Partial(piece) => {
+                format!(
+                    "/complete {} --partial {}",
+                    done.invocation,
+                    piece_value(piece)
+                )
+            }
+        },
     }
 }
 

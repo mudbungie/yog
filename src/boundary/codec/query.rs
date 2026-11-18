@@ -123,8 +123,12 @@ pub(super) fn encode(query: &Query) -> Value {
         // The routing leg's two reads (bl-024b). The follow-class one names
         // nothing at all: the queue it drains is the intake's own.
         Query::Invocations => json!({ "op": INVOCATIONS }),
-        Query::Capture { invocation } => {
-            json!({ "op": CAPTURE, "invocation": invocation })
+        Query::Capture { invocation, since } => {
+            let mut o = Map::new();
+            o.insert("op".to_owned(), json!(CAPTURE));
+            o.insert("invocation".to_owned(), json!(invocation));
+            crate::registry::mailbox::stream::since_into(&mut o, *since);
+            Value::Object(o)
         }
         // The §3.5 table read (bl-53d1): a world fact, so the op is the envelope.
         Query::Prices => json!({ "op": super::spend::PRICES }),
@@ -237,6 +241,7 @@ fn read(op: &str, o: &Map<String, Value>) -> Result<Option<Query>, String> {
         INVOCATIONS => Query::Invocations,
         CAPTURE => Query::Capture {
             invocation: str_of(o, "invocation")?,
+            since: crate::registry::mailbox::stream::since_of(o)?,
         },
         super::spend::PRICES => Query::Prices,
         "lineages" => Query::Config(Read::Lineages {

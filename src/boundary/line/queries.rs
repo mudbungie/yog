@@ -128,10 +128,7 @@ pub(super) fn queries(verb: &str, tail: &str, ctx: &Context) -> Result<Gesture, 
         // first names nothing: the queue it drains is the intake's own, so a
         // line seat typing it drains nothing and is told why at dispatch.
         "invocations" => args::none(tail, verb).map(|()| ask(Query::Invocations)),
-        "capture" => match args::optional_word(tail, verb)? {
-            Some(invocation) => Ok(ask(Query::Capture { invocation })),
-            None => Err(format!("/{verb}: usage: /{verb} <invocation>")),
-        },
+        "capture" => super::tools::capture(tail, verb),
         // The sign-in lane (REMOTE §8.3, bl-c285) — `/login`'s own grammar at
         // the read: the wall is the seat's, the row is the one word. A line
         // seat holds no connection to hold open, so it earns the standing as of

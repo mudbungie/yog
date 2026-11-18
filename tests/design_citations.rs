@@ -136,7 +136,8 @@ const FOREIGN: &[&str] = &[
     // §5.6 joins it (bl-8016): the bounded lease, the exhausted one answered
     // in doubt, and the swallowed capture re-posted. Cited "REMOTE §5.6"
     // everywhere, and the same sibling test keeps DESIGN §5 subsectionless.
-    "5.4", "5.6",
+    // §5.7 joins them (bl-d414): a capture as N posts, cited "REMOTE §5.7".
+    "5.4", "5.6", "5.7",
     // lernie DESIGN's §6.4 — the seat's reasoned exception to §10.1's
     // one-image-per-component ruling (lernie bl-18c7) — and §6.3, the seat's
     // install line on a mac, which §6.4's argument rests on. Cited prefixed

@@ -3,6 +3,7 @@
 
 use super::rt;
 use crate::boundary::{Action, Gesture, Query};
+use crate::registry::mailbox::{Capture, Completion, Offsets, Piece, Post, Verb};
 
 /// One advertised tool, with a schema deep enough that a spelling which rebuilt
 /// it rather than carrying it verbatim would show.
@@ -49,20 +50,55 @@ fn the_routing_legs_gestures_round_trip() {
             }),
         )));
     }
-    rt(Gesture::Act(Action::Route(
-        crate::registry::mailbox::Verb::Complete(crate::registry::mailbox::Completion {
-            invocation: "inv-1".to_owned(),
-            capture: crate::registry::mailbox::Capture {
-                stdout: "hello\n".to_owned(),
-                stderr: "warned\n".to_owned(),
-                exit_code: 3,
-            },
+    for post in [
+        Post::Capture(Capture {
+            stdout: "hello\n".to_owned(),
+            stderr: "warned\n".to_owned(),
+            exit_code: 3,
         }),
-    )));
+        Post::Partial(Piece {
+            stdout: "hel".to_owned(),
+            stderr: String::new(),
+        }),
+    ] {
+        rt(Gesture::Act(Action::Route(Verb::Complete(Completion {
+            invocation: "inv-1".to_owned(),
+            post,
+        }))));
+    }
     rt(Gesture::Ask(Query::Invocations));
-    rt(Gesture::Ask(Query::Capture {
-        invocation: "inv-1".to_owned(),
-    }));
+    for since in [
+        None,
+        Some(Offsets {
+            stdout: 512,
+            stderr: 0,
+        }),
+    ] {
+        rt(Gesture::Ask(Query::Capture {
+            invocation: "inv-1".to_owned(),
+            since,
+        }));
+    }
+}
+
+/// **The streamed form's two line refusals** (REMOTE §5.7): a poll states
+/// both counts or neither, each a byte count; and a piece is read as strictly
+/// as a capture is.
+#[test]
+fn a_malformed_offset_or_piece_is_refused_on_the_line() {
+    let ctx = crate::boundary::line::Context::default();
+    for line in [
+        "/capture",
+        "/capture inv-1 4",
+        "/capture inv-1 4 x",
+        "/capture inv-1 x 4",
+    ] {
+        let e = crate::boundary::line::parse(line, &ctx).expect_err(line);
+        assert!(e.contains("<stdout bytes> <stderr bytes>"), "{e}");
+    }
+    let e = crate::boundary::line::parse("/complete inv-1 --partial {\"stdout\":\"a\"}", &ctx)
+        .expect_err("a piece states both streams");
+    assert!(e.contains("stderr"), "{e}");
 }
 
 /// The lane's flag must name a directory: a bare `--cwd` is the line's own

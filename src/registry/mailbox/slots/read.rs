@@ -12,7 +12,7 @@
 
 use std::time::Duration;
 
-use super::super::doubt::in_doubt;
+use super::super::doubt::{ASKED_AGAIN, in_doubt};
 use super::{Invocation, MailCell, Mailbox, lock_mail};
 
 /// How long a follow-class read waits for work before answering with none:
@@ -109,15 +109,24 @@ impl Mailbox {
     /// [`HAND_OFFS`] times is not handed a fourth, and the server writes its
     /// capture in doubt instead. From there it is a capture like any other —
     /// never offered again, and collected by the driver's ordinary poll.
+    ///
+    /// **An acknowledged slot is never handed out again** (REMOTE §5.7, which
+    /// narrows that ruling): a slot holding a post was received, so its
+    /// machine asking for work again means the run will not finish, and the
+    /// server answers it in doubt at once. Redelivery was bought for the
+    /// hand-off nobody received; a reader has already consumed part of this
+    /// one, and a second run spliced behind it is a capture no run produced.
     fn drain(&self, client: &str, ack: bool) -> Vec<Invocation> {
         let mut slots = lock_mail(&self.cell);
         let mut out = Vec::new();
         for slot in slots.live.values_mut() {
-            if slot.client != client || slot.capture.is_some() {
+            if slot.client != client || slot.run.over() {
                 continue;
             }
-            if slot.handed >= HAND_OFFS {
-                slot.capture = Some(in_doubt(client, slot.handed));
+            if slot.run.acknowledged() {
+                slot.doubt(ASKED_AGAIN);
+            } else if slot.handed >= HAND_OFFS {
+                slot.run.doubt(&in_doubt(client, slot.handed));
             } else if ack || slot.handed == 0 {
                 slot.handed += 1;
                 out.push(slot.invocation.clone());

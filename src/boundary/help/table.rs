@@ -202,11 +202,14 @@ pub const ACTIONS: &[HelpRow] = &[
     },
     HelpRow {
         verb: "complete",
-        usage: "/complete <invocation> <json capture>",
+        usage: "/complete <invocation> [--partial] <json>",
         summary: "answer one routed invocation with what running it captured",
         detail: "The tool host's half of the routing leg. The capture is \
                  `{\"stdout\": …, \"stderr\": …, \"exit_code\": …}` — litany's own tool \
-                 contract, one for one. Only the machine the invocation was addressed to may \
+                 contract, one for one. With `--partial` the document is \
+                 `{\"stdout\": …, \"stderr\": …}`, appended to what has arrived, and the run is \
+                 not over; it is refused once nobody has asked for the capture in thirty \
+                 seconds, and that refusal is the instruction to stop. Only the machine the invocation was addressed to may \
                  answer it; a handle addressed to anyone else reads as absent, which is the \
                  same sentence a handle nobody minted earns. A caller inside the world has no \
                  certificate and therefore no invocations, and is refused.",

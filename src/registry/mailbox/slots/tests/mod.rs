@@ -3,9 +3,17 @@
 
 use std::time::Instant;
 
+use super::super::doubt::unknown;
+use super::super::{Capture, Post};
 use super::read::{HOLD_TICK, HOLD_WAITS};
 use super::*;
 use serde_json::json;
+
+/// The two silences that end a streamed run, and the refused post.
+mod listen;
+/// **The streamed form's own corpus** (REMOTE §5.7): N posts, offsets, the
+/// two silences and the bound.
+mod stream;
 
 /// **The lease's own corpus** (REMOTE §5.3, §5.6): redelivery, the bound
 /// on it, and the answer an exhausted one earns. Its own file for the
@@ -40,6 +48,27 @@ pub(super) fn ran(exit_code: i32) -> Capture {
     }
 }
 
+/// When every single-post beat happens: the same second its slot was queued.
+pub(super) const NOW: i64 = 10;
+
+/// **Today's foot**: one post, carrying the capture — answered the capture as
+/// stored.
+pub(super) fn finish(
+    mail: &Mailbox,
+    client: &str,
+    id: &str,
+    capture: &Capture,
+) -> Result<Capture, String> {
+    mail.complete(NOW, client, id, &Post::Capture(capture.clone()))
+        .map(|standing| standing.capture.unwrap_or_default())
+}
+
+/// **Today's asker**: a poll that states no offsets, so nothing until the end.
+pub(super) fn poll(mail: &Mailbox, by: &str, id: &str) -> Result<Option<Capture>, String> {
+    mail.collect(NOW, by, id, None)
+        .map(|standing| standing.capture)
+}
+
 /// The whole span, in one: post, take, complete, collect — and the slot is gone
 /// after the one read that consumes it.
 #[test]
@@ -47,7 +76,7 @@ fn an_invocation_crosses_and_the_capture_comes_back() {
     let mail = quick();
     let id = mail.post(10, "local", &call("laptop", "Bash"));
     assert_eq!(
-        mail.collect("local", &id),
+        poll(&mail, "local", &id),
         Ok(None),
         "nothing has answered yet"
     );
@@ -61,10 +90,10 @@ fn an_invocation_crosses_and_the_capture_comes_back() {
             cwd: None,
         }]
     );
-    assert_eq!(mail.complete("laptop", &id, &ran(0)), Ok(ran(0)));
-    assert_eq!(mail.collect("local", &id), Ok(Some(ran(0))));
+    assert_eq!(finish(&mail, "laptop", &id, &ran(0)), Ok(ran(0)));
+    assert_eq!(poll(&mail, "local", &id), Ok(Some(ran(0))));
     assert!(
-        mail.collect("local", &id).is_err(),
+        poll(&mail, "local", &id).is_err(),
         "the slot is released by the read that took it"
     );
 }
@@ -183,7 +212,7 @@ fn work_landing_mid_hold_ends_it() {
 #[test]
 fn the_spent_handle_sentence_names_the_restart_at_both_readers() {
     let mail = quick();
-    let refusal = mail.complete("laptop", "inv-9", &ran(0));
+    let refusal = finish(&mail, "laptop", "inv-9", &ran(0));
     assert_eq!(refusal, Err(unknown("inv-9")));
     let said = refusal.expect_err("no such handle");
     assert!(said.contains("inv-9"), "{said}");
@@ -197,7 +226,7 @@ fn the_spent_handle_sentence_names_the_restart_at_both_readers() {
         said.contains("read the world before acting again"),
         "{said}"
     );
-    assert_eq!(mail.collect("local", "inv-9"), Err(unknown("inv-9")));
+    assert_eq!(poll(&mail, "local", "inv-9"), Err(unknown("inv-9")));
 }
 
 /// **Absence, not forbidden** (REMOTE §4): a handle addressed to another
@@ -207,10 +236,10 @@ fn the_spent_handle_sentence_names_the_restart_at_both_readers() {
 fn another_partys_handle_is_absent_rather_than_forbidden() {
     let mail = quick();
     let id = mail.post(10, "local", &call("laptop", "Bash"));
-    assert_eq!(mail.complete("phone", &id, &ran(0)), Err(unknown(&id)));
-    assert_eq!(mail.collect("phone", &id), Err(unknown(&id)));
-    assert_eq!(mail.complete("laptop", &id, &ran(0)), Ok(ran(0)));
-    assert_eq!(mail.collect("local", &id), Ok(Some(ran(0))));
+    assert_eq!(finish(&mail, "phone", &id, &ran(0)), Err(unknown(&id)));
+    assert_eq!(poll(&mail, "phone", &id), Err(unknown(&id)));
+    assert_eq!(finish(&mail, "laptop", &id, &ran(0)), Ok(ran(0)));
+    assert_eq!(poll(&mail, "local", &id), Ok(Some(ran(0))));
 }
 
 /// The sweep: an abandoned slot does not outlive the hour, and the pass runs at
@@ -220,16 +249,16 @@ fn a_post_sweeps_what_no_driver_ever_collected() {
     let mail = quick();
     let stale = mail.post(0, "local", &call("laptop", "Bash"));
     assert!(
-        mail.collect("local", &stale).is_ok(),
+        mail.collect(0, "local", &stale, None).is_ok(),
         "live within the hour"
     );
     mail.post(TTL_SECONDS, "local", &call("laptop", "Bash"));
     assert!(
-        mail.collect("local", &stale).is_ok(),
+        mail.collect(0, "local", &stale, None).is_ok(),
         "the boundary is inclusive"
     );
     mail.post(TTL_SECONDS + 1, "local", &call("laptop", "Bash"));
-    assert!(mail.collect("local", &stale).is_err(), "swept");
+    assert!(poll(&mail, "local", &stale).is_err(), "swept");
 }
 
 /// The production mailbox is the same map with a thirty-second hold — asserted
@@ -241,5 +270,5 @@ fn the_default_hold_is_the_production_bound() {
     assert_eq!(mail.tick, HOLD_TICK);
     let id = mail.post(0, "local", &call("laptop", "Bash"));
     assert_eq!(took(&mail, "laptop").len(), 1, "work waiting ends the hold");
-    assert_eq!(mail.collect("local", &id), Ok(None));
+    assert_eq!(poll(&mail, "local", &id), Ok(None));
 }

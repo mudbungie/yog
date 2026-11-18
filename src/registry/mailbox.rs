@@ -38,8 +38,11 @@ use crate::boundary::codec::fields::{i64_of, str_of};
 mod doubt;
 /// Where in-flight invocations live — the map, and the one lock this leg has.
 pub(crate) mod slots;
+/// The streamed form's vocabulary (REMOTE §5.7): a capture as N posts.
+pub mod stream;
 
 pub use slots::Mailbox;
+pub use stream::{Offsets, Piece, Post, Standing};
 
 /// **What a driver asks for**: a client's advertised tool, with the model's own
 /// arguments. The client is named because the identity is the *addressee* here
@@ -102,12 +105,13 @@ pub struct Capture {
     pub exit_code: i32,
 }
 
-/// One completion, as the act that posts it carries it.
+/// One post for an invocation, as the act that carries it: a piece of its
+/// output, or the capture that ends it (REMOTE §5.7).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Completion {
     /// The invocation being answered.
     pub invocation: String,
-    pub capture: Capture,
+    pub post: Post,
 }
 
 /// **The routing leg's two acts, as one family** (bl-024b) — the
@@ -129,7 +133,8 @@ pub enum Verb {
     /// tool, which is REMOTE §5's own staleness correction asked where it can
     /// still be answered cheaply.
     Invoke(Call),
-    /// **A tool host answers one invocation** with what running it captured.
+    /// **A tool host answers one invocation** with what running it captured —
+    /// in one post, or in several of which the last carries the verdict.
     /// Only the client an invocation was addressed to may post one, and a
     /// handle addressed to anyone else is **absent** rather than forbidden
     /// (REMOTE §4).

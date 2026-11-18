@@ -251,6 +251,7 @@ fn the_governing_read_refuses_and_the_routing_reads_name_no_world() {
     let capture = answer(
         &Query::Capture {
             invocation: "inv-404".to_owned(),
+            since: None,
         },
         &d,
         &ui(),

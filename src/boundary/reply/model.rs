@@ -141,9 +141,13 @@ pub enum Reply {
     /// `capture` is the poll in between. One variant rather than three, on
     /// [`Marks`](Self::Marks)' own terms: what is answered is the slot **as it
     /// stands after the call**, never an echo of what was asked.
+    ///
+    /// The standing's `partial` (REMOTE §5.7, bl-d414) is text that arrived
+    /// while the run is live; its presence, empty included, says a machine has
+    /// posted for the slot.
     Routed {
         invocation: String,
-        capture: Option<crate::registry::mailbox::Capture>,
+        standing: crate::registry::mailbox::Standing,
     },
     /// What this tool host has been asked to run (REMOTE §3) — the
     /// follow-class read's answer. Empty is the ordinary answer of a hold that

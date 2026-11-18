@@ -35,9 +35,9 @@ use super::rows::decode::{
     conv_row, join_row, lineage_row, provider_row, role_row, rows_of, ws_row,
 };
 use super::search::hit_of;
-use crate::boundary::codec::fields::{bool_of, list_of, opt_str_of, opt_val, str_of, strings_of};
+use crate::boundary::codec::fields::{bool_of, list_of, opt_str_of, str_of, strings_of};
 use crate::boundary::codec::prepared_from_value;
-use crate::registry::mailbox::{capture_of, invocation_of};
+use crate::registry::mailbox::invocation_of;
 
 mod inspector;
 /// The two world-level rows, their own file at the cap (bl-53d1).
@@ -215,7 +215,7 @@ fn workspaces(o: &Map<String, Value>) -> Result<Reply, String> {
 fn routed(o: &Map<String, Value>) -> Result<Reply, String> {
     Ok(Reply::Routed {
         invocation: str_of(o, "invocation")?,
-        capture: opt_val(o, "capture", capture_of)?,
+        standing: crate::registry::mailbox::stream::standing_of(o)?,
     })
 }
 

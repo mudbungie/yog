@@ -14,7 +14,7 @@ mod bodies;
 use super::board::{board_row, fleet_facts};
 use super::rows::{conv_row, join_row, lineage_row, provider_row, role_row, ws_row};
 use super::{Reply, prepared_value};
-use crate::registry::mailbox::{capture_value, invocation_value};
+use crate::registry::mailbox::invocation_value;
 use bodies::{delivered, governing, outcome_reply};
 
 /// The follow lane's reply kind (bl-73e7), named once for both directions.
@@ -63,8 +63,8 @@ pub fn encode(reply: &Reply) -> Value {
         // finished" from "finished saying nothing".
         Reply::Routed {
             invocation,
-            capture,
-        } => routed_reply(invocation, capture.as_ref()),
+            standing,
+        } => routed_reply(invocation, standing),
         // The follow-class read's rows, in the one invocation spelling.
         Reply::Invocations(rows) => rows_reply("invocations", rows.iter().map(invocation_value)),
         // The branch, and only the branch (REMOTE §8, bl-ccf7): the space it is
@@ -227,12 +227,10 @@ fn client_row(row: &crate::registry::roster::ClientRow) -> Value {
 /// it — a reader must not have to tell "not finished" from "finished saying
 /// nothing". A body rather than an arm for `encode`'s own budget, on the seam
 /// every other keyed answer here is already cut along.
-fn routed_reply(invocation: &str, capture: Option<&crate::registry::mailbox::Capture>) -> Value {
+fn routed_reply(invocation: &str, standing: &crate::registry::mailbox::Standing) -> Value {
     let mut map = obj_reply("routed");
     map.insert("invocation".to_owned(), json!(invocation));
-    if let Some(capture) = capture {
-        map.insert("capture".to_owned(), capture_value(capture));
-    }
+    crate::registry::mailbox::stream::standing_into(&mut map, standing);
     Value::Object(map)
 }
 

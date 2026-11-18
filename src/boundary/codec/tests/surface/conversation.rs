@@ -4,6 +4,7 @@
 
 use crate::boundary::{Action, Gesture};
 use crate::monitor::Verb;
+use crate::registry::mailbox::{Capture, Completion, Piece, Post, Verb as Leg};
 
 /// One advertised tool with a schema deep enough that a codec which rebuilt it
 /// rather than carrying it would show.
@@ -107,15 +108,23 @@ pub(super) fn surface() -> Vec<Gesture> {
             }),
         )));
     }
-    out.push(Gesture::Act(Action::Route(
-        crate::registry::mailbox::Verb::Complete(crate::registry::mailbox::Completion {
-            invocation: "inv-1".into(),
-            capture: crate::registry::mailbox::Capture {
-                stdout: "hello\n".into(),
-                stderr: "warned\n".into(),
-                exit_code: 3,
-            },
+    // A capture is N ≥ 1 posts (REMOTE §5.7): the piece that says the run
+    // is not over, and the capture that ends it.
+    for post in [
+        Post::Partial(Piece {
+            stdout: "hel".into(),
+            stderr: String::new(),
         }),
-    )));
+        Post::Capture(Capture {
+            stdout: "hello\n".into(),
+            stderr: "warned\n".into(),
+            exit_code: 3,
+        }),
+    ] {
+        out.push(Gesture::Act(Action::Route(Leg::Complete(Completion {
+            invocation: "inv-1".into(),
+            post,
+        }))));
+    }
     out
 }

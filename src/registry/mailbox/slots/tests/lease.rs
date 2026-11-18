@@ -4,7 +4,7 @@
 
 use super::super::super::Capture;
 use super::super::read::HAND_OFFS;
-use super::{call, quick, ran, took};
+use super::{call, finish, poll, quick, ran, took};
 
 /// **The hand-off is not the delivery** (bl-e658): a slot handed to a read that
 /// never answered it goes back on the queue at the client's next read, under
@@ -33,7 +33,7 @@ fn an_answered_invocation_is_not_offered_again() {
     let mail = quick();
     let id = mail.post(10, "local", &call("laptop", "Bash"));
     assert_eq!(took(&mail, "laptop").len(), 1);
-    assert_eq!(mail.complete("laptop", &id, &ran(0)), Ok(ran(0)));
+    assert_eq!(finish(&mail, "laptop", &id, &ran(0)), Ok(ran(0)));
     assert!(
         took(&mail, "laptop").is_empty(),
         "answered work is finished work"
@@ -74,8 +74,7 @@ fn a_third_unanswered_hand_off_is_answered_in_doubt_naming_the_count() {
         took(&mail, "laptop").is_empty(),
         "the fourth read is answered by the server instead"
     );
-    let said = mail
-        .collect("local", &id)
+    let said = poll(&mail, "local", &id)
         .expect("the asker's own handle")
         .expect("the server wrote the capture itself");
     assert_eq!(said.stdout, String::new(), "nothing ran here");
@@ -125,17 +124,17 @@ fn a_late_completion_overwrites_an_uncollected_in_doubt_answer() {
     for _ in 0..=HAND_OFFS {
         took(&mail, "laptop");
     }
-    let landed = mail.complete("laptop", &id, &ran(0)).expect("in flight");
+    let landed = finish(&mail, "laptop", &id, &ran(0)).expect("in flight");
     assert_eq!(landed.stdout, "out", "the box's own capture, kept whole");
     assert_eq!(landed.exit_code, 0);
     assert!(landed.stderr.contains("3 times"), "{}", landed.stderr);
     assert_eq!(
-        mail.collect("local", &id),
+        poll(&mail, "local", &id),
         Ok(Some(landed)),
         "the driver collects what the server stored, mark and all"
     );
     assert!(
-        mail.complete("laptop", &id, &ran(0)).is_err(),
+        finish(&mail, "laptop", &id, &ran(0)).is_err(),
         "after the collect the handle is spent"
     );
 }
@@ -157,17 +156,17 @@ fn a_capture_for_a_redelivered_invocation_carries_the_count() {
     // The foot died holding the capture; the next read hands the slot out
     // again and the box runs the command a second time.
     assert_eq!(took(&mail, "laptop").len(), 1);
-    let said = mail
-        .complete(
-            "laptop",
-            &id,
-            &Capture {
-                stdout: "2".to_owned(),
-                stderr: "warning: already applied".to_owned(),
-                exit_code: 0,
-            },
-        )
-        .expect("in flight");
+    let said = finish(
+        &mail,
+        "laptop",
+        &id,
+        &Capture {
+            stdout: "2".to_owned(),
+            stderr: "warning: already applied".to_owned(),
+            exit_code: 0,
+        },
+    )
+    .expect("in flight");
     assert_eq!(said.stdout, "2", "the box's own output is untouched");
     assert_eq!(said.exit_code, 0, "and so is its verdict");
     assert!(said.stderr.contains("\"laptop\""), "{}", said.stderr);
@@ -183,7 +182,7 @@ fn a_capture_for_a_redelivered_invocation_carries_the_count() {
         "the mark goes first, and the tool's own stderr stays: {}",
         said.stderr
     );
-    assert_eq!(mail.collect("local", &id), Ok(Some(said)));
+    assert_eq!(poll(&mail, "local", &id), Ok(Some(said)));
 }
 
 /// **One hand-off is not a redelivery.** The ordinary run — and Ruling 1's
@@ -195,7 +194,7 @@ fn a_capture_delivered_once_carries_no_mark() {
     let id = mail.post(10, "local", &call("laptop", "Bash"));
     assert_eq!(took(&mail, "laptop").len(), 1);
     assert_eq!(
-        mail.complete("laptop", &id, &ran(0)),
+        finish(&mail, "laptop", &id, &ran(0)),
         Ok(ran(0)),
         "the capture the box computed, verbatim"
     );

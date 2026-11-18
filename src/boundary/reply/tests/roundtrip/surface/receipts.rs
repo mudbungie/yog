@@ -157,17 +157,32 @@ pub(super) fn receipts() -> Vec<Reply> {
         // handle alone while the far machine runs it, and the capture once it
         // has answered — including a non-zero verdict and text on stderr, which
         // is the arm a tool that failed takes.
+        // …and, while a machine that streams is running it, what has
+        // arrived (REMOTE §5.7) — present-and-empty is itself the lease fact.
         Reply::Routed {
             invocation: "inv-1".into(),
-            capture: None,
+            standing: crate::registry::mailbox::Standing::default(),
+        },
+        Reply::Routed {
+            invocation: "inv-1".into(),
+            standing: crate::registry::mailbox::Standing {
+                partial: Some(crate::registry::mailbox::Piece {
+                    stdout: "hel".into(),
+                    stderr: String::new(),
+                }),
+                capture: None,
+            },
         },
         Reply::Routed {
             invocation: "inv-2".into(),
-            capture: Some(crate::registry::mailbox::Capture {
-                stdout: "hello\n".into(),
-                stderr: "warned\n".into(),
-                exit_code: 3,
-            }),
+            standing: crate::registry::mailbox::Standing {
+                partial: None,
+                capture: Some(crate::registry::mailbox::Capture {
+                    stdout: "hello\n".into(),
+                    stderr: "warned\n".into(),
+                    exit_code: 3,
+                }),
+            },
         },
     ]
     .into_iter()

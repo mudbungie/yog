@@ -80,9 +80,19 @@ pub(super) fn surface() -> Vec<Gesture> {
     // The routing leg's two reads (bl-024b): one names a handle, the other
     // names nothing — the queue it drains is the intake's own.
     out.push(Gesture::Ask(Query::Invocations));
-    out.push(Gesture::Ask(Query::Capture {
-        invocation: "inv-1".into(),
-    }));
+    // With the asker's own offsets (REMOTE §5.7) and without.
+    for since in [
+        None,
+        Some(crate::registry::mailbox::Offsets {
+            stdout: 512,
+            stderr: 0,
+        }),
+    ] {
+        out.push(Gesture::Ask(Query::Capture {
+            invocation: "inv-1".into(),
+            since,
+        }));
+    }
     out.extend(inspector_family());
     out
 }

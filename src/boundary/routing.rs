@@ -22,7 +22,7 @@
 //! driver; this leg is transport, and REMOTE §5 is honest that what happens on
 //! the far machine is beyond the adjudicator's reach.
 
-use crate::registry::mailbox::{Call, Completion, Verb};
+use crate::registry::mailbox::{Call, Completion, Offsets, Standing, Verb};
 use crate::registry::{Client, tools};
 
 use super::dispatch::Deps;
@@ -32,7 +32,7 @@ use super::reply::Reply;
 pub(super) fn route(deps: &Deps, ts: &str, verb: &Verb) -> Result<Reply, String> {
     match verb {
         Verb::Invoke(call) => invoke(deps, ts, call),
-        Verb::Complete(done) => complete(deps, done),
+        Verb::Complete(done) => complete(deps, ts, done),
     }
 }
 
@@ -62,23 +62,26 @@ fn invoke(deps: &Deps, ts: &str, call: &Call) -> Result<Reply, String> {
             .post(ts.parse().unwrap_or(0), &deps.caller.client.name(), call);
     Ok(Reply::Routed {
         invocation,
-        capture: None,
+        standing: Standing::default(),
     })
 }
 
-/// A tool host answers one invocation. The identity that may is the intake's,
+/// A tool host posts for one invocation — a piece of its output, or the
+/// capture that ends it (REMOTE §5.7). The identity that may is the intake's,
 /// exactly as it is for an advertisement and for the read below — so an
 /// in-world caller is refused in band with a sentence, and a handle addressed
 /// to another machine is **absent** (REMOTE §4).
-fn complete(deps: &Deps, done: &Completion) -> Result<Reply, String> {
+fn complete(deps: &Deps, ts: &str, done: &Completion) -> Result<Reply, String> {
     let client = connected(deps, "complete")?;
-    let capture = deps
-        .caller
-        .mailbox
-        .complete(&client, &done.invocation, &done.capture)?;
+    let standing = deps.caller.mailbox.complete(
+        ts.parse().unwrap_or(0),
+        &client,
+        &done.invocation,
+        &done.post,
+    )?;
     Ok(Reply::Routed {
         invocation: done.invocation.clone(),
-        capture: Some(capture),
+        standing,
     })
 }
 
@@ -100,15 +103,23 @@ pub(super) fn invocations(deps: &Deps) -> Result<Reply, String> {
 /// The asker's poll: the capture if the far machine has answered, nothing yet
 /// if it has not, and the absent sentence for a handle this caller did not
 /// post. It never waits — the patience belongs to the caller, who is the only
-/// one that knows how long its tool is worth waiting for.
-pub(super) fn capture(deps: &Deps, invocation: &str) -> Result<Reply, String> {
-    let capture = deps
-        .caller
-        .mailbox
-        .collect(&deps.caller.client.name(), invocation)?;
+/// one that knows how long its tool is worth waiting for — **and it is what
+/// keeps the run alive** (REMOTE §5.7): every poll stamps the slot at `now`.
+/// With `since`, the text from the asker's own offsets rides back as it
+/// arrives.
+pub(super) fn capture(
+    deps: &Deps,
+    now: i64,
+    invocation: &str,
+    since: Option<Offsets>,
+) -> Result<Reply, String> {
+    let standing =
+        deps.caller
+            .mailbox
+            .collect(now, &deps.caller.client.name(), invocation, since)?;
     Ok(Reply::Routed {
         invocation: invocation.to_owned(),
-        capture,
+        standing,
     })
 }
 

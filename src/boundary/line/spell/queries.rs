@@ -111,7 +111,10 @@ pub(super) fn spell_query(query: &Query) -> String {
         // The follow-class read names nothing at all; its sibling names the
         // handle, which is the one thing a seat cannot hold.
         Query::Invocations => "/invocations".to_owned(),
-        Query::Capture { invocation } => format!("/capture {invocation}"),
+        Query::Capture { invocation, since } => match since {
+            None => format!("/capture {invocation}"),
+            Some(at) => format!("/capture {invocation} {} {}", at.stdout, at.stderr),
+        },
         // The §3.5 table read (bl-53d1): a world fact, so the verb is the line.
         Query::Prices => format!("/{}", crate::boundary::codec::spend::PRICES),
     }

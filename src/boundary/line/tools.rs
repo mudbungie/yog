@@ -19,8 +19,9 @@ use serde_json::Value;
 
 use super::args;
 use super::parse::act;
-use crate::boundary::{Action, Gesture};
-use crate::registry::mailbox::{Call, Capture, Completion, Verb, capture_of};
+use crate::boundary::{Action, Gesture, Query};
+use crate::registry::mailbox::stream::piece_of;
+use crate::registry::mailbox::{Call, Completion, Post, Verb, capture_of};
 
 /// The family's two lines, by the verb that named one.
 pub(super) fn route(verb: &str, tail: &str) -> Result<Gesture, String> {
@@ -65,17 +66,25 @@ fn invoke(tail: &str, verb: &str) -> Result<Gesture, String> {
     }))))
 }
 
-/// `/complete <invocation> <json capture>` — post what one machine captured.
+/// `/complete <invocation> [--partial] <json>` — post what one machine
+/// captured, or with the flag a piece of it while the run goes on (REMOTE
+/// §5.7). The flag sits before the document for `--cwd`'s reason.
 fn complete(tail: &str, verb: &str) -> Result<Gesture, String> {
-    let (invocation, capture) = args::first_word(tail);
+    let (invocation, document) = args::first_word(tail);
     if invocation.is_empty() {
         return Err(format!(
-            "/{verb}: usage: /{verb} <invocation> <json capture>"
+            "/{verb}: usage: /{verb} <invocation> [--partial] <json>"
         ));
     }
+    let (flag, rest) = args::first_word(&document);
+    let post = if flag == "--partial" {
+        Post::Partial(read(&rest, verb, piece_of)?)
+    } else {
+        Post::Capture(read(&document, verb, capture_of)?)
+    };
     Ok(act(Action::Route(Verb::Complete(Completion {
         invocation,
-        capture: read_capture(&capture, verb)?,
+        post,
     }))))
 }
 
@@ -85,8 +94,32 @@ fn document(tail: &str, verb: &str) -> Result<Value, String> {
     serde_json::from_str(&text).map_err(|e| format!("/{verb}: {e}"))
 }
 
-/// The same, read as a capture — strict on every field, exactly as the envelope
-/// is, because a capture is what a model reads as a tool's answer.
-fn read_capture(tail: &str, verb: &str) -> Result<Capture, String> {
-    capture_of(&document(tail, verb)?).map_err(|e| format!("/{verb}: {e}"))
+/// The same, read as a capture or a piece of one — strict on every field,
+/// exactly as the envelope is, because it is what a model reads as a tool's
+/// answer.
+fn read<T>(tail: &str, verb: &str, of: fn(&Value) -> Result<T, String>) -> Result<T, String> {
+    of(&document(tail, verb)?).map_err(|e| format!("/{verb}: {e}"))
+}
+
+/// `/capture <invocation> [<stdout bytes> <stderr bytes>]` — the asker's poll,
+/// and with the two counts REMOTE §5.7's `since`: the text from there on.
+pub(super) fn capture(tail: &str, verb: &str) -> Result<Gesture, String> {
+    let usage = || format!("/{verb}: usage: /{verb} <invocation> [<stdout bytes> <stderr bytes>]");
+    let words: Vec<&str> = tail.split_whitespace().collect();
+    let count = |word: &&str| word.parse::<u64>().map_err(|_| usage());
+    let (invocation, since) = match words.as_slice() {
+        [invocation] => (invocation, None),
+        [invocation, stdout, stderr] => (
+            invocation,
+            Some(crate::registry::mailbox::Offsets {
+                stdout: count(stdout)?,
+                stderr: count(stderr)?,
+            }),
+        ),
+        _ => return Err(usage()),
+    };
+    Ok(Gesture::Ask(Query::Capture {
+        invocation: (*invocation).to_owned(),
+        since,
+    }))
 }

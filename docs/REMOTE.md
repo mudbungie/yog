@@ -1662,10 +1662,11 @@ caller never posted, both earn the sentence a handle nobody minted earns. A
 refusal that confirmed existence would be the disclosure §4 excludes.
 
 **One reply for one subject.** `invoke`, `complete` and `capture` all answer
-`Reply::Routed { invocation, capture? }` — the slot **as it stands after the
-call**, which is the `Marks` discipline (a receipt is a re-read, never an echo).
-`capture` is absent rather than empty while the far machine still runs it, so a
-reader never has to tell "not finished" from "finished saying nothing".
+`Reply::Routed { invocation, partial?, capture? }` — the slot **as it stands
+after the call**, which is the `Marks` discipline (a receipt is a re-read, never
+an echo). `capture` is absent rather than empty while the far machine still runs
+it, so a reader never has to tell "not finished" from "finished saying nothing";
+`partial` (§5.7, bl-d414) is absent until a machine has posted for the slot.
 
 **What that read cannot say is "never", and PRESENCE IS NOT THE FACT THAT
 WOULD SAY IT** *(bl-6023)*. A drive killed a foot mid-invocation, polled
@@ -1690,8 +1691,8 @@ actual question, and the mailbox holds both already. They are **fields gained
 on a shape in use** — which, when this was written, meant a `PROTOCOL` bump
 and a four-repository act (§3). *(Corrected by bl-0369: since bl-e598 a gained
 field is an edition and bumps nothing (§3.2), so that reason expired. §5.7
-designs the lease half — `partial`'s presence on `reply/routed` — and the
-slot's age is still unsaid.)*
+designs the lease half — `partial`'s presence on `reply/routed`, landed by
+bl-d414 at edition 28 — and the slot's age is still unsaid.)*
 
 Until then the standing answer is the one the routing module already states:
 **the patience belongs to the caller**, who is the only party that knows how
@@ -2445,7 +2446,9 @@ doubt, and the recovery is a read, never a re-send — so the two lanes now
 state one contract from two ends, differing only in *when* the server can
 know: there, at boot from a lock the kernel dropped; here, at the count.
 A `complete` that lands late on an in-doubt slot the driver has not yet
-collected **overwrites it**, because a real capture is better than a doubt;
+collected **overwrites it**, because a real capture is better than a doubt
+*(this slot is one nothing was ever posted for; §5.7's streamed run, ended in
+doubt after text arrived, takes no more posts)*;
 one that lands after the collect is refused as any spent handle is, which is
 the behaviour a swept slot has always had.
 
@@ -2543,8 +2546,9 @@ laptop whose sign-in works nowhere else makes the model call, and a third box
 runs the tool the model asked for. No third grade, no third role and no second
 channel: it is the foot's three gestures (§4.2, §5.4), and the one thing they
 lacked was a capture that arrives while it is being produced. **This section is
-the design; nothing in it has landed.** The balls that land it amend it in
-place.
+the design, and one part of it has landed: the server half of the stream**
+(bl-d414, edition 28 — *The stream, as landed* below). The `bz` arm, the
+listings and the sign-in have not. The balls that land it amend it in place.
 
 **What is true today, read off the code.** litany makes a model call by
 spawning its adapter once per attempt as `<adapter> --json --provider <row>`,
@@ -2688,8 +2692,10 @@ whole at the end, as it does today.
 **What the stream changes about the leg, in four rules.**
 
 - **A run lives while its asker listens.** Every `capture` poll stamps the
-  slot. A post for a slot nobody has polled in thirty seconds — or one already
-  collected or swept — is refused in band, and **the refusal is the stop**: the
+  slot. A `partial` post for a slot nobody has polled in thirty seconds — or
+  any post for one already collected or swept — is refused in band, and **the
+  refusal is the stop** *(the post carrying `capture` is exempt from the
+  thirty seconds: see* The stream, as landed*)*: the
   foot terminates the child (its own cascade, §5.3) and reads on. No cancel
   verb exists and none is added; §3.1's `stop` kills the driver, the arm dies
   with it, its polls end, and the far model call ends within one silence and
@@ -2720,6 +2726,68 @@ whole at the end, as it does today.
   minutes) — has relayed nothing, so the arm answers it as a canonical `error`
   event naming the client and when it last spoke (§5.1's `last_seen`),
   non-retryable: a retry would queue a second call behind the first.
+
+**The stream, as landed** (bl-d414; `src/registry/mailbox/stream.rs` the
+vocabulary, `slots/run.rs` one run's text, `slots/exchange.rs` the post and the
+poll). The three paths are stamped **edition 28** in `corpus/shapes.json` and
+`PROTOCOL` stands at 19: `request/complete` gained `/partial/{stdout,stderr}`,
+`request/capture` gained `/since/{stdout,stderr}` (numbers), and `reply/routed`
+gained `/partial/{stdout,stderr}`. A `complete` stating neither `partial` nor
+`capture` refuses as it always did; one stating both is read as its `capture`.
+On the line they are `/complete <invocation> --partial <json>` and `/capture
+<invocation> <stdout bytes> <stderr bytes>`. What the code settled that the
+rules above left open, and the one place it corrects them:
+
+- **The receipts.** A `partial` post is answered `reply/routed` with an empty
+  `partial` and no `capture` — the lease fact, not an echo of the text. The
+  post carrying `capture` is answered the capture as the slot holds it, which
+  for a foot that posts once is exactly the old receipt.
+- **`partial` is answered only to an asker that sent `since`.** Without it the
+  reply carries neither key until the run is over — *the read is exactly what
+  it was* is kept to the letter, so the lease fact costs a seat one empty
+  `since`.
+- **An offset the slot cannot answer from is refused in band**: before what an
+  earlier ask acknowledged (that text is dropped), past what has arrived, or
+  inside a character. Offsets are bytes of the text as the server holds it,
+  the server's own sentences included.
+- **Corrected here — the post carrying `capture` is not subject to the thirty
+  seconds.** The rule as first written refused *any* post for an unlistened
+  slot. But the refusal exists to stop a child, and a `capture` post has none
+  left to stop: refusing it would throw away a finished answer, and — for a
+  foot that posts once, which never acknowledged the slot — leave the slot to
+  be handed out and run again with nobody listening. So it lands as it always
+  did and is held for a late asker until the sweep; a real capture is worth
+  more than a doubt (§5.6). This is also what keeps today's foot exactly as it
+  was.
+- **A slot whose `partial` was refused is ended in doubt on the spot**, with
+  the sentence below — otherwise a slot nobody had acknowledged would go back
+  out at that machine's next read, to be started and stopped twice more.
+- **The doubt for a run that had begun to arrive keeps what arrived.** The
+  server ends the run with exit code 1, the text already posted left in place
+  and one sentence behind it on stderr: §5.6's clause (the client and the
+  hand-off count), which of three things happened — the box asked for work
+  again without finishing it, it posted nothing for thirty seconds, or it was
+  refused a post because nobody was listening — and *after N bytes of stdout
+  and M of stderr had arrived*. The silence is judged at the asker's own poll;
+  there is no timer.
+- **A run that is over takes no more posts** when a machine had posted for it:
+  a second `capture` would be absorbed twice, so it is refused as a spent
+  handle. §5.6's *a late completion overwrites an uncollected in-doubt answer*
+  stands for the slot it was written for — one the server ended with nothing
+  ever posted.
+- **The redelivery mark (§5.6) goes in front of the first text a run holds**,
+  at its first post rather than at the one carrying the capture, because that
+  is now where the count and real output first meet.
+- **The bound is per stream and the loss is said once.** Each stream holds at
+  most the foot's old capture limit unread (a sixteenth of the frame limit);
+  text past it is cut on a character boundary and counted, and when the run
+  ends stderr gains, outside the bound, *yog: stdout exceeded this server's
+  N-byte capture limit; M further bytes were dropped*. Text that arrives after
+  a reader has made room is kept, so a cut is a hole in the stream and the
+  sentence at the end is what says there was one.
+- **The hour sweep measures the last poll**, not the post: a slot somebody is
+  still asking about is not an abandoned one, and a model call may outlast the
+  hour.
 
 **The listings and the sign-in are the same runner.** Nothing is added to any
 of their shapes; what changes is which rows the answers carry.
@@ -2791,9 +2859,11 @@ still cannot ask for anything it was not sent.
 - **A human typing `invoke` at a seat** must keep asking `capture`, or a
   streaming foot stops the run after thirty seconds.
 
-**What proves it, when it lands.** Server: the mailbox suite — posts absorb in
-order, `since` is idempotent, an acknowledged slot is answered in doubt rather
-than re-handed, a post for an unlistened slot is refused; and a driven turn
+**What proves it, when it lands.** Server: the mailbox suite
+(`src/registry/mailbox/slots/tests/stream.rs`, landed with bl-d414) — posts
+absorb in order, `since` is idempotent, an acknowledged slot is answered in
+doubt rather than re-handed, a `partial` for an unlistened slot is refused and
+a `capture` for one lands, the unread bound holds; and a driven turn
 against a real foot process on loopback whose `bz` entry is a fixture script,
 asserting `response.json` grows before the child exits. Foot: a slow child's
 output is posted before it exits, a refused post kills the child, an older

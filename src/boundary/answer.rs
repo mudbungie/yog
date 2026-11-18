@@ -264,7 +264,9 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
         // captured. Neither names a world, so neither reads the resolution
         // above.
         Query::Invocations => return super::routing::invocations(deps),
-        Query::Capture { invocation } => return super::routing::capture(deps, invocation),
+        Query::Capture { invocation, since } => {
+            return super::routing::capture(deps, now_unix, invocation, *since);
+        }
         // The price table, the ceiling and the world's ledger (§3.5, bl-53d1)
         // — world facts, addressed to no workspace, answered by the module
         // that also writes them so a read and a receipt are one derivation.

@@ -276,7 +276,13 @@ pub enum Query {
     /// the *asker's* patience rather than the server's — a vanished client is
     /// this read answering nothing until its caller gives up and says so, which
     /// is the visible in-band refusal §5 asks for and never a hang.
-    Capture { invocation: String },
+    ///
+    /// `since` (REMOTE §5.7) is the asker's own byte counts: stated, the text
+    /// from there on is answered as it arrives; absent, nothing until the end.
+    Capture {
+        invocation: String,
+        since: Option<crate::registry::mailbox::Offsets>,
+    },
     /// **The price table, the ceiling and the world's ledger** (DESIGN §3.5,
     /// §4.1; bl-53d1): every `(provider, model)` rate, the bound, and the
     /// world's priced spend against it. World facts, so it addresses no

@@ -1,6 +1,6 @@
 //! **What the server says when it cannot know whether the box ran it**
-//! (REMOTE §5.6): the three sentences this leg writes into a refusal or into a
-//! capture, and the one clause all of them share.
+//! (REMOTE §5.6, §5.7): the sentences this leg writes into a refusal or into a
+//! capture, and the one clause the doubts share.
 //!
 //! Split out of [`super`] at §12's per-file budget, on the seam the file
 //! already had: everything else there is a *shape* — what an invocation is,
@@ -16,7 +16,7 @@
 //! came back late, or the handle is gone — so the count has one home and the
 //! endings are three.
 
-use super::Capture;
+use super::stream::Offsets;
 
 /// The clause every sentence here opens with: who it went to and how many
 /// times. `{client:?}` quotes the identity, which is a certificate CN and can
@@ -50,27 +50,63 @@ pub(super) fn unknown(invocation: &str) -> String {
 }
 
 /// **What an exhausted lease is answered with** (REMOTE §5.6, ruling 2): the
-/// server's own capture, written at the read that would hand a slot out for a
-/// fourth time. Non-zero, because it is a failed tool result and the model
-/// reads it as one; empty on stdout, because nothing ran *here*; and one
-/// sentence naming the client, the count and the instruction the gesture lane
-/// already gives — a box that dropped three hand-offs of one tool, with its
-/// own redial series in between, is a box that tool is killing, and the
+/// sentence of the server's own capture, written at the read that would hand
+/// a slot out for a fourth time — non-zero, because it is a failed tool
+/// result and the model reads it as one; nothing on stdout, because nothing
+/// ran *here*. It names the client, the count and the instruction the gesture
+/// lane already gives — a box that dropped three hand-offs of one tool, with
+/// its own redial series in between, is a box that tool is killing, and the
 /// recovery is a read rather than a re-send.
-pub(super) fn in_doubt(client: &str, handed: u32) -> Capture {
-    Capture {
-        stdout: String::new(),
-        stderr: format!(
-            "{} and never answered; {MAY_HAVE_RUN}; {READ_FIRST}",
-            handed_to(client, handed)
-        ),
-        exit_code: 1,
-    }
+pub(super) fn in_doubt(client: &str, handed: u32) -> String {
+    format!(
+        "{} and never answered; {MAY_HAVE_RUN}; {READ_FIRST}",
+        handed_to(client, handed)
+    )
+}
+
+/// What ended a run that had begun to arrive — the three ways the server
+/// learns one will not finish (REMOTE §5.7).
+pub(super) const ASKED_AGAIN: &str = "the box asked for work again without finishing it";
+pub(super) const WENT_QUIET: &str = "the box posted nothing for thirty seconds";
+pub(super) const UNHEARD: &str =
+    "it was refused a post because nobody had asked for its capture in thirty seconds";
+
+/// **What an acknowledged run is answered with when it will not finish**
+/// (REMOTE §5.7): the same doubt, said at once rather than after a second
+/// hand-off, and naming how much had arrived — because a reader has already
+/// consumed part of this run, and a second spliced behind it would be a
+/// capture no run produced.
+pub(super) fn unfinished(client: &str, handed: u32, why: &str, arrived: Offsets) -> String {
+    format!(
+        "{}; {why}, after {} bytes of stdout and {} of stderr had arrived; \
+         {MAY_HAVE_RUN}; {READ_FIRST}",
+        handed_to(client, handed),
+        arrived.stdout,
+        arrived.stderr
+    )
+}
+
+/// **The refusal that is the stop** (REMOTE §5.7): a post for a slot nobody
+/// is listening to. The foot ends the child on it and reads on.
+pub(super) fn unheard(invocation: &str) -> String {
+    format!(
+        "nobody has asked for invocation {invocation:?}'s capture in thirty seconds, so \
+         nothing is waiting for this run — stop it"
+    )
+}
+
+/// The refusal an asker's `since` earns when no stream can answer from it.
+pub(super) fn outside(invocation: &str) -> String {
+    format!(
+        "invocation {invocation:?}: `since` names bytes this server cannot answer from — \
+         before what an earlier ask acknowledged, past what has arrived, or inside a \
+         character; ask from the count of bytes you were answered"
+    )
 }
 
 /// **The mark a redelivered invocation's capture carries** (REMOTE §5.6 as
 /// amended by bl-0655): below the cap, the server says the count *earlier* and
-/// without giving up.
+/// without giving up. `None` at one hand-off, which is not a redelivery.
 ///
 /// A foot restarted mid-flight ran one command twice on the box, and the
 /// capture the model was handed — `Exit code: 0`, and the command's own output
@@ -84,28 +120,21 @@ pub(super) fn in_doubt(client: &str, handed: u32) -> Capture {
 /// capture carries are the whole of what reaches the model — litany renders
 /// exit code, stdout and stderr into the `tool_result` envelope and nothing
 /// else (its ARCH §3.3) — so a field would be a fact only a decoder could
-/// read, on the one lane whose reader is a language model. It goes *first*,
-/// because the bounded projection cuts what a long capture ends with.
+/// read, on the one lane whose reader is a language model. It goes *first*
+/// ([`Run::absorb`](super::slots)), because the bounded projection cuts what
+/// a long capture ends with.
 ///
 /// **One hand-off is not a redelivery, and a re-post is not a second run.**
 /// The count is the slot's, so this is silent at `handed == 1`; and Ruling 1's
 /// held capture is posted on the next dial *before* that channel's first
 /// follow-class read, so the slot is still at one when it lands — the case
 /// where the box ran it once is the case that says nothing.
-pub(super) fn redelivered(client: &str, handed: u32, capture: &Capture) -> Capture {
-    if handed < 2 {
-        return capture.clone();
-    }
-    let mark = format!(
-        "{}; {MAY_HAVE_RUN}, so what this capture reports may be the effect of \
-         more than one run; {READ_FIRST}",
-        handed_to(client, handed)
-    );
-    Capture {
-        stderr: match capture.stderr.as_str() {
-            "" => mark,
-            said => format!("{mark}\n{said}"),
-        },
-        ..capture.clone()
-    }
+pub(super) fn redelivered(client: &str, handed: u32) -> Option<String> {
+    (handed >= 2).then(|| {
+        format!(
+            "{}; {MAY_HAVE_RUN}, so what this capture reports may be the effect of \
+             more than one run; {READ_FIRST}",
+            handed_to(client, handed)
+        )
+    })
 }

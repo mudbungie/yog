@@ -160,14 +160,17 @@ pub const QUERIES: &[HelpRow] = &[
     },
     HelpRow {
         verb: "capture",
-        usage: "/capture <invocation>",
+        usage: "/capture <invocation> [<stdout bytes> <stderr bytes>]",
         summary: "what one routed invocation captured, if the far machine has answered yet",
         detail: "The asking side's poll, and the other half of `/invoke`. It never waits: \
                  `capture` is absent while the machine is still running the tool, present once \
                  it has answered — and the answer is read exactly once, so the second ask reads \
                  as absent. How long to keep asking is yours to decide, and that deadline is \
                  what makes an offline machine a refusal you can see rather than a wait with no \
-                 end. A handle you did not invoke reads as absent too.",
+                 end. A handle you did not invoke reads as absent too. With the two counts — how \
+                 many bytes of each stream you already hold — the text from there on is answered \
+                 as it arrives, under `partial` while the run is live. Keep asking: a machine \
+                 that streams is told to stop once nobody has asked in thirty seconds.",
         surface: Surface::Machine,
     },
     HelpRow {
