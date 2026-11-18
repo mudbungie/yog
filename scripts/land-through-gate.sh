@@ -10,9 +10,9 @@
 # Run on a runner, in a FULL-history checkout (a shallow one has the branch's
 # parent beyond its boundary and every fast-forward is refused "fetch first"),
 # with `GH_TOKEN` set to the JOB token (`actions: write`; the release token is
-# refused a workflow dispatch, HTTP 403 — bl-37d8) and `PAT` set to the
-# repository's `RELEASE_PLZ_TOKEN` or empty. git pushes with whatever token the
-# checkout seated, which is the release token where there is one. The caller has already decided there is something to land.
+# refused a workflow dispatch, HTTP 403 — bl-37d8), `PAT` set to the
+# repository's `RELEASE_PLZ_TOKEN`, and the checkout made with that same token
+# so git pushes with it. The caller has already decided there is something to land.
 #
 #   1. The named paths committed on `<branch-prefix>/<utc-stamp>` and pushed.
 #   2. `ci.yml` dispatched on that branch and watched. That workflow is the one
@@ -21,10 +21,18 @@
 #   3. On a pass, `main` fast-forwarded to the branch. The branch is deleted
 #      whichever way this ends: the run's log is the record, the branch was
 #      only its seat.
-#   4. The release re-judged. A push by the default `GITHUB_TOKEN` triggers no
-#      workflow, so `release-plz.yml` is dispatched; where `PAT` is set the
-#      push was made with it, triggered the chain itself, and no dispatch is
-#      sent.
+#   4. Nothing: the release follows by itself. The push in (3) is made with
+#      the release token, so it is an ordinary push to `main` — CI runs,
+#      `release-plz.yml` opens the release PR, `release-automerge.yml` merges
+#      it.
+#
+# WITHOUT THE RELEASE TOKEN IT REFUSES, before it writes anything (bl-3102).
+# A push by the default `GITHUB_TOKEN` triggers no workflow, and here nothing
+# can stand in for it: `release-plz.yml` opens a release PR only on a `push`
+# (its dispatch is a binaries backfill that never publishes) and
+# `release-automerge.yml` merges nothing without the token. A landing made
+# without it would be a change on `main` no release ever follows — so there is
+# one path, and the lack of it is loud.
 #
 # BOTH FAILURES LEAVE `main` UNTOUCHED. A red `ci.yml` means the change broke
 # something real and is a hand's. A refused fast-forward means `main` moved
@@ -34,6 +42,10 @@ set -euo pipefail
 [ $# -ge 3 ] || { echo "usage: $0 <branch-prefix> <commit-message> <path>..." >&2; exit 2; }
 prefix=$1 message=$2
 shift 2
+[ -n "${PAT:-}" ] || {
+  echo "RELEASE_PLZ_TOKEN is not set: a push without it triggers no CI and no release on main; landing nothing" >&2
+  exit 1
+}
 
 branch="$prefix/$(date -u +%Y%m%d-%H%M)"
 git config user.name "github-actions[bot]"
@@ -57,6 +69,3 @@ git push origin "$branch:main" || {
   echo "main moved while the gate ran: nothing landed; the next run begins from the new main" >&2
   exit 1
 }
-if [ -z "${PAT:-}" ]; then
-  gh workflow run release-plz.yml --ref main
-fi

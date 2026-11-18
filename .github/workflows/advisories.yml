@@ -17,7 +17,7 @@ name: Advisories
 #      prose), then the question asked again. An advisory with no fixed
 #      version leaves it failing, which fails this run — the ONE case that is
 #      a hand's, and the run says so rather than guessing.
-#   3. `scripts/land-through-gate.sh` — the one definition of steps 3 to 5,
+#   3. `scripts/land-through-gate.sh` — the one definition of steps 3 and 4,
 #      shared with `ingest.yml` (bl-38dc) and self-tested in the gate (`make
 #      ingest-selftest`). The lockfile committed on a branch, and `ci.yml`
 #      dispatched on that branch. That workflow is the one definition of green (`make ci` is
@@ -25,15 +25,16 @@ name: Advisories
 #      by the same gate every other change is proved by, on a runner.
 #   4. On a pass, `main` fast-forwarded to the branch; the branch deleted
 #      either way (the run's log is the record, the branch was only its seat).
-#   5. The release re-judged. A push by the default `GITHUB_TOKEN` triggers no
+#   5. The release follows by itself, because the push in (4) is made with
+#      `RELEASE_PLZ_TOKEN`. A push by the default `GITHUB_TOKEN` triggers no
 #      workflow (GitHub, verbatim: "with the exception of `workflow_dispatch`
 #      and `repository_dispatch`, other GITHUB_TOKEN triggered events do not
-#      create workflow runs"), so `release-plz.yml` is dispatched by hand —
-#      exactly as `merge-release-pr` does after its own merge. Where the
-#      repository holds `RELEASE_PLZ_TOKEN` the push is made with it instead,
-#      the push triggers the chain itself, and no dispatch is sent: one
-#      condition, read off the secret's presence, and the same file serves a
-#      repository with the token and one without.
+#      create workflow runs"), and nothing here can be dispatched in its
+#      place: the release PR is opened only on a `push` and merged only with
+#      that token. So without the secret the landing refuses before it writes
+#      anything, rather than land a change no release would ever follow.
+#   6. `scripts/alarm.sh` — a red run opens ONE issue that mails the owner,
+#      however many days the streak lasts; the next green run closes it.
 #
 # WHAT A FAILED RUN MEANS. The fast-forward refuses when `main` moved while
 # the gate ran; the next day's run begins again from the new `main`, so the
@@ -60,11 +61,13 @@ jobs:
     permissions:
       # The branch, its commit and the fast-forward of main.
       contents: write
-      # Dispatching ci.yml and release-plz.yml.
+      # Dispatching ci.yml.
       actions: write
+      # scripts/alarm.sh: the one issue a red streak opens.
+      issues: write
     env:
-      # Present: pushes trigger workflows and no dispatch is needed. Absent:
-      # the default token pushes and release-plz.yml is dispatched (5).
+      # The landing refuses without it (scripts/land-through-gate.sh): only a
+      # push made with this token triggers CI and the release chain on main.
       PAT: ${{ secrets.RELEASE_PLZ_TOKEN }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -115,3 +118,16 @@ jobs:
           moved=$(git diff -- Cargo.lock | sed -nE 's/^[ +]name = "(.*)"/\1/p' | sort -u | paste -sd, -)
           scripts/land-through-gate.sh advisories \
             "the lockfile moves past the day's advisories: $moved" Cargo.lock
+      # The last two steps of every scheduled job (scripts/alarm.sh): the first
+      # red run of a streak opens ONE issue that mails the owner, the next
+      # green run closes it.
+      - name: Alarm, once per red streak
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: scripts/alarm.sh red
+      - name: Close the alarm
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: scripts/alarm.sh green

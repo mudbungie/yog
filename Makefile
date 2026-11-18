@@ -473,9 +473,10 @@ deploy-selftest:
 ingest:
 	@scripts/ingest.sh
 
-# The regression half of that, and of `scripts/land-through-gate.sh` (the one
-# definition of how ingest.yml and advisories.yml write to `main`): both real
-# scripts under fake curl/cargo and fake git/gh, both directions. Seconds, no
+# The regression half of that, of `scripts/land-through-gate.sh` (the one
+# definition of how ingest.yml and advisories.yml write to `main`) and of
+# `scripts/alarm.sh` (the once-per-streak issue every scheduled workflow ends
+# with): the real scripts under fake curl/cargo and fake git/gh, both directions. Seconds, no
 # network, so it sits beside `deploy-selftest` at the head of `lint`.
 ingest-selftest:
 	@scripts/ingest-selftest.sh

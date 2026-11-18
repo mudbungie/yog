@@ -436,7 +436,7 @@ full reasoning). A RustSec advisory is a fact about the day, not the tree,
 so `make deny` judges bans, licences and sources, and
 `.github/workflows/advisories.yml` asks the day's question daily: on a
 finding it runs `make mend-advisories`, proves the lockfile move with
-`ci.yml` on a branch, fast-forwards `main` and re-judges the release. A
+`ci.yml` on a branch and fast-forwards `main`; the release follows the push. A
 gate failure on `deny` is about the tree, never about the calendar.
 
 **The litany and brazen pins are moved by a workflow, not by a ball**
@@ -451,6 +451,17 @@ run of `ingest.yml` is the hand's case**: the upstream release needs a change
 here, so file a ball that lands the pin move WITH the code it needs; the run
 goes green by itself once `main` carries the pins. The `balls` pin is not
 ingested: `bl-speculate` on every box must match it (below).
+
+**A red scheduled run tells the owner once per streak** (bl-3102). Every
+workflow with a `schedule:` — `ingest.yml`, `advisories.yml`, `store-scan.yml`
+— ends with `scripts/alarm.sh red` on failure and `green` on success. The first
+red run opens an issue titled `unattended run red: <workflow>` that mentions
+the owner (the mention is the mail); later red runs find it open and add
+nothing; the next green run closes it. The open issue is the whole state. **A
+new scheduled workflow takes the same two steps and `issues: write`.** The
+landing itself (`scripts/land-through-gate.sh`) refuses without
+`RELEASE_PLZ_TOKEN`: only a push made with it starts CI and the release on
+`main`, and nothing can be dispatched in its place.
 
   **It reads index BLOBS, not the worktree.** `git checkout-index`
   materializes the index into a scratch tree and the scan reads that, so the

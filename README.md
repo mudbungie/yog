@@ -17,7 +17,9 @@ components and yog composes on top of them. The batteries-included direction is
 any doc. The litany and brazen pins follow the registry unattended: the hourly
 `ingest.yml` workflow runs `make ingest`, proves the move through CI on a
 branch and lands it, and the ordinary release follows; a red run is an upstream
-change that needs a hand. Ball reads run in-process, and every substrate spawn targets yog's own
+change that needs a hand, and — like any red scheduled run here — it opens one
+issue mentioning the owner for the whole streak, closed by the next green run
+(`scripts/alarm.sh`). Ball reads run in-process, and every substrate spawn targets yog's own
 executable under a verb namespace — `yog bl <verb…>`, `yog bz <args…>`, `yog
 litany <argv…>` — dispatched to the embedded crate exactly as each upstream's
 own thin binary does (DESIGN §16.7). Nothing is installed alongside: there is no

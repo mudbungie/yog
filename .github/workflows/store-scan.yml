@@ -44,6 +44,10 @@ permissions:
 jobs:
   tasks:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # scripts/alarm.sh: the one issue a red streak opens.
+      issues: write
     steps:
       # The scanner and its rule table, from the source ref.
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -64,3 +68,16 @@ jobs:
       - name: Scan the task store
         working-directory: store
         run: "$GITHUB_WORKSPACE/scripts/leak-scan.sh"
+      # The last two steps of every scheduled job (scripts/alarm.sh): the first
+      # red run of a streak opens ONE issue that mails the owner, the next
+      # green run closes it.
+      - name: Alarm, once per red streak
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: scripts/alarm.sh red
+      - name: Close the alarm
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: scripts/alarm.sh green

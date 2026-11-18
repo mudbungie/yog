@@ -16,14 +16,17 @@ name: Ingest
 #      change reaches `main`, shared with `advisories.yml`, whose header states
 #      every choice in it: the two files committed on a branch, `ci.yml`
 #      dispatched there and watched, `main` fast-forwarded on a pass, the branch
-#      deleted either way, and the release chain woken. The release that
-#      follows is the ordinary one; nothing here publishes.
+#      deleted either way. The push to `main` is made with
+#      `RELEASE_PLZ_TOKEN`, so it starts the ordinary release chain by
+#      itself; nothing here publishes.
+#   3. `scripts/alarm.sh` — a red run opens ONE issue that mails the owner,
+#      however many hours the streak lasts; the next green run closes it.
 #
 # WHAT A FAILED RUN MEANS. A red `ci.yml` on the branch means the upstream
 # release needs a change in yog — an API it moved, a behaviour a test pins —
 # and that IS a hand's: the run fails, `main` is untouched, and it fails again
-# every hour until somebody lands the pin move together with the code it
-# needs. A refused fast-forward means `main` moved while the gate ran; the
+# every hour (alarming once) until somebody lands the pin move together with
+# the code it needs. A refused fast-forward means `main` moved while the gate ran; the
 # next hour begins again from the new `main`.
 #
 # One run at a time: the gate can outlast the hour, and a second run racing
@@ -51,11 +54,13 @@ jobs:
     permissions:
       # The branch, its commit and the fast-forward of main.
       contents: write
-      # Dispatching ci.yml and release-plz.yml.
+      # Dispatching ci.yml.
       actions: write
+      # scripts/alarm.sh: the one issue a red streak opens.
+      issues: write
     env:
-      # Present: pushes trigger workflows and no dispatch is needed. Absent:
-      # the default token pushes and release-plz.yml is dispatched.
+      # The landing refuses without it (scripts/land-through-gate.sh): only a
+      # push made with this token triggers CI and the release chain on main.
       PAT: ${{ secrets.RELEASE_PLZ_TOKEN }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -89,3 +94,16 @@ jobs:
           fi
           scripts/land-through-gate.sh ingest \
             "the pins step to $NOW, ingested from the registry" Cargo.toml Cargo.lock
+      # The last two steps of every scheduled job (scripts/alarm.sh): the first
+      # red run of a streak opens ONE issue that mails the owner, the next
+      # green run closes it.
+      - name: Alarm, once per red streak
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: scripts/alarm.sh red
+      - name: Close the alarm
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: scripts/alarm.sh green

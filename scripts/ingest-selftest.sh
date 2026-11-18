@@ -1,7 +1,8 @@
 #!/bin/sh
 # `make ingest-selftest` — the regression half of the unattended pin move
 # (bl-38dc), in the gate. It drives the REAL `ingest.sh` under a fake `curl` and
-# `cargo`, and the REAL `land-through-gate.sh` under a fake `git` and `gh`, so it
+# `cargo`, and the REAL `land-through-gate.sh` and `alarm.sh` under a fake `git`
+# and `gh`, so it
 # needs no network, no toolchain, no registry and no repository — the same
 # discipline as `deploy/local-selftest.sh`, for the same reason: both scripts
 # run unattended, are in no crate, and one of them writes to `main`.
@@ -16,7 +17,8 @@ set -eu
 HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 INGEST="$HERE/ingest.sh"
 LAND="$HERE/land-through-gate.sh"
-for s in "$INGEST" "$LAND"; do
+ALARM="$HERE/alarm.sh"
+for s in "$INGEST" "$LAND" "$ALARM"; do
     [ -x "$s" ] || { echo "ingest-selftest: $s is not executable" >&2; exit 1; }
 done
 
@@ -198,13 +200,12 @@ gated() {
 }
 landed()    { logged "git push origin $B:main" && before 'gh run watch 77' "git push origin $B:main"; }
 swept()     { [ "$(tail -1 "$work/log")" = "git push origin --delete $B" ]; }
-released()  { logged 'gh workflow run release-plz.yml'; }
 
-green_pat()    { [ "$code" = 0 ] && gated && landed && swept && ! released; }
-green_no_pat() { [ "$code" = 0 ] && gated && landed && swept && released; }
+green()        { [ "$code" = 0 ] && gated && landed && swept; }
+no_token()     { [ "$code" != 0 ] && [ ! -e "$work/log" ] && said 'RELEASE_PLZ_TOKEN is not set'; }
 red()          { [ "$code" != 0 ] && gated && ! logged "git push origin $B:main" \
-                     && swept && ! released; }
-main_moved()   { [ "$code" != 0 ] && gated && swept && ! released \
+                     && swept; }
+main_moved()   { [ "$code" != 0 ] && gated && swept \
                      && said 'main moved while the gate ran'; }
 never_ran()    { [ "$code" != 0 ] && ! logged "git push origin $B:main" && swept \
                      && said 'ci.yml never started'; }
@@ -212,18 +213,61 @@ no_paths()     { [ "$code" = 2 ] && [ ! -e "$work/log" ]; }
 
 echo 'ingest-selftest: the landing'
 set -- ingest 'the message' Cargo.toml Cargo.lock
-land_case 'green gate, with the token -> main fast-forwarded, branch deleted, no dispatch' \
-    green notreal green_pat "$@"
-land_case 'green gate, no token -> the same, and release-plz.yml is dispatched' \
-    green '' green_no_pat "$@"
+land_case 'green gate -> main fast-forwarded after the watch, branch deleted' \
+    green notreal green "$@"
+land_case 'no release token -> refuses, and git is never run' \
+    green '' no_token "$@"
 land_case 'red gate -> main is NOT pushed; branch deleted' \
     red notreal red "$@"
 land_case 'main moved while the gate ran -> nothing lands, says so; branch deleted' \
-    moved '' main_moved "$@"
+    moved notreal main_moved "$@"
 land_case 'ci.yml never starts -> main is NOT pushed; branch deleted' \
     absent notreal never_ran "$@"
 land_case 'no path to commit -> usage, and git is never run' \
     green notreal no_paths ingest 'the message'
+
+# --- alarm.sh ----------------------------------------------------------------
+
+T='unattended run red: Ingest'
+RUN=https://github.example/o/r/actions/runs/7
+
+# What `gh issue list --jq` answers: number, tab, title. The decoys are another
+# workflow's alarm and a title this one is only the head of.
+decoys()   { printf '3\tunattended run red: Advisories\n4\t%s (old)\n' "$T"; }
+one_open() { decoys; printf '9\t%s\n' "$T"; }
+
+alarm_case() { # <label> <red|green|''> <open-issues-fn> <checker-fn>
+    work=$(mktemp -d "${TMPDIR:-/tmp}/yog-alarm.XXXXXX")
+    mkdir -p "$work/bin"
+    "$3" > "$work/issues.txt"
+    shim gh <<EOF
+[ "\$1 \$2" != 'issue list' ] || exec cat "$work/issues.txt"
+printf 'gh %s\n' "\$*" | tr '\n' ' ' >> "$work/log"
+echo >> "$work/log"
+EOF
+    set +e
+    out=$(PATH="$work/bin:$PATH" GH_TOKEN=notreal GITHUB_WORKFLOW=Ingest GITHUB_RUN_ID=7 \
+        GITHUB_SERVER_URL=https://github.example GITHUB_REPOSITORY=o/r \
+        GITHUB_REPOSITORY_OWNER=o "$ALARM" $2 2>&1)
+    code=$?
+    set -e
+    verdict "$1" "$4"
+}
+wrote()    { [ "$(grep -c . "$work/log" 2>/dev/null)" = "$1" ]; }
+silent()   { [ "$code" = 0 ] && [ ! -e "$work/log" ]; }
+opened()   { [ "$code" = 0 ] && wrote 1 \
+                 && grep -q "^gh issue create --title $T --body @o .*$RUN" "$work/log"; }
+closed()   { [ "$code" = 0 ] && wrote 1 \
+                 && logged "gh issue close 9 --comment $RUN is green "; }
+no_word()  { [ "$code" = 2 ] && [ ! -e "$work/log" ]; }
+
+echo 'ingest-selftest: the alarm'
+alarm_case 'red, none open -> opens exactly one issue, mentioning the owner and the run' \
+    red decoys opened
+alarm_case 'red, one open -> says nothing more' red one_open silent
+alarm_case 'green, one open -> closes that one, and only that one' green one_open closed
+alarm_case 'green, none open -> does nothing' green decoys silent
+alarm_case 'neither word -> usage, and gh is never run' '' one_open no_word
 
 [ "$cases" -gt 0 ] || { echo 'ingest-selftest: ran 0 cases: the harness is broken' >&2; exit 1; }
 [ "$fails" = 0 ] || { echo 'ingest-selftest: FAILED' >&2; exit 1; }
