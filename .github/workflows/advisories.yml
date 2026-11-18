@@ -102,7 +102,10 @@ jobs:
       - name: Land it through the gate
         if: steps.ask.outputs.clean != 'true'
         env:
-          GH_TOKEN: ${{ secrets.RELEASE_PLZ_TOKEN || github.token }}
+          # The JOB token, never the release token: GitHub answers a workflow
+          # dispatch made with that one 403 (bl-37d8). git's pushes still ride
+          # the token checkout seated.
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           if git diff --quiet -- Cargo.lock; then

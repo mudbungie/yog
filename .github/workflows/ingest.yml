@@ -76,7 +76,10 @@ jobs:
           echo "now=$now" >> "$GITHUB_OUTPUT"
       - name: Land it through the gate
         env:
-          GH_TOKEN: ${{ secrets.RELEASE_PLZ_TOKEN || github.token }}
+          # The JOB token, never the release token: GitHub answers a workflow
+          # dispatch made with that one 403 (bl-37d8). git's pushes still ride
+          # the token checkout seated.
+          GH_TOKEN: ${{ github.token }}
           NOW: ${{ steps.pins.outputs.now }}
         run: |
           set -euo pipefail

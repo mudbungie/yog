@@ -9,8 +9,10 @@
 #
 # Run on a runner, in a FULL-history checkout (a shallow one has the branch's
 # parent beyond its boundary and every fast-forward is refused "fetch first"),
-# with `GH_TOKEN` set and `PAT` set to the repository's `RELEASE_PLZ_TOKEN` or
-# empty. The caller has already decided there is something to land.
+# with `GH_TOKEN` set to the JOB token (`actions: write`; the release token is
+# refused a workflow dispatch, HTTP 403 — bl-37d8) and `PAT` set to the
+# repository's `RELEASE_PLZ_TOKEN` or empty. git pushes with whatever token the
+# checkout seated, which is the release token where there is one. The caller has already decided there is something to land.
 #
 #   1. The named paths committed on `<branch-prefix>/<utc-stamp>` and pushed.
 #   2. `ci.yml` dispatched on that branch and watched. That workflow is the one
