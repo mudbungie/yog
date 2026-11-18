@@ -2547,10 +2547,11 @@ laptop whose sign-in works nowhere else makes the model call, and a third box
 runs the tool the model asked for. No third grade, no third role and no second
 channel: it is the foot's three gestures (§4.2, §5.4), and the one thing they
 lacked was a capture that arrives while it is being produced. **This section is
-the design, and two parts of it have landed: the server half of the stream**
-(bl-d414, edition 28 — *The stream, as landed* below) **and the `bz` arm**
-(bl-e0c9 — *The `bz` arm, as landed*). The listings and the sign-in have not.
-The balls that land it amend it in place.
+the design, and three parts of it have landed: the server half of the stream**
+(bl-d414, edition 28 — *The stream, as landed* below), **the `bz` arm**
+(bl-e0c9 — *The `bz` arm, as landed*) **and the listings and the sign-in**
+(bl-7467 — *The listings and the sign-in, as landed*). What remains is the
+driven two-machine proof. The balls that land it amend it in place.
 
 **What is true today, read off the code.** litany makes a model call by
 spawning its adapter once per attempt as `<adapter> --json --provider <row>`,
@@ -2799,11 +2800,12 @@ and `PROTOCOL` stands at 19: the arm spends bl-d414's three keys and adds none.
   server already passes — the `yog bz` arm and the in-process runner alike. It
   asks the routed leg whether the command line is its own and otherwise runs
   the linked brazen, whose body is unchanged.
-- **What is routed is the model call, and only it.** The command line must
-  take brazen's data-plane route and carry `--provider <name>` as two
-  arguments — the one spelling litany sends. A listing or a sign-in naming a
-  qualified row still reaches the linked brazen, which has never heard of it;
-  widening that is the listings ball's.
+- **What is routed is every command line that names a row** *(widened by
+  bl-7467; bl-e0c9 routed the model call alone)*: brazen's data-plane route,
+  its model listing and its sign-in, each carrying `--provider <name>` as two
+  arguments. Every other word crosses as typed. The provider listing names no
+  row and is always the linked brazen's — the server's own reads are what
+  append a machine's rows (below).
 - **The name is read off disk, with no ask.** The workspace is the arm's own
   wall leaf (DESIGN §16.2) and its clients are the registration files (§4.1),
   so reading a name costs no round trip and cannot fail on a slow server. An
@@ -2838,12 +2840,12 @@ and `PROTOCOL` stands at 19: the arm spends bl-d414's three keys and adds none.
   (§4). An in-world caller stays unscoped (§3) and is held to its workspace
   where it resolves the name: the loaded set, the worktree lane and this arm
   each read the calling workspace's roster.
-- **Found, and the listings ball's to close: a conversation cannot yet be
-  *born* on a qualified role through a seat.** §9.19's `prompt` door refuses a
-  role whose row the wall does not declare, and a qualified name is such a
-  row until *a qualified name is judged by its qualification* (below) lands.
-  A turn on a conversation that already exists, and litany driven directly,
-  pass. Nothing in litany's config grammar or in a role block refuses `@`.
+- **Found by bl-e0c9 and closed by bl-7467: a conversation could not be
+  *born* on a qualified role through a seat.** §9.19's `prompt` door refused a
+  role whose row the wall does not declare, and a qualified name was such a
+  row. It is now judged by its qualification (below), at that door as at the
+  config gates. Nothing in litany's config grammar or in a role block refuses
+  `@`.
 - **The price table needed nothing.** The step records the qualified name and
   the lookup is exact on `(provider, model)`, so `<row>@<client>` is priced by
   its own entry and is unpriced without one.
@@ -2879,6 +2881,71 @@ of their shapes; what changes is which rows the answers carry.
 Each wait here is bounded and short, because these are reads answered in place:
 a machine that is `serving` takes the row at once, and one that does not answer
 within a few seconds contributes nothing.
+
+**The listings and the sign-in, as landed** (bl-7467;
+`src/boundary/config/far.rs` the server's own asks, `src/bz_host/far.rs` the
+arm). No shape moved, no edition was stamped and `PROTOCOL` stands at 19.
+
+- **Two askers, one reading of the name.** A *child* that names a row — the
+  sign-in the server spawns, a `yog bz --list-models` typed in a workspace —
+  is routed by the arm through the `gestures/` inbox, as the model call is.
+  A read the server answers *in its own process* (`providers`, `catalog`,
+  `models`, the flow read of a `login`) posts to the mailbox it holds by
+  handle and polls it directly: an answer that deposited a gesture from the
+  thread that consumes the inbox would wait on itself. Both split the name
+  against the same roster with the same function.
+- **The bound is three seconds, for every machine asked at once.** The
+  listing is posted to each serving machine first and all are then collected
+  under the one bound, so three machines cost three seconds at worst, not
+  nine. A listing nobody collected is left in its slot for the hour sweep.
+- **Confirmed before building: the wait cannot hold up the post it waits
+  for.** A foot's `complete` is dispatched on that foot's own connection
+  thread (the listener's, one per connection), and the wait is paid on the
+  thread that asked — a seat's connection, or the deposit consumer for an
+  in-world `yog gesture`. So nothing was cached. What the consumer thread's
+  wait does cost is the one thing `invocations` already states: other
+  deposits — a running arm's `capture` polls among them — converge up to
+  three seconds late, well inside the thirty a run is allowed to go unheard.
+- **`models` naming a machine is a refusal where a listing is an absence.**
+  The asker named the box, so its silence is said: one sentence for a machine
+  that advertises no `bz`, one for a machine not parked on its read (asleep,
+  or busy — answered at once, with no wait), one for a machine that took the
+  call and did not finish inside the bound. That brazen's own failure is
+  relayed in its own words, as the linked one's is.
+- **The judgement adds a row and changes no gate.** §9.4's pick, §9.5's
+  provider control and §9.19's `prompt` door each ask *does this row exist*
+  of the workspace's table; a name that selects a machine registered here and
+  advertising `bz` is given a row in that table stating nothing but its name
+  — no credential it lacks, no capability it was asked about. An unanswered
+  (empty) table is still no answer and is left empty.
+- **Corrected here — the sign-in is still a child the server spawns.** The
+  design said *as an invocation rather than a local spawn*. What landed keeps
+  §8.3's run exactly as it was — one child per workspace × provider, a reader
+  thread, the outcome row at settle, the replacement before the spawn — and
+  the child is the `bz` arm with the qualified name on its command line, so
+  the arm makes the invocation and relays the far brazen's two streams as its
+  own. A second executor inside the run holder would have been a second
+  reader, a second outcome row and a second meaning of *replace*. What
+  follows from it: **a second `login` on a live pair terminates the arm, whose
+  polls end, and the far run is refused its next post** — within the thirty
+  seconds of *a run lives while its asker listens* plus one post interval,
+  which is how long the far machine may still hold a loopback port; and a
+  far sign-in nobody takes fails in the arm's own two minutes, on the lane.
+- **Corrected here — the flow is read off the sign-in catalog, for a bare row
+  too.** The design said *that machine's own provider listing*, and §8.3's
+  landed read was the routing table. A preset nobody has signed into is in
+  the catalog and absent from the table (§9.27), and it is exactly the row a
+  first sign-in names — read off the table it has no `device` column, so it
+  was fired `--browser`, the one flow a remote seat cannot finish. Both reads
+  are the catalog now.
+- **A sign-in on a machine that is not parked is refused at the act.** Its
+  flow cannot be read, and a guessed `--browser` would open a browser on a box
+  nobody is sitting at. The act therefore waits up to the three seconds, on
+  the intake, for one catalog read — the only wait `login` has.
+- **A sign-in occupies its foot.** A foot runs serially (§5.3), so for as
+  long as a far device flow waits on its human, model calls routed to that
+  machine queue behind it — the first bullet of *What this does not solve*,
+  at its sharpest.
 
 **What a foot serving `bz` can now see and do, stated plainly.** §4.2's
 sentence — *no ask, no act* — still describes what a foot may **say**; this
@@ -2926,7 +2993,17 @@ a `capture` for one lands, the unread bound holds. The arm
 (`src/bz_host/far/tests.rs`, landed with bl-e0c9): the four readings of a
 name, the stream relayed in its pieces with `since` advancing, the error
 event for a call nobody took and for a refused ask, nothing added after a
-relayed byte. And a driven turn (`tests/bz_far_turn.rs`): the shipped binary
+relayed byte. The listings (`src/boundary/config/far/tests.rs`, landed with
+bl-7467, a fixture foot parked on the real mailbox answering canned brazen
+listings): rows appended qualified, a machine that is not serving neither
+asked nor waited for, `models` run on the machine it names and each of its
+three refusals, the judgement's five readings — and the gates themselves,
+each in its own suite: the pick, the provider control and the `prompt` door
+accept a qualified role with nobody awake. The sign-in
+(`src/boundary/login/tests/far.rs`): the flow read off that machine's catalog,
+and the act refused while it is asleep; and through the shipped binary
+(`tests/bz_far_turn.rs`, third case) the far brazen's stderr line is on the
+arm's stderr while the far child is still waiting. And a driven turn (`tests/bz_far_turn.rs`): the shipped binary
 runs `litany prompt` on a workspace whose roles name a foot, the fixture
 foot's `bz` entry is a script that holds half its stream until the test has
 seen `response.json` grow, and the step commits with the far usage and the
@@ -3915,10 +3992,12 @@ the browser at the seat and the credential in the host's workspace directory.
 
 **The ruling: the sign-in is an act on the boundary, executed by the SERVER
 inside the named workspace's directory, streamed to the invoking seat.**
-*(Generalised by §5.7, bl-0369: executed by the brazen the row names — the
-server's for a bare row, a registered machine's for `<row>@<client>` — and
-the rest of this section reads unchanged with "the server's box" taken as
-"the box that holds the credential".)* bz runs
+*(Generalised by §5.7, bl-0369, landed bl-7467: executed by the brazen the row
+names — the server's for a bare row, a registered machine's for
+`<row>@<client>` — and the rest of this section reads unchanged with "the
+server's box" taken as "the box that holds the credential". The run, its
+lane and its outcome row are the same child either way; §5.7's* The listings
+and the sign-in, as landed *says what the child is.)* bz runs
 where the workspace is, so the credential lands where the agents that need it run,
 and the custody stance survives unchanged at both ends: DESIGN §5.1 #22 holds
 — yog pipes the flow's lines and never a credential — and **nothing
@@ -3971,7 +4050,10 @@ consumption is the seat crate's bl-e3c5, the flow branch bl-7c9f.
 **The flow follows the row's capability; the browser follows the human.** The
 flow-selection rule is DESIGN §8.3's and is amended there (rule 1): the device
 flow where the row declares a device endpoint, the browser flow everywhere
-else. What belongs here is the wire consequence. A **device-capable row
+else. **The row is read off the sign-in catalog** (§9.27; corrected by
+bl-7467 — the routing table does not carry a preset nobody has signed into,
+which is the row a first sign-in names). What belongs here is the wire
+consequence. A **device-capable row
 completes from any seat**: the URL and user code paint wherever the lane is
 held, the human finishes in any browser anywhere (a phone's included), bz
 polls the token endpoint from the server, and the credential never touches the
@@ -5829,6 +5911,12 @@ half, including the one thing this side cannot tell it: which act a refusal
 frame answered is a fact the seat's own poster holds, since a refusal carries
 no `kind`.
 
+**A role naming `<row>@<client>` passes on the qualification** (§5.7,
+bl-7467): the wall neither declares that row nor holds its credential, so
+the door asks only what is durable — the machine is registered in this
+workspace and advertises `bz` — and the call itself says, in band, what was
+missing.
+
 **What it does not carry, on purpose.** No `sign_in_required` field on the
 `prepared` body and no standing *ready?* query: the first would make a seat
 hold a prediction the door re-derives anyway, and the second is a read a
@@ -6212,6 +6300,12 @@ seat one parser and one `kind` match. **A seat renders the catalog where its
 Login verb is and the table everywhere else** — the picker, the role marks and
 every "which rows exist" question stay on `providers`, which is also the list
 `is_unknown_row` judges `/model` against (DESIGN §8.3, §9.4).
+
+**Both reads then carry each serving machine's rows, qualified** (§5.7,
+bl-7467): after the workspace's own, the same listing from every registered
+machine that advertises `bz` and is parked on its read, each row named
+`<row>@<client>` — `{"name": "claude-sub@laptop", "fact": "auth oauth2 ·
+signed in", …}`, where *signed in* is that machine's fact. No shape moved.
 
 Seen on a seat: a fresh wall's `/providers` answering nothing, `/catalog`
 listing the oauth presets with *not signed in*, `/login <row>` completing, and

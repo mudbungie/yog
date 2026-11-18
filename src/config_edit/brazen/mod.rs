@@ -47,6 +47,7 @@ use std::path::Path;
 
 mod effects;
 pub use effects::RealBzRunner;
+pub(crate) use effects::{CATALOG, TABLE, models_line};
 
 /// The wall's brazen layout and the read that needs only it (§5.1 #19/#23) —
 /// free of the editor, because every caller asks without one.

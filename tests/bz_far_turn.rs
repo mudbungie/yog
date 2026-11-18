@@ -20,7 +20,7 @@
 #[path = "bz_far_turn/fixture.rs"]
 mod fixture;
 
-use std::io::Write as _;
+use std::io::{BufRead as _, Write as _};
 use std::path::Path;
 use std::process::Stdio;
 use std::sync::Arc;
@@ -56,7 +56,7 @@ fn a_turn_streams_from_another_machine_and_commits_like_a_local_one() {
         let (mail, done, asked) = (mail.clone(), Arc::clone(&done), Arc::clone(&asked));
         std::thread::spawn(move || {
             while !done.load(Ordering::Relaxed) {
-                serve(&mail, &script, &asked);
+                serve(&mail, &script, &asked, false);
             }
         })
     };
@@ -188,4 +188,72 @@ fn a_stopped_arm_asks_nothing_more() {
     );
     done.store(true, Ordering::Relaxed);
     intake.join().unwrap();
+}
+
+/// **A sign-in on a far row streams its lines** (REMOTE §5.7, bl-7467): the
+/// arm routes `--login --provider <row>@<client>` exactly as it routes a model
+/// call, and what the far brazen prints on stderr — the device code — is on
+/// the arm's own stderr while the far child is still waiting on its human.
+/// The server's sign-in run is a reader over this very child (`login::runs`),
+/// so this is the line `login-tail` paints.
+#[test]
+fn a_far_sign_in_shows_its_device_line_before_the_far_child_exits() {
+    let tmp = tempfile::TempDir::new().unwrap();
+    let state_root = tmp.path().join("state/yog");
+    seat_foot(&state_root);
+    let release = tmp.path().join("release");
+    let script = tmp.path().join("far-bz");
+    fixture::write_exec::write_exec(
+        &script,
+        &format!(
+            "#!/bin/sh\necho 'open https://example.test/device and enter CODE-1234'\n\
+             while [ ! -e '{}' ]; do sleep 0.05; done\n",
+            release.display()
+        ),
+    );
+    let (mail, done) = (
+        Mailbox::holding(5, Duration::from_millis(20)),
+        Arc::new(AtomicBool::new(false)),
+    );
+    let asked = Arc::new(std::sync::Mutex::new(Vec::new()));
+    let intake = intake(&mail, &state_root, &done, &Arc::new(AtomicUsize::new(0)));
+    let host = {
+        let (mail, done, asked) = (mail.clone(), Arc::clone(&done), Arc::clone(&asked));
+        std::thread::spawn(move || {
+            while !done.load(Ordering::Relaxed) {
+                serve(&mail, &script, &asked, true);
+            }
+        })
+    };
+    let mut arm = yog(
+        tmp.path(),
+        &[
+            ("XDG_STATE_HOME", &tmp.path().join("state")),
+            ("YOG_WALL", Path::new("/nonexistent/walls/ws")),
+        ],
+    )
+    .args(["bz", "--login", "--provider", "fix@foot"])
+    .stdin(Stdio::null())
+    .stderr(Stdio::piped())
+    .spawn()
+    .unwrap();
+
+    // The line arrives while the far child cannot have exited: it is still
+    // waiting for the release this test has not written.
+    let mut said = String::new();
+    std::io::BufReader::new(arm.stderr.take().unwrap())
+        .read_line(&mut said)
+        .unwrap();
+    assert!(said.contains("CODE-1234"), "{said}");
+    assert!(!release.exists());
+    std::fs::File::create(&release).unwrap().flush().unwrap();
+
+    assert!(arm.wait().unwrap().success(), "the far exit is the arm's");
+    done.store(true, Ordering::Relaxed);
+    intake.join().unwrap();
+    host.join().unwrap();
+    assert_eq!(
+        asked.lock().unwrap().first().unwrap()["args"],
+        json!(["--login", "--provider", "fix"])
+    );
 }

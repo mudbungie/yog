@@ -3,7 +3,7 @@
 #![allow(clippy::unwrap_used, clippy::indexing_slicing)]
 
 #[path = "../support/write_exec.rs"]
-mod write_exec;
+pub mod write_exec;
 
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
@@ -98,7 +98,9 @@ pub fn answer(mail: &Mailbox, request: &Value) -> Value {
 
 /// The fixture foot: take this machine's work, run its `bz` entry, post each
 /// line the child writes as it is written, then the capture that ends the run.
-pub fn serve(mail: &Mailbox, script: &Path, asked: &std::sync::Mutex<Vec<Value>>) {
+/// The entry speaks on one stream — stdout for a model call, stderr (`err`)
+/// for a sign-in, which is where brazen prints its human-facing lines.
+pub fn serve(mail: &Mailbox, script: &Path, asked: &std::sync::Mutex<Vec<Value>>, err: bool) {
     for invocation in mail.take(FOOT).unwrap() {
         asked.lock().unwrap().push(invocation.input.clone());
         let mut child = yog::git_env::command(script)
@@ -107,10 +109,9 @@ pub fn serve(mail: &Mailbox, script: &Path, asked: &std::sync::Mutex<Vec<Value>>
             .spawn()
             .unwrap();
         for line in BufReader::new(child.stdout.take().unwrap()).lines() {
-            let piece = Piece {
-                stdout: format!("{}\n", line.unwrap()),
-                stderr: String::new(),
-            };
+            let said = (String::new(), format!("{}\n", line.unwrap()));
+            let (stdout, stderr) = if err { said } else { (said.1, said.0) };
+            let piece = Piece { stdout, stderr };
             mail.complete(now(), FOOT, &invocation.id, &Post::Partial(piece))
                 .unwrap();
         }

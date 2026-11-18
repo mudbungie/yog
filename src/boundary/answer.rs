@@ -226,18 +226,7 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
         // asked of the world, this workspace's git and this wall's brazen, at
         // the moment they are asked, and answered straight through because
         // every seat here is already off-frame.
-        Query::Config(read) => {
-            return match read {
-                config::Read::File { file } => config::file(deps, ws, file),
-                config::Read::Marks { .. } => Ok(config::read_marks(deps, ws)),
-                config::Read::Providers { .. } => Ok(config::providers(deps, ws)),
-                config::Read::Catalog { .. } => Ok(config::catalog(deps, ws)),
-                config::Read::Lineages { .. } => config::lineages(ws),
-                config::Read::Models { provider, .. } => config::models(deps, ws, provider),
-                config::Read::Roles { .. } => Ok(config::roles(ws)),
-                config::Read::Proposals { id, .. } => config::proposals(ws, id.as_deref()),
-            };
-        }
+        Query::Config(read) => return config::read::answer(deps, now_unix, ws, read),
         // REMOTE §5's roster (bl-4e08): the §4.1 registration listing, the
         // wire's presence RAM and each client's advertised set, joined at the
         // moment they are asked. It reads the *name* rather than the resolved

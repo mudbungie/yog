@@ -34,8 +34,11 @@
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
-use crate::login::{LoginView, runs::Runs};
+use crate::config_edit::brazen::{BzRunner as _, CATALOG, RealBzRunner, provider_rows};
+use crate::login::LoginView;
+use crate::login::runs::{Runs, flow_of};
 
+use super::config::{far, wall_env};
 use super::dispatch::Deps;
 use super::reply::Reply;
 
@@ -48,15 +51,36 @@ const HOLD_TICK: Duration = Duration::from_millis(16);
 /// Start (or restart) the sign-in for `workspace` × `provider` and answer its
 /// standing (REMOTE §8.3). `workspace` is the chokepoint's own resolved path,
 /// so the wall the child runs in is the one the gesture named (bl-fcd5).
+///
+/// **The flow is read off the sign-in catalog of the brazen that will run it**
+/// (§8.3 rule 1; REMOTE §5.7): this workspace's own for a bare row, the named
+/// machine's for `<row>@<client>`. The catalog and not the routing table,
+/// because a preset nobody has signed into is in the first and absent from the
+/// second (brazen bl-6feb) — and that is exactly the row a first sign-in
+/// names, which the table would have fired `--browser` for want of a row.
 pub(super) fn start(
     deps: &Deps,
     ts: &str,
     workspace: &Path,
     provider: &str,
 ) -> Result<Reply, String> {
+    // The named machine's catalog, asked now — or this wall's own. **A
+    // machine that does not answer refuses the act**: its flow cannot be
+    // read, and a guess would open a browser on a box nobody is sitting at.
+    let (row, catalog) = match far::named(deps, workspace, provider) {
+        Some((row, client)) => {
+            let listed = far::run(deps, ts.parse().unwrap_or(0), &client, CATALOG)?;
+            (row, provider_rows(&listed.stdout))
+        }
+        None => (
+            provider.to_owned(),
+            RealBzRunner::resolve(&wall_env(deps, workspace)).catalog(),
+        ),
+    };
+    let flow = flow_of(&catalog, &row);
     deps.caller
         .logins
-        .start(&deps.world, workspace, provider, &deps.state_root, ts)
+        .start(&deps.world, workspace, provider, flow, &deps.state_root, ts)
         .map(Reply::Login)
 }
 

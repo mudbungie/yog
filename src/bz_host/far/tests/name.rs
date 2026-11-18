@@ -51,7 +51,7 @@ pub(super) fn world(root: &Path, wall: &str) -> Env {
 }
 
 #[test]
-fn the_seam_routes_only_a_model_call_naming_a_client_registered_here() {
+fn the_seam_routes_only_a_call_naming_a_row_on_a_client_registered_here() {
     let root = TempDir::new().expect("tmp");
     let here = world(root.path(), "alba");
     let call = names(&["--json", "--provider", "sub@laptop"]);
@@ -61,16 +61,32 @@ fn the_seam_routes_only_a_model_call_naming_a_client_registered_here() {
     assert_eq!(far.state_root, here.yog_state_root());
     // Registered in another workspace: absent, so the linked brazen's.
     assert!(of(&call, &world(root.path(), "brine")).is_none());
-    // No wall, no row, no value, and a route that is not the data plane.
+    assert!(far.events, "the data plane answers in canonical events");
+    // No wall, no row, no value, and a route that names no row.
     assert!(of(&call, &here.without(crate::world::wall::YOG_WALL)).is_none());
     assert!(of(&names(&["--json"]), &here).is_none());
     assert!(of(&names(&["--json", "--provider"]), &here).is_none());
-    assert!(
-        of(
-            &names(&["--list-models", "--provider", "sub@laptop"]),
-            &here
-        )
-        .is_none()
-    );
+    assert!(of(&names(&["--list-providers", "--json"]), &here).is_none());
     assert!(of(&names(&["--json", "--provider", "sub"]), &here).is_none());
+}
+
+/// A model listing and a sign-in name a row too, so they take the same leg
+/// (bl-7467) — with every other word of the command line passed as typed.
+#[test]
+fn a_listing_and_a_sign_in_naming_a_far_row_are_routed_too() {
+    let root = TempDir::new().expect("tmp");
+    let here = world(root.path(), "alba");
+    for line in [
+        &["--list-models", "--provider", "sub@laptop", "--json"][..],
+        &["--login", "--provider", "sub@laptop", "--browser"][..],
+    ] {
+        let far = of(&names(line), &here).expect("routed");
+        assert_eq!(far.client, "laptop");
+        assert_eq!(far.argv[2], "sub");
+        assert_eq!(
+            (far.argv[0].as_str(), far.argv[3].as_str()),
+            (line[0], line[3])
+        );
+        assert!(!far.events);
+    }
 }

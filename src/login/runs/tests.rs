@@ -15,7 +15,7 @@ use tempfile::tempdir;
 
 use super::Runs;
 use crate::cli_outbound::{Chunk, Cli, ExitInfo, Streamed};
-use crate::login::{LoginRun, LoginView};
+use crate::login::{Flow, LoginRun, LoginView};
 
 /// The workspace every case here signs in, and the world its wall folds out of.
 fn workspace() -> PathBuf {
@@ -76,7 +76,14 @@ fn a_started_run_carries_the_wall_streams_to_the_buffer_and_settles_itself() {
     // The act answers at once, and what it answers is the standing — a run that
     // has just started has said nothing yet, which is not the same as absent.
     let receipt = runs
-        .start(&world, &workspace(), "openai", state.path(), "100")
+        .start(
+            &world,
+            &workspace(),
+            "openai",
+            Flow::Browser,
+            state.path(),
+            "100",
+        )
         .expect("started");
     assert_eq!(receipt.outcome, None, "the act never waits for the run");
 
@@ -100,7 +107,14 @@ fn a_started_run_carries_the_wall_streams_to_the_buffer_and_settles_itself() {
     // A second `Login` on a live pair replaces it: the standing starts over,
     // which is what a seat re-asking the lane then replays.
     let again = runs
-        .start(&world, &workspace(), "openai", state.path(), "101")
+        .start(
+            &world,
+            &workspace(),
+            "openai",
+            Flow::Browser,
+            state.path(),
+            "101",
+        )
         .expect("restarted");
     assert_eq!(again.outcome, None, "the settled run was replaced");
     assert_eq!(settled(&runs, "openai").outcome, Some(0));
@@ -113,7 +127,14 @@ fn a_spawn_that_cannot_start_refuses_and_seats_nothing() {
     let state = tempdir().expect("tmp");
     let runs = Runs::of(Cli::new("/definitely/not/a/real/bz-xyz"));
     let refusal = runs
-        .start(&world, &workspace(), "openai", state.path(), "100")
+        .start(
+            &world,
+            &workspace(),
+            "openai",
+            Flow::Browser,
+            state.path(),
+            "100",
+        )
         .expect_err("an absent binary cannot start a sign-in");
     assert!(!refusal.is_empty(), "the refusal names something");
     // `login::start` already left the synthetic row; nothing is seated, so the
@@ -201,8 +222,15 @@ fn a_run_older_than_an_hour_is_swept_at_the_next_start() {
 
     // The sweep happens at the one moment the map can grow (the mailbox's own
     // discipline), and the bound is the whole run's age.
-    runs.start(&world, &workspace(), "openai", state.path(), "4000")
-        .expect("started");
+    runs.start(
+        &world,
+        &workspace(),
+        "openai",
+        Flow::Browser,
+        state.path(),
+        "4000",
+    )
+    .expect("started");
     assert_eq!(
         runs.standing(&workspace(), "stale"),
         LoginView::default(),
@@ -215,60 +243,5 @@ fn a_run_older_than_an_hour_is_swept_at_the_next_start() {
     assert_eq!(settled(&runs, "openai").outcome, Some(0));
 }
 
-/// **The flow follows the row** (§8.3 rule 1 as amended by bl-61bf; bl-7c9f).
-/// The argv is the whole assertion, because `--browser` is the one word that
-/// selects a flow: a row brazen's own table declares a device endpoint for is
-/// fired headless — bz binds no loopback and the verification URL and user code
-/// stream down the lane, so the sign-in completes from any seat — and a row
-/// declaring none is fired `--browser`, byte for byte as before.
-#[test]
-fn the_spawn_drops_browser_exactly_where_the_row_declares_a_device_endpoint() {
-    let dir = tempdir().expect("tmp");
-    let world = crate::test_support::world::world_under(dir.path());
-    let state = tempdir().expect("tmp");
-    // A browser-only oauth row, authored in this workspace's own wall beside
-    // one NAMED built-in: `openai-chatgpt` is the preset that declares a device
-    // endpoint, in the table only because the wall names it (brazen bl-6feb),
-    // and the hand-written row deliberately declares none.
-    let paths = crate::test_support::world::wall_paths(dir.path());
-    std::fs::create_dir_all(paths.config.parent().expect("the wall's brazen dir")).expect("mkdir");
-    std::fs::write(
-        &paths.config,
-        "[[provider]]\nname = \"acme-oauth\"\nprotocol = \"openai_chat\"\n\
-         base_url = \"https://acme.test\"\nauth = \"oauth2\"\n\
-         api_header = { name = \"Authorization\", scheme = \"bearer\" }\n\
-         [provider.oauth]\nclient_id = \"c\"\n\
-         authorize_url = \"https://acme.test/authorize\"\n\
-         token_url = \"https://acme.test/token\"\n\n\
-         [[provider]]\nname = \"openai-chatgpt\"\n",
-    )
-    .expect("write");
-    // bz echoes the argv it was fired with, then the device flow's own line.
-    let bz = script(
-        dir.path(),
-        "bz",
-        "#!/bin/sh\nprintf '%s\\n' \"$*\" 1>&2\n\
-         printf 'open https://example.test/device and enter CODE-1234\\n' 1>&2\nexit 0\n",
-    );
-    let runs = Runs::of(Cli::new(bz));
-
-    runs.start(&world, &workspace(), "openai-chatgpt", state.path(), "100")
-        .expect("started");
-    let headless = lines(&settled(&runs, "openai-chatgpt"));
-    assert_eq!(
-        headless[0], "--login --provider openai-chatgpt",
-        "no --browser: bz binds no loopback and serves the row's device flow"
-    );
-    assert!(
-        headless[1].contains("https://example.test/device") && headless[1].contains("CODE-1234"),
-        "the URL and the user code stream down the lane: {headless:?}"
-    );
-
-    runs.start(&world, &workspace(), "acme-oauth", state.path(), "100")
-        .expect("started");
-    assert_eq!(
-        lines(&settled(&runs, "acme-oauth"))[0],
-        "--login --provider acme-oauth --browser",
-        "a row declaring no device endpoint keeps the loopback flow"
-    );
-}
+/// The flow a row is fired in, read off the wall's own catalog.
+mod flow;

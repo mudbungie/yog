@@ -11,6 +11,7 @@ use crate::config_edit::branch::{Lineage, config_file, lineages};
 use crate::config_edit::brazen::{
     BzOutcome, BzRunner, ProviderRowView, RealBzRunner, row_names, row_views,
 };
+use crate::config_edit::brazen::{CATALOG, TABLE};
 use crate::config_edit::form::{self, Control, Row, schema_for};
 use crate::config_edit::litany_global::LitanyGlobal;
 use crate::config_edit::{RealFileIo, load_snapshot};
@@ -191,11 +192,32 @@ fn settings(deps: &Deps, ws: &Path, dest: &ConfigFile, text: &str) -> Vec<Row> {
         return Vec::new();
     };
     let providers = if schema.fields.iter().any(|f| f.control == Control::Provider) {
-        row_names(&RealBzRunner::resolve(&super::wall_env(deps, ws)).providers())
+        // Every value a provider control holds is judged, so every one that
+        // names a registered machine is judged by that (REMOTE §5.7).
+        let named = crate::model_pick::grammar::roles(text);
+        let named: Vec<&str> = named.iter().map(|role| role.provider.as_str()).collect();
+        let table = RealBzRunner::resolve(&super::wall_env(deps, ws)).providers();
+        row_names(&super::far::judged(deps, ws, table, &named))
     } else {
         Vec::new()
     };
     form::read(&schema, text, &providers)
+}
+
+/// The family's read door: one arm per member, each answered one level down.
+/// `now` is the asker's clock, spent only by the three reads that may ask a
+/// registered machine (REMOTE §5.7).
+pub(crate) fn answer(deps: &Deps, now: i64, ws: &Path, read: &Read) -> Result<Reply, String> {
+    match read {
+        Read::File { file } => self::file(deps, ws, file),
+        Read::Marks { .. } => Ok(super::read_marks(deps, ws)),
+        Read::Providers { .. } => Ok(providers(deps, now, ws)),
+        Read::Catalog { .. } => Ok(catalog(deps, now, ws)),
+        Read::Lineages { .. } => super::lineages(ws),
+        Read::Models { provider, .. } => super::models(deps, now, ws, provider),
+        Read::Roles { .. } => Ok(super::roles(ws)),
+        Read::Proposals { id, .. } => super::proposals(ws, id.as_deref()),
+    }
 }
 
 /// One workspace's **routing table**, rendered (§8.5, bl-0164) — the §8.3
@@ -206,11 +228,9 @@ fn settings(deps: &Deps, ws: &Path, dest: &ConfigFile, text: &str) -> Vec<Row> {
 /// `credential` column (bl-dba3) — one ask, and no second derivation over the
 /// credentials directory. brazen unanswerable is an empty table, never an
 /// error: the "asked, never stored" contract every wall read here carries.
-pub(crate) fn providers(deps: &Deps, workspace: &Path) -> Reply {
+pub(crate) fn providers(deps: &Deps, now: i64, workspace: &Path) -> Reply {
     Reply::Config(ConfigAnswer::Providers(rows_in(
-        deps,
-        workspace,
-        &|runner| runner.providers(),
+        deps, now, workspace, TABLE,
     )))
 }
 
@@ -219,23 +239,23 @@ pub(crate) fn providers(deps: &Deps, workspace: &Path) -> Reply {
 /// fact of the sphere asked about. Same row shape as [`providers`], so a seat
 /// reads both with one parser; the two differ only in membership — this one
 /// holds every row `bz --login` can serve, table or not.
-pub(crate) fn catalog(deps: &Deps, workspace: &Path) -> Reply {
-    Reply::Config(ConfigAnswer::Catalog(rows_in(deps, workspace, &|runner| {
-        runner.catalog()
-    })))
+pub(crate) fn catalog(deps: &Deps, now: i64, workspace: &Path) -> Reply {
+    Reply::Config(ConfigAnswer::Catalog(rows_in(
+        deps, now, workspace, CATALOG,
+    )))
 }
 
 /// One brazen listing read inside the named workspace's wall and rendered —
 /// the fold the two reads above share, so the wall lens and the rendering are
 /// written once.
-fn rows_in(
-    deps: &Deps,
-    workspace: &Path,
-    read: &dyn Fn(&RealBzRunner) -> Vec<crate::config_edit::brazen::ProviderRow>,
-) -> Vec<ProviderRowView> {
-    row_views(&read(&RealBzRunner::resolve(&super::wall_env(
-        deps, workspace,
-    ))))
+///
+/// **Then the same listing from each registered machine that serves `bz` and
+/// is parked on its read right now** (REMOTE §5.7), its rows named
+/// `<row>@<client>`: one more row each, in the one row shape.
+fn rows_in(deps: &Deps, now: i64, workspace: &Path, line: &[&str]) -> Vec<ProviderRowView> {
+    let mut rows = RealBzRunner::resolve(&super::wall_env(deps, workspace)).listing(line);
+    rows.extend(super::far::rows(deps, now, workspace, line));
+    row_views(&rows)
 }
 
 /// The §9.3 browse (bl-dff8): every lineage with the files its tip holds. A
@@ -246,17 +266,9 @@ pub(super) fn browse(workspace: &Path) -> Result<Vec<Lineage>, String> {
     lineages(workspace).map_err(|e| e.to_string())
 }
 
-/// The §9.4 roster (bl-dff8): the model ids `provider` offers, in the order it
-/// lists them, read **in this process** through the linked brazen (§16.7 W10's
-/// read half). Every seat that reaches the boundary's answer chokepoint is
-/// already off-frame — the consumer's own thread, or a `yog gesture` process
-/// with nothing else to do — so the picker's streamed spawn buys nothing here
-/// and the fork buys a version skew.
-pub(super) fn models(wall: &crate::xdg::Env, provider: &str) -> Result<Vec<String>, String> {
-    roster(&RealBzRunner::resolve(wall).list_models(provider))
-}
-
-/// Fold one `--list-models` run into the roster or the reason there is none —
+/// The §9.4 roster (bl-dff8): fold one `--list-models` run — this process's
+/// linked brazen's (§16.7 W10's read half) or a registered machine's (REMOTE
+/// §5.7) — into the model ids in listing order, or the reason there is none —
 /// [`RosterView`](crate::model_pick::query::RosterView)'s settle, as a refusal:
 /// a non-zero exit answers brazen's own stderr, and an exit-0 run that listed
 /// nothing answers [`EMPTY_ROSTER`], never an empty list a seat would render as

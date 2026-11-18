@@ -22,6 +22,7 @@ fn far(root: &Path, waits: u32) -> Far {
             waits,
             tick: Duration::from_millis(1),
         },
+        events: true,
     }
 }
 
@@ -177,6 +178,23 @@ fn a_failure_after_bytes_were_relayed_adds_nothing_to_the_stream() {
     );
     assert_eq!((exit, out.as_str()), (1, "a\n"));
     assert!(err.contains("yog bz: no invocation"), "{err}");
+}
+
+/// A listing or a sign-in has no canonical stream to answer in: the same
+/// sentence goes to stderr and stdout stays empty.
+#[test]
+fn a_call_that_is_not_a_model_call_fails_on_stderr() {
+    let root = TempDir::new().expect("tmp");
+    let far = Far {
+        events: false,
+        ..far(root.path(), 1)
+    };
+    let (exit, out, err, _) = drive(&far, &[queued(), queued()]);
+    assert_eq!((exit, out.as_str()), (1, ""));
+    assert!(
+        err.contains("yog bz: client \"laptop\" did not take"),
+        "{err}"
+    );
 }
 
 /// A request that cannot be read.

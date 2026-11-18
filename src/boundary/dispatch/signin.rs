@@ -101,7 +101,13 @@ pub(crate) fn gate(
         return Ok(());
     }
     let role = role.unwrap_or(WORKER_ROLE);
-    match verdict(&rows, &roles(workspace, lineage), role) {
+    let roles = roles(workspace, lineage);
+    // **A row on a registered machine is that machine's to answer for**
+    // (REMOTE §5.7): the wall neither declares it nor holds its credential,
+    // and use is attempt — the call itself says, in band, what was missing.
+    let named: Vec<&str> = roles.iter().map(|role| role.provider.as_str()).collect();
+    let rows = super::super::config::far::judged(deps, workspace, rows, &named);
+    match verdict(&rows, &roles, role) {
         None => Ok(()),
         Some(unready) => Err(refusal::say(&unready, &rows, role)),
     }

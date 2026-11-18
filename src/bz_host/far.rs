@@ -47,7 +47,7 @@
 //! disposition, its polls end, and the far run is refused its next post.
 
 use std::io::{Read, Write};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::AtomicBool;
 
 use serde_json::json;
@@ -70,7 +70,7 @@ const KIND: &str = "far_call";
 /// Read `<row>@<client>` off a provider name, against the clients registered
 /// in the calling workspace. The longest registered name that fits wins; a
 /// name with no row in front of the joiner is not a qualification.
-pub(super) fn split(provider: &str, clients: &[String]) -> Option<(String, String)> {
+pub(crate) fn split(provider: &str, clients: &[String]) -> Option<(String, String)> {
     clients
         .iter()
         .filter_map(|client| {
@@ -80,7 +80,17 @@ pub(super) fn split(provider: &str, clients: &[String]) -> Option<(String, Strin
         .max_by_key(|(_, client)| client.len())
 }
 
-/// One model call bound for another machine.
+/// Every client registered in `workspace`, by name — the set a provider's
+/// name is read against, by the arm and by the server's own reads alike.
+pub(crate) fn machines(state_root: &Path, workspace: &str) -> Vec<String> {
+    roster::members(state_root, workspace)
+        .iter()
+        .map(Client::name)
+        .collect()
+}
+
+/// One call bound for another machine: a turn's model call, a model listing
+/// or a sign-in — every command line that names a row (§5.7, bl-7467).
 pub(super) struct Far {
     /// Where the `gestures/` inbox and the registry live.
     pub(super) state_root: PathBuf,
@@ -92,23 +102,26 @@ pub(super) struct Far {
     pub(super) budget: Budget,
     /// How long the call may stand untaken — the router's own bound.
     pub(super) patience: Budget,
+    /// Whether stdout is brazen's canonical stream — the data plane's. Only
+    /// there is a call nothing was relayed for answered as an `error` event;
+    /// a listing or a sign-in says the same sentence on stderr.
+    pub(super) events: bool,
 }
 
-/// The far executor for `argv`, or `None` where the linked brazen answers: any
-/// route but the data plane, no `--provider`, no workspace wall, or a name no
-/// client registered in this workspace fits.
+/// The far executor for `argv`, or `None` where the linked brazen answers: a
+/// route that names no row (the provider listing, token counting, the
+/// server), no `--provider`, no workspace wall, or a name no client
+/// registered in this workspace fits.
 pub(super) fn of(argv: &[String], env: &Env) -> Option<Far> {
-    if !matches!(brazen::route(argv), brazen::Route::Run) {
+    use brazen::Route::{ListModels, Login, Run};
+    let route = brazen::route(argv);
+    if !matches!(route, Run | ListModels | Login) {
         return None;
     }
     let at = argv.iter().position(|arg| arg == PROVIDER)? + 1;
     let workspace = crate::naming::leaf(&env.wall()?);
     let state_root = env.yog_state_root();
-    let clients: Vec<String> = roster::members(&state_root, &workspace)
-        .iter()
-        .map(Client::name)
-        .collect();
-    let (row, client) = split(argv.get(at)?, &clients)?;
+    let (row, client) = split(argv.get(at)?, &machines(&state_root, &workspace))?;
     let argv = argv
         .iter()
         .enumerate()
@@ -120,6 +133,7 @@ pub(super) fn of(argv: &[String], env: &Env) -> Option<Far> {
         argv,
         budget: Budget::default(),
         patience: remote::patience(),
+        events: matches!(route, Run),
     })
 }
 
@@ -153,7 +167,7 @@ impl Far {
         let mut held = Offsets::default();
         match self.call(stdin, stdout, stderr, &mut held) {
             Ok(code) => code,
-            Err(reason) if held.stdout > 0 => {
+            Err(reason) if held.stdout > 0 || !self.events => {
                 let _ = writeln!(stderr, "yog bz: {reason}");
                 1
             }
@@ -219,7 +233,7 @@ impl Far {
                 },
             );
         format!(
-            "client {:?} did not take this model call within {} seconds; {last}. It may be \
+            "client {:?} did not take this call within {} seconds; {last}. It may be \
              asleep, or busy with another call. Nothing ran, and nothing was sent to this \
              server's own provider instead",
             self.client,

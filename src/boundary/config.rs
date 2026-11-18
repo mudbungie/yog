@@ -31,7 +31,7 @@
 
 use crate::config_edit::branch::config_file;
 use crate::config_edit::branch::edit::EditOrigin;
-use crate::config_edit::brazen::{BrazenPaths, BzRunner, RealBzRunner};
+use crate::config_edit::brazen::{BrazenPaths, BzRunner, RealBzRunner, models_line};
 use crate::config_edit::litany_global::LitanyGlobal;
 use crate::model_pick::{BRANCH, PROVIDERS, Pick};
 use crate::world::marks;
@@ -45,10 +45,10 @@ mod file;
 pub use file::ConfigFile;
 pub use read::Read;
 
+/// A registered machine's brazen, asked by these reads (REMOTE §5.7).
+pub(crate) mod far;
 pub(crate) mod read;
 pub(crate) mod write;
-// The two brazen listing reads live beside the other wall reads (bl-c6e3).
-pub(super) use read::{catalog, file, providers};
 pub use write::Write;
 use write::{cadence_path, commit};
 
@@ -109,8 +109,19 @@ pub(super) fn lineages(workspace: &Path) -> Result<Reply, String> {
 /// The §9.4 roster (§8.5, bl-dff8): what `provider` offers **in this
 /// workspace's wall** — the picker's own read, aimed by the gesture rather
 /// than by a focus a headless seat does not have (bl-fcd5).
-pub(super) fn models(deps: &Deps, workspace: &Path, provider: &str) -> Result<Reply, String> {
-    read::models(&wall_env(deps, workspace), provider)
+///
+/// **A qualified provider is listed by the machine it names** (REMOTE §5.7).
+pub(super) fn models(
+    deps: &Deps,
+    now: i64,
+    workspace: &Path,
+    provider: &str,
+) -> Result<Reply, String> {
+    let listed = match far::named(deps, workspace, provider) {
+        Some((row, client)) => far::run(deps, now, &client, &models_line(&row))?,
+        None => RealBzRunner::resolve(&wall_env(deps, workspace)).list_models(provider),
+    };
+    read::roster(&listed)
         .map(ConfigAnswer::Models)
         .map(Reply::Config)
 }
@@ -224,6 +235,7 @@ pub(super) fn pick_model(
         .map(|b| String::from_utf8_lossy(&b).into_owned())
         .map_err(|e| e.to_string())?;
     let table = RealBzRunner::resolve(&wall_env(deps, workspace)).providers();
+    let table = far::judged(deps, workspace, table, &[&pick.provider]);
     let assigned = crate::model_pick::plan(&assigned, &table, pick).map_err(|e| e.to_string())?;
     commit(
         deps,

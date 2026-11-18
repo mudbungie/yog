@@ -167,6 +167,29 @@ fn a_role_naming_a_keyless_row_readies_the_wall() {
     assert!(!past.contains(REFUSAL), "{past}");
 }
 
+/// **A qualified role can be born** (REMOTE §5.7, bl-7467): a role naming a row
+/// on a machine registered here that advertises `bz` passes the door on those
+/// two facts — the wall neither declares that row nor holds its credential,
+/// and the call itself says in band what was missing. Until the machine is
+/// registered the same name is one more row this wall does not declare.
+#[test]
+fn a_role_naming_a_row_on_a_registered_machine_passes_the_door() {
+    let wall = Wall::new();
+    wall.fixture.commit_other(
+        "providers.yaml",
+        "roles:\n  worker:\n    provider: sub@laptop\n    model: big\n",
+    );
+    let refusal = wall.fire().unwrap_err();
+    assert!(refusal.contains("sub@laptop"), "{refusal}");
+    assert!(!wall.trail(), "an undeclared row costs nothing");
+
+    let name = crate::naming::leaf(&wall.workspace());
+    crate::test_support::foot::seat(&wall.state, "laptop", &name, &["bz"]);
+    let past = wall.fire().unwrap_err();
+    assert!(!past.contains("sub@laptop"), "{past}");
+    assert!(wall.trail(), "the fire reached the spawn and left its row");
+}
+
 /// A role naming a row that is `missing` does not ready the wall: `missing` is
 /// the one spelling that is a refusal, whoever named the row.
 #[test]

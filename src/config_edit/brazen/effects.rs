@@ -22,6 +22,18 @@ use crate::bz_host::{self, Tty};
 use crate::xdg::Env;
 use std::path::Path;
 
+/// The two row listings, as command lines — spelled once because the same
+/// line is run on a registered machine for its own rows (REMOTE §5.7).
+pub(crate) const TABLE: &[&str] = &["--list-providers", "--json"];
+/// `--login` with no `--provider` (brazen bl-6feb) prints the sign-in catalog
+/// in the table's row shape: no network and no credential write.
+pub(crate) const CATALOG: &[&str] = &["--login", "--json"];
+
+/// The model listing's command line for `provider`.
+pub(crate) fn models_line(provider: &str) -> [&str; 4] {
+    ["--list-models", "--provider", provider, "--json"]
+}
+
 /// `bz` runner: the [`Env`] every read folds through, and nothing else — the
 /// wall in that env is what decides which sphere's config, credentials and
 /// model cache brazen answers over (§16.2 as amended).
@@ -67,6 +79,13 @@ impl RealBzRunner {
     }
 }
 
+impl RealBzRunner {
+    /// One row listing — [`TABLE`] or [`CATALOG`] — as rows.
+    pub(crate) fn listing(&self, line: &[&str]) -> Vec<ProviderRow> {
+        provider_rows(&self.capture(line).stdout)
+    }
+}
+
 impl BzRunner for RealBzRunner {
     fn dump_config_at(&self, config: &Path) -> BzOutcome {
         self.capture(&["--config", &config.display().to_string(), "--dump-config"])
@@ -77,18 +96,16 @@ impl BzRunner for RealBzRunner {
     }
 
     fn providers(&self) -> Vec<ProviderRow> {
-        provider_rows(&self.capture(&["--list-providers", "--json"]).stdout)
+        self.listing(TABLE)
     }
 
-    /// The same `--list-providers` row shape, printed by `--login` when no
-    /// `--provider` names a target (brazen bl-6feb) — no network and no
-    /// credential write: the login route's seams are wired and never touched.
+    /// The login route's seams are wired and never touched ([`CATALOG`]).
     fn catalog(&self) -> Vec<ProviderRow> {
-        provider_rows(&self.capture(&["--login", "--json"]).stdout)
+        self.listing(CATALOG)
     }
 
     fn list_models(&self, provider: &str) -> BzOutcome {
-        self.capture(&["--list-models", "--provider", provider, "--json"])
+        self.capture(&models_line(provider))
     }
 }
 

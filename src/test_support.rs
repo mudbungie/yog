@@ -175,6 +175,9 @@ pub(crate) mod seat;
 pub(crate) mod server;
 pub(crate) mod wire;
 
+/// A registered machine serving `bz` out of a real mailbox (REMOTE §5.7).
+pub(crate) mod foot;
+
 /// The §11 accessories that crossed with bl-296f — the altitude-0 chrome and
 /// the selection's own detail — asked through the boundary, there being no
 /// model accessor left to ask instead.

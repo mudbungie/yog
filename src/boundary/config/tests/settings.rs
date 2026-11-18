@@ -130,6 +130,24 @@ fn a_role_bound_to_a_dead_provider_row_is_faulted_in_the_answer() {
             .any(|s| s.name == "tools" && s.control == Control::List),
         "and the role's other controls cross with it: {settings:?}"
     );
+
+    // **A row on a registered machine is judged by its qualification** (REMOTE
+    // §5.7): the same name, once it selects a machine of this workspace that
+    // advertises `bz`, faults nothing — awake or not.
+    fx.commit_other(
+        crate::model_pick::PROVIDERS,
+        &TEMPLATE_PROVIDERS.replace("provider: anthropic", "provider: gone@laptop"),
+    );
+    let faulted = |deps| {
+        answered(deps, roles_file(&fx.path))
+            .settings
+            .iter()
+            .any(|s| s.fault.is_some())
+    };
+    assert!(faulted(&deps), "no such machine: one more dead row");
+    let workspace = crate::naming::leaf(&fx.path);
+    crate::test_support::foot::seat(&deps.state_root, "laptop", &workspace, &["bz"]);
+    assert!(!faulted(&deps));
 }
 
 fn roles_file(workspace: &Path) -> ConfigFile {

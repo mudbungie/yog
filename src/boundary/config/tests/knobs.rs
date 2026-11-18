@@ -134,6 +134,43 @@ fn a_pick_commits_the_assignment_and_writes_no_second_file() {
     );
 }
 
+/// **A pick names a row on a registered machine** (REMOTE §5.7): accepted on
+/// the machine's registration and its advertised `bz`, with nobody awake to
+/// ask — the row half is that machine's to refuse at the call.
+#[test]
+fn a_pick_on_a_registered_machines_row_is_written_whether_or_not_it_is_awake() {
+    let root = tempdir().unwrap();
+    let bin = tempdir().unwrap();
+    let log = bin.path().join("log");
+    let litany = script(
+        bin.path(),
+        "litany",
+        &format!(
+            "cat \"$YOG_EDIT_SRC/providers.yaml\" > {}\nexit 0\n",
+            log.display()
+        ),
+    );
+    let fx = workspace();
+    let deps = super::seeing(
+        &deps_at(root.path(), &litany, Path::new("/no/bl")),
+        &[fx.path.as_path()],
+    );
+    seed_wall(&deps, &fx.path, ACME);
+    let picked = pick("worker", "sub@laptop", "m-9", &fx.path);
+    let err = fire(&deps, &picked).unwrap_err();
+    assert!(err.contains("no provider row `sub@laptop`"), "{err}");
+
+    let name = crate::naming::leaf(&fx.path);
+    crate::test_support::foot::seat(&deps.state_root, "laptop", &name, &["bz"]);
+    let reply = fire(&deps, &picked);
+    assert!(
+        matches!(&reply, Ok(Reply::Outcome(o)) if o.ok()),
+        "{reply:?}"
+    );
+    let staged = fs::read_to_string(&log).unwrap();
+    assert!(staged.contains("provider: sub@laptop"), "{staged}");
+}
+
 #[test]
 fn a_pick_on_a_row_brazen_lacks_writes_nothing() {
     let root = tempdir().unwrap();
