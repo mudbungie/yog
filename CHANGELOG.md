@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.95](https://github.com/mudbungie/yog/compare/v0.0.94...v0.0.95) - 2026-11-18
+
+### Changes
+
+- a capture is N posts (complete.partial, capture.since, reply/routed.partial), and a run lives while its asker listens [bl-d414]
+
 ## [0.0.94](https://github.com/mudbungie/yog/compare/v0.0.93...v0.0.94) - 2026-11-18
 
 ### Changes
