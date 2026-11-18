@@ -1,7 +1,7 @@
 +++
-title = "wall brazen config: derive the claude-cli user-agent with header_commands once yog links a brazen that has the key; and stop keeping four copies of the row table"
+title = "brazen pin → =0.0.21 and litany pin → =0.0.16: the linked brazen parses the header_commands row key (brazen bl-0839), so a wall's config may derive the claude-cli user-agent from the installed CLI instead of a hand-copied version"
 created = 1794896911
-updated = 1794896911
+updated = 1794984609
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
