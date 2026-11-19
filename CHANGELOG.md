@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.101](https://github.com/mudbungie/yog/compare/v0.0.100...v0.0.101) - 2026-11-19
+
+### Changes
+
+- the pins step to litany =0.0.20, brazen =0.0.23, ingested from the registry
+- A restarted foot serves at once: an advertisement supersedes the read its certificate holds [bl-96e0]
+
 ## [0.0.100](https://github.com/mudbungie/yog/compare/v0.0.99...v0.0.100) - 2026-11-19
 
 ### Changes
