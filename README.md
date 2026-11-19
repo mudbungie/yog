@@ -244,6 +244,10 @@ mkdir -p <state-root>/clients/builder/workspaces
 touch <state-root>/clients/builder/workspaces/ops
 ```
 
+`<state-root>` is the **world's** own, `<yog-data-root>/world/state/yog` — not
+this box's `$XDG_STATE_HOME` — and `/clients` is how to check: a machine seated
+anywhere else connects and is absent from the roster.
+
 The last two lines are not optional: a leaf on its own is **registered in no
 workspace**, and an advertisement reaches only the workspaces its client is
 registered in — so a foot provisioned by the mint alone connects, advertises to

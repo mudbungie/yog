@@ -37,7 +37,8 @@
 //! capture like any other — the text that had been posted, the server's
 //! sentence on stderr, exit code 1 — and is relayed as one.
 //!
-//! **Patience is spent only while nobody has taken the call.** `partial`'s
+//! **Patience is spent only while nobody has taken the call**, and it is a
+//! span of the clock. `partial`'s
 //! presence on a reply is the lease fact (§5.7); once a machine has posted, the
 //! call is worth as long as it runs, and what ends a run that stalls is the
 //! server's own thirty-second silence rule, read at this arm's poll.
@@ -195,7 +196,10 @@ impl Far {
             "op": "invoke", "client": self.client, "tool": TOOL,
             "input": { "args": self.argv, "stdin": request },
         }))?;
-        let (mut taken, mut waited) = (false, 0);
+        // The patience is a span of the clock, not a count of polls: a poll
+        // is a deposit round trip on top of its tick, and two hundred and
+        // forty of them measured three minutes where the sentence said two.
+        let (mut taken, asked) = (false, std::time::Instant::now());
         loop {
             let (_, standing) = ask(json!({
                 "op": "capture", "invocation": invocation,
@@ -209,8 +213,7 @@ impl Far {
                 pass(stdout, stderr, held, (&capture.stdout, &capture.stderr))?;
                 return Ok(capture.exit_code);
             }
-            waited += u32::from(!taken);
-            if waited >= self.patience.waits {
+            if !taken && asked.elapsed() >= self.patience.span() {
                 return Err(self.untaken());
             }
             std::thread::sleep(self.patience.tick);

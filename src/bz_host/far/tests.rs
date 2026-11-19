@@ -105,7 +105,7 @@ fn the_far_stream_is_relayed_in_the_pieces_it_arrived_in() {
 #[test]
 fn a_call_nobody_took_is_one_error_event_and_the_terminator() {
     let root = TempDir::new().expect("tmp");
-    let (exit, out, err, asked) = drive(&far(root.path(), 2), &[queued(), queued(), queued()]);
+    let (exit, out, err, asked) = drive(&far(root.path(), 0), &[queued(), queued()]);
     let error = refusal(&out);
     assert_eq!(error.kind, brazen::ErrorKind::Other("far_call".to_owned()));
     assert!(!error.retryable());
@@ -115,7 +115,7 @@ fn a_call_nobody_took_is_one_error_event_and_the_terminator() {
         "{}",
         error.message
     );
-    assert_eq!((exit, err.as_str(), asked.len()), (70, "", 3));
+    assert_eq!((exit, err.as_str(), asked.len()), (70, "", 2));
 }
 
 /// The same failure names when the machine last spoke, off the roster's file.
@@ -124,7 +124,7 @@ fn the_error_says_when_the_machine_last_spoke() {
     let root = TempDir::new().expect("tmp");
     let laptop = Client::parse("laptop").expect("client");
     seen::mark(root.path(), &laptop, 86_400);
-    let (_, out, _, _) = drive(&far(root.path(), 1), &[queued(), queued()]);
+    let (_, out, _, _) = drive(&far(root.path(), 0), &[queued(), queued()]);
     let message = refusal(&out).message;
     assert!(
         message.contains("last connected at 1970-01-02"),
@@ -187,7 +187,7 @@ fn a_call_that_is_not_a_model_call_fails_on_stderr() {
     let root = TempDir::new().expect("tmp");
     let far = Far {
         events: false,
-        ..far(root.path(), 1)
+        ..far(root.path(), 0)
     };
     let (exit, out, err, _) = drive(&far, &[queued(), queued()]);
     assert_eq!((exit, out.as_str()), (1, ""));

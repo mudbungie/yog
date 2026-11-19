@@ -2546,12 +2546,15 @@ credentials — a phone sends the message, the server holds the conversation, a
 laptop whose sign-in works nowhere else makes the model call, and a third box
 runs the tool the model asked for. No third grade, no third role and no second
 channel: it is the foot's three gestures (§4.2, §5.4), and the one thing they
-lacked was a capture that arrives while it is being produced. **This section is
-the design, and three parts of it have landed: the server half of the stream**
+lacked was a capture that arrives while it is being produced. **This section
+has landed, in three parts and a drive: the server half of the stream**
 (bl-d414, edition 28 — *The stream, as landed* below), **the `bz` arm**
-(bl-e0c9 — *The `bz` arm, as landed*) **and the listings and the sign-in**
-(bl-7467 — *The listings and the sign-in, as landed*). What remains is the
-driven two-machine proof. The balls that land it amend it in place.
+(bl-e0c9 — *The `bz` arm, as landed*), **the listings and the sign-in**
+(bl-7467 — *The listings and the sign-in, as landed*), **and a turn driven
+across two registered machines** (bl-faf3 — *The drive, as observed*, which
+also records what the tree was found to disagree with and how each was
+settled). The design paragraphs are kept as written; each *as landed* block is
+where the code is the authority.
 
 **What is true today, read off the code.** litany makes a model call by
 spawning its adapter once per attempt as `<adapter> --json --provider <row>`,
@@ -2810,12 +2813,15 @@ and `PROTOCOL` stands at 19: the arm spends bl-d414's three keys and adds none.
   wall leaf (DESIGN §16.2) and its clients are the registration files (§4.1),
   so reading a name costs no round trip and cannot fail on a slow server. An
   arm outside any wall routes nothing.
-- **The patience is spent only while nobody has taken the call.** The arm
-  polls every half second and counts a poll only while the reply carries no
-  `partial`; two hundred and forty such polls is the two minutes. Once a
-  machine has posted, the call is worth as long as it runs, and a run that
-  stalls is ended by the server's own thirty-second rule at the arm's next
-  poll. **A foot that does not stream is therefore held to two minutes for the
+- **The patience is spent only while nobody has taken the call, and it is two
+  minutes of the clock** *(corrected by bl-faf3)*. The arm polls every half
+  second and gives up once two minutes have passed with no reply carrying a
+  `partial`. As first landed it *counted* two hundred and forty polls, and a
+  poll is a deposit round trip on top of its tick: driven, a call nobody took
+  failed after a little over three minutes under a sentence that said one
+  hundred and twenty seconds. Once a machine has posted, the call is worth as
+  long as it runs, and a run that stalls is ended by the server's own
+  thirty-second rule at the arm's next poll. **A foot that does not stream is therefore held to two minutes for the
   whole call**, which is what its own fixed bound already was.
 - **Corrected here — the in-band error covers every failure before a byte was
   relayed**, not only the machine that never took the call. A refused `invoke`
@@ -2985,7 +2991,72 @@ still cannot ask for anything it was not sent.
 - **A human typing `invoke` at a seat** must keep asking `capture`, or a
   streaming foot stops the run after thirty seconds.
 
-**What proves it, when it lands.** Server: the mailbox suite
+**The drive, as observed** (bl-faf3). One server, one workspace, and two
+feet under their own certificates, registered in that workspace by the
+hand-carried route (§15, README *the hand-carried leaf*): one advertising
+only `bz`, the other only an ordinary tool. **Real**: the server binary of
+this tree, its listener, mailbox, inbox intake and adjudication; two
+processes of the published streaming foot (thrall 0.0.28) over mTLS; litany
+and the arm; every gesture typed at an in-world seat. **Standing in**: the
+provider — the `bz` entry's command was a script speaking brazen's envelope
+(the one input object in, canonical events out), so no model was called and
+no credential existed — and the seat, which was `yog gesture` rather than a
+window. Nothing outside that scratch world was touched. Against each claim:
+
+- **The listings.** `providers` answered `sim@<inference foot>` — *auth
+  oauth2 · signed in*, that machine's fact — in a quarter of a second, on a
+  wall whose own table was empty; `catalog` answered the server's own
+  unsigned preset and then the far row; `models` naming the row answered that
+  machine's list, naming the tool-only foot answered *advertises no tool
+  "bz"*, and naming no registered machine fell through to the linked brazen's
+  *unknown provider*. The far command lines were the server's own, with the
+  row unqualified.
+- **The turn.** A role set to the qualified row by `/model`, a message from
+  the seat, and three model calls ran on the inference foot: the first asked
+  for `clients load`, the second called the loaded tool, the third wrote the
+  reply. The tool call was held by adjudication, released by the operator's
+  `/answer`, and ran on the *other* foot, whose capture came back as the tool
+  result. `follow` showed the third call's text growing while that foot's
+  child was still writing; the steps committed with the far usage.
+- **The sign-in.** `/login` on the qualified row was fired headless — the
+  flow read off that machine's catalog — and `login-tail` showed the device
+  line one second after the act and six before the far child exited, then the
+  outcome; one row landed on the trail, naming the qualified row.
+- **The stop.** A turn stopped mid-stream: the far child wrote its last line
+  thirty-one seconds after the stop — the thirty of *a run lives while its
+  asker listens*, and one post.
+- **The sleeping machine.** With the inference foot suspended, a message
+  failed in band — the step `failed`, the conversation's failure the arm's
+  sentence naming the client and when it last connected — and nothing ran on
+  the server's own brazen. Woken, the foot ran the stale call it had been
+  handed, and was refused at the first post made more than thirty seconds
+  after the arm's last poll.
+
+What the tree was found to disagree with, and how each was settled:
+
+- **The arm's two minutes were three.** Corrected in the code and above (*The
+  `bz` arm, as landed*): the patience is clocked. The router's wait for an
+  ordinary tool (§5.3) counts polls the same way and is filed (bl-cb6d), not changed
+  here.
+- **A suspended machine is still `serving` until its read's hold runs out.**
+  The predicate is the server's own claim on a parked read, and a machine
+  that stops without closing its connection keeps that claim for the rest of
+  the thirty-second hold. So *asleep contributes no rows and costs no wait*
+  is true of a machine that was already not parked; one that went to sleep
+  mid-read costs a listing the three-second bound once, and is handed a
+  listing it will run when it wakes. The bound is what the design stated for
+  exactly this, and nothing was added.
+- **A wall whose own table is empty judges no name.** §9.4's rule — an empty
+  table is no answer — is older than this section and outranks the
+  qualification: on a fresh wall the pick accepted a row on a machine nobody
+  registered. The gates judge a qualified name only beside at least one row
+  of the server's own.
+- **A registration by hand goes under the world's state root**, the one the
+  server's own `clients/` listing is read from, which is not the box's
+  `$XDG_STATE_HOME`. The roster is how to check: a machine seated in the
+  wrong place connects and is absent from it.
+
+**What proves it.** Server: the mailbox suite
 (`src/registry/mailbox/slots/tests/stream.rs`, landed with bl-d414) — posts
 absorb in order, `since` is idempotent, an acknowledged slot is answered in
 doubt rather than re-handed, a `partial` for an unlistened slot is refused and
@@ -3011,7 +3082,9 @@ qualified row; a second case sends the arm `SIGTERM` and sees no poll after
 it. **That fixture is not a wire client**: its intake answers the arm's two
 gestures out of the real mailbox and the foot posts to that mailbox directly,
 so the TLS leg and the dispatch arms are proven by their own suites and the
-two-machine drive remains the live proof's. Foot: a slow child's
+two machines, the real foot and the listener between them are *The drive, as
+observed* — a drive and not a suite case, because the foot is another
+repository's binary and the gate builds this one alone. Foot: a slow child's
 output is posted before it exits, a refused post kills the child, an older
 server is posted to once. brazen: the envelope mode runs an allowed command
 line byte-for-byte as the direct one and refuses each flag outside the set.
