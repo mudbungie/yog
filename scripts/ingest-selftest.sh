@@ -158,7 +158,7 @@ ingest_case 'the lockfile kept a second brazen -> refuses' \
 
 B=ingest/20260101-0000
 
-land_case() { # <label> <mode:green|red|moved|absent> <pat> <checker-fn> [args...]
+land_case() { # <label> <mode:green|red|moved|refused|absent> <pat> <checker-fn> [args...]
     _label=$1 _mode=$2 _pat=$3 _check=$4
     shift 4
     work=$(mktemp -d "${TMPDIR:-/tmp}/yog-land.XXXXXX")
@@ -171,7 +171,10 @@ EOF
 EOF
     shim git <<EOF
 printf 'git %s\n' "\$*" >> "$work/log"
-[ "$_mode \$*" != "moved push origin $B:main" ] || exit 1
+case "$_mode \$*" in
+  "moved push origin $B:main"|"refused push origin $B:main") exit 1 ;;
+  "moved merge-base --is-ancestor FETCH_HEAD $B") exit 1 ;;
+esac
 EOF
     shim gh <<EOF
 printf 'gh %s\n' "\$1 \$2 \$3" >> "$work/log"
@@ -205,8 +208,10 @@ green()        { [ "$code" = 0 ] && gated && landed && swept; }
 no_token()     { [ "$code" != 0 ] && [ ! -e "$work/log" ] && said 'RELEASE_PLZ_TOKEN is not set'; }
 red()          { [ "$code" != 0 ] && gated && ! logged "git push origin $B:main" \
                      && swept; }
-main_moved()   { [ "$code" != 0 ] && gated && swept \
+main_moved()   { [ "$code" = 0 ] && gated && swept \
                      && said 'main moved while the gate ran'; }
+refused_push() { [ "$code" != 0 ] && gated && swept && logged 'git fetch -q origin main' \
+                     && said 'main did not move'; }
 never_ran()    { [ "$code" != 0 ] && ! logged "git push origin $B:main" && swept \
                      && said 'ci.yml never started'; }
 no_paths()     { [ "$code" = 2 ] && [ ! -e "$work/log" ]; }
@@ -219,8 +224,10 @@ land_case 'no release token -> refuses, and git is never run' \
     green '' no_token "$@"
 land_case 'red gate -> main is NOT pushed; branch deleted' \
     red notreal red "$@"
-land_case 'main moved while the gate ran -> nothing lands, says so; branch deleted' \
+land_case 'main moved while the gate ran -> says so and exits GREEN; branch deleted' \
     moved notreal main_moved "$@"
+land_case 'the push is refused and main did NOT move -> red, a hand'"'"'s; branch deleted' \
+    refused notreal refused_push "$@"
 land_case 'ci.yml never starts -> main is NOT pushed; branch deleted' \
     absent notreal never_ran "$@"
 land_case 'no path to commit -> usage, and git is never run' \

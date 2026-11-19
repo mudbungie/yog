@@ -9,10 +9,9 @@
 [advisories]
 # Reject crates whose published version has been yanked from the registry.
 yanked = "deny"
-# **The ignore list is empty, and that is a state to keep.** An entry that
-# stops matching any crate makes `cargo deny check` warn `advisory-not-detected`
-# on every gate run, so this list stays exactly as long as the tree justifies —
-# which right now is not at all.
+# **The ignore list is as short as the tree justifies, and no longer.** An
+# entry that stops matching any crate makes `cargo deny check` warn
+# `advisory-not-detected` on every run, and that warning is the cue to drop it.
 #
 # Dropped when they stopped matching: RUSTSEC-2026-0194 / -0195 (quick-xml
 # < 0.41 XML DoS), reached only via wayland-scanner, which moved to quick-xml
@@ -24,7 +23,15 @@ yanked = "deny"
 # never calls into with untrusted bytes. It leaves when litany leaves that
 # reader (litany ball filed beside this hold); drop the entry the run it stops
 # matching.
-ignore = ["RUSTSEC-2024-0449"]
+#
+# Held (bl-1f1b, operator ruling 2026-11-18): RUSTSEC-2026-0543, chrono
+# unmaintained, reached only through litany. Unmaintained, not vulnerable: no
+# CVE, every version is named and no fixed one exists, so `mend-advisories`
+# has nothing to move it to — and while it failed the re-check, the daily mend
+# could land nothing at all, the fixable advisories beside it included (a week
+# of red runs holding back RUSTSEC-2026-0381 and -0382). Drop the entry the run
+# cargo-deny warns `advisory-not-detected` for it.
+ignore = ["RUSTSEC-2024-0449", "RUSTSEC-2026-0543"]
 
 [licenses]
 # Exhaustive allow-list for the current dependency graph. The slash-form

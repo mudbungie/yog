@@ -34,9 +34,13 @@
 # without it would be a change on `main` no release ever follows — so there is
 # one path, and the lack of it is loud.
 #
-# BOTH FAILURES LEAVE `main` UNTOUCHED. A red `ci.yml` means the change broke
-# something real and is a hand's. A refused fast-forward means `main` moved
-# while the gate ran; the caller's next run begins again from the new `main`.
+# NEITHER REFUSAL TOUCHES `main`, AND ONLY ONE IS RED. A red `ci.yml` means the
+# change broke something real and is a hand's: exit 1. A refused fast-forward
+# means `main` moved while the gate ran, and the caller's next run begins again
+# from the new `main` with no hand involved — so it says so and exits 0 (bl-1f1b,
+# operator ruling): a run that heals itself must not open an alarm. That is
+# forgiven only when `main` is SEEN to have moved; a push refused while main's
+# tip is still inside the branch (permissions, a protection rule) is exit 1.
 set -euo pipefail
 
 [ $# -ge 3 ] || { echo "usage: $0 <branch-prefix> <commit-message> <path>..." >&2; exit 2; }
@@ -65,7 +69,12 @@ for _ in $(seq 1 30); do
 done
 [ -n "$run" ] || { echo "ci.yml never started on $branch" >&2; exit 1; }
 gh run watch "$run" --exit-status
-git push origin "$branch:main" || {
-  echo "main moved while the gate ran: nothing landed; the next run begins from the new main" >&2
+git push origin "$branch:main" && exit 0
+# Refused. Forgiven only when main really moved: its tip still inside the
+# branch means nothing landed underneath, and the refusal is something else.
+git fetch -q origin main
+if git merge-base --is-ancestor FETCH_HEAD "$branch"; then
+  echo "the push to main was refused and main did not move: this is a hand's" >&2
   exit 1
-}
+fi
+echo "main moved while the gate ran: nothing landed; the next run begins from the new main" >&2

@@ -457,7 +457,9 @@ workflow with a `schedule:` — `ingest.yml`, `advisories.yml`, `store-scan.yml`
 — ends with `scripts/alarm.sh red` on failure and `green` on success. The first
 red run opens an issue titled `unattended run red: <workflow>` that mentions
 the owner (the mention is the mail); later red runs find it open and add
-nothing; the next green run closes it. The open issue is the whole state. **A
+nothing; the next green run closes it. The open issue is the whole state. A
+landing refused only because `main` moved while its gate ran is green — the
+next run heals it, so it raises no alarm. **A
 new scheduled workflow takes the same two steps and `issues: write`.** The
 landing itself (`scripts/land-through-gate.sh`) refuses without
 `RELEASE_PLZ_TOKEN`: only a push made with it starts CI and the release on
