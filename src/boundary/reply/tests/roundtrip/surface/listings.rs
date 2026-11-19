@@ -5,6 +5,7 @@
 
 use super::super::super::super::Reply;
 use crate::boundary::reply::{ConfigAnswer, PricesView};
+use crate::registry::mailbox::Taken;
 use crate::spend::PriceRow;
 
 /// The §11 altitude-0 answers — the enumeration with its §7.2 notes, and one
@@ -214,21 +215,24 @@ fn routing() -> Vec<Reply> {
         // The follow-class read's answer at both of its arms (bl-024b): a hold
         // that ended with nothing, and one carrying work whose input must
         // survive the trip verbatim.
-        Reply::Invocations(Vec::new()),
-        Reply::Invocations(vec![crate::registry::mailbox::Invocation {
+        Reply::Invocations(Taken::Work(Vec::new())),
+        // The read a newer activation of the same certificate ended (REMOTE
+        // §5.1, bl-96e0): no rows, and the one key that says why.
+        Reply::Invocations(Taken::Superseded),
+        Reply::Invocations(Taken::Work(vec![crate::registry::mailbox::Invocation {
             id: "inv-1".into(),
             tool: "Bash".into(),
             input: serde_json::json!({"command": "ls -l", "timeout": 30}),
             cwd: None,
-        }]),
+        }])),
         // The worktree lane's row (bl-77be): the subject's location crosses
         // to the machine that runs it.
-        Reply::Invocations(vec![crate::registry::mailbox::Invocation {
+        Reply::Invocations(Taken::Work(vec![crate::registry::mailbox::Invocation {
             id: "inv-2".into(),
             tool: "bash".into(),
             input: serde_json::json!({"command": "printf made > out.txt"}),
             cwd: Some("/w/home/agents/c-1".into()),
-        }]),
+        }])),
         // REMOTE §5's roster (bl-4e08): both presence arms, a client that
         // advertises and one that has not, and a schema deep enough that a
         // codec rebuilding it rather than carrying it verbatim would show.

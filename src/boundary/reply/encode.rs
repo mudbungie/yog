@@ -14,7 +14,7 @@ mod bodies;
 use super::board::{board_row, fleet_facts};
 use super::rows::{conv_row, join_row, lineage_row, provider_row, role_row, ws_row};
 use super::{Reply, prepared_value};
-use crate::registry::mailbox::invocation_value;
+use crate::registry::mailbox::{Taken, invocation_value};
 use bodies::{delivered, governing, outcome_reply};
 
 /// The follow lane's reply kind (bl-73e7), named once for both directions.
@@ -66,7 +66,16 @@ pub fn encode(reply: &Reply) -> Value {
             standing,
         } => routed_reply(invocation, standing),
         // The follow-class read's rows, in the one invocation spelling.
-        Reply::Invocations(rows) => rows_reply("invocations", rows.iter().map(invocation_value)),
+        // A read a newer activation ended says so in one more key, which
+        // rides only when true (REMOTE §5.1, bl-96e0).
+        Reply::Invocations(Taken::Work(rows)) => {
+            rows_reply("invocations", rows.iter().map(invocation_value))
+        }
+        Reply::Invocations(Taken::Superseded) => {
+            let mut map = rows_map("invocations", std::iter::empty());
+            map.insert("superseded".to_owned(), json!(true));
+            Value::Object(map)
+        }
         // The branch, and only the branch (REMOTE §8, bl-ccf7): the space it is
         // a branch of is a pure function of the workspace the gesture named, so
         // saying it here would be that name spelled a second time, as a path.

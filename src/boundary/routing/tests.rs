@@ -5,7 +5,7 @@ use super::*;
 use crate::boundary::dispatch::Caller;
 use crate::boundary::tests::snapshot;
 use crate::cli_outbound::Cli;
-use crate::registry::mailbox::{Capture, Mailbox, Post};
+use crate::registry::mailbox::{Capture, Mailbox, Post, Taken};
 use serde_json::json;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -99,14 +99,14 @@ fn a_call_crosses_and_the_capture_comes_back() {
     let taken = invocations(&host);
     assert_eq!(
         taken,
-        Ok(Reply::Invocations(vec![
+        Ok(Reply::Invocations(Taken::Work(vec![
             crate::registry::mailbox::Invocation {
                 id: id.clone(),
                 tool: "Bash".to_owned(),
                 input: json!({"command": "ls"}),
                 cwd: None,
             }
-        ]))
+        ])))
     );
 
     assert_eq!(
@@ -194,7 +194,10 @@ fn an_empty_hold_and_an_unheld_handle_are_both_ordinary_answers() {
     let root = tempdir().expect("tmp");
     let mail = Mailbox::holding(1, Duration::from_millis(1));
     let host = deps(root.path(), "laptop", &mail);
-    assert_eq!(invocations(&host), Ok(Reply::Invocations(Vec::new())));
+    assert_eq!(
+        invocations(&host),
+        Ok(Reply::Invocations(Taken::Work(Vec::new())))
+    );
     assert!(
         capture(&host, 100, "inv-404", None).is_err_and(|e| e.contains("inv-404")),
         "the handle is named"
@@ -260,4 +263,34 @@ fn a_connection_cannot_reach_a_machine_registered_only_elsewhere() {
         handle(invoke(&seat, "100", &call("laptop", "Bash"))),
         "inv-1"
     );
+}
+
+/// **A read ended by a newer activation is answered, in its own kind** (REMOTE
+/// §5.1, bl-96e0): the parked read comes back `superseded`, inside its hold.
+#[test]
+fn a_read_a_newer_activation_ended_is_answered_superseded() {
+    let root = tempdir().expect("tmp");
+    let mail = Mailbox::holding(4000, Duration::from_millis(5));
+    let (path, theirs) = (root.path().to_path_buf(), mail.clone());
+    let old = std::thread::spawn(move || invocations(&deps(&path, "laptop", &theirs)));
+    crate::test_support::foot::parked(&mail, "laptop");
+    mail.supersede("laptop");
+    assert_eq!(
+        old.join().expect("the old read"),
+        Ok(Reply::Invocations(Taken::Superseded))
+    );
+}
+
+/// **A bare read takes no queue.** A second `invocations` under the certificate
+/// of a read that is parked is refused, and the parked read is undisturbed —
+/// only an advertisement is an activation.
+#[test]
+fn a_bare_redial_does_not_take_the_queue_from_a_live_reader() {
+    let root = tempdir().expect("tmp");
+    let mail = Mailbox::holding(1, Duration::from_millis(1));
+    let _live = mail.reading("laptop").expect("the live reader");
+    let said = invocations(&deps(root.path(), "laptop", &mail)).expect_err("refused");
+    assert!(said.contains("already holding"), "{said}");
+    assert!(said.contains("advertises first"), "{said}");
+    assert!(mail.serving("laptop"), "the live reader still holds it");
 }

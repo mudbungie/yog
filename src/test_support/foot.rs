@@ -62,7 +62,7 @@ pub(crate) fn serve(
     let handle = std::thread::spawn(move || {
         for answer in script {
             let call = (0..30)
-                .find_map(|_| mail.take(&client).expect("one reader").pop())
+                .find_map(|_| mail.take(&client).expect("one reader").work().pop())
                 .expect("the foot was never handed its call");
             tx.send(call.input).expect("the test is listening");
             if let Some(capture) = answer {

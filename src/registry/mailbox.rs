@@ -42,6 +42,7 @@ pub(crate) mod slots;
 pub mod stream;
 
 pub use slots::Mailbox;
+pub use slots::read::Taken;
 pub use stream::{Offsets, Piece, Post, Standing};
 
 /// **What a driver asks for**: a client's advertised tool, with the model's own

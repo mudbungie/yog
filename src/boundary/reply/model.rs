@@ -152,7 +152,9 @@ pub enum Reply {
     /// What this tool host has been asked to run (REMOTE §3) — the
     /// follow-class read's answer. Empty is the ordinary answer of a hold that
     /// expired with no work, not a failure: the host asks again.
-    Invocations(Vec<crate::registry::mailbox::Invocation>),
+    /// Or, with no rows and `superseded: true`, that a newer activation of this
+    /// certificate ended the read (REMOTE §5.1, bl-96e0).
+    Invocations(crate::registry::mailbox::Taken),
     /// The altitude-0 chrome (REMOTE §9.7, bl-b4b5): the enumerated workspaces
     /// with their §6 rollups and §4.1 pin ranks, and the §7.2 currency of the
     /// derivation they came off.

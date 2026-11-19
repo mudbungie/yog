@@ -1208,46 +1208,92 @@ then reconnect — a set is presented once per connection, which is this
 section's own traffic ruling. The mint's own success text now says the same
 thing from the other end: a leaf it issues is registered nowhere.
 
-**A set is not replaced under a machine that is serving, and one identity has
-one reader** (bl-1462, twin of thrall bl-2d78). The store is keyed on the
-identity and was last-writer-wins, so any connection bearing the certificate
-could present the empty array and be answered `ok`; from then on every invoke
-for that client was refused server-side for a tool that plainly existed, while
-the host sat there healthy and holding a full set. The host cannot notice on
-its own — the bullet above is why, and its traffic reasoning is right: the set
-is presented once per channel, and re-presenting before every read would double
-the traffic to say a thing that had not changed. What that reasoning assumes is
+**One identity has one reader, and an advertisement is what takes the queue**
+(bl-1462, twin of thrall bl-2d78; the rule below is bl-96e0's). The store is
+keyed on the identity and was last-writer-wins, so any connection bearing the
+certificate could present the empty array and be answered `ok`; from then on
+every invoke for that client was refused server-side for a tool that plainly
+existed, while the host sat there healthy and holding a full set. The host
+cannot notice on its own — the set is presented when a channel is taken up and
+after each hand-off, and re-presenting before every read would double the
+traffic to say a thing that had not changed. What that reasoning assumes is
 that nothing else writes the set, and nothing in the protocol made it true.
 
-The seam is drawn at the one moment the server can tell a reconnect from a
-usurper, and it needs no version, no generation and no receipt — three facts
-yog would store and could not check:
+bl-1462 answered with two refusals, and **the second of them was wrong in the
+case that matters most**. It refused an advertisement that would change the set
+while that client held a parked read, on the reading that a parked read is a
+machine serving right now. It is not: `Mailbox::take` sleeps between looks for
+the whole thirty-second hold and nothing in that loop learns its peer's socket
+closed, so a process a supervisor has just killed is still "serving" for the
+rest of its hold. A foot restarted after its tool document was edited was
+therefore refused its advertisement — which a foot reads as final, so the
+process exited, was restarted, and was refused again — and a foot restarted
+with nothing changed was let through and then refused its own first read by
+its own corpse. Both waited out a claim nobody was behind.
 
-- **A second concurrent `invocations` read is refused in band**, naming the
-  client. Two parked readers under one identity is two processes claiming one
-  machine's name; the newcomer would take work the first is waiting for and
-  neither end would learn it. The claim is RAII inside the mailbox, released
-  however the read leaves — presence's own shape, and there is no leave verb.
+**The rule** (operator, 2026-11-18: *a restart is an activation, and it should
+be able to tell the server it is ready to go*). It needs no version, no
+generation and no receipt, because the gesture already exists — a process
+presents its set when it takes a channel up, and never while its own read is
+parked:
 
-  **Its life is the hold and not the connection's, which is what makes the
-  refusal retryable** (bl-0a74). `Mailbox::take` drops the claim on the way out,
-  *before* the caller writes the answer, so a peer that vanished without a FIN
-  frees the slot within one hold's width — thirty seconds — rather than when
-  some later socket act finally notices. A machine redialling after a blip
-  therefore meets this sentence naming *itself*, from a predecessor that is
-  already dying, and the right answer is to wait and ask again. It is stated
-  here because the alternative reading is catastrophic in exactly the case the
-  guard was built for: a redial that took the refusal as final would make the
-  first network blip permanent, which is the failure §5.3's reversal exists to
-  end. It is a *contract*, not an implementation note — a refactor handing the
-  claim back to the caller would break a foot on the far side of the wire with
-  nothing here to catch it, so `slots.rs` carries the test that names it.
-- **An advertisement that would CHANGE the set in force is refused while that
-  client holds a parked read**, naming the client and both ways out. A host
-  re-presenting an unchanged set writes nothing and never reaches the guard, so
-  the ordinary reconnect pays neither a refusal nor a file read; a genuinely
-  reconfigured box restarting is refused for at most the hold's width and lands
-  on its next dial, loudly, rather than silently disarming whatever is serving.
+- **An accepted `advertise` ends whatever `invocations` read its certificate
+  holds.** The set comes into force, the reader slot is free before the
+  advertisement is answered, and the read that caller makes next is the
+  reader. A restart is serving again in the time it takes to dial twice,
+  whether or not its set changed. An advertisement that is *refused* — invalid,
+  registered nowhere, unwritable — ends nothing.
+- **The read that was ended is answered, never dropped**: the ordinary
+  `invocations` reply with no rows and one more key,
+
+  ```json
+  {"ok": true, "kind": "invocations", "rows": [], "superseded": true}
+  ```
+
+  within one look of the mailbox (an eighth of a second). When the process
+  behind it is dead the answer goes nowhere, which is the restart. When it is
+  **alive** — a second process bearing the same certificate — it has just been
+  told that a newer activation took its queue, which is the thing bl-1462 was
+  for: the worry was never that a machine might lose its queue, it was that
+  *neither end would learn it*. A foot that reads the key stops that channel,
+  naming why, and does not dial again: its own next advertisement would end
+  the read that replaced it, and two processes taking a queue from each other
+  in turn is the pathology with a longer period.
+
+  `superseded` rides only when true and is **edition 29** (§3.2): an optional
+  key on a reply already answered, so no bump. A reader that ignores it reads
+  what was true before the key existed — a hold that ended with no work — and
+  asks again, where it meets the refusal below.
+- **A bare `invocations` never takes the queue.** A second read under a
+  certificate whose read is parked is refused in band, naming the client, as it
+  always was: a read states nothing about who is entitled to the queue, and a
+  process that is entitled says so by advertising first. The claim is RAII
+  inside the mailbox and is *one read's*, told from its successor's by a token
+  — so a superseded read is handed nothing more, and on its way out it does not
+  release the slot the new reader holds.
+
+  **The claim's life is still the hold and not the connection's** (bl-0a74).
+  `Mailbox::take` drops it on the way out, *before* the caller writes the
+  answer, so a peer that vanished without a FIN frees the slot within one
+  hold's width for a client that only reads. No foot is such a client — every
+  one advertises on taking a channel up — so against a server of edition 29 or
+  later a foot does not meet this refusal from its own predecessor at all;
+  against an older one it does, and waits it out as before (§5.3).
+
+**Work the ended read's process held is the lease's, unchanged** (§5.3, §5.6,
+§5.7). The new activation's first read is the acknowledgement any read is: a
+hand-off nobody answered goes out again under the id it was first handed, up
+to the bound; a run that had begun to post is answered in doubt and handed to
+nobody. Supersession adds no case — a superseded activation is a foot that
+stopped, and that already had an answer.
+
+**Not built: the server noticing a parked connection's peer has gone.** It
+would free a dead reader's slot without anyone advertising, and nothing now
+waits on that. The answer path holds no socket — a read is answered from a
+`Peer` and a request — so the probe is a seam through the listener, the intake
+and the dispatch; and a clean TLS close leaves an alert ahead of the FIN, which
+a peek cannot tell from a request. What it would still buy is one hand-off of a
+lease not spent on a dead read, and §5.6's bound already prices that.
 
 **And a third durable fact: when this client last spoke** *(bl-d542, PROTOCOL
 14)*. §5's two facts could not tell a ghost from a sleeping machine: `present`
@@ -1277,9 +1323,9 @@ so does every §5.3 hand-off, since the foot re-asserts at the end of each
 (thrall bl-2d78). A box that presents once per channel sees `true` on its first
 presentation and never again. **A `true` on any later re-assertion is the
 machine learning it was disarmed while it was absent**, and the sentence it
-prints is the whole remedy — the window is the one the two guards above cannot
-reach, because a foot executing a tool holds no parked read and `serving()` is
-false for that tool's whole runtime.
+prints is the whole remedy — the window is the one the rule above cannot
+reach, because a foot executing a tool holds no parked read, so an
+advertisement made in that window ends nothing and tells nobody.
 
 It is not an echo and §8.1's test still holds: the stored set after the write
 *is* the set the gesture carried, so answering the set would be one fact said
@@ -1292,10 +1338,11 @@ server already computed it (`registry::tools::store` answers "did it write" and
 the dispatch discarded it), so what landed is one field on one reply and no new
 verb.
 
-Refusal rather than a trail note because both parties can act on a refusal and
-only one of them reads a trail — and because §5.3's redelivery predicate reads
-"the client asked for work again" as "it did not finish what it holds", which
-is exact only while one connection at a time may ask.
+An answer on the wire rather than a trail note because both parties can act on
+what they are told and only one of them reads a trail — and one reader at a
+time because §5.3's redelivery predicate reads "the client asked for work
+again" as "it did not finish what it holds", which is exact only while one
+connection at a time may ask.
 
 **A name collision inside one client's set declines loudly**, naming the token;
 a collision *across* clients is legal and ordinary — two laptops both offering
@@ -1735,9 +1782,10 @@ next read rather than letting the lease re-run the tool (§5.6).
 **One reader per client identity is what makes the predicate exact.** "The
 client asked for work again" only means "it did not finish what it holds" while
 one connection at a time may ask. Two parked readers under one identity is two
-processes claiming one machine's name, and §5.1 refuses the second in band
-(bl-1462) — that guard is this predicate's precondition, not a decoration on
-it.
+processes claiming one machine's name, and §5.1 never allows it: a second read
+is refused in band (bl-1462), and an advertisement ends the first before a
+second can begin (bl-96e0). That is this predicate's precondition, not a
+decoration on it.
 
 **A capture is text, and the transcode happens once.** A capture ends as a
 model's tool result and a model's message is text, so the *executor* transcodes
@@ -1780,15 +1828,21 @@ not the redial's. **A redial is also a coarser instance of the §5.1
 re-assertion** — it presents the set again on the new connection — which is why
 the two are one subject and not two.
 
-**The one refusal a redial must expect is its own predecessor.** A read parked
-when its connection died does not leave until this server tries to answer it, so
-a redial inside that window meets §5.1's one-reader refusal naming this very
-client. It is **retryable** and it is **bounded**: the claim's life is the
-mailbox's hold and not the connection's — `Mailbox::take` releases it on the way
-out, before its answer is written — so the stale predecessor is gone within one
-hold's width (thirty seconds) whether or not the socket has been noticed. A
-redial loop that treated that sentence as final would turn the first blip into
-the permanent stop this reversal exists to end.
+**A redial takes its own queue back, because it advertises first** (§5.1,
+bl-96e0). A read parked when its connection died does not leave until this
+server tries to answer it, and until edition 29 a redial inside that window met
+the one-reader refusal naming this very client and had to wait a hold's width
+for a predecessor that was already gone. The redial's advertisement now ends
+that read, so the read that follows is granted at once.
+
+**Against a server older than that, the refusal is still its own predecessor,
+and still retryable.** The claim's life is the mailbox's hold and not the
+connection's — `Mailbox::take` releases it on the way out, before its answer is
+written — so the stale predecessor is gone within one hold's width (thirty
+seconds) whether or not the socket has been noticed. A redial loop that treated
+that sentence as final would turn the first blip into the permanent stop this
+reversal exists to end. What a foot must treat as final is the other answer:
+`superseded`, which no predecessor can send.
 
 **A tool runs under two deadlines, and they measure different things.** The
 host's own bound terminates the child (SIGTERM then SIGKILL, the cascade the

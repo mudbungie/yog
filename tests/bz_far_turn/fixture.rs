@@ -101,7 +101,7 @@ pub fn answer(mail: &Mailbox, request: &Value) -> Value {
 /// The entry speaks on one stream — stdout for a model call, stderr (`err`)
 /// for a sign-in, which is where brazen prints its human-facing lines.
 pub fn serve(mail: &Mailbox, script: &Path, asked: &std::sync::Mutex<Vec<Value>>, err: bool) {
-    for invocation in mail.take(FOOT).unwrap() {
+    for invocation in mail.take(FOOT).unwrap().work() {
         asked.lock().unwrap().push(invocation.input.clone());
         let mut child = yog::git_env::command(script)
             .stdin(Stdio::null())

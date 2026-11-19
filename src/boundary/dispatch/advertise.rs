@@ -19,20 +19,36 @@ use super::Deps;
 use crate::boundary::reply::Reply;
 
 /// Validate the set and store it under the caller's own identity, writing only
-/// when it differs from what is stored (REMOTE §5) — and **answer whether it
-/// wrote** (REMOTE §5.1, bl-66d4).
+/// when it differs from what is stored (REMOTE §5) — **answer whether it
+/// wrote** (REMOTE §5.1, bl-66d4) — and **end whatever read this certificate
+/// holds** (REMOTE §5.1, bl-96e0).
 ///
-/// [`tools::store`] has always computed that bool and this executor always
-/// discarded it, so a box re-presenting an unchanged set and a box restoring a
+/// [`tools::store`] has always computed that bool and this executor used to
+/// discard it, so a box re-presenting an unchanged set and a box restoring a
 /// set some other connection blanked were answered the identical `ok`. The
-/// second of those is two processes claiming one machine's name, and it reached
-/// no log on either side: bl-1462's guards cover the whole of an IDLE host's
-/// life, and the window they cannot cover is the one the host opens itself —
-/// §5.3's foot is absent for a tool's whole runtime, holds no parked read, and
-/// so `superseding` below waves the replacement through. The foot's own half
-/// (thrall bl-2d78) re-asserts at the end of every hand-off, which bounds that
-/// window to one tool's runtime and then **heals silently**. This is the
-/// sentence that makes the heal audible, and it costs one field on one reply.
+/// second of those is two processes claiming one machine's name; `wrote` on a
+/// re-assertion is the sentence that makes it audible (thrall bl-2d78).
+///
+/// **An advertisement is an activation, and an activation takes the queue.** A
+/// foot presents its set when it takes a channel up — at process start and on
+/// every redial — and never while its own read is parked, so a read still
+/// parked under this certificate when one arrives is a predecessor: the
+/// process a supervisor just killed, the connection a network change stranded,
+/// or a second process bearing the same name. The server cannot tell those
+/// apart and no longer has to: the set comes into force, the parked read is
+/// ended and *told* ([`Mailbox::supersede`](crate::registry::mailbox::Mailbox::supersede)),
+/// and the read this caller makes next is the reader.
+///
+/// It replaces a guard that refused a CHANGED set while a read was parked
+/// (bl-1462), which protected a serving machine from being disarmed without
+/// learning of it. That guard could not tell a serving machine from a dead
+/// one's claim — a parked read sleeps through its peer's death for the rest of
+/// its hold — so it refused exactly the restart that follows an edited tool
+/// document. What it protected is kept by other means: the machine that loses
+/// its queue is now told so, at once.
+///
+/// The read is ended **after** the store, so an advertisement that is refused
+/// — invalid, registered nowhere, unwritable — ends nothing.
 pub(super) fn advertise(deps: &Deps, tools: &[Tool]) -> Result<Reply, String> {
     let client = &deps.caller.client;
     if client.is_local() {
@@ -44,8 +60,8 @@ pub(super) fn advertise(deps: &Deps, tools: &[Tool]) -> Result<Reply, String> {
     }
     tools::validate(tools)?;
     presented(deps)?;
-    superseding(deps, tools)?;
     let wrote = tools::store(&deps.state_root, client, tools).map_err(|e| e.to_string())?;
+    deps.caller.mailbox.supersede(&client.name());
     Ok(Reply::Advertised { wrote })
 }
 
@@ -75,35 +91,6 @@ fn presented(deps: &Deps) -> Result<(), String> {
          in, and that set is empty. {} Then reconnect — a set is presented once per connection",
         client.name(),
         crate::registry::peer::seat_by_hand(&client.name())
-    ))
-}
-
-/// **A serving machine's set may not be replaced under it** (REMOTE §5.1,
-/// bl-1462). The store is keyed on the identity and was last-writer-wins, so
-/// any connection bearing the certificate could blank a healthy host's tools —
-/// and by REMOTE §5's own traffic ruling the set is presented once per channel,
-/// so the host that is running never learns it was disarmed. The only symptom
-/// was invocations refused for a tool that plainly exists.
-///
-/// The seam is drawn at the one moment the server can tell the two apart: a
-/// **parked follow-class read** is a machine that is serving right now, and a
-/// set that **differs** from the one in force is a second party disagreeing
-/// with it. A host re-presenting an unchanged set on reconnect writes nothing
-/// and never reaches this — which is the ordinary path, so the guard costs it
-/// no refusal and no file read.
-fn superseding(deps: &Deps, tools: &[Tool]) -> Result<(), String> {
-    let client = &deps.caller.client;
-    if !deps.caller.mailbox.serving(&client.name())
-        || tools::read(&deps.state_root, client) == tools
-    {
-        return Ok(());
-    }
-    Err(format!(
-        "advertise: {:?} is holding this server's follow-class read and this is not the \
-         set in force — a second connection may not replace a serving machine's tools, \
-         because the machine that is serving would never learn it was disarmed. \
-         Re-present the set in force, or stop the connection that is serving",
-        client.name()
     ))
 }
 

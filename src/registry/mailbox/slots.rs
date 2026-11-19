@@ -6,7 +6,7 @@
 //! **The lock lives in [`state`](crate::state)** (AGENTS.md rule 7), beside
 //! presence's: [`MailCell`] and [`lock_mail`] there.
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 use std::time::Duration;
 
 use crate::state::{MailCell, lock_mail};
@@ -75,11 +75,14 @@ impl Slot {
 pub(crate) struct Slots {
     live: BTreeMap<String, Slot>,
     seq: u64,
-    /// **One reader per client identity** (REMOTE §5.1, bl-1462). Not a
-    /// refcount, unlike presence: two connections holding one machine's *queue*
-    /// is the pathology itself, where two holding one machine's *presence* is
-    /// an operator with two seats.
-    reading: BTreeSet<String>,
+    /// **One reader per client identity** (REMOTE §5.1, bl-1462), as the
+    /// token of the read that holds it. Not a refcount, unlike presence: two
+    /// connections holding one machine's *queue* is the pathology itself,
+    /// where two holding one machine's *presence* is an operator with two
+    /// seats.
+    reading: BTreeMap<String, u64>,
+    /// The serial a read's token is minted from.
+    reads: u64,
 }
 
 /// The process's invocation mailbox, shared by handle exactly as

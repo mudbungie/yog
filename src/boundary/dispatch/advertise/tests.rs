@@ -6,9 +6,11 @@ use crate::boundary::dispatch::Caller;
 use crate::boundary::tests::snapshot;
 use crate::cli_outbound::Cli;
 use crate::registry::Client;
+use crate::registry::mailbox::{Mailbox, Taken};
 use serde_json::json;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
+use std::time::Duration;
 use tempfile::tempdir;
 
 fn tool(name: &str) -> Tool {
@@ -124,45 +126,86 @@ fn a_colliding_name_declines_and_leaves_the_stored_set_alone() {
     );
 }
 
-/// **A serving machine's set may not be replaced under it** (bl-1462). The
-/// store was last-writer-wins on the identity, so a second connection bearing
-/// the same certificate could present the empty set and disarm a healthy host
-/// — server-side every later invoke was refused for a tool that plainly
-/// existed, and neither end was told.
+/// A mailbox whose hold outlasts the beat — twenty seconds — so a read that
+/// ended inside it was ended by the advertisement and not by its own clock.
+fn patient(mut deps: Deps) -> Deps {
+    deps.caller.mailbox = Mailbox::holding(4000, Duration::from_millis(5));
+    deps
+}
+
+/// Park a read for `client` on its own thread, and answer once it is parked.
+fn parked(deps: &Deps, client: &str) -> std::thread::JoinHandle<Result<Taken, String>> {
+    let (mail, name) = (deps.caller.mailbox.clone(), client.to_owned());
+    let reader = std::thread::spawn(move || mail.take(&name));
+    crate::test_support::foot::parked(&deps.caller.mailbox, client);
+    reader
+}
+
+/// **A restarted foot with an edited tool document is serving at once**
+/// (REMOTE §5.1, bl-96e0). The read its predecessor parked is still standing —
+/// a parked read sleeps through its peer's death — and the new process's
+/// advertisement used to be refused for as long as it stood. Now the set comes
+/// into force, the old read is ended and told, and the read the new process
+/// makes next is granted without waiting.
 #[test]
-fn a_second_connection_may_not_blank_a_serving_machines_set() {
+fn a_restart_with_a_changed_set_is_serving_at_once() {
+    let root = tempdir().expect("tempdir");
+    let laptop = Client::parse("laptop").expect("identity");
+    let deps = patient(seated(root.path(), &laptop));
+    advertise(&deps, &[tool("Bash")]).expect("stored");
+    let old = parked(&deps, "laptop");
+
+    assert_eq!(
+        advertise(&deps, &[tool("Read")]),
+        Ok(Reply::Advertised { wrote: true })
+    );
+    assert_eq!(
+        crate::registry::tools::read(root.path(), &laptop),
+        vec![tool("Read")],
+        "the new set is the set in force"
+    );
+    let serving = deps.caller.mailbox.reading("laptop");
+    assert!(
+        serving.is_ok(),
+        "the new activation's read is granted at once"
+    );
+    assert_eq!(
+        old.join().expect("the old read"),
+        Ok(Taken::Superseded),
+        "and a predecessor that is still alive learns it lost the queue"
+    );
+}
+
+/// **So is one whose document did not change** — the plain restart, which was
+/// let through at the advertisement and then refused at its own first read.
+#[test]
+fn a_restart_with_the_same_set_is_serving_at_once() {
+    let root = tempdir().expect("tempdir");
+    let laptop = Client::parse("laptop").expect("identity");
+    let deps = patient(seated(root.path(), &laptop));
+    advertise(&deps, &[tool("Bash")]).expect("stored");
+    let old = parked(&deps, "laptop");
+
+    assert_eq!(
+        advertise(&deps, &[tool("Bash")]),
+        Ok(Reply::Advertised { wrote: false })
+    );
+    let serving = deps.caller.mailbox.reading("laptop");
+    assert!(serving.is_ok(), "granted at once");
+    assert_eq!(old.join().expect("the old read"), Ok(Taken::Superseded));
+}
+
+/// **A refused advertisement ends nothing.** The read is ended after the store,
+/// so a set that could not be presented leaves the machine that is serving
+/// exactly as it was.
+#[test]
+fn a_refused_advertisement_leaves_the_parked_read_alone() {
     let root = tempdir().expect("tempdir");
     let laptop = Client::parse("laptop").expect("identity");
     let deps = seated(root.path(), &laptop);
-    advertise(&deps, &[tool("Bash")]).expect("stored");
-
-    let parked = deps
-        .caller
-        .mailbox
-        .reading("laptop")
-        .expect("the machine's own read");
-    let refusal = advertise(&deps, &[]).expect_err("refused while serving");
-    assert!(refusal.contains("\"laptop\""), "{refusal}");
-    assert!(
-        refusal.contains("would never learn it was disarmed"),
-        "{refusal}"
-    );
-    assert_eq!(
-        crate::registry::tools::read(root.path(), &laptop),
-        vec![tool("Bash")],
-        "the serving machine keeps its tools"
-    );
-
-    // The ordinary path is untouched in both directions: the machine itself
-    // re-presenting the set in force writes nothing and is not refused, and
-    // once nothing is serving, a changed set lands as it always did.
-    advertise(&deps, &[tool("Bash")]).expect("an unchanged set is not a replacement");
-    drop(parked);
-    advertise(&deps, &[tool("Read")]).expect("nobody is serving");
-    assert_eq!(
-        crate::registry::tools::read(root.path(), &laptop),
-        vec![tool("Read")]
-    );
+    let _parked = deps.caller.mailbox.reading("laptop").expect("its read");
+    advertise(&deps, &[tool("Read"), tool("Read")]).expect_err("declined");
+    assert!(deps.caller.mailbox.serving("laptop"));
 }
 
 /// An unwritable store is a refusal, not a panic. The client is seated, so the

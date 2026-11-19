@@ -54,7 +54,9 @@ pub const FOLLOWING: &[HelpRow] = &[
                  connection presented, which is why a caller inside the world (`yog gesture`, \
                  the deposit inbox, the window) is refused rather than handed somebody's work. \
                  An empty answer is the ordinary answer of a hold that ended quietly, not a \
-                 failure. Each row is `{\"invocation\": …, \"tool\": …, \"input\": …}`; run \
+                 failure — unless it carries `\"superseded\": true`, which says a newer \
+                 activation of this certificate advertised and took the queue: stop, do not \
+                 ask again. Each row is `{\"invocation\": …, \"tool\": …, \"input\": …}`; run \
                  it and post the result with `/complete`.",
         surface: Surface::Machine,
     },

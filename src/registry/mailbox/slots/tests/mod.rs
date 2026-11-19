@@ -5,10 +5,13 @@ use std::time::Instant;
 
 use super::super::doubt::unknown;
 use super::super::{Capture, Post};
-use super::read::{HOLD_TICK, HOLD_WAITS};
+use super::read::{HOLD_TICK, HOLD_WAITS, Taken};
 use super::*;
 use serde_json::json;
 
+/// **A newer activation takes the queue** (REMOTE §5.1, bl-96e0): the
+/// advertisement's half of the one-reader rule.
+mod activation;
 /// The two silences that end a streamed run, and the refused post.
 mod listen;
 /// **The streamed form's own corpus** (REMOTE §5.7): N posts, offsets, the
@@ -37,7 +40,9 @@ pub(super) fn call(client: &str, tool: &str) -> Call {
 /// One follow-class read that is expected to be granted its reader slot — the
 /// ordinary case, so the refusal stays visible where a test means it.
 pub(super) fn took(mail: &Mailbox, client: &str) -> Vec<Invocation> {
-    mail.take(client).expect("this client has no other reader")
+    let taken = mail.take(client).expect("this client has no other reader");
+    assert_ne!(taken, Taken::Superseded, "and nothing advertised under it");
+    taken.work()
 }
 
 pub(super) fn ran(exit_code: i32) -> Capture {
@@ -109,9 +114,10 @@ fn a_take_drains_only_this_clients_work() {
     assert_eq!(taken.first().map(|i| i.id.clone()), Some(mine));
 }
 
-/// **One reader per identity** (bl-1462): a second connection presenting the
-/// same certificate while one is parked is refused in band, naming the client
-/// and the two ways out — and the first reader keeps its work.
+/// **One reader per identity** (bl-1462): a second read under the same
+/// certificate while one is parked is refused in band, naming the client and
+/// the two ways out — and the first reader keeps its work. A bare read never
+/// takes a queue; only an advertisement does (`activation`).
 #[test]
 fn a_second_reader_under_one_identity_is_refused() {
     let mail = quick();
@@ -135,8 +141,8 @@ fn a_second_reader_under_one_identity_is_refused() {
 }
 
 /// The claim is released **however the read leaves**, so the slot is a claim on
-/// a live reader and never a latch of its own — and `serving` answers the same
-/// fact the advertisement's gate reads.
+/// a live reader and never a latch of its own — and `serving` answers that
+/// same fact.
 #[test]
 fn the_reader_slot_is_released_when_the_read_ends() {
     let mail = quick();

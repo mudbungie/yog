@@ -105,11 +105,12 @@ fn complete(deps: &Deps, ts: &str, done: &Completion) -> Result<Reply, String> {
 /// thread and never the deposit consumer, because an in-world caller is refused
 /// before the wait rather than parked in it.
 ///
-/// **One reader per identity** (REMOTE §5.1, bl-1462): a second connection
-/// presenting the same certificate while one is parked here is refused in band.
-/// Two readers on one queue is two processes claiming one machine's name — the
-/// newcomer would take work the first is waiting for, and neither end would
-/// learn it.
+/// **One reader per identity** (REMOTE §5.1, bl-1462): a second read under
+/// the same certificate while one is parked here is refused in band — a read
+/// never takes the queue from the read that holds it. **An advertisement does**
+/// (bl-96e0): the read it ends is answered [`Taken::Superseded`](crate::registry::mailbox::Taken), so the
+/// process behind it, if one is still alive, learns it is no longer this
+/// machine's reader.
 pub(super) fn invocations(deps: &Deps) -> Result<Reply, String> {
     let client = connected(deps, "invocations")?;
     Ok(Reply::Invocations(deps.caller.mailbox.take(&client)?))

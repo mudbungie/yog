@@ -37,7 +37,7 @@ use super::rows::decode::{
 use super::search::hit_of;
 use crate::boundary::codec::fields::{bool_of, list_of, opt_str_of, str_of, strings_of};
 use crate::boundary::codec::prepared_from_value;
-use crate::registry::mailbox::invocation_of;
+use crate::registry::mailbox::{Taken, invocation_of};
 
 mod inspector;
 /// The two world-level rows, their own file at the cap (bl-53d1).
@@ -193,7 +193,12 @@ fn listing(kind: &str, o: &Map<String, Value>) -> Option<Result<Reply, String>> 
         }
         "clients" => rows_of(o, client_row).map(Reply::Clients),
         super::doctor::KIND => super::doctor::rows(o).map(Reply::Doctor),
-        "invocations" => rows_of(o, invocation_of).map(Reply::Invocations),
+        // The read a newer activation ended (REMOTE §5.1, bl-96e0): the key
+        // rides only when true, so anything else is the ordinary answer.
+        "invocations" if o.get("superseded") == Some(&Value::Bool(true)) => {
+            Ok(Reply::Invocations(Taken::Superseded))
+        }
+        "invocations" => rows_of(o, invocation_of).map(|r| Reply::Invocations(Taken::Work(r))),
         // The §3.5 table, ceiling and ledger (bl-53d1), read by the module
         // that spells them.
         super::prices::KIND => super::prices::view_of(o).map(Reply::Prices),
