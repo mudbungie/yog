@@ -6,7 +6,7 @@
 
 use super::ConfigFile;
 use crate::boundary::dispatch::Deps;
-use crate::boundary::reply::{ConfigAnswer, ConfigView, Reply};
+use crate::boundary::reply::{ConfigAnswer, ConfigView, Placed, Reply};
 use crate::config_edit::branch::{Lineage, config_file, lineages};
 use crate::config_edit::brazen::{
     BzOutcome, BzRunner, ProviderRowView, RealBzRunner, row_names, row_views,
@@ -215,7 +215,7 @@ pub(crate) fn answer(deps: &Deps, now: i64, ws: &Path, read: &Read) -> Result<Re
         Read::Catalog { .. } => Ok(catalog(deps, now, ws)),
         Read::Lineages { .. } => super::lineages(ws),
         Read::Models { provider, .. } => super::models(deps, now, ws, provider),
-        Read::Roles { .. } => Ok(super::roles(ws)),
+        Read::Roles { .. } => Ok(super::roles(deps, ws)),
         Read::Proposals { id, .. } => super::proposals(ws, id.as_deref()),
     }
 }
@@ -251,11 +251,12 @@ pub(crate) fn catalog(deps: &Deps, now: i64, workspace: &Path) -> Reply {
 ///
 /// **Then the same listing from each registered machine that serves `bz` and
 /// is parked on its read right now** (REMOTE §5.7), its rows named
-/// `<row>@<client>`: one more row each, in the one row shape.
-fn rows_in(deps: &Deps, now: i64, workspace: &Path, line: &[&str]) -> Vec<ProviderRowView> {
-    let mut rows = RealBzRunner::resolve(&super::wall_env(deps, workspace)).listing(line);
+/// `<row>@<client>` with both halves beside the name: one more row each.
+fn rows_in(deps: &Deps, now: i64, workspace: &Path, line: &[&str]) -> Vec<Placed<ProviderRowView>> {
+    let own = RealBzRunner::resolve(&super::wall_env(deps, workspace)).listing(line);
+    let mut rows: Vec<_> = row_views(&own).into_iter().map(Placed::from).collect();
     rows.extend(super::far::rows(deps, now, workspace, line));
-    row_views(&rows)
+    rows
 }
 
 /// The §9.3 browse (bl-dff8): every lineage with the files its tip holds. A

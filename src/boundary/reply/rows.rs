@@ -230,6 +230,19 @@ pub(super) fn flight_token(flight: Flight) -> &'static str {
     }
 }
 
+/// A row and, where its name selects a registered machine, the two halves of
+/// that name (REMOTE §5.7, bl-471d): `client` and `row`, **absent** together
+/// for the server's own — the `pinned` rank's discipline, and what makes a
+/// server that never wrote them and a row that is the server's one reading.
+pub(super) fn placed<T>(row: &super::Placed<T>, encode: impl Fn(&T) -> Value) -> Value {
+    let mut value = encode(&row.row);
+    if let (Some(at), Some(map)) = (&row.at, value.as_object_mut()) {
+        map.insert("client".to_owned(), json!(at.client));
+        map.insert("row".to_owned(), json!(at.row));
+    }
+    value
+}
+
 /// One provider row as the operator reads it (§8.3, §9.5): its name, the
 /// credential fact in words, why `bz --login` cannot serve it — `null` exactly
 /// when it can — and the two **tuning capabilities** a controls surface shows

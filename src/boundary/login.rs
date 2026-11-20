@@ -68,9 +68,9 @@ pub(super) fn start(
     // machine that does not answer refuses the act**: its flow cannot be
     // read, and a guess would open a browser on a box nobody is sitting at.
     let (row, catalog) = match far::named(deps, workspace, provider) {
-        Some((row, client)) => {
-            let listed = far::run(deps, ts.parse().unwrap_or(0), &client, CATALOG)?;
-            (row, provider_rows(&listed.stdout))
+        Some(at) => {
+            let listed = far::run(deps, ts.parse().unwrap_or(0), &at.client, CATALOG)?;
+            (at.row, provider_rows(&listed.stdout))
         }
         None => (
             provider.to_owned(),

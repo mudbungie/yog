@@ -32,7 +32,7 @@ use super::board::decode::board;
 use super::config_answer::ConfigAnswer as A;
 use super::queue::queue_row_of;
 use super::rows::decode::{
-    conv_row, join_row, lineage_row, provider_row, role_row, rows_of, ws_row,
+    conv_row, join_row, lineage_row, placed, provider_row, role_row, rows_of, ws_row,
 };
 use super::search::hit_of;
 use crate::boundary::codec::fields::{bool_of, list_of, opt_str_of, str_of, strings_of};
@@ -183,9 +183,9 @@ fn listing(kind: &str, o: &Map<String, Value>) -> Option<Result<Reply, String>> 
         "ops" => rows_of(o, super::op_row::decode).map(Reply::Ops),
         "help" => help(o),
         "search" => search(o),
-        "providers" => rows_of(o, provider_row).map(|r| config(A::Providers(r))),
-        "catalog" => rows_of(o, provider_row).map(|r| config(A::Catalog(r))),
-        "roles" => rows_of(o, role_row).map(|r| config(A::Roles(r))),
+        "providers" => rows_of(o, |v| placed(v, provider_row)).map(|r| config(A::Providers(r))),
+        "catalog" => rows_of(o, |v| placed(v, provider_row)).map(|r| config(A::Catalog(r))),
+        "roles" => rows_of(o, |v| placed(v, role_row)).map(|r| config(A::Roles(r))),
         "lineages" => rows_of(o, lineage_row).map(|r| config(A::Lineages(r))),
         "models" => strings_of(o, "rows").map(|r| config(A::Models(r))),
         crate::proposals::wire::KIND => {

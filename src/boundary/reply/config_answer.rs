@@ -16,6 +16,39 @@
 
 use super::ConfigView;
 
+/// **Which registered machine a provider's name selects, and the row as that
+/// machine spells it** (REMOTE §5.7, bl-471d): the two halves of
+/// `<row>@<client>`, said as fields so that no reader takes the name apart.
+/// The server reads the name against the workspace's registered clients, the
+/// longest that fits, and a reader holding the name alone cannot repeat that.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Place {
+    pub client: String,
+    pub row: String,
+}
+
+/// A listed row beside its [`Place`] — `None` for the server's own, which is
+/// every row there was before the field. One carrier for the three answers
+/// that name a provider, so the pair has one encoder and one decoder.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Placed<T> {
+    pub row: T,
+    pub at: Option<Place>,
+}
+
+impl<T> From<T> for Placed<T> {
+    fn from(row: T) -> Self {
+        Self { row, at: None }
+    }
+}
+
+impl<T> std::ops::Deref for Placed<T> {
+    type Target = T;
+    fn deref(&self) -> &T {
+        &self.row
+    }
+}
+
 /// One §9 config read's answer.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ConfigAnswer {
@@ -25,19 +58,19 @@ pub enum ConfigAnswer {
     /// brazen's **routing table** with the §5.1 #22 credential presence
     /// (§8.5, bl-0164) — the §8.3 login pane's own rows: what a run in this
     /// workspace can route to.
-    Providers(Vec<crate::config_edit::brazen::ProviderRowView>),
+    Providers(Vec<Placed<crate::config_edit::brazen::ProviderRowView>>),
     /// brazen's **sign-in catalog** in the same row shape (§8.3, bl-c6e3):
     /// every row `bz --login` can serve, signed in or not — the login pane's
     /// other read, so a preset nobody has signed into yet has a Login verb
     /// somewhere.
-    Catalog(Vec<crate::config_edit::brazen::ProviderRowView>),
+    Catalog(Vec<Placed<crate::config_edit::brazen::ProviderRowView>>),
     /// This workspace's role assignments (§9.4, §5.1 #27): the whole `roles:`
     /// block of the commit its lineage stands at, one row per role, in file
     /// order. The type is the grammar's own
     /// [`RoleModel`](crate::model_pick::RoleModel), which the §9.4 gestures
     /// already write and the fork composer already reads — one vocabulary for
     /// one entry (bl-2410).
-    Roles(Vec<crate::model_pick::RoleModel>),
+    Roles(Vec<Placed<crate::model_pick::RoleModel>>),
     /// The workspace's config lineages with each tip's files (§9.3, bl-dff8) —
     /// the config pane's two dropdowns.
     Lineages(Vec<crate::config_edit::branch::Lineage>),

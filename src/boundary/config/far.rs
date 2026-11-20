@@ -38,8 +38,9 @@ use std::time::Duration;
 use serde_json::json;
 
 use crate::boundary::dispatch::Deps;
+use crate::boundary::reply::{Place, Placed};
 use crate::bz_host::far::{TOOL, machines, split};
-use crate::config_edit::brazen::{BzOutcome, ProviderRow, provider_rows};
+use crate::config_edit::brazen::{BzOutcome, ProviderRow, ProviderRowView, provider_rows};
 use crate::registry::mailbox::{Call, Capture};
 use crate::registry::{Client, tools};
 
@@ -49,9 +50,9 @@ const TICK: Duration = Duration::from_millis(25);
 
 /// Read `<row>@<client>` off `provider` against the clients registered in
 /// `workspace`: the row as that machine spells it, and the machine.
-pub(crate) fn named(deps: &Deps, workspace: &Path, provider: &str) -> Option<(String, String)> {
+pub(crate) fn named(deps: &Deps, workspace: &Path, provider: &str) -> Option<Place> {
     let registered = machines(&deps.state_root, &crate::naming::leaf(workspace));
-    split(provider, &registered)
+    split(provider, &registered).map(|(row, client)| Place { client, row })
 }
 
 /// Does `client` advertise the `bz` tool — the durable half of *can serve*.
@@ -82,7 +83,7 @@ pub(crate) fn judged(
         return rows;
     }
     for name in names {
-        let far = named(deps, workspace, name).is_some_and(|(_, client)| advertises(deps, &client));
+        let far = named(deps, workspace, name).is_some_and(|at| advertises(deps, &at.client));
         if far && !rows.iter().any(|row| row.name == *name) {
             rows.push(ProviderRow {
                 name: (*name).to_owned(),
@@ -135,9 +136,16 @@ fn asked(deps: &Deps, now: i64, clients: &[String], line: &[&str]) -> Vec<(Strin
 }
 
 /// One row listing (`TABLE` or `CATALOG`) from every machine of `workspace`
-/// that advertises `bz` and is serving, each row's name qualified. The rows
-/// describe **that machine's** credentials as its own brazen reports them.
-pub(crate) fn rows(deps: &Deps, now: i64, workspace: &Path, line: &[&str]) -> Vec<ProviderRow> {
+/// that advertises `bz` and is serving, each row's name qualified and its two
+/// halves stated beside it — the machine is known here, so no reader has to
+/// read it back off the name. The rows describe **that machine's** credentials
+/// as its own brazen reports them.
+pub(crate) fn rows(
+    deps: &Deps,
+    now: i64,
+    workspace: &Path,
+    line: &[&str],
+) -> Vec<Placed<ProviderRowView>> {
     let hosts: Vec<String> = machines(&deps.state_root, &crate::naming::leaf(workspace))
         .into_iter()
         .filter(|client| advertises(deps, client))
@@ -145,12 +153,15 @@ pub(crate) fn rows(deps: &Deps, now: i64, workspace: &Path, line: &[&str]) -> Ve
     asked(deps, now, &hosts, line)
         .into_iter()
         .flat_map(|(client, capture)| {
-            provider_rows(&capture.stdout)
-                .into_iter()
-                .map(move |row| ProviderRow {
-                    name: format!("{}@{client}", row.name),
-                    ..row
-                })
+            provider_rows(&capture.stdout).into_iter().map(move |row| {
+                let name = format!("{}@{client}", row.name);
+                let at = Some(Place {
+                    client: client.clone(),
+                    row: row.name.clone(),
+                });
+                let row = ProviderRow { name, ..row }.view();
+                Placed { row, at }
+            })
         })
         .collect()
 }

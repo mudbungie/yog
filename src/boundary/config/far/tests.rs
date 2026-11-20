@@ -13,7 +13,7 @@ use super::*;
 use crate::boundary::Query;
 use crate::boundary::config::Read;
 use crate::boundary::dispatch::Caller;
-use crate::boundary::reply::{ConfigAnswer, Reply};
+use crate::boundary::reply::{ConfigAnswer, Place, Placed, Reply};
 use crate::config_edit::brazen::{CATALOG, ProviderRowView, TABLE, provider_rows};
 use crate::registry::mailbox::Mailbox;
 use crate::test_support::foot::{mailbox, parked, printed, seat, serve};
@@ -46,14 +46,19 @@ fn world(root: &Path) -> (Deps, Mailbox) {
     (deps, mail)
 }
 
-fn rows_of(reply: Result<Reply, String>) -> Vec<ProviderRowView> {
+fn at(client: &str, row: &str) -> Place {
+    let (client, row) = (client.to_owned(), row.to_owned());
+    Place { client, row }
+}
+
+fn rows_of(reply: Result<Reply, String>) -> Vec<Placed<ProviderRowView>> {
     match reply {
         Ok(Reply::Config(ConfigAnswer::Providers(rows) | ConfigAnswer::Catalog(rows))) => rows,
         other => panic!("a listing answers rows: {other:?}"),
     }
 }
 
-fn providers(deps: &Deps) -> Vec<ProviderRowView> {
+fn providers(deps: &Deps) -> Vec<Placed<ProviderRowView>> {
     rows_of(ask(
         deps,
         &Query::Config(Read::Providers { workspace: name() }),
@@ -72,7 +77,9 @@ fn models(deps: &Deps, provider: &str) -> Result<Reply, String> {
 
 /// The server's own rows, then the serving machine's with their names
 /// qualified — that machine's credential fact, in the one row shape — and the
-/// catalog likewise. What crossed is the same listing command line.
+/// catalog likewise. What crossed is the same listing command line. **Each
+/// far row states its machine and its own spelling beside the name** (bl-471d)
+/// and the server's own state neither.
 #[test]
 fn a_serving_machine_appends_its_rows_qualified() {
     let root = tempdir().unwrap();
@@ -82,14 +89,18 @@ fn a_serving_machine_appends_its_rows_qualified() {
     parked(&mail, "laptop");
     let rows = providers(&deps);
     assert_eq!(rows.first().map(|row| row.name.as_str()), Some("acme"));
+    assert_eq!(rows.first().and_then(|row| row.at.clone()), None);
     assert_eq!(
         rows.last(),
-        Some(&ProviderRowView {
-            name: "sub@laptop".to_owned(),
-            fact: "auth oauth2 · signed in".to_owned(),
-            blocked: None,
-            effort: true,
-            priority: false,
+        Some(&Placed {
+            row: ProviderRowView {
+                name: "sub@laptop".to_owned(),
+                fact: "auth oauth2 · signed in".to_owned(),
+                blocked: None,
+                effort: true,
+                priority: false,
+            },
+            at: Some(at("laptop", "sub")),
         })
     );
     assert_eq!(asked.recv().unwrap(), json!({ "args": TABLE }));
@@ -99,7 +110,11 @@ fn a_serving_machine_appends_its_rows_qualified() {
         &deps,
         &Query::Config(Read::Catalog { workspace: name() }),
     ));
-    assert!(catalog.iter().any(|row| row.name == "sub@laptop"));
+    assert!(
+        catalog
+            .iter()
+            .any(|row| row.name == "sub@laptop" && row.at == Some(at("laptop", "sub")))
+    );
     assert_eq!(asked.recv().unwrap(), json!({ "args": CATALOG }));
     foot.join().unwrap();
 }
@@ -196,8 +211,5 @@ fn the_config_gates_accept_a_row_on_a_machine_that_serves_bz() {
         .collect();
     assert_eq!(judged_names, ["sub", "x@laptop"]);
     assert!(judged(&deps, &ws(), Vec::new(), &names).is_empty());
-    assert_eq!(
-        named(&deps, &ws(), "x@laptop"),
-        Some(("x".to_owned(), "laptop".to_owned()))
-    );
+    assert_eq!(named(&deps, &ws(), "x@laptop"), Some(at("laptop", "x")));
 }

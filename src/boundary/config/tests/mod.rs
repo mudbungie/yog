@@ -25,6 +25,7 @@ use std::sync::Arc;
 mod browse;
 mod files;
 mod knobs;
+mod placed;
 mod proposals;
 mod reads;
 /// The §9.5 typed half of a config read (bl-dc3f).

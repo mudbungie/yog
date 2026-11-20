@@ -57,14 +57,16 @@ fn a_providers_reply_names_each_rows_credential_fact_and_login_block() {
             blocked: None,
             effort: true,
             priority: true,
-        },
+        }
+        .into(),
         ProviderRowView {
             name: "zinc".to_owned(),
             fact: "auth none · no credential needed".to_owned(),
             blocked: Some("keyless — nothing to log in".to_owned()),
             effort: true,
             priority: false,
-        },
+        }
+        .into(),
     ])));
     assert_eq!(value["kind"], "providers");
     let rows = value["rows"].as_array().expect("rows");
@@ -89,8 +91,10 @@ fn a_catalog_reply_is_the_providers_row_shape_under_its_own_kind() {
         effort: false,
         priority: false,
     };
-    let catalog = encode(&Reply::Config(ConfigAnswer::Catalog(vec![row.clone()])));
-    let table = encode(&Reply::Config(ConfigAnswer::Providers(vec![row])));
+    let catalog = encode(&Reply::Config(ConfigAnswer::Catalog(vec![
+        row.clone().into(),
+    ])));
+    let table = encode(&Reply::Config(ConfigAnswer::Providers(vec![row.into()])));
     assert_eq!(catalog["kind"], "catalog");
     assert_eq!(table["kind"], "providers");
     assert_eq!(catalog["rows"], table["rows"], "one row shape, two kinds");

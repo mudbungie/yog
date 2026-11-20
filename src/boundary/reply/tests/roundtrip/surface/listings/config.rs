@@ -9,39 +9,23 @@
 //! survives.
 
 use super::super::super::super::super::Reply;
-use crate::boundary::reply::ConfigAnswer;
+use crate::boundary::reply::{ConfigAnswer, Place, Placed};
 use crate::config_edit::brazen::ProviderRowView;
+
+/// A row on the registered machine `client`, spelled `row` there (REMOTE
+/// §5.7, bl-471d) — the two keys only such a row carries.
+fn on<T>(client: &str, row: &str, listed: T) -> Placed<T> {
+    let (client, row) = (client.to_owned(), row.to_owned());
+    Placed {
+        row: listed,
+        at: Some(Place { client, row }),
+    }
+}
 
 /// The §9 family's answers, in carrier order.
 pub(super) fn answers() -> Vec<Reply> {
     vec![
-        // The §9.4 role assignments (bl-2410): a role tuned both ways beside
-        // one tuned neither, so `effort`'s two spellings and `priority`'s two
-        // both cross. A level yog would never WRITE rides here too, because
-        // this answer reports the file rather than asserting a vocabulary.
-        Reply::Config(ConfigAnswer::Roles(vec![
-            crate::model_pick::RoleModel {
-                role: "worker".into(),
-                provider: "anthropic".into(),
-                model: "claude-sonnet-5".into(),
-                effort: Some("high".into()),
-                priority: true,
-            },
-            crate::model_pick::RoleModel {
-                role: "compactor".into(),
-                provider: "codex".into(),
-                model: "gpt-5.4-mini".into(),
-                effort: None,
-                priority: false,
-            },
-            crate::model_pick::RoleModel {
-                role: "critic".into(),
-                provider: "codex".into(),
-                model: "gpt-5.4".into(),
-                effort: Some("extreme".into()),
-                priority: false,
-            },
-        ])),
+        roles(),
         // The §9.6 staged proposals (bl-dd88): one fresh row beside one stale,
         // so both readings of `fresh` cross and the empty lineage pool the
         // stale one wears is proven rather than assumed; and the listing with
@@ -86,7 +70,8 @@ pub(super) fn answers() -> Vec<Reply> {
                 blocked: None,
                 effort: true,
                 priority: true,
-            },
+            }
+            .into(),
             // The other arm of both tuning booleans, so neither is only ever
             // spelled one way across the surface (bl-23bd).
             ProviderRowView {
@@ -95,7 +80,11 @@ pub(super) fn answers() -> Vec<Reply> {
                 blocked: Some("no login flow".into()),
                 effort: false,
                 priority: false,
-            },
+            }
+            .into(),
+            // A serving machine's row, whose `client` and `row` say what the
+            // name is made of — and that a client's name may carry the joiner.
+            on("lab@annex", "claude-sub", far("claude-sub@lab@annex")),
         ])),
         // The sign-in catalog (bl-c6e3): the same row shape under its own
         // kind, carrying the one row the table above cannot — an oauth preset
@@ -107,14 +96,66 @@ pub(super) fn answers() -> Vec<Reply> {
                 blocked: None,
                 effort: true,
                 priority: true,
-            },
+            }
+            .into(),
             ProviderRowView {
                 name: "openai-chatgpt".into(),
                 fact: "auth oauth2 \u{b7} not signed in".into(),
                 blocked: None,
                 effort: false,
                 priority: false,
-            },
+            }
+            .into(),
+            on("laptop", "claude-sub", far("claude-sub@laptop")),
         ])),
     ]
+}
+
+/// A registered machine's oauth row, signed in there.
+fn far(name: &str) -> ProviderRowView {
+    ProviderRowView {
+        name: name.into(),
+        fact: "auth oauth2 \u{b7} signed in".into(),
+        blocked: None,
+        effort: true,
+        priority: false,
+    }
+}
+
+/// The §9.4 role assignments (bl-2410): a role tuned both ways beside
+/// one tuned neither, so `effort`'s two spellings and `priority`'s two
+/// both cross. A level yog would never WRITE rides here too, because
+/// this answer reports the file rather than asserting a vocabulary.
+fn roles() -> Reply {
+    Reply::Config(ConfigAnswer::Roles(vec![
+        crate::model_pick::RoleModel {
+            role: "worker".into(),
+            provider: "anthropic".into(),
+            model: "claude-sonnet-5".into(),
+            effort: Some("high".into()),
+            priority: true,
+        }
+        .into(),
+        crate::model_pick::RoleModel {
+            role: "compactor".into(),
+            provider: "codex".into(),
+            model: "gpt-5.4-mini".into(),
+            effort: None,
+            priority: false,
+        }
+        .into(),
+        // A role on a registered machine's row: the name whole, and its
+        // two halves beside it.
+        on(
+            "laptop",
+            "codex",
+            crate::model_pick::RoleModel {
+                role: "critic".into(),
+                provider: "codex@laptop".into(),
+                model: "gpt-5.4".into(),
+                effort: Some("extreme".into()),
+                priority: false,
+            },
+        ),
+    ]))
 }

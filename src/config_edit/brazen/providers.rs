@@ -189,7 +189,7 @@ impl ProviderRow {
     }
 
     /// This row as every surface renders it (§8.3, §9.5).
-    fn view(&self) -> ProviderRowView {
+    pub(crate) fn view(&self) -> ProviderRowView {
         ProviderRowView {
             name: self.name.clone(),
             fact: format!("auth {} · {}", self.auth, self.credential_words()),

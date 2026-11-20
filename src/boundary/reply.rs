@@ -77,7 +77,7 @@ mod workflow;
 mod ws_row;
 
 pub use cleared::cleared;
-pub use config_answer::ConfigAnswer;
+pub use config_answer::{ConfigAnswer, Place, Placed};
 pub use config_view::ConfigView;
 pub use decode::decode;
 pub use encode::{encode, refusal};

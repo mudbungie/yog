@@ -72,7 +72,7 @@ fn a_config_gesture_reads_the_sphere_it_names_not_the_seats_own() {
         }),
     ) {
         Ok(Reply::Config(ConfigAnswer::Providers(rows))) => {
-            rows.into_iter().map(|r| r.name).collect::<Vec<_>>()
+            rows.into_iter().map(|r| r.row.name).collect::<Vec<_>>()
         }
         other => panic!("providers answers providers: {other:?}"),
     };
@@ -250,6 +250,7 @@ fn the_roles_read_answers_the_lineages_own_assignments() {
     assert_eq!(rows[1].role, "compactor");
     assert_eq!(rows[1].effort, None);
     assert!(!rows[1].priority);
+    assert!(rows.iter().all(|row| row.at.is_none()), "the server's own");
 }
 
 /// **Nothing set is an answer.** A workspace with no readable config lineage has

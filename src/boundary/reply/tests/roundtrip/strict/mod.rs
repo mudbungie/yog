@@ -241,3 +241,38 @@ fn an_unknown_agent_mark_refuses_by_name() {
     refuses(&seat(json!([7])), "non-string");
     refuses(&seat(json!("notified")), "non-array");
 }
+
+/// **A row's machine and its own spelling ride together** (REMOTE §5.7,
+/// bl-471d): one without the other, or either as anything but a string, is no
+/// reading of where the row lives, on each of the three answers that say it.
+#[test]
+fn a_rows_place_is_two_strings_or_neither() {
+    let provider = |extra: Value| {
+        let mut row = json!({ "name": "sub@laptop", "fact": "f", "blocked": null,
+                              "effort": true, "priority": false });
+        row.as_object_mut()
+            .expect("a row")
+            .extend(extra.as_object().expect("keys").clone());
+        row
+    };
+    for kind in ["providers", "catalog"] {
+        refuses(
+            &rows(kind, provider(json!({ "client": "laptop" }))),
+            "together",
+        );
+        refuses(&rows(kind, provider(json!({ "row": "sub" }))), "together");
+        refuses(
+            &rows(kind, provider(json!({ "client": 7, "row": "sub" }))),
+            "together",
+        );
+        assert!(decode(&rows(kind, provider(json!({})))).is_ok());
+    }
+    refuses(
+        &rows(
+            "roles",
+            json!({ "role": "worker", "provider": "sub@laptop", "model": "m",
+                    "effort": null, "priority": false, "row": "sub" }),
+        ),
+        "together",
+    );
+}

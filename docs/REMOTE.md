@@ -2910,8 +2910,9 @@ and `PROTOCOL` stands at 19: the arm spends bl-d414's three keys and adds none.
   the lookup is exact on `(provider, model)`, so `<row>@<client>` is priced by
   its own entry and is unpriced without one.
 
-**The listings and the sign-in are the same runner.** Nothing is added to any
-of their shapes; what changes is which rows the answers carry.
+**The listings and the sign-in are the same runner.** What changes is which
+rows the answers carry — and, since edition 30 (below), two keys on each such
+row saying what its name is made of.
 
 - **`providers` and `catalog`** answer the server's own rows as today, then,
   for each client registered in the workspace that advertises `bz` **and is
@@ -2941,6 +2942,49 @@ of their shapes; what changes is which rows the answers carry.
 Each wait here is bounded and short, because these are reads answered in place:
 a machine that is `serving` takes the row at once, and one that does not answer
 within a few seconds contributes nothing.
+
+**A row says which machine it is on, and a seat never takes the name apart**
+(bl-471d, **edition 30**; `PROTOCOL` unmoved). The name `<row>@<client>` is
+what selects, and it is read in exactly one place: here, against the
+workspace's registered clients, the longest that fits. A seat cannot repeat
+that reading — neither half is barred from carrying the joiner, and the
+registered set is not in the listing — so two seats that each cut the name
+their own way were two more derivations of one fact, free to disagree with the
+server and with each other. The server states its reading instead. Every row
+of `reply/providers`, `reply/catalog` and `reply/roles` whose provider name
+selects a registered machine carries two more keys:
+
+    {"name": "claude-sub@laptop", "client": "laptop", "row": "claude-sub",
+     "fact": "auth oauth2 · signed in", "blocked": null,
+     "effort": true, "priority": false}
+
+    {"role": "worker", "provider": "claude-sub@laptop",
+     "client": "laptop", "row": "claude-sub",
+     "model": "m", "effort": null, "priority": false}
+
+- **`client`** — the registered machine the row is on, in the word this wire
+  already uses for one (`reply/clients`, `reply/ops`, `invoke`).
+- **`row`** — the row as that machine spells it: the name with its
+  qualification gone, which is what a seat shows under the machine's heading.
+
+**The two ride together, and both are absent on the server's own rows** —
+absent, not null, so a server older than edition 30, which wrote neither, and
+a row that is the server's own are one reading: §3.2's rule 2, *the default is
+the fact before the field existed*. A seat therefore groups by `client`
+(absent: the server), labels by `row` (absent: `name`), and **sends back the
+name whole** — `name` on a listing row, `provider` on a role's — in `/model`,
+`models` and `login`, which read it exactly as before. No seat splits, joins
+or trims a provider name, and against an older server every row reads as the
+server's own under its whole name: nothing hidden, nothing attributed on a
+guess.
+
+**`roles` says it too, because the listing cannot.** A listing holds only the
+machines parked on their read at that moment, so a role set to a row on a
+sleeping laptop is on no listing row a seat could look its machine up in. The
+role's own row answers it from the registry — the same durable reading the
+`bz` arm will make at the call — awake or not. A qualified-looking name whose
+suffix no machine registered here bears carries neither key: it is the
+server's own row, which is what the arm will treat it as.
 
 **The listings and the sign-in, as landed** (bl-7467;
 `src/boundary/config/far.rs` the server's own asks, `src/bz_host/far.rs` the
@@ -5826,6 +5870,10 @@ that truth and no seat could ask for it.
   to end, so the word rides across and a control can show that it does not
   recognize it. `priority` has no such case: `false` and omitted are one fact
   upstream, so there is nothing a stray word could mean but *not asking*.
+- **A role on a registered machine's row says so** (bl-471d, edition 30;
+  §5.7): `client` and `row` beside `provider`, absent together for a role on
+  the server's own row. `provider` stays the whole name and the one thing a
+  seat sends back.
 - **Nothing set is an answer, not a refusal.** A workspace whose config cannot
   be read, or whose `roles:` block is absent or inline, answers the empty list.
   That is the opposite of the §11 `governing` read, which refuses — and the
@@ -6432,7 +6480,9 @@ every "which rows exist" question stay on `providers`, which is also the list
 bl-7467): after the workspace's own, the same listing from every registered
 machine that advertises `bz` and is parked on its read, each row named
 `<row>@<client>` — `{"name": "claude-sub@laptop", "fact": "auth oauth2 ·
-signed in", …}`, where *signed in* is that machine's fact. No shape moved.
+signed in", …}`, where *signed in* is that machine's fact. Since edition 30
+(bl-471d, §5.7) each such row also states `client` and `row`, the two halves
+of its name, and a seat reads those rather than the name.
 
 Seen on a seat: a fresh wall's `/providers` answering nothing, `/catalog`
 listing the oauth presets with *not signed in*, `/login <row>` completing, and

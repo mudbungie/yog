@@ -10,7 +10,7 @@
 
 use serde_json::Value;
 
-use super::super::WsRow;
+use super::super::{Place, Placed, WsRow};
 use crate::binding::WorkspaceKind;
 use crate::boundary::codec::fields::{
     bool_of, i64_of, list_of, opt, opt_str_of, opt_val, pick, str_of, strings_of, u64_of, usize_of,
@@ -185,6 +185,22 @@ pub(crate) fn join_row(v: &Value) -> Result<JoinRow, String> {
         claimant: opt_str_of(o, "claimant")?,
         title: opt_str_of(o, "title")?,
     })
+}
+
+/// A row read by `read`, and its [`Place`] (REMOTE §5.7, bl-471d): `client`
+/// and `row` ride together or not at all, so one without the other refuses.
+pub(crate) fn placed<T>(
+    v: &Value,
+    read: impl Fn(&Value) -> Result<T, String>,
+) -> Result<Placed<T>, String> {
+    let row = read(v)?;
+    let part = |key| v.get(key).map(|part| part.as_str().map(str::to_owned));
+    let at = match (part("client"), part("row")) {
+        (None, None) => None,
+        (Some(Some(client)), Some(Some(row))) => Some(Place { client, row }),
+        _ => return Err("row: `client` and `row` are two strings, together".to_owned()),
+    };
+    Ok(Placed { row, at })
 }
 
 /// The provider facts, the §5.1 #22 credential answer beside them, and the two

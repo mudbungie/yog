@@ -38,7 +38,7 @@ use crate::world::marks;
 use std::path::Path;
 
 use super::dispatch::Deps;
-use super::reply::{ConfigAnswer, Reply};
+use super::reply::{ConfigAnswer, Placed, Reply};
 
 /// The destination datum and its addressing — split at §12's cap (bl-f5f6).
 mod file;
@@ -118,7 +118,7 @@ pub(super) fn models(
     provider: &str,
 ) -> Result<Reply, String> {
     let listed = match far::named(deps, workspace, provider) {
-        Some((row, client)) => far::run(deps, now, &client, &models_line(&row))?,
+        Some(at) => far::run(deps, now, &at.client, &models_line(&at.row))?,
         None => RealBzRunner::resolve(&wall_env(deps, workspace)).list_models(provider),
     };
     read::roster(&listed)
@@ -153,13 +153,20 @@ pub(super) fn read_marks(deps: &Deps, workspace: &Path) -> Reply {
 /// refuses, and the difference is real: *this conversation has no policy* is
 /// never true, while *this workspace has assigned no role* is an ordinary state
 /// a fresh world passes through.
-pub(super) fn roles(workspace: &Path) -> Reply {
+///
+/// **Each row says which machine its provider's name selects** (REMOTE §5.7,
+/// bl-471d) — the reading the `bz` arm will make of it at the call, awake or
+/// not, which a listing of the machines serving right now cannot answer.
+pub(super) fn roles(deps: &Deps, workspace: &Path) -> Reply {
     let text = config_file(workspace, &format!("config/{BRANCH}"), PROVIDERS)
         .map(|b| String::from_utf8_lossy(&b).into_owned())
         .unwrap_or_default();
-    Reply::Config(ConfigAnswer::Roles(crate::model_pick::grammar::roles(
-        &text,
-    )))
+    let placed = |row: crate::model_pick::RoleModel| Placed {
+        at: far::named(deps, workspace, &row.provider),
+        row,
+    };
+    let rows = crate::model_pick::grammar::roles(&text);
+    Reply::Config(ConfigAnswer::Roles(rows.into_iter().map(placed).collect()))
 }
 
 /// The named workspace's brazen locations (§16.2 as amended). **The gesture's

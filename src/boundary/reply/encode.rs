@@ -12,7 +12,7 @@ use serde_json::{Map, Value, json};
 mod bodies;
 
 use super::board::{board_row, fleet_facts};
-use super::rows::{conv_row, join_row, lineage_row, provider_row, role_row, ws_row};
+use super::rows::{conv_row, join_row, lineage_row, placed, provider_row, role_row, ws_row};
 use super::{Reply, prepared_value};
 use crate::registry::mailbox::{Taken, invocation_value};
 use bodies::{delivered, governing, outcome_reply};
@@ -184,9 +184,9 @@ fn config_answer(answer: &super::ConfigAnswer) -> Value {
     use super::ConfigAnswer as A;
     match answer {
         A::File(view) => super::config_view::config(view),
-        A::Providers(rows) => rows_reply("providers", rows.iter().map(provider_row)),
-        A::Catalog(rows) => rows_reply("catalog", rows.iter().map(provider_row)),
-        A::Roles(rows) => rows_reply("roles", rows.iter().map(role_row)),
+        A::Providers(rows) => rows_reply("providers", rows.iter().map(|r| placed(r, provider_row))),
+        A::Catalog(rows) => rows_reply("catalog", rows.iter().map(|r| placed(r, provider_row))),
+        A::Roles(rows) => rows_reply("roles", rows.iter().map(|r| placed(r, role_row))),
         A::Lineages(rows) => rows_reply("lineages", rows.iter().map(lineage_row)),
         A::Models(ids) => rows_reply("models", ids.iter().map(|id| json!(id))),
         A::Proposals(view) => crate::proposals::wire::reply(view),
