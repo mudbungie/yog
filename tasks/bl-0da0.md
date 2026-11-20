@@ -1,7 +1,8 @@
 +++
 title = "Container server cannot see a sibling tool's sign-in: an ambient-credential row reads 'not signed in' under the container unit"
 created = 1794985432
-updated = 1794985432
+updated = 1795157505
+claimant = "Rabid"
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["bug"]
 +++
