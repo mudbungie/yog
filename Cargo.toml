@@ -1,6 +1,6 @@
 [package]
 name = "yog"
-version = "0.0.100"
+version = "0.0.101"
 edition = "2024"
 description = "yog: the standalone server for litany loops — the world, the balls and the conversations, behind one wire"
 license = "MIT"
@@ -384,7 +384,7 @@ clap = { version = "4", features = ["derive"] }
 # that agent alone, and each step's `meta.json` gains `model_mark`, which rides
 # `steps_view::meta_field` unread like every other grows-only field. yog spends
 # none of the new verb here.
-litany = "=0.0.19"
+litany = "=0.0.20"
 libc = "0.2"
 notify = "6"
 # The REMOTE §9.5 wire's TLS (bl-b6fa, approved by operator ruling 2026-08-13).

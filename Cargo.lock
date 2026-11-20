@@ -441,9 +441,9 @@ checksum = "32a66949e030da00e8c7d4434b251670a91556f4144941d37452769c25d58a53"
 
 [[package]]
 name = "litany"
-version = "0.0.19"
+version = "0.0.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "162025667c5221ea49468eae43c7c9c85820a7cc5bf439d64bb2ee25ddadd7a6"
+checksum = "b61ad02cd22e5cc0eea99ccba0ba5eb8596bcfcc3c8241a6fa4335cf00fcfd22"
 dependencies = [
  "brazen",
  "chrono",
@@ -1122,7 +1122,7 @@ dependencies = [
 
 [[package]]
 name = "yog"
-version = "0.0.100"
+version = "0.0.101"
 dependencies = [
  "balls",
  "brazen",
