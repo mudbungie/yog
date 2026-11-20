@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.104](https://github.com/mudbungie/yog/compare/v0.0.103...v0.0.104) - 2026-11-20
+
+### Changes
+
+- Any seat finishes any sign-in: one bare command line per row, the authorize URL crosses as the lane's authorize key, and the pasted code goes back as login's code (edition 31) [bl-0127]
+- A workspace's brazen config carries its own copy of the built-in provider rows, so a corrected built-in never reaches an existing workspace [bl-b1ea]
+
 ## [0.0.103](https://github.com/mudbungie/yog/compare/v0.0.102...v0.0.103) - 2026-11-20
 
 ### Changes
