@@ -2695,6 +2695,31 @@ operator ruling this section does not take. **A bare row never resolves to "the
 one machine that advertises `bz`"**: registering a laptop must not move every
 workspace's model calls onto it.
 
+**A credential that lives on a machine is reached through that machine's
+foot, and there is no second way** (operator ruling 2026-11-19, bl-0da0). A
+bare row answers with what the server's own environment holds, and for a
+workspace that is three things: a credential its own sign-in minted into its
+wall (§8.3), a key written in the wall's own configuration, or a keyless
+endpoint the server can reach. A row whose credential source is a fact about a
+box — a file in an operator's home that a sibling tool keeps, borrowed through
+an `ambient` block, or a program installed there, run by an `exec` row — is
+served by a foot **on that box**, under the qualified name. That holds when
+the box is the server's own. A container deployment sees its state mount and
+nothing else (README *What mounts where*), so such a row under the bare name
+reads `missing`, or names a program the image does not carry, and can never
+do otherwise; while the same row on that box's foot answers. **One provider
+offered twice — dead under the bare name, live under the qualified one — is
+the defect**, and its remedy is subtraction: the workspace's own brazen
+configuration does not carry the row, the foot's does, and the role names
+`<row>@<client>`. Weighed and refused: **mounting the operator's home, or the
+sibling tool's directory, into the container.** It puts an operator's home
+inside the server's reach, it borrows a credential the server cannot refresh,
+and it is a second road to what the foot already serves. Nothing enforces
+this — the server seeds no provider row and judges none (use is attempt) — so
+it is a rule about what an operator writes in two files, stated here once.
+What it leaves open is the sign-in for such a row when it is browser-only and
+nobody sits at the box: bl-0127.
+
 **The turn, in the order it happens.**
 
 1. A seat deposits a message; the server drives the conversation as it always
@@ -2937,7 +2962,11 @@ row saying what its name is made of.
   a phone's included. A browser-only row opens its browser **on the far
   machine**, which is the one box where that redirect can land — §8.3's
   *the browser follows the human* holds only if the human is at that box, and
-  the pane says so.
+  the pane says so. *(Read off brazen for bl-0da0: the far brazen hands
+  the authorize address to a launcher and never prints it, so a box with no
+  browser ends the run at once in brazen's own words, and no seat is shown
+  anything to finish. A far browser-only row is signed in at that box or not
+  at all — bl-0127.)*
 
 Each wait here is bounded and short, because these are reads answered in place:
 a machine that is `serving` takes the row at once, and one that does not answer

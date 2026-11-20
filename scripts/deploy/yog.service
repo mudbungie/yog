@@ -62,6 +62,10 @@ ExecStartPre=-/usr/bin/docker rm -f yog
 # work dir beside it is only §8.1's bare-rung cwd, and it is a mount so work on
 # a checkout outlives the container.
 #
+# Never a third mount for an operator's home or a sibling tool's sign-in: a
+# credential that lives on this box is served by a thrall on this box and
+# reached as `<row>@<client>` (REMOTE §5.7).
+#
 # The git identity is passed by NAME, not by value: the values live in the
 # environment file above, so this file states no identity and the box states
 # it once. yog's substrate commits, and git refuses against an identity-less

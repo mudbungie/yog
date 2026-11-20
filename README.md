@@ -951,6 +951,13 @@ least visible.
 - **No provider credentials, and no world at all.** Both are mounts. A
   credential baked into a layer is a credential published to everyone who can
   pull it.
+- **No operator home, and so no sibling tool's sign-in.** The container sees
+  the state mount and the work dir. A provider row that borrows a credential
+  file from a home directory, or runs a program installed on the box, cannot
+  answer from inside it and is not meant to: it belongs in the brazen
+  configuration of a thrall on that box, and a role reaches it as
+  `<row>@<client>` (REMOTE §5.7, *A credential that lives on a machine*).
+  Never mount a home to make such a row work here.
 - **Nothing an agent runs.** A tool call routes to a registered thrall over the
   real wire or refuses in band (REMOTE §12's ship-inert posture); the server
   runs no tool itself. A toolchain in this layer for agents to use would be
