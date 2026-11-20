@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.102](https://github.com/mudbungie/yog/compare/v0.0.101...v0.0.102) - 2026-11-20
+
+### Changes
+
+- A provider row names its machine as a field, so a seat never splits the qualified name to learn it [bl-471d]
+
 ## [0.0.101](https://github.com/mudbungie/yog/compare/v0.0.100...v0.0.101) - 2026-11-19
 
 ### Changes
