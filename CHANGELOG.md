@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.103](https://github.com/mudbungie/yog/compare/v0.0.102...v0.0.103) - 2026-11-20
+
+### Changes
+
+- The router's wait for a routed tool counts polls, so its two minutes run about three [bl-cb6d]
+- Container server cannot see a sibling tool's sign-in: an ambient-credential row reads 'not signed in' under the container unit [bl-0da0]
+
 ## [0.0.102](https://github.com/mudbungie/yog/compare/v0.0.101...v0.0.102) - 2026-11-20
 
 ### Changes
