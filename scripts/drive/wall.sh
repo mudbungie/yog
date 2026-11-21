@@ -74,8 +74,12 @@
 # DESIGN §3.1's bootstrap constant, `src/names/mod.rs::DEFAULT_NAME` in the tree.
 BOOTSTRAP_WS=home
 wall_dir() { printf '%s/yog/world/walls/%s/brazen' "$1" "$2"; }
-# The row table alone: brazen's provider rows reach the wall through this file
-# and nowhere else (preflight says so of `openai-chatgpt`).
+# The row table alone: the rows brazen does NOT ship reach the wall through this
+# file and nowhere else. A shipped row needs no line here — it enters the table
+# when the credential beside it resolves — and a wall holds only its differences
+# from the shipped rows (DESIGN §16.2, bl-b1ea): this is a verbatim copy of the
+# host's file, so a shipped row restated THERE is restated here, field for
+# field, and outranks the binary under drive. Keep the source to its differences.
 seed_wall_config() {
   [ -n "${2:-}" ] || return 0
   wall=$(wall_dir "$1" "$2")

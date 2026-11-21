@@ -9028,6 +9028,51 @@ already folded it on the read side (`config_edit::FileIo::write`). No seeding,
 no birth-time act, and nothing inherited: an unwritten wall is still not on
 disk.
 
+**A wall's `config.toml` holds only its differences from the built-in rows
+(bl-b1ea, operator ruling).** brazen lays a file's row over the built-in row of
+the same name **field by field**: a field the file states wins, a field it
+leaves out is the built-in's. A field is a top-level key of the row, and a
+table under it (`oauth`, `models`, `ambient`) is ONE field taken whole — a wall
+that states `[provider.oauth]` to change one key of it has replaced the
+built-in's whole table, including any key the built-in gains later;
+`body_defaults` alone is folded key by key. So a file row is a set of pins,
+and every pin outranks the built-in for as long as it stands. A wall that restates a built-in
+row whole therefore holds a second copy of every fact in that row, and the copy
+is the one that is read: when the ChatGPT-subscription row's model-listing pin
+was corrected upstream, every wall that had restated the row went on listing
+the short catalogue, on a binary that carried the fix. The rule that dissolves
+it is the single-source one — the built-in is the home of a built-in's facts,
+and a wall states what it changes:
+
+- **A row brazen does not ship** is written whole. It is the workspace's own.
+- **A change to a built-in row** is that row's `name` and the changed fields,
+  and nothing else. Changing one key of a table costs restating that table,
+  which is a pin on all of it and worth a comment saying which key was meant.
+- **Naming a built-in is itself a difference, and sometimes the only one
+  wanted.** A named row is in the routing table outright and ahead of every
+  row the file does not name; an unnamed built-in is in it only while a
+  credential resolves for it, and a keyless one (`auth = "none"`) has no
+  credential to resolve, so it enters only by name. A row that is `name` alone
+  is the whole of that statement.
+
+**yog writes none of this and cannot repair it.** No yog code path puts a row
+in a wall — the born-empty rule above — so a restated row is always a hand's:
+a whole config pasted through `/config brazen`, or a file copied in from
+another wall or from a machine's own brazen config. `/help config` says the
+rule at the door those hands use. And a copy already on disk cannot be mended
+in code, because the two cases a mend would have to separate are the same
+bytes: a field that still equals the built-in is harmless today and could be
+dropped, but it is not the one that hurts; the one that hurts equals an
+**older** built-in, and nothing in the file says whether the operator pinned
+that value or merely inherited it. yog holds no history of brazen's table to
+ask, and a guess in either direction is a silent change to a workspace's
+routing. So an existing wall is brought under the rule by reading it against
+the built-in table once, by hand: delete every field of a built-in-named row
+that the operator did not mean as a change, and delete the row itself unless
+its name is doing the work the last bullet describes. `scripts/drive/wall.sh`
+copies a machine's own brazen config into a scratch world's wall verbatim; it
+is a fixture of that hand's file and inherits whatever the file restates.
+
 **"Nothing can seed a wall before the birth" was this section's stated reason,
 and it holds only of a MINTED leaf (bl-1851).** A wall is keyed by a *name*, so a
 hand that knows the name can lay one whenever it likes — and the empty-world

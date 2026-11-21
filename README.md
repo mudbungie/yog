@@ -304,7 +304,11 @@ keyed by the name the workspace is created under, so nothing can seed it
 earlier —
 so a newborn workspace answers brazen's shipped provider rows and nothing else;
 custom rows and sign-ins are per-workspace acts you perform after birth, which
-is what keeps a corporate sphere's logins from shining into a personal one. A
+is what keeps a corporate sphere's logins from shining into a personal one.
+**Write only what differs from a shipped row** (DESIGN §16.2): a row named after
+one is laid over it field by field, so a field you restate outranks the shipped
+value for good, and a later correction to the shipped row never reaches that
+workspace. A
 seat inside *no* workspace has no wall, so `yog bz …` there refuses (exit 64)
 rather than reaching for machine state — including a shell the escape hatches
 below dropped into, since they hand out the world, and the world names no

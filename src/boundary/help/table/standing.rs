@@ -82,7 +82,10 @@ pub const STANDING: &[HelpRow] = &[
                  entire new contents. The destination decides how it lands: `brazen` is \
                  validated by bz before it is written, into the seat's own workspace (its \
                  providers, sign-ins and model cache belong to that workspace and nowhere \
-                 else); `models`, `cadence` and a `workflow` are refused if they name a \
+                 else), and it holds only what differs from bz's built-in rows: a row named \
+                 after a built-in is laid over it field by field, so write the fields you are \
+                 changing and no others, because a field restated here outranks the built-in \
+                 for good and a later correction to the built-in never reaches this workspace; `models`, `cadence` and a `workflow` are refused if they name a \
                  provider row outside the workspace's routing table (`/providers`); a lineage (`branch` advances one, `fork` \
                  starts one from another, `orphan` starts a fresh one) is committed by \
                  `litany config` on the seat's workspace. The text is everything \
