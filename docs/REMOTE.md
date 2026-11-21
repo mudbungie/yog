@@ -3163,8 +3163,7 @@ What the tree was found to disagree with, and how each was settled:
 
 - **The arm's two minutes were three.** Corrected in the code and above (*The
   `bz` arm, as landed*): the patience is clocked. The router's wait for an
-  ordinary tool (§5.3) counts polls the same way and is filed (bl-cb6d), not changed
-  here.
+  ordinary tool (§5.3) counted polls the same way and is clocked since bl-cb6d.
 - **A suspended machine is still `serving` until its read's hold runs out.**
   The predicate is the server's own claim on a parked read, and a machine
   that stops without closing its connection keeps that claim for the rest of

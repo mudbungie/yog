@@ -20,8 +20,9 @@
 //! machine is connected: a tool host holds its connection only while it is
 //! waiting, so it is *absent* for the whole time it is busy, and a presence
 //! test would refuse the second call of a host that is certainly there. What a
-//! machine that never answers earns is this loop running out, in band, naming
-//! how long it waited.
+//! machine that never answers earns is this loop running out, in band. The
+//! bound is [`Budget::span`] of the clock, measured from the queueing, however
+//! many polls fit in it.
 //!
 //! **One stop check, and it is [`ask`]'s** (bl-3a88). Two waits nest here — the
 //! poll loop below and, inside each of its round trips, the wait on the server —
@@ -67,17 +68,23 @@ pub fn invoke(
         |request: &Value| routed(&site.state_root, site.budget, request, &entry.client, stop);
     let invocation = routed(&ask)?.0;
     let poll = json!({ "op": "capture", "invocation": invocation });
-    for _ in 0..site.patience.waits {
+    // The patience is a span of the clock, not a count of polls (bl-cb6d): a
+    // poll is a deposit round trip on top of its tick, so a count of them
+    // waits longer than the bound it was given.
+    let asked = std::time::Instant::now();
+    loop {
         if let Some(capture) = routed(&poll)?.1.capture {
             return Ok(capture);
         }
+        if asked.elapsed() >= site.patience.span() {
+            return Err(format!(
+                "client {:?} did not answer invocation {invocation} in time; \
+                 it may be offline, or the tool is still running there",
+                entry.client
+            ));
+        }
         std::thread::sleep(site.patience.tick);
     }
-    Err(format!(
-        "client {:?} did not answer invocation {invocation} in time; \
-         it may be offline, or the tool is still running there",
-        entry.client
-    ))
 }
 
 /// One `Reply::Routed` round trip: the handle, and the slot as it stands — the

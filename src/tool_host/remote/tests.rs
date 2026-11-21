@@ -43,7 +43,7 @@ fn the_poll_waits_for_a_capture_that_is_not_there_yet() {
     );
     let mut s = site(root.path(), budget());
     s.patience = Budget {
-        waits: 8,
+        waits: 60_000,
         tick: Duration::from_millis(1),
     };
     let got = invoke(&s, &entry(), &json!({"command": "ls"}), None, &quiet());
@@ -61,11 +61,14 @@ fn the_poll_waits_for_a_capture_that_is_not_there_yet() {
 
 /// **The deadline is the visible refusal** (REMOTE §5): a machine that never
 /// answers costs the caller's patience and then a sentence naming the handle
-/// it was waiting on — never a hang.
+/// it was waiting on — never a hang. The bound is a span of the clock and not
+/// a count of polls (bl-cb6d), so a zero span is spent by the one look every
+/// call gets: one queue and one poll are scripted, and a second poll would
+/// find no server and say a different sentence.
 #[test]
 fn a_machine_that_never_answers_runs_out_and_says_so() {
     let root = TempDir::new().expect("tmp");
-    let (handle, _seen) = scripted(
+    let (handle, seen) = scripted(
         root.path(),
         &[
             json!({"ok": true, "kind": "routed", "invocation": "inv-7"}),
@@ -74,12 +77,13 @@ fn a_machine_that_never_answers_runs_out_and_says_so() {
     );
     let mut s = site(root.path(), budget());
     s.patience = Budget {
-        waits: 1,
-        tick: Duration::ZERO,
+        waits: 0,
+        tick: Duration::from_millis(500),
     };
     let e = invoke(&s, &entry(), &json!({}), None, &quiet()).expect_err("nothing answered");
     handle.join().expect("server");
-    assert!(e.contains("inv-7") && e.contains("laptop"), "{e}");
+    assert!(e.contains("inv-7") && e.contains("in time"), "{e}");
+    assert_eq!(seen.iter().count(), 2, "one queue, one poll");
 }
 
 /// A stop landing mid-run ends the wait, which is the router obligation litany
@@ -98,7 +102,7 @@ fn a_stop_ends_the_wait_on_the_tool() {
     let stop = AtomicBool::new(false);
     let mut s = site(root.path(), budget());
     s.patience = Budget {
-        waits: 400,
+        waits: 60_000,
         tick: Duration::from_millis(1),
     };
     let got = std::thread::scope(|scope| {
