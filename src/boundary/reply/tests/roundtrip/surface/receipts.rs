@@ -192,12 +192,13 @@ pub(super) fn receipts() -> Vec<Reply> {
     .collect()
 }
 
-/// The sign-in's standing (REMOTE §8.3, bl-c285) at each of its three moments,
+/// The sign-in's standing (REMOTE §8.3, bl-c285) at each of its four moments,
 /// because a fixture that only ever spelled the live one would prove only that
-/// the live one crosses: a run that has said nothing, a run mid-flow — both
-/// stream tags, since bz writes its human-facing flow to stderr and its
-/// machine-readable output to stdout — and a settled non-zero exit carrying the
-/// §8.3 run-by-hand fallback.
+/// the live one crosses: a run that has said nothing, a run mid-flow, a run
+/// **waiting for a code** — both stream tags, since bz writes its human-facing
+/// instruction to stderr and the authorize URL to stdout, and the URL again as
+/// the `authorize` key a seat acts on (bl-0127) — and a settled non-zero exit
+/// carrying the §8.3 run-by-hand fallback.
 fn logins() -> Vec<Reply> {
     let line = |text: &str, err: bool| crate::cli_outbound::StreamedLine {
         text: text.to_owned(),
@@ -206,20 +207,25 @@ fn logins() -> Vec<Reply> {
     vec![
         Reply::Login(crate::login::LoginView::default()),
         Reply::Login(crate::login::LoginView {
-            lines: vec![
-                line("open https://provider.invalid/auth", true),
-                line("{\"ready\":true}", false),
-            ],
-            outcome: None,
-            fallback: None,
-        }),
-        Reply::Login(crate::login::LoginView {
             lines: vec![line(
-                "this provider has no device endpoint; use `--browser`",
+                "open https://provider.invalid/device and enter CODE-1234",
                 true,
             )],
-            outcome: Some(78),
-            fallback: Some("yog exec --ws /ws bz --login --provider acme --browser".into()),
+            ..Default::default()
+        }),
+        Reply::Login(crate::login::LoginView {
+            lines: vec![
+                line("https://provider.invalid/authorize?state=s", false),
+                line("open the URL above in any browser and sign in", true),
+            ],
+            authorize: Some("https://provider.invalid/authorize?state=s".into()),
+            ..Default::default()
+        }),
+        Reply::Login(crate::login::LoginView {
+            lines: vec![line("login failed: no code was pasted", true)],
+            outcome: Some(77),
+            fallback: Some("yog exec --ws /ws bz --login --provider acme".into()),
+            authorize: None,
         }),
     ]
 }

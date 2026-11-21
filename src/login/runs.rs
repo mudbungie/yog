@@ -1,48 +1,56 @@
 //! **Where a sign-in lives while it runs** (REMOTE §8.3, DESIGN §8.3 as
-//! amended by bl-61bf; bl-c285): the server's map of live `bz --login`
-//! children, **one per workspace × provider**.
+//! amended by bl-61bf; bl-c285): the server's map of live sign-ins, **one per
+//! workspace × provider**.
 //!
-//! The flow is a boundary act now, not a pane's own spawn, and that moves two
+//! The flow is a boundary act, not a pane's own spawn, and that moves two
 //! facts here. The child runs where the *wall* is, so the credential lands in
 //! the sphere whose agents read it (§16.2) whichever box the seat is on; and
 //! nothing waits for it — the intake is one thread for the whole world (REMOTE
 //! §3), so [`Runs::start`] answers the run's standing at once and every later
 //! look is a re-read of that same standing.
 //!
-//! **The flow is read once, by the act** (§8.3 rule 1 as amended by bl-61bf;
-//! bl-7c9f, bl-7467). Which flow a row is fired in is the row's own `device`
-//! column, and [`flow_of`] is the one branch over it. The act hands it the
-//! sign-in catalog of the brazen that will run the sign-in — this workspace's
-//! own for a bare row, the named machine's for `<row>@<client>` (REMOTE
-//! §5.7) — so no surface carries a selector and nothing downstream re-derives
-//! it. A qualified row is spawned exactly as a bare one is: the child is the
-//! `bz` arm, and the arm is what makes the call on the far machine
-//! ([`crate::bz_host::far`]), so every rule below — the replacement, the
-//! reader thread, the outcome row — holds for both with no second path.
+//! **Nothing here chooses a flow** (§8.3 rule 1 as amended by bl-0127). Every
+//! row is fired the same bare command line and its own brazen serves whichever
+//! sign-in it has — this workspace's for a bare row, the named machine's for
+//! `<row>@<client>` (REMOTE §5.7), reached by the `bz` arm
+//! ([`crate::bz_host::far`]) with no second path. So the act reads no catalog
+//! before it spawns, and a machine that does not answer is a line in the lane
+//! rather than a refusal at the door.
 //!
-//! **A second `Login` on a live pair terminates and replaces it.** The
-//! operator's own restart is the cancel, so there is no cancel verb; the
-//! termination is not best-effort housekeeping but a precondition — an
-//! abandoned loopback flow still holds the row's redirect port, and the
-//! replacement would lose the bind. So the old run is dropped *under the lock,
-//! before the new child is spawned* ([`Stream`](crate::cli_outbound::Stream)'s
-//! own drop is the SIGTERM-then-SIGKILL, confined to `cli_outbound::sys` —
-//! AGENTS rule 3), and the intake pays that grace rather than the next
-//! sign-in paying a lost port.
+//! **A `Login` naming no code starts the pair's sign-in over; one naming a
+//! code finishes the run that is waiting for it.** Those are the act's only
+//! two meanings and each is its own invariant:
 //!
-//! **A reader thread per run, and lanes that only read.** Nothing else polls
-//! the child: two seats may hold lanes on one run and a run with no lane at all
-//! still has to settle, because settling is what writes the one `ops.jsonl`
-//! outcome row (§4.2, `LoginRun::finalize`'s one-source rule). So the thread
-//! owns the *cadence* and the map owns the *run*, and a lane reads the buffer.
-//! The thread retires the moment its run settles or stops being its run, which
-//! is what a replacement does to it — the serial is that test, and it needs no
-//! second flag for anyone to forget to set.
+//! - *Start* terminates and replaces whatever stood. The operator's own
+//!   restart is the cancel, so there is no cancel verb, and of any number of
+//!   starts only the newest can finish — the row's brazen parks one verifier
+//!   per row and each start overwrites it (brazen's pasted-code sign-in). Two seats
+//!   starting the same sign-in therefore share one run and one URL: the
+//!   earlier lane ends, its re-ask replays the newer run, and a code obtained
+//!   at the older URL is refused by the brazen that issued it.
+//! - *Finish* is taken only by a run standing with an `authorize` URL. A code
+//!   handed to a pair with no such run — nothing started, a device flow, a run
+//!   already settled, a server that restarted and forgot — is refused here,
+//!   naming the restart, and touches nothing. Which seat sends it is not
+//!   asked: every seat on the workspace is the operator, and the code is
+//!   worthless to anything but the verifier it was issued against.
 //!
-//! **A settled run stays until it is swept**, so re-asking replays: a dropped
-//! lane, a re-attached seat and a finished sign-in are one case. The bound is
-//! the §5.3 mailbox's own — an hour — swept at the one moment the map can
-//! grow, exactly as `registry::mailbox` sweeps its slots.
+//! **A reader thread per command line, and lanes that only read.** Nothing
+//! else polls the child: two seats may hold lanes on one run and a run with no
+//! lane at all still has to settle, because settling is what writes the
+//! `ops.jsonl` outcome row (§4.2, `LoginRun::finalize`'s one-source rule). So
+//! the thread owns the *cadence* and the map owns the *run*, and a lane reads
+//! the buffer. The thread retires the moment its command settles, stands
+//! waiting, or stops being its run — the serial is that test, re-stamped by a
+//! replacement and by a redeemed code alike, and it needs no second flag for
+//! anyone to forget to set.
+//!
+//! **A run stays until it is swept**, settled or waiting, so re-asking
+//! replays: a dropped lane, a re-attached seat and a finished sign-in are one
+//! case. The bound is the §5.3 mailbox's own — an hour from the START — swept
+//! at the one moment the map can grow, exactly as `registry::mailbox` sweeps
+//! its slots. An abandoned waiting run costs nothing meanwhile: no child, no
+//! port, and brazen's parked verifier lapses on its own in ten minutes.
 //!
 //! The lock itself is the crate's chokepoint's (AGENTS rule 7,
 //! [`state::LoginCell`](crate::state::LoginCell)); what lives here is the map
@@ -52,9 +60,8 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
-use super::{Flow, LoginRun, LoginView};
+use super::{LoginRun, LoginView};
 use crate::cli_outbound::{Binary, Cli};
-use crate::config_edit::brazen::ProviderRow;
 use crate::state::{LoginCell, lock_logins as lock_runs};
 
 /// How often a reader thread drains its child. The §7.2 follower's own period,
@@ -63,7 +70,7 @@ use crate::state::{LoginCell, lock_logins as lock_runs};
 const READ_TICK: Duration = Duration::from_millis(16);
 
 /// How long a run survives after it began: an hour, the §5.3 mailbox bound. It
-/// is the *whole* run's age and not its idle time, because a browser flow the
+/// is the *whole* run's age and not its idle time, because a sign-in the
 /// operator walked away from is exactly the thing being bounded.
 const TTL_SECONDS: i64 = 3600;
 
@@ -121,56 +128,54 @@ impl Runs {
         }
     }
 
-    /// **Start the sign-in for this pair** and answer its standing at once.
+    /// **Start this pair's sign-in — or, given a `code`, finish the one that
+    /// is waiting for it** — and answer its standing at once (module doc).
     ///
     /// `world` is the composed world and `workspace` the gesture's own resolved
     /// path (bl-fcd5, never a focus): the wall is folded ONCE, by the very lens
     /// `boundary::config` reads providers through
     /// ([`wall::env`](crate::world::wall::env)), and laid on the child by that
     /// lens's own inverse ([`wall::pairs_of`](crate::world::wall::pairs_of)) —
-    /// so the sphere the flow is read in and the sphere the child writes its
-    /// credential into are one value, not two derivations. A spawn failure
-    /// refuses in bz's own words and has already left its synthetic
-    /// `ops.jsonl` row (`login::start`).
+    /// so the sphere the child writes its credential into is the one the
+    /// gesture named. A spawn failure refuses in bz's own words and has
+    /// already left its synthetic `ops.jsonl` row (`login::start`).
     pub fn start(
         &self,
         world: &crate::xdg::Env,
         workspace: &Path,
         provider: &str,
-        flow: Flow,
+        code: Option<&str>,
         state_root: &Path,
         ts: &str,
     ) -> Result<LoginView, String> {
         let now: i64 = ts.parse().unwrap_or(0);
         let key = (workspace.to_path_buf(), provider.to_owned());
-        // The wall lens the act read the flow through is the child's own env.
         let wall = crate::world::wall::env(world, workspace);
-        // **The display the browser opens on** (bl-bd71): the service's own
-        // environment names none, so the child is handed what the session's
-        // sockets name — and nothing on a box that has no session.
-        let bz = self
-            .bz
-            .and_env(crate::world::wall::pairs_of(&wall))
-            .and_env(super::display::discover(&wall));
+        let bz = self.bz.and_env(crate::world::wall::pairs_of(&wall));
         let mut board = lock_runs(&self.cell);
-        // The sweep, at the one moment the map can grow — and the replacement,
-        // *before* the spawn, so the port a live flow holds is released rather
-        // than contended (module doc).
+        // The sweep, at the one moment the map can grow.
         board.live.retain(|_, slot| now - slot.at <= TTL_SECONDS);
-        board.live.remove(&key);
-        let run = super::start(&bz, provider, state_root, ts, Some(workspace), flow)
-            .map_err(|e| e.to_string())?;
         board.seq += 1;
         let serial = board.seq;
-        let view = run.view();
-        board.live.insert(
-            key.clone(),
-            Slot {
-                run,
-                serial,
-                at: now,
-            },
-        );
+        let view = if let Some(code) = code {
+            let waiting = |slot: &&mut Slot| slot.run.view().authorize.is_some();
+            let Some(slot) = board.live.get_mut(&key).filter(waiting) else {
+                return Err(nothing_waiting(provider));
+            };
+            slot.run.redeem(&bz, code, ts).map_err(|e| e.to_string())?;
+            slot.serial = serial;
+            slot.run.view()
+        } else {
+            // The replacement drops the old run BEFORE the spawn: its child is
+            // terminated first, never left racing its successor.
+            board.live.remove(&key);
+            let run = super::start(&bz, provider, state_root, ts, Some(workspace))
+                .map_err(|e| e.to_string())?;
+            let view = run.view();
+            let at = now;
+            board.live.insert(key.clone(), Slot { run, serial, at });
+            view
+        };
         drop(board);
         let (runs, tick) = (self.clone(), self.tick);
         // The look comes AFTER the wait, which is not a nicety: a child that
@@ -190,8 +195,9 @@ impl Runs {
 
     /// One look by the reader thread that owns `serial`: drain what the child
     /// produced into the buffer, and say whether this run is still its to read.
-    /// `false` once it settles **or** once the slot is another run's — which is
-    /// how a replacement retires the thread it replaced, with no flag to set.
+    /// `false` once the command settles or stands waiting, **or** once the
+    /// slot's serial is another's — which is how a replacement and a redeemed
+    /// code each retire the thread before them, with no flag to set.
     fn drain(&self, key: &Key, serial: u64) -> bool {
         let mut board = lock_runs(&self.cell);
         match board.live.get_mut(key) {
@@ -218,8 +224,7 @@ impl Runs {
         let view = board.live.get(&key)?.run.view();
         Some(LoginView {
             lines: view.lines.get(sent..).unwrap_or_default().to_vec(),
-            outcome: view.outcome,
-            fallback: view.fallback,
+            ..view
         })
     }
 
@@ -245,22 +250,13 @@ impl Runs {
     }
 }
 
-/// **Which flow `provider` is fired in**, off the catalog of the brazen that
-/// will run it — the §8.3 rule 1 branch, and the whole of it. A row declaring a
-/// device endpoint is fired headless; every other row, and a name the table does
-/// not carry at all, gets `--browser`. The unknown name is not a special case:
-/// `--browser` is the floor every oauth row can serve, so a row nothing declared
-/// anything about is fired the way an undeclared row is, and bz refuses it in
-/// its own words if it cannot serve that either.
-pub(crate) fn flow_of(rows: &[ProviderRow], provider: &str) -> Flow {
-    let headless = rows
-        .iter()
-        .any(|row| row.name == provider && ProviderRow::headless_login(row));
-    if headless {
-        Flow::Device
-    } else {
-        Flow::Browser
-    }
+/// The refusal a code earns where no run is waiting for one (module doc):
+/// the fact, and the one act that changes it.
+fn nothing_waiting(provider: &str) -> String {
+    format!(
+        "no sign-in for {provider:?} is waiting for a code here — start one with /{} {provider}",
+        crate::boundary::codec::LOGIN
+    )
 }
 
 #[cfg(test)]

@@ -4163,7 +4163,7 @@ because there is only one `Prompt` door and one wall to judge.
 | Delete workspace (§3.6 — typed-name confirm; refused while any agent is Live/InFlight) | `bl unclaim <id> --as <name>` per live bound ball (project), then the `ui.json` prune, then the dir removal logged as `["yog-step","delete-workspace"]` | short, piped ×N + the §4.2 non-spawn step line; the §8.1 planner idiom, order load-bearing (§3.6) |
 | Delete conversation (§3.6 one deep, bl-f17a — confirm scaled to blast radius; refused while any member is Live/InFlight) | `litany delete <ws> <agent>` (+ `--children` iff the typed name armed it); the dialog's census is `litany delete <ws> <agent> --children --dry-run` beforehand (unlogged — a read, the `bl conf` seam's idiom) | short, piped; a clean removal then prunes the subtree's `seen` keys (`ui.json`, §4.1) |
 | Refresh models | `bz --list-models --provider <row> --json` | **in-process** through the linked brazen — `RealBzRunner`, which since bl-7942 is every caller there is (§8.5's `Models`, bl-dff8). The streamed-piped shape stays defined (§8's third class) because §8.3's sign-in still needs it, and `--list-models`' own use of it went with the surface that streamed it; the logical argv logged is unchanged |
-| Login provider | `bz --login --provider <row>`, plus `--browser` on a row serving no device flow (`Action::Login`; the remedy an auth-failed step names) | streamed-piped (§8.3); same physical retarget. The row is offered only when brazen's table says `auth = "oauth2"` (§8.3 as amended, bl-b4e5), and the flag follows the `device` column of the **sign-in catalog** — one read, by the act (§8.3 rule 1 as amended by bl-61bf, landed bl-7c9f; the catalog rather than the table since bl-7467, REMOTE §5.7, because a preset nobody has signed into is absent from the table and is the row a first sign-in names). A row named `<row>@<client>` is read off that machine's catalog and signed in there. The spawn's locus is the server's, as a boundary act (REMOTE §8.3, landed bl-c285) |
+| Login provider | `bz --login --provider <row>` for every row, and `bz --login --provider <row> --code=<pasted>` as the second command line of a pasted-code sign-in (`Action::Login`, without and with its `code`; the remedy an auth-failed step names) | streamed-piped (§8.3); same physical retarget. The row is offered only when brazen's table says `auth = "oauth2"` (§8.3 as amended, bl-b4e5). No flow word and no read before the spawn (§8.3 rule 1 as amended by bl-0127): the row's own brazen picks the flow. A row named `<row>@<client>` is fired identically and signed in on that machine by the `bz` arm (REMOTE §5.7). The spawn's locus is the server's, as a boundary act (REMOTE §8.3, landed bl-c285) |
 
 A short verb is **piped inside the gesture** — `actions::verbs::run_logged`
 runs it to completion and appends its outcome — so there is no window for a
@@ -4232,44 +4232,51 @@ knows the workspace, and no downstream seat has to be told.*
   box the browser is on — a sign-in fired at the seat wrote the seat's wall
   and left the host's empty, which is the live defect the ruling closes. The
   act and its lane **landed at bl-c285**: `Action::Login { workspace, provider }`
+  (with an optional `code` since bl-0127, rule 1 below)
   starts the run and answers its standing without waiting, and the follow-class
   `Query::LoginTail { workspace, provider }` streams it (`src/boundary/login.rs`,
   `src/login/runs.rs`). The surface that used to spawn it in process is gone with
   the window (bl-7942); consuming the pair at a seat is the seat crate's
   bl-e3c5. Nothing
   credential-shaped crosses the boundary in either direction: yog carries the
-  flow, bz owns the credential (§5.1 #22), and the streamed lines are the whole
-  of what moves.
+  flow, bz owns the credential (§5.1 #22), and what moves is the streamed
+  lines outbound and — for a pasted-code sign-in (rule 1) — one authorization
+  code inbound, which is single-use and redeemable only with a verifier that
+  never leaves the box holding the row.
 
   **The flow-selection rule and the capability source (bl-b4e5), three
   rules:**
 
-  1. **The flow is the row's own capability (amended bl-61bf): the device
-     flow where the row declares a device endpoint, the browser flow
-     everywhere else.** The rule was "always `--browser`", argued from the
-     desktop — a GUI with a browser at hand — and the argument died when the
-     workspace stopped being the box's own (REMOTE §8.2): the loopback
-     AuthCode flow (RFC 8252) completes only where the browser can reach bz's
-     loopback, which for a server-side sign-in (REMOTE §8.3) is the server's
-     box and not the seat's. The device flow (RFC 8628) is the
-     seat-independent one — bz needs no browser and binds nothing; the URL and
-     user code stream to whichever seat asked; the human completes in any
-     browser anywhere — so where a row can serve it, it is the flow that
-     completes from every seat, the server's own box included (a co-located
-     seat can open the verification URL it is handed, so that case keeps its
-     one-gesture feel). `authorize_url` and `token_url` are
-     *required* fields of every `oauth` block while the `device` block is
-     optional, so `--browser` remains the floor every oauth row can serve; a
-     browser-only row signed in from a remote seat gets the stated loopback
-     remedy (REMOTE §8.3), never a silent hang. Still no flow selector on any
-     surface and nothing yog guesses at: the branch is one row-declared fact,
-     read off brazen's own table (rule 2). **Landed at bl-7c9f**: the branch is
-     `login::Flow`, chosen ONCE in `login::runs::Runs::start` off the same wall
-     lens the spawn folds through, and the `--browser` word is dropped exactly
-     where `ProviderRow::headless_login` says the row declares a device
-     endpoint. The run-by-hand fallback is the argv that was attempted in the
-     flow it was attempted in (rule 3), so it stays a command that would
-     actually succeed.
+  1. **The flow is the row's own capability, and yog does not read it
+     (amended bl-0127; before it bl-61bf): one command line for every row,
+     and the row's own brazen picks the flow.** yog fires the bare `bz --login
+     --provider <row>` and never `--browser`. brazen's default is the sign-in a
+     human finishes somewhere else, and a server can offer a seat no other
+     kind: a row declaring a device endpoint answers the device flow (RFC 8628)
+     — bz binds nothing, the URL and user code stream to whichever seat asked,
+     the human completes in any browser anywhere — and a row declaring none
+     answers the **pasted-code sign-in**: bz prints the authorize URL on stdout
+     and exits 0 with nothing stored, and the code the human copies at that URL
+     comes back as the same act carrying a `code`, fired as a second command
+     line into the same run (REMOTE §8.3 is the authority for the whole
+     exchange and its wire). **A zero exit that wrote to stdout is a run
+     waiting for a code, not a sign-in** — the one thing `login::run` reads
+     off a child beyond its lines and its exit. The history, because both
+     earlier rules were argued and both died: the rule was first "always
+     `--browser`", argued from the desktop — a GUI with a browser at hand —
+     and that died when the workspace stopped being the box's own (REMOTE
+     §8.2), since the loopback AuthCode flow (RFC 8252) completes only where
+     the browser can reach bz's loopback. bl-61bf then made it "device where
+     the row declares one, `--browser` everywhere else", read off the row's
+     `device` column — which left every row with no device endpoint finishable
+     only by a human at the box that holds it, and not at all on a box with no
+     browser, where bz died before printing its URL. Still no flow selector on
+     any surface and nothing yog guesses at; there is now not even a branch:
+     `login::Flow`, `runs::flow_of`, `ProviderRow::headless_login`, the act's
+     catalog read and `login::display` (the display handed to a browser child)
+     are all deleted. A co-located seat loses nothing it is owed — it opens
+     the URL it is handed, as it does for a device row — and the run-by-hand
+     fallback is the command that starts the sign-in (rule 3).
   2. **Loginability is brazen's `auth` column, never a yog-side
      reclassification.** `bz --list-providers --json` projects
      `{name, protocol, auth, credential}` per row; brazen's own resolve
@@ -4280,16 +4287,14 @@ knows the workspace, and no downstream seat has to be told.*
      is a row it can only refuse: those rows get **no Login button at all** —
      see rule 4. **The projection carries the device-endpoint fact too**
      (bl-7c9f, over the brazen release that answered the bl-c5fe ask): the
-     listing's `device` column names the headless flow a row serves in brazen's
-     own `device.style` spelling, and rule 1 as amended (bl-61bf) makes that
-     the flow key. A style rather than a boolean, because the endpoint's
-     grammar is the row's fact too — brazen selects the wire from it — while
-     yog's one reader asks only whether there is one. A row naming none, and a
-     listing written before the column existed, both read as browser-only: an
-     unanswered question grants no capability, exactly as it refuses none.
-     **The listing read is the sign-in catalog** (REMOTE §9.27; bl-7467): the
-     routing table omits a preset nobody has signed into, which is the row a
-     first sign-in names, so read off the table it was fired `--browser`.
+     listing's `device` column names the device-code wire a row serves in
+     brazen's own `device.style` spelling. A style rather than a boolean,
+     because the endpoint's grammar is the row's fact too — brazen selects the
+     wire from it. It was the flow key under bl-61bf's rule 1; since bl-0127
+     nothing in yog branches on it and it crosses to the seats as description.
+     **The listing a seat chooses a row from is the sign-in catalog** (REMOTE
+     §9.27; bl-7467): the routing table omits a preset nobody has signed into,
+     which is the row a first sign-in names.
   3. **The streamed class carries stderr, tagged.** bz writes its entire
      human-facing login flow to *stderr* (stdout is reserved for its
      machine-readable discovery output): the authorize URL, and on failure the
@@ -4297,9 +4302,12 @@ knows the workspace, and no downstream seat has to be told.*
      each line with its origin (§8), so a consumer that shows the flow gets
      both and a consumer that parses (`bz --list-models --json`, §9.4) filters
      to stdout. The `ops.jsonl` outcome row's stderr is derived from those same
-     lines — the log and the lane can never carry different text. The fallback command
-     is the exact argv attempted, `--browser` included, so what is offered to
-     run by hand is a command that would actually succeed.
+     lines — the log and the lane can never carry different text. **One line is
+     stdout's, by brazen's contract** (bl-0127): the authorize URL of a
+     pasted-code sign-in, the one product of that command line, which is how
+     rule 1 tells a run waiting for a code from a sign-in. The fallback command
+     is the one that STARTS the sign-in, a failed finish included — a refused
+     code is spent or foreign, and offering it again by hand could not help.
   4. **A row states its state in words; nothing is offered-but-inert
      (bl-402f).** The roster once carried ten `Login <provider>` entries and
      dimmed the eight it could not serve, with the reason out of sight — so
@@ -8265,7 +8273,7 @@ that named one of its files; the rule it taught is not.)
 | `src/boundary/help/table/offer.rs` | the four offer pages |
 | `src/boundary/line{,/args,/parse,/queries,/spell,/spell/queries,/config,/config/proposals,/verbs,/verbs/control,/balls,/fork,/fan,/tools,/workflow,/spend}.rs` | the §8.5 **line**: the slash spelling of the boundary — the `/`-marker and its `//` escape, and the higher-order help rule read once above the verb match; the argument grammar (context reads that refuse by name, the `--flag value…` split, and — since bl-06a1 — `goal_or_prefill`, the one home of the §3.3 rule that `/prompt`'s goal is optional and falls to `prepared.goal` whole when nothing is typed: a **default, never a concatenation**, because a composer seat sends the edited whole and a `/prompt` that prepended would fire every composer-typed prefill twice); the reader — the mutating verbs, chaining to `queries`, the populating half in its own file since bl-6233 (it was a function inside `parse` from bl-0164) along §4.8's taxonomy, the same seam the codec and the help table are cut on; and the writer whose exhaustive match is the compile gate; `config` the §9 family's own grammar, reader and writer in one home, whose destination is words and whose tail is the file verbatim (bl-3f46) — and (bl-0164) whose *absent* tail, on a destination other than a lineage, is `/config`'s and `/marks`' own read; `verbs` (bl-3746) the per-verb argument builders the reader calls into — the §4.9 monitor's three and the §4.3 loop's two among them (bl-66fb) — with `verbs/control` the §4.11 capability family cut out at the budget (bl-94a5): `/answer`'s verdict and its `--scope` flag, the inverse spelling that leaves the flag off for the default, the usage string every refusal and the help page read, and the floor's two verbs; `fork` the V2 attempt's, whose flags lead so the goal can be the verbatim tail (bl-dc0c); `fan` the §3.8 mutating fan's three, beside it on the same seam — a family whose gestures read an obligation off the seat rather than a bare tail (bl-8746; `/deliver`'s summary is the verbatim tail after its handle, bl-c2bd); `balls` the `bl` family's own grammar beside them (bl-dbde) — the id-taking verbs' ball, the re-home, and the two authoring verbs whose payload is the family's own vocabulary; `tools` the routing leg's two acts (bl-024b), both of which end in a document taken verbatim to the end of the line, exactly as `/advertise`'s set does; `workflow` the §9.4 mark's two lines (bl-b680) — `/workflow <lineage>` and `/clear-workflow`, the conversation the seat's as `/retarget`'s is and the direction the verb, so a bare `/workflow` refuses naming the lineage it wanted and is never a clear |
 | `src/boundary/line/offer.rs` | the offer grammar: `/offer <name> [foot]`, `/offers`, `/approve <name>`, `/decline <name>`, and the grade-word reader |
-| `src/boundary/login.rs` | **the §8.3 sign-in as a boundary act** (REMOTE §8.3, DESIGN §8.3 as amended by bl-61bf; bl-c285): `Action::Login`, which starts `bz --login --provider <row>` — in the flow that row declares (§8.3 rule 1 as amended) — on the SERVER inside the *named* workspace's wall and answers that run's standing **without waiting for it** — a browser flow is minutes of a human's attention and the intake is one thread for the whole world, so the receipt is the standing re-read (the `Marks` discipline) and never an echo; `Query::LoginTail`, answered here once as that same standing; and `Lane`, the **second follow-class read** — everything buffered, then each arrival, then the settled exit as the last frame. **Re-ask replays** and needs no case: a lane holds nothing when it opens, so its first frame is the whole buffer, exactly as a follow reader opening at byte zero is. A pair with no run opens on one empty frame rather than on silence, because *nobody has signed in here* is a reading and not a refusal. Nothing about a child process is here — the holder is `src/login/runs.rs` |
+| `src/boundary/login.rs` | **the §8.3 sign-in as a boundary act** (REMOTE §8.3, DESIGN §8.3 as amended by bl-61bf; bl-c285): `Action::Login`, which fires one command line of the sign-in — the start, `bz --login --provider <row>`, or with a `code` the finish of a run that printed its authorize URL and stands waiting (§8.3 rule 1 as amended by bl-0127) — on the SERVER inside the *named* workspace's wall and answers that run's standing **without waiting for it** — a browser flow is minutes of a human's attention and the intake is one thread for the whole world, so the receipt is the standing re-read (the `Marks` discipline) and never an echo; `Query::LoginTail`, answered here once as that same standing; and `Lane`, the **second follow-class read** — everything buffered, then each arrival, one frame when the run comes to wait for a code (the `authorize` URL, said once per lane even with no line to carry it), then the settled exit as the last frame. **Re-ask replays** and needs no case: a lane holds nothing when it opens, so its first frame is the whole buffer, exactly as a follow reader opening at byte zero is. A pair with no run opens on one empty frame rather than on silence, because *nobody has signed in here* is a reading and not a refusal. Nothing about a child process is here — the holder is `src/login/runs.rs` |
 | `src/boundary/sugar/argv.rs` | `yog gesture`'s own argv (§8.5): the one payload — a JSON envelope **or** a slash line — and the context flags a terminal line states its elided targets with, the terminal holding no selection to read them off |
 | `src/budgets/{mod,bills,last}.rs` | the Usage-event vocabulary, parsed in one place (§5.1 #16) — the fold of every attempt segment beside `last`, the final reading per field, last wins (§5.1 #35, bl-9c8a: brazen's usage events are partial; its own file on the seam this row already drew), `context_window` off the same lines (the §5.1 #35 denominator, stated in band by brazen and never tabled by yog), and the **one home of the prompt reading** every figure above shares (`prompt_tokens` / `uncached_prompt_tokens` / `total_tokens`, bl-6621: the counters overlap, so a total is a fold and never a sum — and since brazen 0.0.10 `input_total_tokens` IS the prompt where a line carries it, which makes the `max` rule a per-line fallback for older records rather than the fold's rule, bl-bf8b); the one `steps/` walk every figure shares — per-step fold beside the model that billed it, the conv that owns it and its own `seq`, so a `Scope` applies after the walk and "which step is the latest" is asked in memory (§3.5, bl-9dd4; bl-a48b); since bl-53d1 a `StepBill` carries the **provider row** off the same `meta.json` read as its wall span (litany bl-4c1c, VISION §6 item 8) — the other half of the §3.5 table's key, `None` for every record written before litany said it |
 | `src/bz_host.rs` | the entry to the linked brazen (§16.7): the wall fold, the snapshot brazen reads, the route decision, and the no-wall refusal (§16.2) |
@@ -8334,8 +8342,7 @@ that named one of its files; the rule it taught is not.)
 | `src/git_tree/tools.rs` | the tool-call view-model over the on-disk `tools/<tool-id>/input.json` / `output.json` records, in-flight being an input with no output beside it |
 | `src/inboxview/{mod,wire}.rs` | deposit parsing + the listing's per-file name/bytes (`InboxEntry`, §11 Raw) + the one `✉ from · at` header wording every §5.1 #11 seat shares (bl-929d), its sender resolved through the §3.3 ladder over the `Titles` table the answer carries (bl-b6d0); the tests cut out of `mod` when Raw landed (bl-1ff1). Its headless spelling is `wire`, beside the type for the reason `workdiff::wire` gives — these rows' shape *is* this module's vocabulary — added when the §11 reads gained boundary queries (bl-6233). |
 | `src/lib.rs` | module decls, Args, test_support (`src/test_support{,/world,/workspace}.rs` — the fake effects, the hermetic fixture world and its wall, and the real on-disk litany workspace, each its own file at §12's cap) |
-| `src/login/{mod,auth,runs,wire}.rs` | §8.3 as amended (§15 M6 Z8): the streamed-piped `bz --login` flow, whose lines cross verbatim and whose exit lands ONE outcome row, and the pure auth-shaped step-failure predicate that names the remedy on the failure itself. `runs` is the **server's run holder** (REMOTE §8.3, bl-c285): one live child per workspace × provider, spawned with that workspace's wall standing, in the flow the act read off the catalog of the brazen that will run it and handed in (`flow_of`, §8.3 rule 1 as amended, bl-7c9f; bl-7467 moved the read to the act, which is where a registered machine's catalog can be asked — REMOTE §5.7). A row on a registered machine is the same child: its command line carries the qualified name and the `bz` arm routes it; a second `Login` on a live pair drops the old run *under the lock, before the new child is spawned*, because an abandoned loopback flow still holds the row's redirect port and terminating it is a precondition rather than housekeeping; one reader thread per run owns the cadence while the map owns the run, so two seats may hold lanes on one and a run with **no** lane still settles — settling is what leaves the one §4.2 outcome row; a thread retires the moment its run settles or stops being its run, which the serial answers with no flag to set; and a settled run stays until the §5.3 hour sweep, so re-asking replays. `wire` is the standing's one JSON spelling, both directions, serving the act's receipt and every lane frame because they are one value at two moments. The `Mutex` is the crate chokepoint's (`state::LoginCell`) |
-| `src/login/display.rs` | **the display a sign-in's browser opens on** (bl-bd71): the server runs as a user unit started before the graphical session exported `DISPLAY`/`WAYLAND_DISPLAY` into the user manager, so the service and every `bz --login` child it seats had neither and `xdg-open` died into the login tail; the child is handed the display the session's sockets name — `$XDG_RUNTIME_DIR/wayland-<n>`, `/tmp/.X11-unix/X<n>` — where the server's own environment names none, and nothing on a box with neither socket, which is the headless server's case and the device flow's. Ordering the unit after a graphical session was the other fix and the wrong one: a headless box has no such target |
+| `src/login/{mod,auth,run,runs,wire}.rs` | §8.3 as amended (§15 M6 Z8): the streamed-piped `bz --login` flow, whose lines cross verbatim and whose every command line lands ONE outcome row, and the pure auth-shaped step-failure predicate that names the remedy on the failure itself. `mod` is what a sign-in is *spelled as* — the words, the `LoginView`, the run-by-hand command; **`run`** (split at the cap, bl-0127) is the children that run it: `LoginRun`, whose `finalize` reads a zero exit that wrote to stdout as *waiting for a code* (`LoginView::authorize`, never beside an outcome) and whose `redeem` fires the second command line into the same run, lines appended. `runs` is the **server's run holder** (REMOTE §8.3, bl-c285): one sign-in per workspace × provider, spawned with that workspace's wall standing and with **no flow chosen** (§8.3 rule 1 as amended by bl-0127 — the row's brazen picks it, so nothing is read first). A row on a registered machine is the same child: its command line carries the qualified name and the `bz` arm routes it (REMOTE §5.7). The act has two meanings and each is one invariant: with no code it drops whatever stood *under the lock, before the new child is spawned* and starts over — the restart is the cancel; with a code it is taken **only by a run standing with an `authorize`** and refused, naming the restart, everywhere else. One reader thread per command line owns the cadence while the map owns the run, so two seats may hold lanes on one and a run with **no** lane still settles — settling is what leaves the §4.2 outcome row; a thread retires the moment its command settles, stands waiting, or stops being its run, which the serial answers (re-stamped by a replacement and by a redeemed code alike) with no flag to set; and a run stays until the §5.3 hour sweep, so re-asking replays. `wire` is the standing's one JSON spelling, both directions, serving the act's receipt and every lane frame because they are one value at two moments. The `Mutex` is the crate chokepoint's (`state::LoginCell`) |
 | `src/main.rs` (excl.) | entry, the `$EDITOR` shim above clap, multi-call/namespace dispatch, the §8.4 hatches, and the one call that is the whole binary (`Server::serve`, §8.5) |
 | `src/model_pick/{mod,header,pick,tuning,grammar/mod,grammar/entries,grammar/fields,grammar/roles,grammar/rows,grammar/tools,query}.rs` | the §9.4 picker: `pick` the gesture itself — one operator choice, the three gates it passes and the `providers.yaml` text it produces, cut off `mod.rs` at the §12 pre-split band so the picker's vocabulary (the role and branch it writes, which of its two scope sentences is in force, and the sentences a refusal states) is not the derivation that consumes it — the **one-file** pure plan (bl-d9cb — `plan` returns the `providers.yaml` text and nothing else, litany having retired the `models:` table the second write fed; `grammar/models` survived it for yog's own one-fact table until bl-9c8a moved the §5.1 #35 denominator to the step record, and `grammar/rows` is what is left of it: the one provider-row judgement) + the provider-row gate and default (bl-bd89) + `role_fault`, the role rows' one judgement over the LIVE pointer in the pick gate's own words, the **two** scope sentences the one pane is handed (conversation vs. birth, bl-824e) and the **two** config lines — the conversation's `GoverningConfig::label()` + the derived **apart** clause with the one exit it earns (bl-9786, bl-2d19, inverted by bl-e654: `ModelRow::apart`/`set_apart`, `RETARGET_EXIT` alone, `NEW_CONVERSATION_EXIT` deleted) and the birth block's pair-and-branch-head line, the §9.4 **tuning pair** beside `pick` (bl-23bd) — `tuning` the two knobs of the same role assignment, their closed level vocabulary, the carrier the §8.5 roster holds one row of, and the pure plan that says which of the four rewrites a gesture is; it is a sibling of `pick` and not a widening of it because the two gate differently (a pointer must name a live, capable row; a knob is always lawful and a capability decides only whether a seat offers the control) — the anchored block grammars (no YAML dep), now cut on their own altitude seam: `fields` the generic locate/read/replace/**insert**/**remove** over ONE entry's four-space field, which every rewrite and the §9.5 pane share, beside `entries` the acts on a whole entry — declare it, drop it, list a block's — whose callers are the §4.3 armed loop's `cadence.yaml` rows rather than the picker's fields (the split is bl-23bd's, at the pre-split band, when the two new field primitives made one file carry both altitudes). The insert exists because an **optional** assignment field's first write is always an insert and `set_field` refuses one; `set_entry` was the wrong tool for a `roles:` entry, since replacing it whole would not preserve an unstated `tools:` line — the ONE row judgement (`is_unknown_row`) every §9 gate calls, the protocol-capability gate beside it (`PickError::Incapable`, bl-3d22 — the effective table is carried whole because a row name cannot answer whether the dialect takes tools), and `remedy` the way out of a credential-shaped roster failure (bl-91f1, §9.4): §8.3's own `looks_auth` as the gate, `ProviderRow::login_blocked` as the words, a §11 tab as the destination — no wording and no classifier of its own, and no `Unrouted` state, because the picker named the row in the query it just fired |
 | `src/monitor/{mod,arming,verdict,row}.rs` | the VISION §4.9 alignment monitor's data half: the anti-reinvention law stated where it must hold; the `cadence.yaml` `monitor:` block (arming, the model pin, the policy file it names) and the seed that file starts from; the three-valued verdict and the one reading of a model's reply; and the ops row that is audit trail, level-trigger memory and tuning dataset at once — with `latest`/`worst`, the queries that make a standing verdict a derivation rather than a field |

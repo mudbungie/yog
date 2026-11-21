@@ -143,7 +143,8 @@ fn encode_action(action: &Action) -> Value {
         Action::Login {
             workspace,
             provider,
-        } => device::encode_login(workspace, provider),
+            code,
+        } => device::encode_login(workspace, provider, code.as_deref()),
         // The §3.5 spend family (bl-53d1), spelled in its family file.
         Action::Price { .. } | Action::Ceiling { .. } => spend::encode(action),
     }

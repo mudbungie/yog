@@ -172,8 +172,14 @@ pub enum Action {
     Offer(crate::registry::offer::Verb),
     /// **The sign-in, as an act** (REMOTE §8.3; DESIGN §8.3 as amended by
     /// bl-61bf): `bz --login` on the SERVER, inside the named workspace's wall
-    /// ([`device`]).
-    Login { workspace: String, provider: String },
+    /// ([`device`]). `code` absent starts the pair's sign-in (over); present,
+    /// it is what a human copied at the URL a waiting run printed, and
+    /// finishes that run (bl-0127, edition 31).
+    Login {
+        workspace: String,
+        provider: String,
+        code: Option<String>,
+    },
     /// **Write or delete one price-table entry** (DESIGN §3.5, §4.1 `prices`;
     /// bl-53d1): `(provider row, model)` → its four rates, `None` deleting the
     /// entry ([`spend`]). Micro-USD here, USD on the wire.

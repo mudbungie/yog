@@ -12,6 +12,11 @@
 //! `outcome` and `fallback` are **absent rather than null** while the run is
 //! live: a reader must not have to tell "still signing in" from "finished
 //! saying nothing", and the fallback exists only for a non-zero exit (§8.3).
+//!
+//! `authorize` (edition 31, bl-0127) is absent the same way and is **a
+//! standing fact, not an append**: it rides every frame written while the run
+//! waits for a code and no frame after, so a reader takes the newest frame's
+//! word for it rather than remembering an older one's.
 
 use serde_json::{Map, Value, json};
 
@@ -39,6 +44,9 @@ pub(crate) fn body(view: &LoginView) -> Map<String, Value> {
     if let Some(command) = &view.fallback {
         map.insert("fallback".to_owned(), json!(command));
     }
+    if let Some(url) = &view.authorize {
+        map.insert("authorize".to_owned(), json!(url));
+    }
     map
 }
 
@@ -50,6 +58,7 @@ pub(crate) fn view_of(o: &Map<String, Value>) -> Result<LoginView, String> {
         lines: list_of(o, "lines", line_of)?,
         outcome: opt(o, "outcome", exit_of)?,
         fallback: opt_str_of(o, "fallback")?,
+        authorize: opt_str_of(o, "authorize")?,
     })
 }
 

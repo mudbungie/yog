@@ -6,26 +6,34 @@
 
 use serde_json::{Map, Value, json};
 
-use super::{Action, str_of};
+use super::{Action, opt_str_of, str_of};
 
 /// The sign-in act's op token (bl-c285), named once for both directions and
 /// for the line that types it.
 pub(crate) const LOGIN: &str = "login";
 
 /// The §8.3 sign-in (REMOTE §8.3, bl-c285): the wall it runs in and the
-/// provider row it signs into, and nothing else — the flow is the row's own
-/// capability, never a field a seat may spell (DESIGN §8.3 rule 1).
-pub(super) fn encode_login(workspace: &str, provider: &str) -> Value {
-    json!({ "op": LOGIN, "workspace": workspace, "provider": provider })
+/// provider row it signs into — the flow is the row's own capability, never a
+/// field a seat may spell (DESIGN §8.3 rule 1). `code` (edition 31, bl-0127)
+/// is written only when there is one: absent, the act starts the sign-in, and
+/// that is the reading every server gave the op before the key existed.
+pub(super) fn encode_login(workspace: &str, provider: &str, code: Option<&str>) -> Value {
+    let mut act = json!({ "op": LOGIN, "workspace": workspace, "provider": provider });
+    if let (Some(code), Some(o)) = (code, act.as_object_mut()) {
+        o.insert("code".to_owned(), json!(code));
+    }
+    act
 }
 
-/// The inverse. Both halves required (REMOTE §8.3): a sign-in that guessed
-/// either would write a credential into the wrong sphere, or into the right
-/// one for a row nobody named.
+/// The inverse. The pair is required (REMOTE §8.3): a sign-in that guessed
+/// either half would write a credential into the wrong sphere, or into the
+/// right one for a row nobody named. The code is optional and absent is the
+/// start.
 pub(super) fn decode(o: &Map<String, Value>) -> Result<Action, String> {
     Ok(Action::Login {
         workspace: str_of(o, "workspace")?,
         provider: str_of(o, "provider")?,
+        code: opt_str_of(o, "code")?,
     })
 }
 

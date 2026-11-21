@@ -79,8 +79,10 @@ fn spell_action(action: &Action) -> String {
         Action::Config(write) => spell_write(write),
         // The §8.3 sign-in: the wall is the seat's, as `/model`'s is, and the
         // row is the one word the context cannot supply.
-        Action::Login { provider, .. } => {
-            format!("/{} {provider}", crate::boundary::codec::LOGIN)
+        Action::Login { provider, code, .. } => {
+            let code = code.iter().map(|pasted| format!(" {pasted}"));
+            let code = code.collect::<String>();
+            format!("/{} {provider}{code}", crate::boundary::codec::LOGIN)
         }
         Action::Fork { attempt, goal, .. } => super::fork::spell(attempt, goal),
         Action::Ack => "/ack".to_owned(),

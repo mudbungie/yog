@@ -3,9 +3,11 @@
 //! has said, and the lane that keeps saying it.
 //!
 //! The act is [`Action::Login`](super::Action::Login) and it does exactly two
-//! things — start `bz --login --provider <row>`, in the flow that row's own
-//! `device` column declares (§8.3 rule 1 as amended by bl-61bf), on the SERVER
-//! inside the *named* workspace's wall, and answer that run's standing. It never
+//! things — fire one command line of the sign-in on the SERVER inside the
+//! *named* workspace's wall (the start, `bz --login --provider <row>`; or,
+//! carrying the `code` a human copied at the URL a waiting run printed, the
+//! finish), and answer that run's standing. Which flow the row serves is its
+//! own brazen's answer (§8.3 rule 1 as amended by bl-0127). It never
 //! waits: a sign-in is minutes of a human's attention and the intake is
 //! one thread for the whole world (REMOTE §3), so an act that waited it out
 //! would stop every deposit converging. The receipt is therefore the standing
@@ -34,11 +36,9 @@
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
-use crate::config_edit::brazen::{BzRunner as _, CATALOG, RealBzRunner, provider_rows};
 use crate::login::LoginView;
-use crate::login::runs::{Runs, flow_of};
+use crate::login::runs::Runs;
 
-use super::config::{far, wall_env};
 use super::dispatch::Deps;
 use super::reply::Reply;
 
@@ -48,39 +48,28 @@ use super::reply::Reply;
 const HOLD_WAITS: u32 = 1875;
 const HOLD_TICK: Duration = Duration::from_millis(16);
 
-/// Start (or restart) the sign-in for `workspace` × `provider` and answer its
-/// standing (REMOTE §8.3). `workspace` is the chokepoint's own resolved path,
-/// so the wall the child runs in is the one the gesture named (bl-fcd5).
+/// Start (or restart) the sign-in for `workspace` × `provider` — or, with a
+/// `code`, finish the one waiting for it — and answer its standing (REMOTE
+/// §8.3). `workspace` is the chokepoint's own resolved path, so the wall the
+/// child runs in is the one the gesture named (bl-fcd5).
 ///
-/// **The flow is read off the sign-in catalog of the brazen that will run it**
-/// (§8.3 rule 1; REMOTE §5.7): this workspace's own for a bare row, the named
-/// machine's for `<row>@<client>`. The catalog and not the routing table,
-/// because a preset nobody has signed into is in the first and absent from the
-/// second (brazen bl-6feb) — and that is exactly the row a first sign-in
-/// names, which the table would have fired `--browser` for want of a row.
+/// **Nothing is read before the spawn** (§8.3 rule 1 as amended by bl-0127).
+/// The act used to ask the sign-in catalog of the brazen that would run it —
+/// this workspace's, or the named machine's (REMOTE §5.7) — for the row's
+/// `device` column, to decide between two command lines. There is one command
+/// line now and the row's own brazen picks the flow, so a qualified row is
+/// spawned exactly as a bare one is and a machine that does not answer says
+/// so in the lane.
 pub(super) fn start(
     deps: &Deps,
     ts: &str,
     workspace: &Path,
     provider: &str,
+    code: Option<&str>,
 ) -> Result<Reply, String> {
-    // The named machine's catalog, asked now — or this wall's own. **A
-    // machine that does not answer refuses the act**: its flow cannot be
-    // read, and a guess would open a browser on a box nobody is sitting at.
-    let (row, catalog) = match far::named(deps, workspace, provider) {
-        Some(at) => {
-            let listed = far::run(deps, ts.parse().unwrap_or(0), &at.client, CATALOG)?;
-            (at.row, provider_rows(&listed.stdout))
-        }
-        None => (
-            provider.to_owned(),
-            RealBzRunner::resolve(&wall_env(deps, workspace)).catalog(),
-        ),
-    };
-    let flow = flow_of(&catalog, &row);
     deps.caller
         .logins
-        .start(&deps.world, workspace, provider, flow, &deps.state_root, ts)
+        .start(&deps.world, workspace, provider, code, &deps.state_root, ts)
         .map(Reply::Login)
 }
 
@@ -109,6 +98,9 @@ pub(crate) struct Lane {
     /// per read and never stored, so a re-ask starts at zero and replays.
     sent: usize,
     opened: bool,
+    /// Whether the last look found the run waiting for a code — what makes
+    /// that standing one frame of its own rather than one per look.
+    asking: bool,
     done: bool,
     waits: u32,
     quiet: u32,
@@ -137,6 +129,7 @@ impl Lane {
             provider,
             sent: 0,
             opened: false,
+            asking: false,
             done: false,
             waits,
             quiet: 0,
@@ -169,7 +162,11 @@ impl Lane {
             self.done = true;
             return Frame::Ready(view);
         }
-        if first || !view.lines.is_empty() {
+        // A run that came to stand waiting for a code says so once, even with
+        // no line to carry it on: the URL is news a seat cannot act without.
+        let asking = view.authorize.is_some();
+        let asked = std::mem::replace(&mut self.asking, asking);
+        if first || !view.lines.is_empty() || (asking && !asked) {
             return Frame::Ready(view);
         }
         Frame::Waiting

@@ -2717,8 +2717,9 @@ inside the server's reach, it borrows a credential the server cannot refresh,
 and it is a second road to what the foot already serves. Nothing enforces
 this — the server seeds no provider row and judges none (use is attempt) — so
 it is a rule about what an operator writes in two files, stated here once.
-What it leaves open is the sign-in for such a row when it is browser-only and
-nobody sits at the box: bl-0127.
+What it left open — the sign-in for such a row when it has no device endpoint
+and nobody sits at the box — is closed by bl-0127: §8.3's pasted-code sign-in
+finishes it from any seat.
 
 **The turn, in the order it happens.**
 
@@ -2958,15 +2959,15 @@ row saying what its name is made of.
   off the slot's stream — which is why standard error streams too: brazen
   prints the device code there. The credential is minted and stored on the
   machine that will use it and never leaves; what crosses is the human-facing
-  line, as §8.3 already ruled. A device-capable row completes from any seat,
-  a phone's included. A browser-only row opens its browser **on the far
-  machine**, which is the one box where that redirect can land — §8.3's
-  *the browser follows the human* holds only if the human is at that box, and
-  the pane says so. *(Read off brazen for bl-0da0: the far brazen hands
-  the authorize address to a launcher and never prints it, so a box with no
-  browser ends the run at once in brazen's own words, and no seat is shown
-  anything to finish. A far browser-only row is signed in at that box or not
-  at all — bl-0127.)*
+  line, as §8.3 already ruled. **Every row completes from any seat, a
+  phone's included** (bl-0127): a device-capable row by its device code, and
+  a row with no device endpoint by §8.3's pasted-code sign-in — the far
+  brazen prints its authorize URL, the seat's own browser signs in, and the
+  code goes back over this same channel as a second invocation of that
+  machine's `bz`. The verifier that code is redeemed against never leaves the
+  far box. *(Until bl-0127 such a row was fired `--browser`: the far brazen
+  handed the address to a launcher and never printed it, so a box with no
+  browser ended the run at once and no seat was shown anything to finish.)*
 
 Each wait here is bounded and short, because these are reads answered in place:
 a machine that is `serving` takes the row at once, and one that does not answer
@@ -3062,20 +3063,21 @@ arm). No shape moved, no edition was stamped and `PROTOCOL` stands at 19.
   follows from it: **a second `login` on a live pair terminates the arm, whose
   polls end, and the far run is refused its next post** — within the thirty
   seconds of *a run lives while its asker listens* plus one post interval,
-  which is how long the far machine may still hold a loopback port; and a
+  which is how long a far device flow may go on polling; and a
   far sign-in nobody takes fails in the arm's own two minutes, on the lane.
-- **Corrected here — the flow is read off the sign-in catalog, for a bare row
-  too.** The design said *that machine's own provider listing*, and §8.3's
-  landed read was the routing table. A preset nobody has signed into is in
-  the catalog and absent from the table (§9.27), and it is exactly the row a
-  first sign-in names — read off the table it has no `device` column, so it
-  was fired `--browser`, the one flow a remote seat cannot finish. Both reads
-  are the catalog now.
-- **A sign-in on a machine that is not parked is refused at the act.** Its
-  flow cannot be read, and a guessed `--browser` would open a browser on a box
-  nobody is sitting at. The act therefore waits up to the three seconds, on
-  the intake, for one catalog read — the only wait `login` has.
-- **A sign-in occupies its foot.** A foot runs serially (§5.3), so for as
+- **Retired by bl-0127 — the act reads no catalog and refuses no sleeping
+  machine.** Two bullets stood here: that the flow is read off the sign-in
+  catalog (the routing table omits a preset nobody has signed into, so read
+  off the table such a row was fired `--browser`), and that a sign-in on a
+  machine that is not parked is refused at the act, after one three-second
+  catalog read, because a guessed `--browser` would open a browser on a box
+  nobody is sitting at. Both existed to choose between two command lines.
+  There is one now (§8.3) and the far brazen picks the flow, so the read, the
+  wait and the refusal are gone: `login` has no wait at all, and a machine
+  that does not take the call says so on the lane in the arm's two minutes.
+- **A sign-in occupies its foot** — a device flow does; a pasted-code one
+  (§8.3) is two short runs with nothing held between them. A foot runs
+  serially (§5.3), so for as
   long as a far device flow waits on its human, model calls routed to that
   machine queue behind it — the first bullet of *What this does not solve*,
   at its sharpest.
@@ -4216,8 +4218,9 @@ bootstrap doctrine.
 three serializations and with no wire vocabulary of their own; the seat-side
 consumption is the seat crate's bl-e3c5, the flow branch bl-7c9f.
 
-- `Action::Login { workspace, provider }` (`login`, `/login <provider>`) starts
-  the run server-side — inside the named workspace's directory, the same `wall::env`
+- `Action::Login { workspace, provider }` (`login`, `/login <provider>`) —
+  since bl-0127 with an optional `code`, *The pasted-code sign-in* below —
+  starts the run server-side — inside the named workspace's directory, the same `wall::env`
   lens the config reads spend, laid on the spawn as `wall::pairs_of` (bl-7c9f:
   one lens, because the flow branch reads the row through it too) — and
   answers at once with the run's standing (the `Marks` re-read discipline):
@@ -4235,34 +4238,149 @@ consumption is the seat crate's bl-e3c5, the flow branch bl-7c9f.
 - Both answer in ONE frame at every intake that cannot hold a connection
   (`answer`'s own arm), which is the same fold answered once rather than a
   degraded reading — the follow lane's own discipline, unchanged.
-- The run is server RAM, one per workspace × provider. A second `Login` on a
-  live pair terminates and replaces it — the operator's own restart is the
-  cancel, so no cancel verb exists — and the termination happens **before** the
-  replacement is spawned, because an abandoned loopback flow still holds the
-  row's redirect port. A run older than an hour is swept
+- The run is server RAM, one per workspace × provider. A second `Login`
+  (naming no code) on a pair terminates and replaces whatever stood — the
+  operator's own restart is the cancel, so no cancel verb exists — and the
+  termination happens **before** the replacement is spawned, so a child is
+  never left racing its successor. *(The reason was once the redirect port an
+  abandoned loopback flow held; the server fires no loopback flow since
+  bl-0127 and the order stays for the plainer reason.)* A run older than an
+  hour is swept
   (§5.3's mailbox bound), at the one moment the map can grow. One reader thread
   per run owns the cadence while the map owns the run, so two seats may hold
   lanes on one and a run **with no lane at all** still settles — settling is
   what appends the `ops.jsonl` outcome row server-side: it was always world
   state.
 
-**The flow follows the row's capability; the browser follows the human.** The
-flow-selection rule is DESIGN §8.3's and is amended there (rule 1): the device
-flow where the row declares a device endpoint, the browser flow everywhere
-else. **The row is read off the sign-in catalog** (§9.27; corrected by
-bl-7467 — the routing table does not carry a preset nobody has signed into,
-which is the row a first sign-in names). What belongs here is the wire
-consequence. A **device-capable row
-completes from any seat**: the URL and user code paint wherever the lane is
-held, the human finishes in any browser anywhere (a phone's included), bz
-polls the token endpoint from the server, and the credential never touches the
-wire. A **browser-only row** completes only where a browser can reach the
-SERVER's loopback: the server's own box (the window's local case, unchanged),
-or an operator's own port-forward — an operator act on boxes the operator
-administers, §1.4's own posture, **stated as the remedy where the seat is
-remote and never built into the channel**. Both halves landed at bl-7c9f: the
-projection carries the `device` column, and the builtin oauth row declares an
-endpoint, so the default install's sign-in completes from any seat.
+**One command line; the row's brazen picks the flow; every row is finished
+from any seat** (bl-0127, operator ruling 2026-11-20: *a sign-in can be
+managed by any seat — it is carrying the registration token over the channel,
+the system working as intended*; brazen bl-2764 is the provider half). This
+replaces the paragraph that stood here — *the flow follows the row's
+capability; the browser follows the human* — whose second clause was the
+defect: for a row with no device endpoint the server fired `--browser`, the
+loopback flow, which opens a browser **on the box running brazen** and takes
+its redirect **on that box's loopback**. On a box with a display and nobody at
+it a browser opened for no one; on a box with none the run died at once with
+the authorize URL never printed. Either way the lane showed a seat nothing it
+could act on, and the remedy this section used to state — forward a port to
+the server — is not something a phone can do or a foot's machine offers.
+
+The server now fires **the bare `bz --login --provider <row>` for every row and
+never `--browser`**, and reads no catalog first: which flow answers is the
+row's own brazen's fact (DESIGN §8.3 rule 1 as amended), on the server's box
+for a bare row and on the named machine for `<row>@<client>` (§5.7), with one
+path through both. Two things can come back, and a seat can finish either:
+
+- **A device-capable row** streams a verification URL and a user code and the
+  child stays up polling the token endpoint. Unchanged since bl-7c9f: the
+  human finishes in any browser anywhere and the run settles by itself.
+- **A row with no device endpoint** answers brazen's *pasted-code sign-in*:
+  the child prints the row's **authorize URL on stdout and exits 0 with
+  nothing stored**, having parked the PKCE verifier and the CSRF state in its
+  own credential store. That is not a sign-in and the run does not say it is:
+  **a zero exit that wrote to stdout is a run waiting for a code.** The server
+  states no `outcome`; it states `authorize`, the URL.
+
+**The pasted-code sign-in, in the order it happens.**
+
+1. A seat sends `login` for the row. The server starts the run and answers its
+   standing; the seat opens `login-tail`.
+2. The row's brazen — wherever it lives — prints the authorize URL and exits.
+   The lane's frame carries the URL as a line, as everything bz says is
+   carried, **and as the `authorize` key**, which is the fact a seat acts on:
+   it never has to find a URL in prose.
+3. The human opens that URL **in the seat's own browser** — a phone's, a
+   laptop's, any — and signs in at the vendor. The vendor hands that browser
+   an authorization code: on a page that displays it, where the row names the
+   vendor's code-display redirect, or in the address the browser is sent to
+   (a loopback address that does not load, because nothing listens there),
+   where the row names only a loopback redirect. bz's own stderr line, on the
+   lane, says which of the two this row will show.
+4. The seat sends `login` again for the same row with **`code`**: what the
+   human copied, verbatim — the code, the page's `code#state`, or the whole
+   address. The server does not read it. It fires `bz --login --provider <row>
+   --code=<pasted>` as the **same run's second command line**; the lines
+   append to the lane the seat already holds and `authorize` leaves the
+   standing.
+5. That brazen checks the paste against the state it parked, exchanges the
+   code with the verifier it parked, and stores the credential **on its own
+   box**. Its exit is the run's `outcome`: 0 is signed in, anything else is
+   brazen's reason on the lane and the §8.3 fallback beside it.
+
+**What crosses, and what does not.** Outbound, the authorize URL: it carries
+the PKCE *challenge* and the state, and it is meant to be opened by whoever
+is signing in. Inbound, one authorization code. **Neither is a credential.**
+The code is single-use and redeemable only together with the verifier, which
+was minted on the box that holds the row, is stored 0600 beside its
+credentials, and never appears on any stream; the token exchange and the
+stored credential are that box's alone. So the custody ruling stands as
+written — *yog pipes the flow and never a credential* (DESIGN §5.1 #22) — and
+the sentence above it, *nothing credential-shaped ever crosses yog's wire*,
+is now stated precisely rather than loosely: a code crosses, and it is not
+credential-shaped, because holding it buys nothing. For that reason the code
+is not hidden either: the command line that carried it is the `ops.jsonl` row
+like any other, since a log line that could not be redeemed when it was
+written cannot be redeemed later.
+
+**The wire: two optional keys, edition 31, `PROTOCOL` unmoved (§3.2).**
+
+| Where | Key | Type | Present | Absent means |
+|---|---|---|---|---|
+| request `login` | `code` | string | when the seat is handing back what the human copied | start the pair's sign-in (over) — the op's only meaning before the key existed |
+| reply `login` (the act's receipt and every `login-tail` frame) | `authorize` | string, the URL to open | on every frame written while the run waits for a code | the run is not waiting for a code |
+
+`lines`, `outcome` and `fallback` are unchanged. `lines` is still an append a
+reader extends; **`authorize` is a standing fact a reader replaces**: the
+newest frame's word is the truth, present or absent. It is never written
+beside an `outcome`. A lane emits one frame when a run comes to wait even if
+no line arrived with it, and a lane opened later replays it, because the run
+stays until it is swept. No new op, no new reply kind, no new lane: the act
+that starts a sign-in is the act that finishes it, and the read that follows
+one follows the other.
+
+Skew is harmless in both directions. A server older than edition 31 ignores
+`code` and restarts the sign-in — but it never wrote `authorize`, so no seat
+that honours the table above sends it one. A seat older than edition 31
+ignores `authorize` and paints a lane that stops, without an outcome, on
+bz's own instruction and URL: legible, and never a false *signed in*, which
+is why the waiting run states no outcome rather than a zero.
+
+**What can go wrong, and the one rule that answers each.**
+
+- **A code pasted at the wrong seat, or by the wrong person.** There is no
+  wrong seat: every seat on the workspace is operator-grade (§2) and the run
+  belongs to the pair, not to who started it. And there is no useful wrong
+  code: one issued for any other authorization fails the parked state or the
+  vendor's own verifier check, and nothing is stored. The server keeps no
+  notion of *whose* sign-in it is because nothing depends on it.
+- **A code with nothing waiting for it** — never started, a device flow, a
+  run already settled, a server that restarted and forgot its RAM. Refused at
+  the act, naming `/login <row>`, with nothing spawned. One invariant: *a
+  code is taken only by a run that stands with an `authorize`.*
+- **An abandoned sign-in.** It holds nothing: no child, no port, no lease on
+  a foot. The far verifier lapses on its own ten minutes after the URL was
+  printed — a code offered later is refused in brazen's words, naming the
+  restart — and the run is swept with every other at the hour. The credential
+  the row already held is untouched throughout; starting a sign-in and
+  walking away costs the row nothing.
+- **Two seats starting the same sign-in.** One pair, one run: the second
+  start replaces the first, the first seat's lane ends and its re-ask replays
+  the newer run, so both seats are looking at the same URL. On the far side
+  each start overwrites the one parked verifier, so **only the newest URL can
+  be finished** and a code from the older one is refused. Nothing is merged
+  and nothing is corrupted.
+- **A lapsed or foreign verifier, a vendor that refuses the exchange.** All
+  one case: the finishing command exits non-zero, its reason is the last line
+  on the lane, and the fallback names the command that starts over.
+- **A machine that does not answer.** The act no longer waits on it — there
+  is no catalog to read — so the run starts and the `bz` arm's own two-minute
+  patience says so on the lane (§5.7).
+
+**What it leaves a foot free to do.** A device flow occupies its foot for as
+long as its human takes (§5.7, *A sign-in occupies its foot*). A pasted-code
+sign-in does not: each of its two command lines is answered in place and the
+minutes in between belong to no process anywhere.
 
 **Faces (one capability, N spellings — §3).** The window's Login pane aims at
 the FOCUSED workspace across channels (§8.2): a local workspace asks this
@@ -4275,17 +4393,25 @@ not hold.
 
 **What this does not solve, on purpose.**
 
-- A browser-only row signed in from a seat with no shell (a phone): the
-  port-forward remedy assumes a terminal somewhere. The hole closes per row as
-  its provider gains a device endpoint — the builtin oauth row has one since
-  bl-7c9f — and for a row that still declares none, that pairing has no paved
-  path: the pane says so rather than offering a verb that cannot finish.
+- **A row whose vendor shows no code and registers no redirect a human can
+  read back.** None is known; the limit would be that row's, and brazen's
+  refusal is what the lane would say. *(This bullet used to be "a browser-only
+  row signed in from a phone has no paved path". It has one now.)*
+- **The loopback-redirect row's last step is a copy from an address bar.** A
+  vendor that registers only a loopback redirect for the client (a desktop
+  installed-app client, typically) sends the seat's browser to an address on
+  the seat's own loopback, which does not load; the human copies it. That is
+  the honest shape of that vendor's flow from a second device and not
+  something the channel can improve — a seat MAY improve it for itself, by
+  listening on that port while its own browser signs in and handing the
+  address it receives to `code`, and nothing on the wire changes if it does.
 - Re-auth when a token expires mid-conversation on the host: already owned —
   bz's silent refresh renews without interaction, and where refresh fails the
   auth-failed banner (DESIGN §8.3 rule 5) routes to this same one act, which
   any seat can now complete.
-- A provider with neither a device endpoint nor a reachable redirect: the same
-  stated operator remedy. No paste-back arm — §11.
+- A stored credential that refreshes afterwards is brazen's own (it owns what
+  it minted); a row still borrowing a sibling tool's sign-in is not touched
+  by any of this until somebody signs it in.
 
 ### 8.4 Enrollment, and the QR envelope — retired (§15.4; bl-7a14)
 
@@ -6742,7 +6868,13 @@ Recorded so they are not relitigated:
   a durable secret, which §6 rules a client never holds (key material and RAM,
   nothing else). The server-side act buys the same capability with no secret
   in channel.
-- **A paste-back completion arm for browser-only rows** (bl-61bf, §8.3) — the
+- **A paste-back completion arm for browser-only rows** (bl-61bf, §8.3) —
+  **OVERTURNED by bl-0127** (operator ruling 2026-11-20; §8.3, *One command
+  line*). The payer this entry said to wait for arrived: a row on a foot's
+  machine with no device endpoint and nobody at the box. What the entry
+  objected to did not have to be built, either — the code rides a second
+  command line, so no child's stdin opened and the streamed-piped class is
+  still stdin-null. The entry as it stood, kept for the reasoning: the
   seat's human copying the redirect landing back into the stream. It would
   give the login surface its first INPUT path — a boundary act feeding a
   child's stdin, and a change to the streamed-piped spawn class, which is

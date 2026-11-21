@@ -31,13 +31,13 @@
 //! (bl-20cb retired the §9.5 config copy); the boundary's `Providers` reply and
 //! §9.4's remedy sentence read the same derivation without repainting the row.
 //!
-//! **`device` is the flow capability.** The column names the headless sign-in a
-//! row serves, in brazen's own `device.style` spelling. `authorize_url`/
-//! `token_url` are required fields of every `oauth` block while `device` is
-//! optional, so the **browser** flow stays the floor every oauth row can serve
-//! and this column says which rows do better: [`ProviderRow::headless_login`] is
-//! the whole of the branch, read once at the spawn (§8.3 rule 1 as amended by
-//! bl-61bf; [`crate::login`]).
+//! **`device` names a device endpoint, and yog decides nothing by it.** The
+//! column carries the device-code wire a row serves, in brazen's own
+//! `device.style` spelling, and it crosses to the seats on the row. It was
+//! once the branch that chose the sign-in's command line; since bl-0127 there
+//! is one command line and the row's own brazen picks the flow — a device
+//! code where this column names a wire, a pasted code where it is empty
+//! (REMOTE §8.3) — so the column is description, not a switch.
 
 /// brazen's `auth` spelling for an OAuth row (`AuthId::OAuth2`'s serde rename).
 const OAUTH2: &str = "oauth2";
@@ -112,12 +112,11 @@ pub struct ProviderRow {
     /// [`effort`](Self::effort) and [`priority`](Self::priority) are plain
     /// bools: those two gate a control, this one gates a WRITE.
     pub tools: Option<bool>,
-    /// **Which headless sign-in this row serves**, in brazen's own
-    /// `device.style` spelling (`rfc8628`, `codex`) — empty for a row that
-    /// serves none. A *style* rather than a boolean because the endpoint's
-    /// grammar is the row's fact too and brazen selects the wire from it; yog's
-    /// one reader ([`headless_login`](Self::headless_login)) asks only whether
-    /// there is one.
+    /// **Which device-code wire this row serves**, in brazen's own
+    /// `device.style` spelling (`rfc8628`, `codex`) — empty for a row with no
+    /// device endpoint, whose sign-in is the pasted-code one (REMOTE §8.3). A
+    /// *style* rather than a boolean because the endpoint's grammar is the
+    /// row's fact too. Carried, never branched on.
     pub device: String,
 }
 
@@ -138,22 +137,6 @@ impl ProviderRow {
                 "auth \"{other}\" — bz --login signs in oauth2 rows only"
             )),
         }
-    }
-
-    /// **Can this row be signed in with no browser on the server's box?** (§8.3
-    /// rule 1 as amended by bl-61bf.) The [`device`](Self::device) column alone:
-    /// a row declaring a device endpoint serves the seat-independent flow — bz
-    /// binds nothing and streams the verification URL and user code to whichever
-    /// seat asked — while a row declaring none can only serve the loopback
-    /// browser flow, which completes where the browser reaches the server.
-    ///
-    /// **One column, deliberately not two.** It does not re-ask
-    /// [`login_blocked`](Self::login_blocked): brazen carries `device` inside the
-    /// `oauth` block, so a row with no login capability has no column to declare
-    /// it with, and the two answer separate questions — whether the verb is
-    /// offered, and which flow it fires.
-    pub fn headless_login(&self) -> bool {
-        !self.device.is_empty()
     }
 
     /// Does this row carry a credential a run would actually spend? The

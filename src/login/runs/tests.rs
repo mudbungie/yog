@@ -15,7 +15,7 @@ use tempfile::tempdir;
 
 use super::Runs;
 use crate::cli_outbound::{Chunk, Cli, ExitInfo, Streamed};
-use crate::login::{Flow, LoginRun, LoginView};
+use crate::login::{LoginRun, LoginView};
 
 /// The workspace every case here signs in, and the world its wall folds out of.
 fn workspace() -> PathBuf {
@@ -76,14 +76,7 @@ fn a_started_run_carries_the_wall_streams_to_the_buffer_and_settles_itself() {
     // The act answers at once, and what it answers is the standing — a run that
     // has just started has said nothing yet, which is not the same as absent.
     let receipt = runs
-        .start(
-            &world,
-            &workspace(),
-            "openai",
-            Flow::Browser,
-            state.path(),
-            "100",
-        )
+        .start(&world, &workspace(), "openai", None, state.path(), "100")
         .expect("started");
     assert_eq!(receipt.outcome, None, "the act never waits for the run");
 
@@ -107,14 +100,7 @@ fn a_started_run_carries_the_wall_streams_to_the_buffer_and_settles_itself() {
     // A second `Login` on a live pair replaces it: the standing starts over,
     // which is what a seat re-asking the lane then replays.
     let again = runs
-        .start(
-            &world,
-            &workspace(),
-            "openai",
-            Flow::Browser,
-            state.path(),
-            "101",
-        )
+        .start(&world, &workspace(), "openai", None, state.path(), "101")
         .expect("restarted");
     assert_eq!(again.outcome, None, "the settled run was replaced");
     assert_eq!(settled(&runs, "openai").outcome, Some(0));
@@ -127,14 +113,7 @@ fn a_spawn_that_cannot_start_refuses_and_seats_nothing() {
     let state = tempdir().expect("tmp");
     let runs = Runs::of(Cli::new("/definitely/not/a/real/bz-xyz"));
     let refusal = runs
-        .start(
-            &world,
-            &workspace(),
-            "openai",
-            Flow::Browser,
-            state.path(),
-            "100",
-        )
+        .start(&world, &workspace(), "openai", None, state.path(), "100")
         .expect_err("an absent binary cannot start a sign-in");
     assert!(!refusal.is_empty(), "the refusal names something");
     // `login::start` already left the synthetic row; nothing is seated, so the
@@ -222,15 +201,8 @@ fn a_run_older_than_an_hour_is_swept_at_the_next_start() {
 
     // The sweep happens at the one moment the map can grow (the mailbox's own
     // discipline), and the bound is the whole run's age.
-    runs.start(
-        &world,
-        &workspace(),
-        "openai",
-        Flow::Browser,
-        state.path(),
-        "4000",
-    )
-    .expect("started");
+    runs.start(&world, &workspace(), "openai", None, state.path(), "4000")
+        .expect("started");
     assert_eq!(
         runs.standing(&workspace(), "stale"),
         LoginView::default(),
@@ -243,5 +215,5 @@ fn a_run_older_than_an_hour_is_swept_at_the_next_start() {
     assert_eq!(settled(&runs, "openai").outcome, Some(0));
 }
 
-/// The flow a row is fired in, read off the wall's own catalog.
-mod flow;
+/// The act's two meanings: a start, and a code for the run that waits.
+mod code;

@@ -48,32 +48,26 @@ fn provider_rows_reads_name_and_auth_in_listing_order() {
     assert_eq!(rows[1].auth, "none");
 }
 
-/// **The flow key is a column, not a yog reclassification** (§8.3 rule 1 as
-/// amended by bl-61bf, rule 2's discipline; bl-7c9f). brazen names the headless
-/// sign-in a row serves by its `device.style` — the STYLE and not a bool,
-/// because the endpoint's grammar is the row's fact too — and yog's one reader
-/// asks only whether there is one. A row that names none, and every row of a
-/// listing written before the column existed, reads as browser-only: an
-/// unanswered question is never a capability.
+/// **The device column is carried as brazen spelled it** (bl-7c9f; a
+/// description since bl-0127, when the sign-in stopped branching on it).
+/// brazen names the device-code wire a row serves by its `device.style` — the
+/// STYLE and not a bool, because the endpoint's grammar is the row's fact too.
+/// A row that names none, and one whose column is not a string, read empty.
 #[test]
-fn the_device_column_is_the_headless_login_capability() {
+fn the_device_column_is_carried_in_brazens_own_spelling() {
     let rows = provider_rows(
         r#"{"providers":[
         {"name":"chatgpt","auth":"oauth2","device":"codex"},
         {"name":"standards","auth":"oauth2","device":"rfc8628"},
-        {"name":"loopback-only","auth":"oauth2"},
+        {"name":"pasted","auth":"oauth2"},
         {"name":"shapeless","auth":"oauth2","device":7}
     ]}"#,
     );
     assert_eq!(rows[0].device, "codex");
     assert_eq!(rows[1].device, "rfc8628");
-    assert!(rows[0].headless_login() && rows[1].headless_login());
-    assert!(
-        !rows[2].headless_login() && !rows[3].headless_login(),
-        "no column, and an unreadable one, both read as browser-only"
-    );
-    // The predicates are separate questions: this row can be signed in, and it
-    // is signed in one particular way.
+    assert!(rows[2].device.is_empty() && rows[3].device.is_empty());
+    // Whether the verb is offered is a separate question, and its answer does
+    // not turn on this column: a row with no device endpoint signs in too.
     assert_eq!(rows[2].login_blocked(), None);
 }
 

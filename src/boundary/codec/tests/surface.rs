@@ -99,15 +99,19 @@ fn spend() -> Vec<Gesture> {
     ]
 }
 
-/// The §8.3 sign-in (REMOTE §8.3, bl-c285) — one entry, because the act's
-/// whole envelope is the pair it names: the flow is the row's own capability
-/// and never a field a seat spells (DESIGN §8.3 rule 1), so there is no arm
-/// here for a fixture to walk.
+/// The §8.3 sign-in (REMOTE §8.3, bl-c285) in its two meanings: the pair
+/// alone, which starts the sign-in — the flow is the row's own capability and
+/// never a field a seat spells (DESIGN §8.3 rule 1) — and the pair with the
+/// code a human copied, which finishes a waiting one (bl-0127).
 fn login() -> Vec<Gesture> {
-    vec![Gesture::Act(crate::boundary::Action::Login {
-        workspace: "ws".to_owned(),
-        provider: "acme".to_owned(),
-    })]
+    let act = |code: Option<&str>| {
+        Gesture::Act(crate::boundary::Action::Login {
+            workspace: "ws".to_owned(),
+            provider: "acme".to_owned(),
+            code: code.map(str::to_owned),
+        })
+    };
+    vec![act(None), act(Some("pasted-code#state"))]
 }
 
 /// REMOTE §15.1's offer family (bl-9ea6) — the mint at both grades, because

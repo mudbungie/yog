@@ -17,11 +17,11 @@ use crate::boundary::reply::Reply;
 use crate::boundary::{Action, Query};
 use crate::cli_outbound::{Chunk, Cli, ExitInfo, Streamed};
 use crate::login::runs::Runs;
-use crate::login::{Flow, LoginRun, LoginView};
+use crate::login::{LoginRun, LoginView};
 use crate::ui_state::UiState;
 
-/// A sign-in on a registered machine's row (REMOTE §5.7).
-mod far;
+/// The finishing code, the waiting frame, and a row on another machine.
+mod code;
 
 /// The §3.1 sphere every case here signs in — the one the fixture world's wall
 /// is folded off, so a spawn lands where the fixture reads.
@@ -125,6 +125,7 @@ fn the_act_starts_the_run_answers_its_standing_and_the_read_says_the_rest() {
     let act = Action::Login {
         workspace: crate::naming::leaf(&workspace()),
         provider: "openai".to_owned(),
+        code: None,
     };
     let Ok(Reply::Login(receipt)) = dispatch(&deps, &mut ui, "100", &act) else {
         panic!("the sign-in act answers a standing");
@@ -229,15 +230,8 @@ fn a_lane_ends_when_the_run_it_was_reading_is_gone() {
     // The next sign-in sweeps the hour-old run this lane was reading. The lane
     // ends rather than sliding onto a successor nobody asked it about; the seat
     // re-asks, and a re-ask replays from the start.
-    runs.start(
-        &world,
-        &workspace(),
-        "other",
-        Flow::Browser,
-        state.path(),
-        "4000",
-    )
-    .expect("started");
+    runs.start(&world, &workspace(), "other", None, state.path(), "4000")
+        .expect("started");
     assert!(matches!(lane.poll(), Frame::Over));
     assert_eq!(lane.next(), None);
 }

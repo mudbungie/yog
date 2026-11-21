@@ -133,17 +133,8 @@ pub fn parse(input: &str, ctx: &Context) -> Result<Gesture, String> {
         // under which everything above a read waits for an answer. The
         // conversation is the seat's, so the verb is the whole line.
         "revoke" | "restore" => verbs::control::floor(verb, tail, ctx),
-        // The §8.3 sign-in (REMOTE §8.3, bl-c285): the wall is the seat's own
-        // workspace, exactly as `/model`'s is, and the one word is the provider
-        // row — the thing no seat's context can supply. No flow flag, ever: the
-        // flow is the row's own capability (DESIGN §8.3 rule 1).
-        crate::boundary::codec::LOGIN => match args::optional_word(tail, verb)? {
-            Some(provider) => Ok(act(Action::Login {
-                workspace: args::workspace(ctx, verb)?,
-                provider,
-            })),
-            None => Err(format!("/{verb}: usage: /{verb} <provider>")),
-        },
+        // The §8.3 sign-in (REMOTE §8.3, bl-c285), in its own function below.
+        crate::boundary::codec::LOGIN => login(tail, ctx, verb),
         "fork" => super::fork::fork(tail, ctx, verb),
         "ack" => args::none(tail, verb).map(|()| act(Action::Ack)),
         "seen" => verbs::seen(tail, ctx, verb),
@@ -209,4 +200,23 @@ pub(super) fn act(action: Action) -> Gesture {
 
 pub(super) fn ask(query: Query) -> Gesture {
     Gesture::Ask(query)
+}
+
+/// The §8.3 sign-in (REMOTE §8.3, bl-c285): the wall is the seat's own
+/// workspace, exactly as `/model`'s is, and the first word is the provider row
+/// — the thing no seat's context can supply. No flow flag, ever: the flow is
+/// the row's own capability (DESIGN §8.3 rule 1). A second word is the code a
+/// human copied at the URL a waiting run printed (bl-0127) — one word, because
+/// a code and a pasted address alike carry no space.
+fn login(tail: &str, ctx: &Context, verb: &str) -> Result<Gesture, String> {
+    match tail.split_whitespace().collect::<Vec<_>>().as_slice() {
+        [provider, code @ ..] if code.len() <= 1 => Ok(act(Action::Login {
+            workspace: args::workspace(ctx, verb)?,
+            provider: (*provider).to_owned(),
+            code: code.first().map(|word| (*word).to_owned()),
+        })),
+        _ => Err(format!(
+            "/{verb}: usage: /{verb} <provider> [<pasted code>]"
+        )),
+    }
 }

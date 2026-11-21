@@ -4,10 +4,9 @@
 //! streamed runner's [`LoginView`] carries them **verbatim**; ONE outcome row
 //! lands in `ops.jsonl` at exit (§4.2, the stream never logged line-by-line); a
 //! non-zero exit carries the exact run-by-hand command as the fallback (§8.3).
-//! Both scenarios here fire the **browser** flow, which since §8.3 rule 1's
-//! amendment (bl-61bf) is the arm a row taking no device endpoint gets — the
-//! floor every oauth row can serve. Which arm a given row gets is read at the
-//! spawn and is `login::runs`' own fact; this story is about the STREAM.
+//! Both scenarios fire the one command line every row gets (§8.3 rule 1 as
+//! amended by bl-0127): which flow answers is the row's own brazen's fact, and
+//! this story is about the STREAM.
 //! Credentials stay bz's — yog renders.
 //!
 //! One `#[test]` runs both scenarios sequentially — a shape this file kept
@@ -20,7 +19,7 @@ use crate::support::Recorder;
 use std::path::Path;
 use tempfile::tempdir;
 use yog::cli_outbound::Cli;
-use yog::login::{self, Flow, LoginRun, LoginView};
+use yog::login::{self, LoginRun, LoginView};
 
 /// Poll the run to settlement (bounded — the fake exits promptly), returning the
 /// terminal view-model the shell would paint.
@@ -52,7 +51,6 @@ fn s0_t5_login_streams_device_code_lines_and_converges_to_one_outcome_row() {
         ok_state.path(),
         "T0",
         Some(Path::new("/ws")),
-        Flow::Browser,
     )
     .unwrap();
     let view = drain(&mut run);
@@ -73,14 +71,11 @@ fn s0_t5_login_streams_device_code_lines_and_converges_to_one_outcome_row() {
     assert_eq!(view.outcome, Some(0));
     assert_eq!(view.fallback, None, "a clean exit needs no fallback");
 
-    // The spawn was the BROWSER flow — the flag is what selects it over bz's
-    // device-flow default, which 78s on a row declaring no device endpoint.
+    // One command line for every row (bl-0127): no flow word, because the
+    // row's own brazen picks the flow.
     let inv = bz_ok.invocations();
     assert_eq!(inv.len(), 1);
-    assert_eq!(
-        inv[0].argv,
-        ["--login", "--provider", "openai", "--browser"]
-    );
+    assert_eq!(inv[0].argv, ["--login", "--provider", "openai"]);
 
     // Exactly one outcome row at exit; the live stream is never re-logged.
     let bin = bz_ok.path().display().to_string();
@@ -89,7 +84,7 @@ fn s0_t5_login_streams_device_code_lines_and_converges_to_one_outcome_row() {
     assert_eq!(ops[0].exit, 0);
     assert_eq!(
         ops[0].argv,
-        [bin.as_str(), "--login", "--provider", "openai", "--browser"]
+        [bin.as_str(), "--login", "--provider", "openai"]
     );
     assert_eq!(ops[0].stdout, "", "the live stream is not re-logged (§4.2)");
 
@@ -99,7 +94,7 @@ fn s0_t5_login_streams_device_code_lines_and_converges_to_one_outcome_row() {
     let bz_bad = Recorder::new(dir.path(), "bz-bad").on_err(
         "--login",
         "",
-        "this provider has no device endpoint; use `--browser`\n",
+        "provider `anthropic` has no `oauth` config; add an `oauth` block to its row\n",
         78,
     );
     let mut run = login::start(
@@ -108,7 +103,6 @@ fn s0_t5_login_streams_device_code_lines_and_converges_to_one_outcome_row() {
         bad_state.path(),
         "T0",
         Some(Path::new("/ws")),
-        Flow::Browser,
     )
     .unwrap();
     let view = drain(&mut run);
@@ -118,7 +112,7 @@ fn s0_t5_login_streams_device_code_lines_and_converges_to_one_outcome_row() {
     assert!(
         view.lines
             .iter()
-            .any(|l| l.text.contains("no device endpoint")),
+            .any(|l| l.text.contains("no `oauth` config")),
         "bz's terminal reason line is rendered: {:?}",
         view.lines
     );
@@ -126,12 +120,12 @@ fn s0_t5_login_streams_device_code_lines_and_converges_to_one_outcome_row() {
         .fallback
         .expect("a non-zero exit must carry the fallback command");
     assert!(
-        fallback.ends_with("--login --provider anthropic --browser"),
-        "the fallback is a command that would actually succeed, got: {fallback}"
+        fallback.ends_with("--login --provider anthropic"),
+        "the fallback is the command that starts the sign-in, got: {fallback}"
     );
 
     let ops = yog::opslog::tail(bad_state.path(), 8);
     assert_eq!(ops.len(), 1);
     assert_eq!(ops[0].exit, 78);
-    assert!(ops[0].stderr.contains("no device endpoint"));
+    assert!(ops[0].stderr.contains("no `oauth` config"));
 }

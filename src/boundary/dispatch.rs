@@ -219,7 +219,9 @@ pub fn dispatch(deps: &Deps, ui: &mut UiState, ts: &str, action: &Action) -> Res
         // THIS box inside the named workspace's wall, so the credential lands
         // where that workspace's agents read it. Like the routing leg below it
         // never waits — the receipt is the run's standing, re-read.
-        Action::Login { provider, .. } => login::start(deps, ts, ws, provider),
+        Action::Login { provider, code, .. } => {
+            login::start(deps, ts, ws, provider, code.as_deref())
+        }
         // REMOTE §5's routing leg (bl-024b): queue a call for the machine that
         // advertised it, and take a tool host's answer to one. Neither waits —
         // the intake here is one thread for the whole world.

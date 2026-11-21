@@ -72,10 +72,13 @@ fn the_config_familys_reads_round_trip() {
 /// seat's, and state the row, which is not.
 #[test]
 fn the_sign_in_and_its_lane_round_trip() {
-    rt(Gesture::Act(crate::boundary::Action::Login {
-        workspace: "ws".to_owned(),
-        provider: "acme".to_owned(),
-    }));
+    for code in [None, Some("abc#def".to_owned())] {
+        rt(Gesture::Act(crate::boundary::Action::Login {
+            workspace: "ws".to_owned(),
+            provider: "acme".to_owned(),
+            code,
+        }));
+    }
     rt(Gesture::Ask(Query::LoginTail {
         workspace: "ws".to_owned(),
         provider: "acme".to_owned(),
@@ -92,8 +95,8 @@ fn a_sign_in_with_no_provider_named_refuses_with_its_usage() {
             .expect_err("a row is required");
         assert!(refusal.contains("usage"), "{verb}: {refusal}");
         assert!(
-            crate::boundary::line::parse(&format!("/{verb} a b"), &super::super::ctx()).is_err(),
-            "{verb}: one word, not a sentence"
+            crate::boundary::line::parse(&format!("/{verb} a b c"), &super::super::ctx()).is_err(),
+            "{verb}: a row and at most a code, not a sentence"
         );
     }
 }
