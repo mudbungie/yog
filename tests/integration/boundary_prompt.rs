@@ -30,7 +30,7 @@ fn deps(litany: &Cli, state_root: &Path, workspaces: &[&Path]) -> Deps {
         bl: Cli::new("/no/bl"),
         state_root: state_root.to_path_buf(),
         yog_binary: state_root.join("yog"),
-        world: yog::world::compose(&yog::xdg::Env::from_env()),
+        world: yog::world::compose(&hermetic(state_root)),
         home: state_root.join("home"),
         yog_data_root: state_root.join("data"),
         snapshot: Arc::new(Snapshot {
@@ -58,6 +58,28 @@ fn deps(litany: &Cli, state_root: &Path, workspaces: &[&Path]) -> Deps {
         }),
         caller: yog::boundary::dispatch::Caller::default(),
     }
+}
+
+/// The fixture's world, built from two named variables and nothing of the
+/// process's own (bl-2067). The `Prompt` door's *sign in first* rung reads
+/// brazen's routing table through this snapshot, and brazen's ambient
+/// credential discovery reads it too: a foreign tool's sign-in file is found
+/// by expanding `~/` against the snapshot's `HOME`, and a key by the name of a
+/// variable in it. Handed the process environment, the rung answered for the
+/// box the suite ran on — a box holding a sign-in for a built-in preset got a
+/// one-row table that does not carry the fixture's keyless row, and a refusal
+/// where a box holding none got an empty table and a fire.
+fn hermetic(state_root: &Path) -> yog::xdg::Env {
+    yog::xdg::Env::of(named(state_root))
+}
+
+/// The two variables [`hermetic`] names, both inside the fixture.
+fn named(state_root: &Path) -> Vec<(String, String)> {
+    let under = |leaf: &str| state_root.join(leaf).to_string_lossy().into_owned();
+    vec![
+        ("HOME".to_owned(), under("home")),
+        ("XDG_DATA_HOME".to_owned(), under("share")),
+    ]
 }
 
 fn prepared(ws: &Path, cwd: &Path) -> Prepared {
@@ -169,4 +191,36 @@ fn a_prepare_that_cannot_seed_refuses_through_the_dispatch_arm() {
     )
     .unwrap_err();
     assert!(!err.is_empty());
+}
+
+/// **The door answers from the fixture's snapshot, in both directions**
+/// (bl-2067). The two beats above pass because that snapshot names no
+/// credential; this one names one — a built-in preset's own key variable — and
+/// is refused exactly as they were on a box that held a sign-in: the table is
+/// now that preset's rows, and the keyless row the role names is not among
+/// them. So what the rung reads is what the fixture wrote, and never the box.
+#[test]
+fn a_credential_in_the_fixtures_own_snapshot_is_the_one_the_door_reads() {
+    let state = tempdir().unwrap();
+    let ws = tempdir().unwrap();
+    crate::support::keyless_wall(ws.path());
+    let mut d = deps(&Cli::new("/no/such/litany"), state.path(), &[ws.path()]);
+    let mut vars = named(state.path());
+    vars.push(("OPENAI_API_KEY".to_owned(), "notreal-fixture".to_owned()));
+    d.world = yog::world::compose(&yog::xdg::Env::of(vars));
+    let err = dispatch(
+        &d,
+        &mut UiState::open(state.path().join("ui.json")),
+        "T0",
+        &Action::Prompt {
+            prepared: prepared(ws.path(), ws.path()),
+            goal: "g".into(),
+            seed: Some(7),
+        },
+    )
+    .unwrap_err();
+    assert!(
+        err.contains("`ollama`") && err.contains("declares no such row"),
+        "{err}"
+    );
 }
