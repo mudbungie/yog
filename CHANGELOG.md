@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.106](https://github.com/mudbungie/yog/compare/v0.0.105...v0.0.106) - 2026-11-21
+
+### Changes
+
+- a machine mid-job vanishes from provider listings and refuses named reads: busy is told from asleep by the job the mailbox holds, and a busy machine answers from its last known rows [bl-3b4b]
+
 ## [0.0.105](https://github.com/mudbungie/yog/compare/v0.0.104...v0.0.105) - 2026-11-21
 
 ### Changes
