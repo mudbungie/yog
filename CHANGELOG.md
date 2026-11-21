@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.105](https://github.com/mudbungie/yog/compare/v0.0.104...v0.0.105) - 2026-11-21
+
+### Changes
+
+- the pins step to litany =0.0.21, brazen =0.0.24, ingested from the registry
+
 ## [0.0.104](https://github.com/mudbungie/yog/compare/v0.0.103...v0.0.104) - 2026-11-20
 
 ### Changes
