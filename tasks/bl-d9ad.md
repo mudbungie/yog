@@ -1,7 +1,8 @@
 +++
 title = "nothing is refused because a machine is busy: a read aimed at a working machine queues one ask behind its job, and a machine heard from a moment ago is there"
 created = 1795322544
-updated = 1795322544
+updated = 1795322545
+claimant = "Rabid-busy"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
