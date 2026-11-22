@@ -2,6 +2,7 @@
 title = "a machine mid-job vanishes from provider listings and refuses named reads: busy is told from asleep by the job the mailbox holds, and a busy machine answers from its last known rows"
 created = 1795322339
 updated = 1795322339
+claimant = "Rabid-busy"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
