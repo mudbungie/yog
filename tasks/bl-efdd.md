@@ -2,6 +2,7 @@
 title = "REMOTE 5.8 PROPOSED: a tool host states which invocations it holds on each read, so finished and busy are stated facts instead of inferences from silence — design only, no source or edition change"
 created = 1795322390
 updated = 1795322390
+claimant = "Rabid-design"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 +++
