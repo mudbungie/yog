@@ -156,7 +156,7 @@ pub(super) fn read_marks(deps: &Deps, workspace: &Path) -> Reply {
 ///
 /// **Each row says which machine its provider's name selects** (REMOTE §5.7,
 /// bl-471d) — the reading the `bz` arm will make of it at the call, awake or
-/// not, which a listing of the machines serving right now cannot answer.
+/// not, which a listing of the machines that are there right now cannot answer.
 pub(super) fn roles(deps: &Deps, workspace: &Path) -> Reply {
     let text = config_file(workspace, &format!("config/{BRANCH}"), PROVIDERS)
         .map(|b| String::from_utf8_lossy(&b).into_owned())

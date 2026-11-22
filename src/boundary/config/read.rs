@@ -250,7 +250,8 @@ pub(crate) fn catalog(deps: &Deps, now: i64, workspace: &Path) -> Reply {
 /// written once.
 ///
 /// **Then the same listing from each registered machine that serves `bz` and
-/// is parked on its read right now** (REMOTE §5.7), its rows named
+/// is there** — parked on its read and asked, or busy and answering with what
+/// it last said (REMOTE §5.7) — its rows named
 /// `<row>@<client>` with both halves beside the name: one more row each.
 fn rows_in(deps: &Deps, now: i64, workspace: &Path, line: &[&str]) -> Vec<Placed<ProviderRowView>> {
     let own = RealBzRunner::resolve(&super::wall_env(deps, workspace)).listing(line);

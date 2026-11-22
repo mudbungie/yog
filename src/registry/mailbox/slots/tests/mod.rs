@@ -12,6 +12,8 @@ use serde_json::json;
 /// **A newer activation takes the queue** (REMOTE §5.1, bl-96e0): the
 /// advertisement's half of the one-reader rule.
 mod activation;
+/// A machine that is working, and what it last answered (bl-3b4b).
+mod known;
 /// The two silences that end a streamed run, and the refused post.
 mod listen;
 /// **The streamed form's own corpus** (REMOTE §5.7): N posts, offsets, the

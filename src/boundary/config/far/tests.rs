@@ -15,7 +15,7 @@ use crate::boundary::config::Read;
 use crate::boundary::dispatch::Caller;
 use crate::boundary::reply::{ConfigAnswer, Place, Placed, Reply};
 use crate::config_edit::brazen::{CATALOG, ProviderRowView, TABLE, provider_rows};
-use crate::registry::mailbox::Mailbox;
+use crate::registry::mailbox::{Mailbox, Post};
 use crate::test_support::foot::{mailbox, parked, printed, seat, serve};
 
 /// One far listing: an oauth row that is signed in and declares a device
@@ -119,8 +119,9 @@ fn a_serving_machine_appends_its_rows_qualified() {
     foot.join().unwrap();
 }
 
-/// A machine that is asleep — registered, advertising, not parked on its read
-/// — is not asked: no rows, no wait, and nothing left queued for it. Nor is
+/// A machine that is asleep — registered, advertising, neither parked on its
+/// read nor working — is not asked: no rows, no wait, and nothing left queued
+/// for it. Nor is
 /// one that is awake and advertises no `bz`.
 #[test]
 fn a_machine_that_is_not_serving_adds_no_rows_and_no_wait() {
@@ -137,7 +138,66 @@ fn a_machine_that_is_not_serving_adds_no_rows_and_no_wait() {
         ["acme"]
     );
     let asleep = models(&deps, "sub@laptop").unwrap_err();
-    assert!(asleep.contains("\"laptop\" is not waiting"), "{asleep}");
+    assert!(asleep.contains("\"laptop\" is not there"), "{asleep}");
+}
+
+/// **A machine mid-job stays in sight** (bl-3b4b). It holds no read while it
+/// works, so it cannot be asked — and it is the one machine certainly there.
+/// The listing keeps its rows and a read naming it is answered, both from what
+/// it last said to the same read and with no wait; a read it has never
+/// answered is called busy, not asleep. When the job ends it is asked afresh
+/// or, as here where nobody parks again, it is simply not there.
+#[test]
+fn a_busy_machine_answers_from_what_it_last_said() {
+    let root = tempdir().unwrap();
+    let (deps, mail) = world(root.path());
+    let listed = printed(r#"{"models":[{"id":"big","default":true}]}"#);
+    let script = vec![Some(printed(LISTING)), Some(listed), None];
+    let (foot, _asked) = serve(&mail, "laptop", script);
+
+    parked(&mail, "laptop");
+    assert!(providers(&deps).iter().any(|row| row.name == "sub@laptop"));
+    parked(&mail, "laptop");
+    let fresh = models(&deps, "sub@laptop");
+    assert!(fresh.is_ok(), "{fresh:?}");
+
+    parked(&mail, "laptop");
+    let job = Call {
+        client: "laptop".to_owned(),
+        tool: TOOL.to_owned(),
+        input: json!({ "stdin": "a model call" }),
+        cwd: None,
+    };
+    let job = mail.post(0, "driver", &job);
+    foot.join().unwrap();
+    assert!(
+        !mail.serving("laptop"),
+        "taken, and nothing parked behind it"
+    );
+
+    let before = Instant::now();
+    let rows = providers(&deps);
+    assert!(
+        before.elapsed().as_secs() < 2,
+        "a busy machine is not waited for"
+    );
+    assert!(
+        rows.iter()
+            .any(|row| row.name == "sub@laptop" && row.at == Some(at("laptop", "sub")))
+    );
+    assert_eq!(models(&deps, "sub@laptop"), fresh);
+    let unasked = models(&deps, "other@laptop").unwrap_err();
+    assert!(
+        unasked.contains("\"laptop\" is busy with another call"),
+        "{unasked}"
+    );
+
+    mail.complete(0, "laptop", &job, &Post::Capture(printed("done")))
+        .expect("the job's own machine");
+    let rows = providers(&deps);
+    assert!(!rows.iter().any(|row| row.at.is_some()), "{rows:?}");
+    let gone = models(&deps, "sub@laptop").unwrap_err();
+    assert!(gone.contains("\"laptop\" is not there"), "{gone}");
 }
 
 /// `models` naming a machine runs the listing there, with the row

@@ -17,9 +17,12 @@
 //!   advertises `bz`. Both are files (§5), so the answer does not depend on
 //!   whether the machine is awake, and the row half is that machine's to
 //!   refuse at the call.
-//! - *Can it answer a listing now?* The mailbox's own `serving` — it is parked
-//!   on its read at this moment. A machine that is asleep or busy contributes
-//!   no rows and costs no wait.
+//! - *Is it there?* The mailbox's own two readings — it is parked on its
+//!   read (`serving`), or it is working on a job this server handed it and
+//!   still believes in (`busy`). A parked machine is asked. A busy one cannot
+//!   be — a foot runs one call at a time — so it answers with **what it last
+//!   said to the same read**, the mailbox's one replica of it. A machine that
+//!   is neither is asleep or gone: no rows, no wait.
 //!
 //! **The wait is bounded and paid on the answering thread** — three seconds
 //! for every machine asked at once. A foot's `complete` arrives on that foot's
@@ -100,14 +103,16 @@ pub(crate) fn judged(
     rows
 }
 
-/// Run `bz <line>` on each of `clients` that is parked on its read right now,
-/// all at once, and answer what came back inside the bound — in the order
-/// asked. A machine that is not serving is not asked.
+/// `bz <line>` as each of `clients` answers it, in the order asked. A machine
+/// parked on its read is asked now, all at once, and what comes back inside
+/// the bound is remembered; one that did not answer — it is busy, or it took
+/// the ask and is still on it — answers with what it last said to this read,
+/// while the mailbox believes it is working. The rest answer nothing, and
+/// are not waited for.
 fn asked(deps: &Deps, now: i64, clients: &[String], line: &[&str]) -> Vec<(String, Capture)> {
     let (mail, by) = (&deps.caller.mailbox, deps.caller.client.name());
-    let mut open: Vec<(String, String, Option<Capture>)> = clients
+    let mut open: Vec<(Call, Option<String>, Option<Capture>)> = clients
         .iter()
-        .filter(|client| mail.serving(client))
         .map(|client| {
             let call = Call {
                 client: client.clone(),
@@ -115,28 +120,38 @@ fn asked(deps: &Deps, now: i64, clients: &[String], line: &[&str]) -> Vec<(Strin
                 input: json!({ "args": line }),
                 cwd: None,
             };
-            (client.clone(), mail.post(now, &by, &call), None)
+            let invocation = mail.serving(client).then(|| mail.post(now, &by, &call));
+            (call, invocation, None)
         })
         .collect();
     for _ in 0..WAITS {
-        for (_, invocation, got) in open.iter_mut().filter(|(_, _, got)| got.is_none()) {
-            *got = mail
-                .collect(now, &by, invocation, None)
-                .ok()
+        for (call, invocation, got) in open.iter_mut().filter(|(_, _, got)| got.is_none()) {
+            *got = invocation
+                .as_deref()
+                .and_then(|id| mail.collect(now, &by, id, None).ok())
                 .and_then(|standing| standing.capture);
+            if let Some(fresh) = got.as_ref() {
+                mail.remember(now, call, fresh);
+            }
         }
-        if open.iter().all(|(_, _, got)| got.is_some()) {
+        if open
+            .iter()
+            .all(|(_, invocation, got)| invocation.is_none() || got.is_some())
+        {
             break;
         }
         std::thread::sleep(TICK);
     }
     open.into_iter()
-        .filter_map(|(client, _, got)| Some((client, got?)))
+        .filter_map(|(call, _, got)| {
+            let got = got.or_else(|| mail.known(now, &call))?;
+            Some((call.client, got))
+        })
         .collect()
 }
 
 /// One row listing (`TABLE` or `CATALOG`) from every machine of `workspace`
-/// that advertises `bz` and is serving, each row's name qualified and its two
+/// that advertises `bz` and is there — parked or busy — each row's name qualified and its two
 /// halves stated beside it — the machine is known here, so no reader has to
 /// read it back off the name. The rows describe **that machine's** credentials
 /// as its own brazen reports them.
@@ -166,29 +181,39 @@ pub(crate) fn rows(
         .collect()
 }
 
-/// `bz <line>` run on the one machine a name selected — a row's model listing,
-/// or the catalog a sign-in's flow is read off — or the sentence saying why
-/// that machine did not answer. The asker named the machine, so its silence
-/// is a refusal here where in [`rows`] it is an absence.
+/// `bz <line>` as the one machine a name selected answers it — a row's model
+/// listing — or the sentence saying why that machine did not. The asker named
+/// the machine, so its silence is a refusal here where in [`rows`] it is an
+/// absence; and **only a machine that is not there is refused as absent**: a
+/// busy one answers from what it last said, and is called busy when it has
+/// never said it.
 pub(crate) fn run(deps: &Deps, now: i64, client: &str, line: &[&str]) -> Result<BzOutcome, String> {
     if !advertises(deps, client) {
         return Err(format!(
             "client {client:?} advertises no tool {TOOL:?} right now"
         ));
     }
-    if !deps.caller.mailbox.serving(client) {
-        return Err(format!(
-            "client {client:?} is not waiting for work right now — it is asleep, or busy \
-             with another call; /clients says when it last connected"
-        ));
-    }
+    let mail = &deps.caller.mailbox;
+    let parked = mail.serving(client);
     let (_, capture) = asked(deps, now, &[client.to_owned()], line)
         .pop()
         .ok_or_else(|| {
-            format!(
-                "client {client:?} did not answer within {} seconds",
-                (TICK * WAITS).as_secs()
-            )
+            if parked {
+                format!(
+                    "client {client:?} did not answer within {} seconds",
+                    (TICK * WAITS).as_secs()
+                )
+            } else if mail.busy(now, client) {
+                format!(
+                    "client {client:?} is busy with another call, and it has not answered \
+                     this read before — ask again when that call ends"
+                )
+            } else {
+                format!(
+                    "client {client:?} is not there right now — it is asleep, or gone; \
+                     /clients says when it last connected"
+                )
+            }
         })?;
     Ok(BzOutcome {
         success: capture.exit_code == 0,

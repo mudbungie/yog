@@ -16,12 +16,14 @@ use super::{Call, Invocation};
 
 /// The two ends' exchange over one slot: the foot's post, the asker's poll.
 mod exchange;
+/// A machine that is working, and what it last answered (REMOTE §5.7).
+mod known;
 /// The follow-class read, its one-reader claim and the bound on its lease.
 pub(crate) mod read;
 /// One run's text as it arrives (REMOTE §5.7): appended, read, bounded.
 mod run;
 
-use run::Run;
+use run::{LISTEN_SECONDS, Run};
 
 use read::{HOLD_TICK, HOLD_WAITS};
 
@@ -66,6 +68,17 @@ impl Slot {
         let said = unfinished(&self.client, self.handed, why, self.run.arrived());
         self.run.doubt(&said);
     }
+
+    /// **Is a machine running this, as far as this server believes** (REMOTE
+    /// §5.7, bl-3b4b): handed out, not over, its asker still listening and its
+    /// run not gone silent. No clock of its own — each clause is a rule that
+    /// already ends a run, so *busy* is believed exactly as long as the job is.
+    fn works(&self, now: i64) -> bool {
+        self.handed > 0
+            && !self.run.over()
+            && !self.run.silent(now)
+            && now - self.heard <= LISTEN_SECONDS
+    }
 }
 
 /// The map behind the handle: every live invocation by its id, the serial the
@@ -83,6 +96,10 @@ pub(crate) struct Slots {
     reading: BTreeMap<String, u64>,
     /// The serial a read's token is minted from.
     reads: u64,
+    /// **What each machine last answered a read** (REMOTE §5.7, bl-3b4b), by
+    /// machine, tool and input, with when: the server's one replica of an
+    /// answer whose home is that machine. Swept with the slots, at the hour.
+    known: BTreeMap<known::Key, (i64, super::Capture)>,
 }
 
 /// The process's invocation mailbox, shared by handle exactly as
@@ -125,6 +142,7 @@ impl Mailbox {
     pub fn post(&self, now: i64, by: &str, call: &Call) -> String {
         let mut slots = lock_mail(&self.cell);
         slots.live.retain(|_, slot| now - slot.heard <= TTL_SECONDS);
+        slots.known.retain(|_, (at, _)| now - *at <= TTL_SECONDS);
         slots.seq += 1;
         let id = format!("inv-{}", slots.seq);
         slots.live.insert(
