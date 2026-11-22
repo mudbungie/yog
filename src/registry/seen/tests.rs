@@ -45,3 +45,20 @@ fn a_stamp_that_cannot_be_written_is_silent() {
     mark(root.path(), &client(), 1_700_000_000);
     assert_eq!(read(root.path(), &client()), None);
 }
+
+/// **Recent is thirty seconds, and never is not recent** (bl-d9ad): a machine
+/// that spoke a moment ago is there, one that spoke long ago, in the future,
+/// or never is not — nor is a name that is no client.
+#[test]
+fn a_machine_that_spoke_a_moment_ago_is_recent() {
+    let root = tempdir().expect("tmp");
+    assert!(!spoke(root.path(), "laptop", 100), "never");
+    assert!(!recent(root.path(), "laptop"), "never, by the wall clock");
+    mark(root.path(), &client(), 100);
+    assert!(spoke(root.path(), "laptop", 100));
+    assert!(spoke(root.path(), "laptop", 100 + RECENT_SECONDS));
+    assert!(!spoke(root.path(), "laptop", 101 + RECENT_SECONDS));
+    assert!(!spoke(root.path(), "laptop", 99), "a stamp from the future");
+    assert!(!recent(root.path(), "laptop"), "long ago");
+    assert!(!spoke(root.path(), "", 100), "no client bears no name");
+}

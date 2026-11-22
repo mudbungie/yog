@@ -21,8 +21,10 @@
 //! waiting, so it is *absent* for the whole time it is busy, and a presence
 //! test would refuse the second call of a host that is certainly there. What a
 //! machine that never answers earns is this loop running out, in band. The
-//! bound is [`Budget::span`] of the clock, measured from the queueing, however
-//! many polls fit in it.
+//! bound is [`Budget::span`] of the clock, however many polls fit in it —
+//! **measured from when the machine last spoke** (REMOTE §3.3, bl-d9ad): a
+//! machine heard from a moment ago is working, and a call queued behind its
+//! job, or a tool it is still running, is waited for and not refused.
 //!
 //! **One stop check, and it is [`ask`]'s** (bl-3a88). Two waits nest here — the
 //! poll loop below and, inside each of its round trips, the wait on the server —
@@ -46,6 +48,7 @@ use super::ask::{self, Budget};
 use super::{Site, loaded};
 use crate::boundary::reply::{self, Reply};
 use crate::registry::mailbox::{Capture, Standing};
+use crate::registry::seen;
 
 /// Run one loaded remote name on the machine that advertised it, and answer
 /// what it captured — or the sentence saying why nothing did.
@@ -71,15 +74,21 @@ pub fn invoke(
     // The patience is a span of the clock, not a count of polls (bl-cb6d): a
     // poll is a deposit round trip on top of its tick, so a count of them
     // waits longer than the bound it was given.
-    let asked = std::time::Instant::now();
+    //
+    // **And it does not run while the machine is there** (REMOTE §3.3,
+    // bl-d9ad): a machine that spoke a moment ago is working — on this call,
+    // or on the one this call is queued behind — and busy means wait.
+    let mut asked = std::time::Instant::now();
     loop {
         if let Some(capture) = routed(&poll)?.1.capture {
             return Ok(capture);
         }
-        if asked.elapsed() >= site.patience.span() {
+        if seen::recent(&site.state_root, &entry.client) {
+            asked = std::time::Instant::now();
+        } else if asked.elapsed() >= site.patience.span() {
             return Err(format!(
-                "client {:?} did not answer invocation {invocation} in time; \
-                 it may be offline, or the tool is still running there",
+                "client {:?} did not answer invocation {invocation} in time, and has \
+                 not spoken to this server since; it may be offline or asleep",
                 entry.client
             ));
         }

@@ -132,6 +132,35 @@ fn the_error_says_when_the_machine_last_spoke() {
     );
 }
 
+/// **Busy means wait** (REMOTE §3.3, bl-d9ad): a machine that spoke a moment
+/// ago is working, and a call queued behind its job is waited for however
+/// long the patience is — here, no time at all.
+#[test]
+fn a_call_queued_behind_a_working_machine_outlives_the_patience() {
+    let root = TempDir::new().expect("tmp");
+    let laptop = Client::parse("laptop").expect("client");
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .expect("after the epoch")
+        .as_secs();
+    seen::mark(
+        root.path(),
+        &laptop,
+        i64::try_from(now).expect("this century"),
+    );
+    let (exit, out, _, _) = drive(
+        &far(root.path(), 0),
+        &[
+            queued(),
+            queued(),
+            queued(),
+            json!({"ok": true, "kind": "routed", "invocation": "inv-1",
+                   "capture": {"stdout": "ran\n", "stderr": "", "exit_code": 0}}),
+        ],
+    );
+    assert_eq!((exit, out.as_str()), (0, "ran\n"));
+}
+
 /// A machine that has posted is running the call: silence after that is the
 /// server's to judge, and the patience is not spent on it.
 #[test]

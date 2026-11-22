@@ -17,12 +17,12 @@
 //!   advertises `bz`. Both are files (§5), so the answer does not depend on
 //!   whether the machine is awake, and the row half is that machine's to
 //!   refuse at the call.
-//! - *Is it there?* The mailbox's own two readings — it is parked on its
-//!   read (`serving`), or it is working on a job this server handed it and
-//!   still believes in (`busy`). A parked machine is asked. A busy one cannot
-//!   be — a foot runs one call at a time — so it answers with **what it last
-//!   said to the same read**, the mailbox's one replica of it. A machine that
-//!   is neither is asleep or gone: no rows, no wait.
+//! - *Is it there?* [`there`] — it is parked on its read, or working on a
+//!   job this server handed it and still believes in, or it spoke within the
+//!   thirty seconds a job is believed alive. A machine that is there is
+//!   **asked, never refused**: the read is deposited in its mailbox, behind
+//!   whatever it is running, once. A machine that is none of the three is
+//!   asleep or gone: no rows, no wait.
 //!
 //! **The wait is bounded and paid on the answering thread** — three seconds
 //! for every machine asked at once. A foot's `complete` arrives on that foot's
@@ -31,9 +31,10 @@
 //! `gestures/` inbox the thread is the deposit consumer, and the cost is the
 //! one `invocations` already states: other deposits converge after it.
 //!
-//! **A listing nobody collected is left where it stands.** Its machine posts
-//! the capture to a slot no one polls again, and the mailbox's hour sweep
-//! takes it; there is no cancel on this leg and none is added.
+//! **An ask nobody waited out is still answered.** Its capture lands in the
+//! mailbox's replica of that read whoever is listening, so the next asker of
+//! the same read is answered from it; and a read is in flight at most once,
+//! so asking again queues nothing more.
 
 use std::path::Path;
 use std::time::Duration;
@@ -45,7 +46,7 @@ use crate::boundary::reply::{Place, Placed};
 use crate::bz_host::far::{TOOL, machines, split};
 use crate::config_edit::brazen::{BzOutcome, ProviderRow, ProviderRowView, provider_rows};
 use crate::registry::mailbox::{Call, Capture};
-use crate::registry::{Client, tools};
+use crate::registry::{Client, seen, tools};
 
 /// How long a listing may take: 120 looks, 25 ms apart — three seconds.
 const WAITS: u32 = 120;
@@ -103,16 +104,24 @@ pub(crate) fn judged(
     rows
 }
 
-/// `bz <line>` as each of `clients` answers it, in the order asked. A machine
-/// parked on its read is asked now, all at once, and what comes back inside
-/// the bound is remembered; one that did not answer — it is busy, or it took
-/// the ask and is still on it — answers with what it last said to this read,
-/// while the mailbox believes it is working. The rest answer nothing, and
-/// are not waited for.
+/// **Is `client` there** — parked on its read, working, or heard from a moment
+/// ago (the instant between a foot's last post and its next read)?
+fn there(deps: &Deps, now: i64, client: &str) -> bool {
+    let mail = &deps.caller.mailbox;
+    mail.serving(client) || mail.busy(now, client) || seen::spoke(&deps.state_root, client, now)
+}
+
+/// `bz <line>` as each of `clients` that is there answers it, in the order
+/// asked. Each is asked — one ask per read, queued behind whatever that
+/// machine is running — and a machine that was not already working is waited
+/// for, all at once, inside the bound. What is answered is what the machine
+/// last said to this read: the fresh answer when it came, an earlier one while
+/// the ask is still out, and nothing only when it has never answered.
 fn asked(deps: &Deps, now: i64, clients: &[String], line: &[&str]) -> Vec<(String, Capture)> {
-    let (mail, by) = (&deps.caller.mailbox, deps.caller.client.name());
-    let mut open: Vec<(Call, Option<String>, Option<Capture>)> = clients
+    let mail = &deps.caller.mailbox;
+    let mut open: Vec<(Call, bool)> = clients
         .iter()
+        .filter(|client| there(deps, now, client))
         .map(|client| {
             let call = Call {
                 client: client.clone(),
@@ -120,32 +129,24 @@ fn asked(deps: &Deps, now: i64, clients: &[String], line: &[&str]) -> Vec<(Strin
                 input: json!({ "args": line }),
                 cwd: None,
             };
-            let invocation = mail.serving(client).then(|| mail.post(now, &by, &call));
-            (call, invocation, None)
+            let idle = !mail.busy(now, client);
+            mail.ask(now, &call);
+            (call, idle)
         })
         .collect();
     for _ in 0..WAITS {
-        for (call, invocation, got) in open.iter_mut().filter(|(_, _, got)| got.is_none()) {
-            *got = invocation
-                .as_deref()
-                .and_then(|id| mail.collect(now, &by, id, None).ok())
-                .and_then(|standing| standing.capture);
-            if let Some(fresh) = got.as_ref() {
-                mail.remember(now, call, fresh);
-            }
+        for (call, waiting) in open.iter_mut().filter(|(_, waiting)| *waiting) {
+            *waiting = mail.queued(now, call);
         }
-        if open
-            .iter()
-            .all(|(_, invocation, got)| invocation.is_none() || got.is_some())
-        {
+        if !open.iter().any(|(_, waiting)| *waiting) {
             break;
         }
         std::thread::sleep(TICK);
     }
     open.into_iter()
-        .filter_map(|(call, _, got)| {
-            let got = got.or_else(|| mail.known(now, &call))?;
-            Some((call.client, got))
+        .filter_map(|(call, _)| {
+            let last = mail.known(&call)?;
+            Some((call.client, last))
         })
         .collect()
 }
@@ -182,38 +183,29 @@ pub(crate) fn rows(
 }
 
 /// `bz <line>` as the one machine a name selected answers it — a row's model
-/// listing — or the sentence saying why that machine did not. The asker named
-/// the machine, so its silence is a refusal here where in [`rows`] it is an
-/// absence; and **only a machine that is not there is refused as absent**: a
-/// busy one answers from what it last said, and is called busy when it has
-/// never said it.
+/// listing — or the sentence saying why there is no answer yet. **Nothing is
+/// refused because the machine is busy** (REMOTE §5.7): the read is queued
+/// behind what it is running, and the sentence says so. Only a machine that
+/// is not there, or that serves no `bz`, is refused as such.
 pub(crate) fn run(deps: &Deps, now: i64, client: &str, line: &[&str]) -> Result<BzOutcome, String> {
     if !advertises(deps, client) {
         return Err(format!(
             "client {client:?} advertises no tool {TOOL:?} right now"
         ));
     }
-    let mail = &deps.caller.mailbox;
-    let parked = mail.serving(client);
+    if !there(deps, now, client) {
+        return Err(format!(
+            "client {client:?} is not there right now — it is asleep, or gone; \
+             /clients says when it last connected"
+        ));
+    }
     let (_, capture) = asked(deps, now, &[client.to_owned()], line)
         .pop()
         .ok_or_else(|| {
-            if parked {
-                format!(
-                    "client {client:?} did not answer within {} seconds",
-                    (TICK * WAITS).as_secs()
-                )
-            } else if mail.busy(now, client) {
-                format!(
-                    "client {client:?} is busy with another call, and it has not answered \
-                     this read before — ask again when that call ends"
-                )
-            } else {
-                format!(
-                    "client {client:?} is not there right now — it is asleep, or gone; \
-                     /clients says when it last connected"
-                )
-            }
+            format!(
+                "queued, not refused: this read is waiting on client {client:?} behind the \
+                 call it is running, and the answer is kept here when it arrives — ask again"
+            )
         })?;
     Ok(BzOutcome {
         success: capture.exit_code == 0,

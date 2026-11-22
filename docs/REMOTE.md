@@ -716,6 +716,86 @@ on 19 is what guarantees no server of the new discipline meets a reader of
 the old.
 
 
+### 3.3 Busy means queue (bl-d9ad)
+
+**Nothing is refused because something is working. Busy means queue.** A
+refusal says a thing is *not there* or *not allowed* — an unknown name, a
+machine that is asleep or gone, a certificate that may not say this, a request
+that does not parse. It never says *come back later*: whoever is busy keeps
+the ask, and takes it up when the work in front of it ends. This is the one
+place the rule is stated; every other section that meets a busy party cites it
+(operator, 2026-11-21: *sending a message should always queue the message,
+which is ingested at next turn; we should never reject just because the server
+is doing work*).
+
+**One path: everything goes to the queue first** (operator, 2026-11-21: *you
+always hit the queue first; when there's nothing happening, that immediately
+dequeues, but you always go to queue; one code path*). There is no *idle — do
+it directly* beside *busy — queue it*. An ask or a message is enqueued,
+always; a target with nothing in front of it dequeues at once. Idle is the
+general path with an empty queue, never a case of its own — so nothing can
+behave one way when tested idle and another when met busy.
+
+- **A message** is written to the agent's inbox whether or not a driver is
+  running; only then is the driver's lock probed, and an idle agent is
+  started *to drain the inbox*. No message is handed to a driver any other
+  way.
+- **A read or a call aimed at a machine** is posted to that machine's mailbox
+  whether it is parked or working; a parked foot's read hands it over within
+  one look. The server never runs anything on a machine except through its
+  mailbox. What differs for a machine already working is only how long the
+  *asker* waits before answering with what is known — never where the ask
+  goes.
+
+What it means at each place a seat or a driver meets a party that is working:
+
+- **A message to a conversation mid-turn is accepted and queued.** The
+  `message` act writes it to that agent's inbox and answers `ok`; the running
+  driver ingests it at its next step boundary — after the current step's tool
+  results commit, before the next model call. Nothing on that path asks
+  whether a turn is running, a routed tool is in flight, a sign-in is live or
+  the conversation's machine is busy. (litany's inbox is the queue; §3.1.)
+- **A read aimed at a busy machine is queued behind its job** (§5.7, *A busy
+  machine stays in sight*): one ask per read, deposited in that machine's
+  mailbox and handed over at its next read, its answer kept for whoever asks.
+- **A model call or a tool call routed to a busy machine waits for it**
+  (§5.3, §5.7). The driver's patience measures a machine that has gone
+  quiet, not one that is working: it does not run while that machine spoke
+  to this server within the last thirty seconds.
+- **`invoke` queues** and never asks whether its machine is connected (§5).
+- **A second `login` replaces the first; `stop`, `nudge`, a role or config
+  write, and starting another conversation** look at no running work at all.
+
+**How a machine is known to be working** — the one predicate, three facts the
+server already holds: it is parked on its read, or the mailbox holds a job
+handed to it that is still believed alive (§5.7), or it spoke within thirty
+seconds (§5.1's `last_seen`). The third closes the instant between a foot's
+last post and its next read, and is the only one a driver, which holds no
+mailbox, can read.
+
+**What is still refused while something runs, and why it is not this rule.**
+
+- **Deleting a workspace or an agent with a live conversation** is refused,
+  naming them: *stop them first*. A delete is irreversible and a turn in
+  flight would be writing into what it removes; queueing a deletion behind a
+  turn would destroy the turn's result the moment it landed. It is *not
+  allowed*, and the remedy is in the sentence.
+- **A second `invocations` read under one certificate** (§5.1) is two
+  processes claiming one machine, not one machine being busy.
+- **A second server on one world**, and **a ninth certificate-less
+  connection at the registration door** (§15.2), are capacity and identity,
+  not work in progress.
+
+**What the wire cannot yet say.** A read that is queued and has no earlier
+answer has no `ok` reply meaning *queued*: `reply/models` is a list, and an
+empty one would read as *this provider has no models*. Until an optional key
+says it (an edition, not built here), that one answer is carried by the
+reply's sentence — *queued, not refused* — in the envelope a refusal uses. It
+is a state said in the only words the wire has, and a seat that asks again is
+answered. One foot still runs one call at a time (§5.7, *What this does not
+solve*): queued work waits for the job in front of it.
+
+
 ## 4. Identity, authentication, authorization
 
 - **mTLS both ways.** The operator runs a private CA out-of-channel and
@@ -1850,7 +1930,10 @@ reversal exists to end. What a foot must treat as final is the other answer:
 host's own bound terminates the child (SIGTERM then SIGKILL, the cascade the
 crate already owns) and answers the shell's `timeout` verdict with a sentence;
 the driver's longer patience stands behind it for the case where the whole host
-process went away. Neither is a knob: a server that has not answered is down,
+process went away — and only for that case (§3.3, bl-d9ad): while the machine
+spoke within thirty seconds the patience is not spent, so a call queued behind
+another job, or a tool a streaming foot is still running, is waited for.
+Neither is a knob: a server that has not answered is down,
 and a tool that has not answered is working. *(§5.7 designs the successor for
 a foot that streams: the host's fixed bound gives way to the asker's own
 listening, and a refused post is what terminates the child.)*
@@ -2512,8 +2595,9 @@ the behaviour a swept slot has always had.
 
 **The expiry is already two numbers, and no third is added.** What the model
 waits is the driver's patience — `tool_host/remote::patience`, two minutes —
-which ends with a sentence of its own naming the client and that the tool
-*"may be offline, or … still running there"*. What the map holds is the hour
+which ends with a sentence of its own naming the client and that it *"may be
+offline or asleep"* — and which, since bl-d9ad, does not run while that
+machine spoke within thirty seconds (§3.3). What the map holds is the hour
 sweep, which bounds the server's RAM and not the attempt: by the time it runs
 no driver is polling, and a capture landing on a slot nobody will collect is
 freed by the sweep exactly as before. The lesson's day-long window is a
@@ -2811,8 +2895,8 @@ whole at the end, as it does today.
   reached the arm ends the arm's stream without its terminator; litany already
   reads that as a call that died and does not retry it, and the conversation
   rests with the failure where every provider failure lands. A call nobody
-  took — the machine asleep, or busy past the arm's patience (§5.6's two
-  minutes) — has relayed nothing, so the arm answers it as a canonical `error`
+  took — the machine asleep or gone for the arm's patience (§5.6's two
+  minutes; a machine that is working is waited for, §3.3) — has relayed nothing, so the arm answers it as a canonical `error`
   event naming the client and when it last spoke (§5.1's `last_seen`),
   non-retryable: a retry would queue a second call behind the first.
 
@@ -2906,6 +2990,11 @@ and `PROTOCOL` stands at 19: the arm spends bl-d414's three keys and adds none.
   long as it runs, and a run that stalls is ended by the server's own
   thirty-second rule at the arm's next poll. **A foot that does not stream is therefore held to two minutes for the
   whole call**, which is what its own fixed bound already was.
+  **And the two minutes do not run while the machine is working** (§3.3,
+  bl-d9ad): a call queued behind another job on a machine that spoke within
+  thirty seconds restarts the clock at every poll, so it fails only once
+  that machine has been silent for the whole patience. The sentence then says
+  *asleep, or gone*, no longer *or busy with another call*.
 - **Corrected here — the in-band error covers every failure before a byte was
   relayed**, not only the machine that never took the call. A refused `invoke`
   (the client advertises no `bz`) and a server that did not answer have
@@ -2947,10 +3036,11 @@ row saying what its name is made of.
   for each client registered in the workspace that advertises `bz` **and is
   there at that moment**, append that machine's rows with their names
   qualified. A machine parked on its read (the mailbox's own `serving`) is
-  asked: the same listing is run there. A machine that is **busy** cannot be
-  asked — a foot runs one call at a time (§5.3) — and answers with what it
-  last said to the same listing, at no wait (*A busy machine stays in sight*,
-  below). A machine that is neither is asleep or gone: it contributes no rows
+  asked: the same listing is run there. A machine that is **busy** is asked
+  too, behind its job (§3.3) — a foot runs one call at a time (§5.3) — and
+  meanwhile answers with what it last said to the same listing, at no wait
+  (*A busy machine stays in sight*, below). A machine that is neither, and has
+  not spoken in thirty seconds, is asleep or gone: it contributes no rows
   and costs no wait, and the roster (§5.1) is where a seat reads why. The rows
   describe **that machine's
   credentials as that machine's brazen reports them** — "signed in" on a
@@ -2961,7 +3051,8 @@ row saying what its name is made of.
   not it is awake. The row half is the far machine's to refuse at the call:
   use is attempt.
 - **`models`** with a qualified provider runs the listing on that machine,
-  or — while it is busy — answers what that machine last said to it.
+  or — while it is busy — queues the listing behind its job and answers what
+  that machine last said to it.
 - **`login`** with a qualified provider starts the same run §8.3 describes,
   as an invocation rather than a local spawn, and `login-tail` reads its lines
   off the slot's stream — which is why standard error streams too: brazen
@@ -3002,30 +3093,39 @@ readings of the mailbox now carry it.
   the arm's two minutes at the longest. Nothing is handed to a machine on the
   strength of *busy*, so the cost of believing it too long is a listing that
   shows that machine's last known rows for that long.
+- **A read is asked, never refused, and is in flight at most once** (§3.3,
+  bl-d9ad). A listing or a `models` read aimed at a machine that is there is
+  deposited in its mailbox like any job — posted by the server itself, under
+  a name no caller bears — and waits behind whatever that machine is running;
+  the foot is handed it at its next read. The ask in flight is a field of the
+  read it belongs to (machine, tool, input), so a second asker of the same
+  read joins it and queues nothing: one invariant, not a count.
 - **What it last said has one replica, and it lives in the mailbox.** The home
-  of a machine's rows is that machine's brazen. The server keeps the last
-  capture each machine gave each read — keyed by machine, tool and input, in
-  RAM under the mailbox's own lock — replaced by every fresh answer and swept
-  after an hour. It is served **only while that machine is busy**: a machine
-  that can be asked is asked, and one that is asleep or gone is not spoken
-  for. So a replica is never older than the job that is hiding its machine,
-  or an hour, whichever is less; *signed in* on such a row is that machine's
+  of a machine's rows is that machine's brazen. The ask's capture lands in
+  that read's entry whoever is or is not still waiting — in RAM under the
+  mailbox's own lock, replaced by every fresh answer, swept an hour after the
+  read was last asked. So the asker's wait is bounded (three seconds, and
+  none at all for a machine already working) while the ask stays queued, and
+  whoever asks next is answered. *Signed in* on such a row is that machine's
   fact as of its last answer, and the wire does not say which rows are
   remembered.
-- **A read that names a busy machine is answered, not refused.** `models`
-  answers what that machine last said to the same listing. Asked a read it
-  has never answered, the server says the machine is *busy with another call*
-  — not asleep — and to ask again when that call ends; nothing is queued for
-  it, because an ask left behind a model call is collected by nobody.
-- **A machine that took an ask and did not answer inside the bound** is, from
-  that moment, a machine holding a job — the ask — so it too answers with
-  what it last said, for the thirty seconds its asker's silence allows.
+- **What a seat is answered.** A listing carries the machine's last known
+  rows — fresh when the ask came back inside the bound. `models` answers the
+  machine's last list the same way. A read the machine has **never**
+  answered, asked while it works, is answered *queued, not refused: this read
+  is waiting on client … behind the call it is running, and the answer is
+  kept here when it arrives — ask again* — §3.3's one state the wire has no
+  `ok` shape for.
+- **A machine between two jobs is there.** Between its last post and its next
+  read a foot is neither parked nor working; having spoken within thirty
+  seconds, it is asked, and the ask waits in its mailbox for the read that is
+  coming. A machine that fell asleep is believed there for those thirty
+  seconds too, and costs a listing the three-second bound once.
 - **Not solved here.** A busy machine still runs nothing new until its job
   ends: one call at a time is the foot's, and the remedy needs the wire
   (*What this does not solve*, below). A server restart empties the mailbox,
-  so the replica and every job go with it; the feet's next reads are fresh
-  asks. And between a foot's last post and its next read — two round trips —
-  it is neither parked nor busy, and a listing made in that instant omits it.
+  so the replica, every queued ask and every job go with it; the feet's next
+  reads are fresh asks.
 
 **A row says which machine it is on, and a seat never takes the name apart**
 (bl-471d, **edition 30**; `PROTOCOL` unmoved). The name `<row>@<client>` is
@@ -3096,13 +3196,14 @@ arm). No shape moved, no edition was stamped and `PROTOCOL` stands at 19.
   three seconds late, well inside the thirty a run is allowed to go unheard.
 - **`models` naming a machine is a refusal where a listing is an absence.**
   The asker named the box, so its silence is said: one sentence for a machine
-  that advertises no `bz`, one for a machine that is not there (asleep or
-  gone — answered at once, with no wait), one for a machine that took the
-  call and did not finish inside the bound. That brazen's own failure is
-  relayed in its own words, as the linked one's is. *Amended by bl-3b4b: the
-  second sentence used to cover a busy machine too. A busy machine now
-  answers what it last said, and is called busy — a fourth sentence — only
-  for a read it has never answered (*A busy machine stays in sight*, above).*
+  that advertises no `bz`, and one for a machine that is not there (asleep or
+  gone — answered at once, with no wait). That brazen's own failure is
+  relayed in its own words, as the linked one's is. *Amended by bl-3b4b and
+  bl-d9ad: a third sentence used to refuse a machine that took the call and
+  did not finish inside the bound, and the second used to cover a busy
+  machine. Neither is a refusal now — the read stays queued, and the answer
+  is the machine's last, or §3.3's* queued, not refused *(*A busy machine
+  stays in sight*, above).*
 - **The judgement adds a row and changes no gate.** §9.4's pick, §9.5's
   provider control and §9.19's `prompt` door each ask *does this row exist*
   of the workspace's table; a name that selects a machine registered here and
@@ -3168,7 +3269,7 @@ still cannot ask for anything it was not sent.
 - **The poll is the stream's grain.** The arm polls at the router's cadence,
   so text reaches a seat in half-second pieces rather than per token.
 - **A machine that is absent is a turn that fails**, in band, after the arm's
-  patience. There is no fallback row: a call that silently ran on the server's
+  patience — absent, not busy: a working machine is waited for (§3.3). There is no fallback row: a call that silently ran on the server's
   credential instead would be an implicit location, which the name exists to
   forbid.
 - **Version skew between two brazens.** The far `bz` answers for its own
@@ -3232,8 +3333,9 @@ What the tree was found to disagree with, and how each was settled:
   mid-read costs a listing the three-second bound once, and is handed a
   listing it will run when it wakes. The bound is what the design stated for
   exactly this, and nothing was added. *Since bl-3b4b that unanswered listing
-  is a job its machine holds, so for the next thirty seconds the machine
-  reads as busy and a listing carries its last known rows.*
+  is a job its machine holds, so the machine reads as busy and a listing
+  carries its last known rows; since bl-d9ad it is also the one ask in flight
+  for that read, so later listings queue nothing more.*
 - **A wall whose own table is empty judges no name.** §9.4's rule — an empty
   table is no answer — is older than this section and outranks the
   qualification: on a fresh wall the pick accepted a row on a machine nobody
@@ -3246,8 +3348,8 @@ What the tree was found to disagree with, and how each was settled:
 
 **What proves it.** Server: the mailbox suite
 (`src/registry/mailbox/slots/tests/stream.rs`, landed with bl-d414;
-`tests/known.rs`, bl-3b4b — busy from the hand-off, ended by each rule that
-ends a run, and the replica served only meanwhile) — posts
+`tests/known.rs`, bl-3b4b and bl-d9ad — busy from the hand-off, ended by each
+rule that ends a run, a read queued once and its answer kept) — posts
 absorb in order, `since` is idempotent, an acknowledged slot is answered in
 doubt rather than re-handed, a `partial` for an unlistened slot is refused and
 a `capture` for one lands, the unread bound holds. The arm
@@ -3258,8 +3360,9 @@ relayed byte. The listings (`src/boundary/config/far/tests.rs`, landed with
 bl-7467, a fixture foot parked on the real mailbox answering canned brazen
 listings): rows appended qualified, a machine that is not there neither
 asked nor waited for, a busy machine's rows and model list answered from what
-it last said and gone when its job ends, `models` run on the machine it names
-and each of its four refusals, the judgement's five readings — and the gates themselves,
+it last said, a read it never answered queued once behind its job and
+answered when asked again, a machine between two jobs asked, `models` run on
+the machine it names and each of its two refusals, the judgement's five readings — and the gates themselves,
 each in its own suite: the pick, the provider control and the `prompt` door
 accept a qualified role with nobody awake. The sign-in
 (`src/boundary/login/tests/far.rs`): the flow read off that machine's catalog,

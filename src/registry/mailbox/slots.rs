@@ -96,10 +96,11 @@ pub(crate) struct Slots {
     reading: BTreeMap<String, u64>,
     /// The serial a read's token is minted from.
     reads: u64,
-    /// **What each machine last answered a read** (REMOTE §5.7, bl-3b4b), by
-    /// machine, tool and input, with when: the server's one replica of an
-    /// answer whose home is that machine. Swept with the slots, at the hour.
-    known: BTreeMap<known::Key, (i64, super::Capture)>,
+    /// **Each read put to a machine** (REMOTE §5.7, bl-3b4b, bl-d9ad), by
+    /// machine, tool and input: the one ask in flight for it and the server's
+    /// one replica of what that machine last answered. Swept an hour after it
+    /// was last asked.
+    known: BTreeMap<known::Key, known::Asked>,
 }
 
 /// The process's invocation mailbox, shared by handle exactly as
@@ -140,12 +141,18 @@ impl Mailbox {
     /// also when the sweep of everything older than an hour happens — one pass,
     /// at the one moment the map can grow.
     pub fn post(&self, now: i64, by: &str, call: &Call) -> String {
-        let mut slots = lock_mail(&self.cell);
-        slots.live.retain(|_, slot| now - slot.heard <= TTL_SECONDS);
-        slots.known.retain(|_, (at, _)| now - *at <= TTL_SECONDS);
-        slots.seq += 1;
-        let id = format!("inv-{}", slots.seq);
-        slots.live.insert(
+        lock_mail(&self.cell).queue(now, by, call)
+    }
+}
+
+impl Slots {
+    /// [`Mailbox::post`], under the lock its caller already holds.
+    fn queue(&mut self, now: i64, by: &str, call: &Call) -> String {
+        self.live.retain(|_, slot| now - slot.heard <= TTL_SECONDS);
+        self.known.retain(|_, read| now - read.at <= TTL_SECONDS);
+        self.seq += 1;
+        let id = format!("inv-{}", self.seq);
+        self.live.insert(
             id.clone(),
             Slot {
                 client: call.client.clone(),

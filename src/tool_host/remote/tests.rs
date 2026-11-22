@@ -86,6 +86,37 @@ fn a_machine_that_never_answers_runs_out_and_says_so() {
     assert_eq!(seen.iter().count(), 2, "one queue, one poll");
 }
 
+/// **Busy means wait** (REMOTE §3.3, bl-d9ad): the same spent patience, and a
+/// machine that spoke a moment ago — it is working, on this call or on the one
+/// this call is queued behind. The call is waited for, and its capture is the
+/// answer.
+#[test]
+fn a_machine_that_is_there_is_waited_for_past_the_patience() {
+    let root = TempDir::new().expect("tmp");
+    let laptop = crate::registry::Client::parse("laptop").expect("client");
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .expect("after the epoch")
+        .as_secs();
+    seen::mark(
+        root.path(),
+        &laptop,
+        i64::try_from(now).expect("this century"),
+    );
+    let queued = json!({"ok": true, "kind": "routed", "invocation": "inv-7"});
+    let done = json!({"ok": true, "kind": "routed", "invocation": "inv-7",
+                      "capture": {"stdout": "late", "stderr": "", "exit_code": 0}});
+    let (handle, _seen) = scripted(root.path(), &[queued.clone(), queued.clone(), queued, done]);
+    let mut s = site(root.path(), budget());
+    s.patience = Budget {
+        waits: 0,
+        tick: Duration::from_millis(1),
+    };
+    let got = invoke(&s, &entry(), &json!({}), None, &quiet()).expect("waited for");
+    handle.join().expect("server");
+    assert_eq!(got.stdout, "late");
+}
+
 /// A stop landing mid-run ends the wait, which is the router obligation litany
 /// states and cannot enforce. The flag is raised by the stand-in server
 /// **before** it writes the answer the driver is waiting on — the hostile

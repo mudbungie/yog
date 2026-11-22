@@ -199,7 +199,10 @@ impl Far {
         // The patience is a span of the clock, not a count of polls: a poll
         // is a deposit round trip on top of its tick, and two hundred and
         // forty of them measured three minutes where the sentence said two.
-        let (mut taken, asked) = (false, std::time::Instant::now());
+        // **Nor is it spent while the machine is there** (REMOTE §3.3,
+        // bl-d9ad): one that spoke a moment ago is working, this call is
+        // queued behind its job, and busy means wait.
+        let (mut taken, mut asked) = (false, std::time::Instant::now());
         loop {
             let (_, standing) = ask(json!({
                 "op": "capture", "invocation": invocation,
@@ -213,7 +216,9 @@ impl Far {
                 pass(stdout, stderr, held, (&capture.stdout, &capture.stderr))?;
                 return Ok(capture.exit_code);
             }
-            if !taken && asked.elapsed() >= self.patience.span() {
+            if !taken && seen::recent(&self.state_root, &self.client) {
+                asked = std::time::Instant::now();
+            } else if !taken && asked.elapsed() >= self.patience.span() {
                 return Err(self.untaken());
             }
             std::thread::sleep(self.patience.tick);
@@ -236,8 +241,8 @@ impl Far {
                 },
             );
         format!(
-            "client {:?} did not take this call within {} seconds; {last}. It may be \
-             asleep, or busy with another call. Nothing ran, and nothing was sent to this \
+            "client {:?} did not take this call within {} seconds of last speaking; \
+             {last}. It is asleep, or gone. Nothing ran, and nothing was sent to this \
              server's own provider instead",
             self.client,
             self.patience.span().as_secs()

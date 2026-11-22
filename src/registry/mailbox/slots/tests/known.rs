@@ -1,11 +1,11 @@
 //! **A machine that is working, and what it last answered** (REMOTE §5.7,
-//! bl-3b4b): `busy` is the job the mailbox handed out and still believes in,
-//! and `known` is the one replica of a machine's answer, served only then.
+//! bl-3b4b, bl-d9ad): `busy` is the job the mailbox handed out and still
+//! believes in; a read is asked once and its answer kept.
 
 use super::super::TTL_SECONDS;
 use super::super::run::LISTEN_SECONDS;
 use super::stream::{ending, piece, running};
-use super::{NOW, call, quick, ran, took};
+use super::{NOW, call, finish, quick, ran, took};
 
 /// **Queued is not working, and handed is.** A job nobody took says nothing
 /// about its machine; one a read was handed makes that machine busy — and no
@@ -54,29 +54,59 @@ fn busy_ends_by_the_rules_that_end_a_run() {
     );
 }
 
-/// **The replica is served only while its machine is busy**, is replaced by
-/// each fresh answer, is one read's and not another's, and is swept at the
-/// hour with everything else this map holds.
+/// **A read is in flight at most once, and its answer is kept.** Asked twice
+/// it is queued once; the capture lands in what is known whoever was waiting;
+/// asked again it goes out again, and the earlier answer stands until the
+/// fresh one replaces it. Another read's answer is its own.
 #[test]
-fn what_a_machine_last_said_is_known_while_it_works() {
+fn a_read_is_queued_once_and_its_answer_is_kept() {
     let mail = quick();
-    let (read, other) = (call("laptop", "bz"), call("laptop", "shell"));
-    mail.remember(NOW, &read, &ran(0));
-    assert_eq!(mail.known(NOW, &read), None, "an idle machine is asked");
+    let read = call("laptop", "bz");
+    assert_eq!(mail.known(&read), None, "never asked");
+    mail.ask(NOW, &read);
+    mail.ask(NOW, &read);
+    assert!(mail.queued(NOW, &read));
+    let work = took(&mail, "laptop");
+    assert_eq!(work.len(), 1, "asked twice, queued once");
+    for handed in &work {
+        finish(&mail, "laptop", &handed.id, &ran(0)).expect("in flight");
+    }
+    assert!(!mail.queued(NOW, &read), "answered with nobody waiting");
+    assert_eq!(mail.known(&read), Some(ran(0)));
 
-    running(&mail);
-    assert_eq!(mail.known(NOW, &read), Some(ran(0)));
-    assert_eq!(mail.known(NOW, &other), None, "another read's answer");
-    mail.remember(NOW, &read, &ran(7));
-    assert_eq!(
-        mail.known(NOW, &read),
-        Some(ran(7)),
-        "replaced, not kept beside"
+    mail.ask(NOW, &read);
+    assert!(mail.queued(NOW, &read), "asked again, out again");
+    assert_eq!(mail.known(&read), Some(ran(0)), "the last answer stands");
+    for handed in took(&mail, "laptop") {
+        finish(&mail, "laptop", &handed.id, &ran(7)).expect("in flight");
+    }
+    assert!(!mail.queued(NOW, &read));
+    assert_eq!(mail.known(&read), Some(ran(7)), "replaced, not kept beside");
+    assert_eq!(mail.known(&call("laptop", "shell")), None);
+}
+
+/// **An ask ends as any run does**: its machine going quiet answers it in
+/// doubt, and that is what is known. And a read nobody has asked in an hour is
+/// swept with its flight.
+#[test]
+fn an_ask_ends_in_doubt_or_is_swept() {
+    let mail = quick();
+    let read = call("laptop", "bz");
+    mail.ask(NOW, &read);
+    for handed in took(&mail, "laptop") {
+        mail.complete(NOW, "laptop", &handed.id, &piece("half", ""))
+            .expect("in flight");
+    }
+    assert!(mail.queued(NOW + LISTEN_SECONDS, &read));
+    assert!(
+        !mail.queued(NOW + LISTEN_SECONDS + 1, &read),
+        "it went quiet"
     );
+    let said = mail.known(&read).expect("the doubt is the answer");
+    assert_eq!((said.stdout.as_str(), said.exit_code), ("half", 1));
 
-    let late = NOW + TTL_SECONDS + 1;
-    mail.post(late, "local", &call("laptop", "bz"));
-    assert_eq!(took(&mail, "laptop").len(), 1);
-    assert!(mail.busy(late, "laptop"));
-    assert_eq!(mail.known(late, &read), None, "an hour old is not known");
+    mail.ask(NOW, &read);
+    mail.post(NOW + TTL_SECONDS + 1, "local", &call("desktop", "bz"));
+    assert_eq!(mail.known(&read), None, "an hour unasked is not known");
+    assert!(!mail.queued(NOW + TTL_SECONDS + 1, &read), "nor in flight");
 }

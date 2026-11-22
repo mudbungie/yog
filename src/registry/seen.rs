@@ -61,5 +61,27 @@ pub fn read(state_root: &Path, client: &Client) -> Option<i64> {
         .ok()
 }
 
+/// **How recently a machine must have spoken to be there** with no read
+/// parked and no job held (REMOTE §3.3, bl-d9ad): thirty seconds, the span a
+/// job is believed alive without a post. A foot that is working posts at
+/// least every ten, and one between two jobs spoke a moment ago.
+pub const RECENT_SECONDS: i64 = 30;
+
+/// Did `client` speak within [`RECENT_SECONDS`] of `now`?
+pub fn spoke(state_root: &Path, client: &str, now: i64) -> bool {
+    Client::parse(client)
+        .ok()
+        .and_then(|client| read(state_root, &client))
+        .is_some_and(|at| (0..=RECENT_SECONDS).contains(&(now - at)))
+}
+
+/// [`spoke`], by the wall clock — for a waiter that holds no `now` of its own.
+pub fn recent(state_root: &Path, client: &str) -> bool {
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |since| since.as_secs());
+    spoke(state_root, client, i64::try_from(now).unwrap_or(i64::MAX))
+}
+
 #[cfg(test)]
 mod tests;
