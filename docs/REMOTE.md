@@ -3280,6 +3280,221 @@ output is posted before it exits, a refused post kills the child, an older
 server is posted to once. brazen: the envelope mode runs an allowed command
 line byte-for-byte as the direct one and refuses each flag outside the set.
 
+### 5.8 PROPOSED, NOT IN FORCE — a host states what it holds (bl-efdd)
+
+> **Status: a proposal awaiting the operator's ruling. Nothing in this section
+> is built. No edition is taken and `PROTOCOL` is unmoved. §5.1–§5.7 are the
+> wire in force; where this section disagrees with them, they are right.**
+
+**The principle it serves** (operator): things happen on the server, and every
+interface reads its own replica and sends in parallel regardless of what else
+is going on. The tool lane breaks that in one place — the server learns a
+host's state from what the host does *not* say.
+
+Three words, used below as defined here. A **host** is a program that runs
+work for the server: thrall, and the phone's tool host. A **slot** is the
+server's record of one invocation, in RAM. A **read** is the host's
+`invocations` request, which the server holds open — *parks* — for up to thirty
+seconds waiting for work.
+
+#### 5.8.1 What happens today, and where the server guesses
+
+In order (line numbers as of this ball):
+
+1. The host advertises, then reads. The read takes its certificate's one
+   reader slot; a second read is refused (`src/registry/mailbox/slots/read.rs:108-127`)
+   and an accepted advertisement ends the parked one
+   (`src/boundary/dispatch/advertise.rs:64`, `read.rs:135`).
+2. Work arrives. The read is answered with every queued slot, each counted as
+   handed (`read.rs:168-189`).
+3. The host **stops reading**, runs the work one at a time, posts each capture
+   and re-advertises (thrall `src/run/hold.rs:126-139`; yog-android
+   `src/host/serve.rs:206-234`). A host that is not streaming holds no
+   connection for that whole time.
+4. It reads again.
+
+| The server's guess | Where | Why it is a guess |
+|---|---|---|
+| It read again, so it holds nothing: every slot it was handed and has not answered goes out again | `read.rs:183` (`ack`) | True only because step 3 forbids reading while working |
+| It read again while one of its slots had begun to post, so that run is dead | `read.rs:179-180`; the sentence is `doubt.rs:69` | The same |
+| A read is parked, so the machine can take a call now; none parked means it cannot | `read.rs:142`; `src/boundary/config/far.rs:123`, `:197` | A busy machine is there |
+| No read is parked but a slot it was handed is still believed alive, so it is "busy" and is answered for from what it last said (bl-3b4b) | `src/registry/mailbox/slots.rs:76`; `slots/known.rs:47-67`; `config/far.rs:147`, `:206` | A belief built from three other clocks; the answer served is a remembered one |
+| No connection, so the roster says `present: false` | `src/registry/roster.rs:57` | The same |
+| No capture in two minutes: "it may be offline, or the tool is still running there" | `src/tool_host/remote.rs:79-83`; `src/bz_host/far.rs:216` | The server cannot tell which, so a long tool is cut off and a dead box is waited on |
+| A parked read has a live process behind it | `read.rs:86-101` | A dead peer stays parked for the rest of its hold — the reason `superseded` exists (§5.1) |
+
+What it costs: one job at a time per host (§5.7, *"One call at a time per
+foot"*), a sign-in that occupies its machine, and a busy machine that reads as
+absent on every seat.
+
+#### 5.8.2 The wire: one optional key on one request
+
+```json
+{"op": "invocations", "holding": ["inv-7", "inv-9"]}
+```
+
+**`holding` is every invocation id this host was handed and whose final post
+the server has not yet answered** — running, waiting its turn on the host, or
+finished with the capture still unsent. (*Final post*: the `complete` that
+carries the capture.)
+
+- **Absent reads as the empty list: "I hold nothing".** That is what an old
+  host means by reading at all, and it is what the server already assumes. An
+  old host is the general path with an empty list, not a case.
+- **A slot the read lists is left alone by that read**: not handed again, not
+  ended. A slot of this certificate the read does *not* list, and that has no
+  capture, gets exactly today's treatment (§5.6, §5.7): handed again, up to
+  three hand-offs, if nothing was posted for it; answered in doubt if
+  something was. The reply is unchanged.
+- **A listed id that is finished, unknown to this server, or addressed to
+  another machine is ignored, silently.** A server restart makes every id
+  unknown and is ordinary; a refusal would confirm that another machine's id
+  exists (§4).
+
+**It is an edition, not a `PROTOCOL` bump** (§3.2): an optional request key
+whose absence reads as the fact before it existed.
+
+- **Old host, new server.** No key is sent. Today's behaviour, byte for byte.
+- **New host, old server.** The old server ignores the key
+  (`src/boundary/codec/query.rs:241` reads no field) and would treat a read
+  made while working as "finished nothing". So a new host reads while working
+  only when the server's hello states an edition at or above this key's stamp —
+  the gate thrall already uses for streamed posts (its `src/channel.rs:126`).
+  One loop, one predicate: *read when `holding` is empty, or the server reads
+  `holding`*. Against an old server that is the serial loop of today.
+
+**What a host then does.** It keeps one read parked at all times, tools
+running or not. Work runs off the reading thread and each run posts on its own
+connection, as a streamed run already does (thrall `src/channel.rs:146-156`).
+
+#### 5.8.3 What it deletes, and what it cannot
+
+Deleted, or made true instead of guessed:
+
+- **"It asked again, so it finished nothing."** `read.rs:183` keeps its line
+  and loses its premise: work goes out again because the host *said* it does
+  not hold it. `doubt.rs:69` becomes a statement — "the box said it no longer
+  holds it".
+- **"Busy means absent."** A host that reads while working is always parked,
+  so `present` and `serving` are true while it works with no change to
+  either, and it is asked rather than remembered. For such a host bl-3b4b's
+  `busy`, its remembered answers (`slots/known.rs`, `slots.rs:76`) and the
+  "busy with another call" refusal (`config/far.rs:206-210`) never fire; they
+  are deleted outright once no serial host is left to serve. The busy-host
+  reasoning in `src/registry/mailbox.rs:16-24` and §5's presence amendment
+  goes the same way.
+- **One job at a time**, and with it §5.7's *"One call at a time per foot"*,
+  *"A sign-in occupies its foot"*, and the workaround of a second foot under
+  its own certificate.
+- **In the hosts, the re-advertisement after every hand-off** and the
+  "restored" notice behind it (thrall `hold.rs:134-138`; yog-android
+  `serve.rs:220-230`). It closed the window in which a working host held no
+  read; that window is gone, so a rival's advertisement always finds a read to
+  end and to tell.
+- **In thrall, the ordering rule "post the held capture before the first
+  read"** (`hold.rs:116`, §5.6 ruling 1). The id stays in `holding` until its
+  post is answered, so any order is safe. The held capture itself stays.
+
+Not deleted, and why:
+
+- **One read per certificate, and `superseded`.** "Not listed means not held"
+  is only true if a certificate speaks with one voice. The reader slot stops
+  being the precondition of a guess and becomes that rule. A host needs only
+  one read, so it never meets the refusal from itself.
+- **The three-hand-off bound, the doubt sentences and the hour sweep.** The
+  leg is still at-least-once.
+- **`wrote` on the advertisement's receipt.** It is a required key (§5.1);
+  removing it is a `PROTOCOL` bump.
+- **thrall's ten-second empty post** (`src/exec/stream.rs:23`). It is how a
+  silent child learns its asker left (§5.7, *the refusal is the stop*).
+- **The legacy path.** Absent-means-empty is the old host's path forever
+  within this major, and it costs no code: it is the same path.
+
+#### 5.8.4 Attacked
+
+- **A host process dies holding jobs and restarts.** Its first read lists
+  nothing. Unposted work is handed out again at once and partly posted work is
+  answered in doubt — today's outcomes, now only for work actually lost.
+- **A host vanishes and never reads again.** Without step 3 below: the
+  asker's two-minute patience, as today. With it: *a slot some read has
+  listed, whose certificate then has no read parked for thirty seconds, is
+  answered in doubt at its asker's next poll* — at most a minute after the
+  death, naming the cause. Thirty seconds is the bound this leg already uses
+  in both directions (§5.7).
+- **A host lies.** Listing an id it is not running keeps only a slot
+  addressed to itself, and it could already answer that slot falsely. Omitting
+  an id it is running gets the same id handed back — the idempotency key
+  (§5.3) — at most three times, each marked on the capture (§5.6). A
+  duplicate in the list is a set.
+- **Two processes, one certificate.** Unchanged rule: the second read is
+  refused, the newer advertisement ends the older read and tells it. One hole
+  closes — today a second process reading while the first is *busy* is granted
+  and re-runs its work; a host that is always parked leaves no such moment.
+- **A result arrives for an id the server gave up on.** Unchanged (§5.6): a
+  capture reopens a doubt the server wrote with nothing posted and nobody has
+  collected; otherwise the post is refused, and the host drops the capture and
+  the id.
+- **A result and the next read cross.** The id leaves `holding` only after
+  its final post is answered, and the server ignores a listed id that is
+  finished. Every interleaving of the two is then one of: listed and
+  finished (ignored), or not listed and finished (nothing to hand out). No
+  order re-runs the work.
+- **How many at once.** The host's fact, and it is not on the wire. The
+  server hands a host everything addressed to it, as it always has; the host
+  lists all of it and runs as many at a time as it chooses. Work is addressed
+  to a named machine, so the server has nothing to decide with the number.
+
+**Refused: many readers per certificate.** Dropping the reader slot entirely
+makes "not listed" mean nothing — another process may hold it — so work could
+only be reclaimed by timeout, and a restart would wait out that timeout where
+today it waits for nothing. It buys a pool of processes under one name, which
+concurrency inside one host already gives.
+
+#### 5.8.5 Rollout, and the smallest first step
+
+`PROTOCOL` stays 19, so no release is held on another (§3).
+
+1. **yog — the smallest step.** Read `holding` on `request/invocations`; a
+   listed slot is skipped by that read. One optional array and one filter in
+   `drain`; the corpus stamps the next edition. No host changes and no host
+   can tell.
+2. **thrall, then yog-android.** Re-vendor the ledger; read while working
+   when the server's edition allows; delete the re-advertisement. Either may
+   ship in any order after step 1 — each gates on the hello.
+3. **yog, a second edition.** The thirty-second rule above, and an optional
+   `held: true` on `reply/routed` (rides only when true) while a slot is
+   listed. The two callers' patience (`tool_host/remote.rs:79`,
+   `bz_host/far.rs:216`) then counts only time a slot is *not* held, and their
+   sentence stops saying "offline, or still running".
+4. **lernie.** Nothing. It hosts no tools.
+5. **The docs.** §5.1, §5.3 and §5.7 lose the sentences listed in §5.8.3 in
+   the ball that lands each step.
+
+**What it makes of the small fixes around it.** *Keeping a busy machine
+visible without a wire change* (bl-3b4b, landed; §5.7, *A busy machine stays
+in sight*) is redundant for any host past step 2 and still carries every
+serial one; its own *Not solved here* — "a busy machine still runs nothing
+new until its job ends … the remedy needs the wire" — is this section. *The
+phone doing its work off the reading thread*
+is step 2's first half and is kept. *The phone honouring `superseded`*
+(yog-android bl-83d3) is not redundant: a host that is always parked is always
+the one told.
+
+#### 5.8.6 What it does not solve
+
+- **The leg stays at-least-once.** A host restarted mid-tool still runs that
+  tool again, bounded and marked.
+- **A server restart still loses every slot** (§5.6 ruling 3). A host lists
+  ids the new process never minted, is ignored, and learns at its next post.
+- **A silent tool on a host that does not stream** is not stopped when its
+  asker leaves.
+- **After step 3, a host that hangs while listing a job holds that turn until
+  the operator stops it** (§3.1). Before step 3 the two-minute patience still
+  cuts it off — and cuts off every honest long tool with it.
+- **The roster says a machine is there, not what it is doing.**
+- **The server still never speaks first.** A parked read is still how work
+  travels.
+
 ## 6. What lives where
 
 Everything durable is the server's: the world, the logs (`ops.jsonl`), the
