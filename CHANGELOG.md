@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.108](https://github.com/mudbungie/yog/compare/v0.0.107...v0.0.108) - 2026-11-22
+
+### Changes
+
+- the pins step to litany =0.0.22, brazen =0.0.25, ingested from the registry
+
+## [0.0.107](https://github.com/mudbungie/yog/compare/v0.0.106...v0.0.107) - 2026-11-21
+
+### Changes
+
+- nothing is refused because a machine is busy: a read aimed at a working machine queues one ask behind its job, and a machine heard from a moment ago is there [bl-d9ad]
+
 ## [0.0.106](https://github.com/mudbungie/yog/compare/v0.0.105...v0.0.106) - 2026-11-21
 
 ### Changes

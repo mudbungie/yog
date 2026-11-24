@@ -1,6 +1,6 @@
 [package]
 name = "yog"
-version = "0.0.106"
+version = "0.0.108"
 edition = "2024"
 description = "yog: the standalone server for litany loops — the world, the balls and the conversations, behind one wire"
 license = "MIT"
@@ -158,7 +158,7 @@ balls = "=0.5.13"
 # claude-session row ask the installed CLI for its version instead of carrying
 # a hand-copied one that rots when the backend raises its floor (bl-ee09, ops
 # bl-048a). litany steps to the same pin in 0.0.16 (below).
-brazen = { version = "=0.0.24", features = ["native-host"] }
+brazen = { version = "=0.0.25", features = ["native-host"] }
 clap = { version = "4", features = ["derive"] }
 # The embedded agent harness (DESIGN §16.7 W11): the multiplex arm `yog litany
 # <argv…>` reproduces litany's own thin exec binding over `litany::cmd`, and the
@@ -384,7 +384,7 @@ clap = { version = "4", features = ["derive"] }
 # that agent alone, and each step's `meta.json` gains `model_mark`, which rides
 # `steps_view::meta_field` unread like every other grows-only field. yog spends
 # none of the new verb here.
-litany = "=0.0.21"
+litany = "=0.0.22"
 libc = "0.2"
 notify = "6"
 # The REMOTE §9.5 wire's TLS (bl-b6fa, approved by operator ruling 2026-08-13).
