@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.109](https://github.com/mudbungie/yog/compare/v0.0.108...v0.0.109) - 2026-11-24
+
+### Changes
+
+- REMOTE 5.8 in force: a host that sends holding on its invocations read is pushed every job over one open read, with a heartbeat; old hosts unchanged [bl-f5cd]
+
 ## [0.0.108](https://github.com/mudbungie/yog/compare/v0.0.107...v0.0.108) - 2026-11-22
 
 ### Changes
