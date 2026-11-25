@@ -122,7 +122,10 @@ pub(super) fn encode(query: &Query) -> Value {
         } => json!({ "op": LOGIN_TAIL, "workspace": workspace, "provider": provider }),
         // The routing leg's two reads (bl-024b). The follow-class one names
         // nothing at all: the queue it drains is the intake's own.
-        Query::Invocations => json!({ "op": INVOCATIONS }),
+        Query::Invocations { holding: None } => json!({ "op": INVOCATIONS }),
+        Query::Invocations {
+            holding: Some(held),
+        } => json!({ "op": INVOCATIONS, "holding": held }),
         Query::Capture { invocation, since } => {
             let mut o = Map::new();
             o.insert("op".to_owned(), json!(CAPTURE));
@@ -238,7 +241,9 @@ fn read(op: &str, o: &Map<String, Value>) -> Result<Option<Query>, String> {
             provider: str_of(o, "provider")?,
         },
         // The tool host's follow-class read, and the asker's poll (bl-024b).
-        INVOCATIONS => Query::Invocations,
+        INVOCATIONS => Query::Invocations {
+            holding: crate::registry::mailbox::holding_of(o)?,
+        },
         CAPTURE => Query::Capture {
             invocation: str_of(o, "invocation")?,
             since: crate::registry::mailbox::stream::since_of(o)?,

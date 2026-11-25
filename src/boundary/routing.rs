@@ -22,7 +22,7 @@
 //! driver; this leg is transport, and REMOTE §5 is honest that what happens on
 //! the far machine is beyond the adjudicator's reach.
 
-use crate::registry::mailbox::{Call, Completion, Offsets, Standing, Verb};
+use crate::registry::mailbox::{Call, Completion, Offsets, Standing, Taken, Verb};
 use crate::registry::{Client, tools};
 
 use super::dispatch::Deps;
@@ -111,9 +111,27 @@ fn complete(deps: &Deps, ts: &str, done: &Completion) -> Result<Reply, String> {
 /// (bl-96e0): the read it ends is answered [`Taken::Superseded`](crate::registry::mailbox::Taken), so the
 /// process behind it, if one is still alive, learns it is no longer this
 /// machine's reader.
-pub(super) fn invocations(deps: &Deps) -> Result<Reply, String> {
+///
+/// **A read stating `holding` is a pushing host's** (REMOTE §5.8). This intake
+/// holds no connection, so it answers that read's first frame — the general
+/// path with one frame; the held form is the connection's (`consumer::lanes`).
+pub(super) fn invocations(
+    deps: &Deps,
+    holding: Option<&[String]>,
+    now: i64,
+) -> Result<Reply, String> {
     let client = connected(deps, "invocations")?;
-    Ok(Reply::Invocations(deps.caller.mailbox.take(&client)?))
+    let taken = match holding {
+        None => deps.caller.mailbox.take(&client)?,
+        Some(held) => {
+            let mut push = deps
+                .caller
+                .mailbox
+                .push(&client, held, Box::new(move || now));
+            push.next().unwrap_or(Taken::Superseded)
+        }
+    };
+    Ok(Reply::Invocations(taken))
 }
 
 /// The asker's poll: the capture if the far machine has answered, nothing yet

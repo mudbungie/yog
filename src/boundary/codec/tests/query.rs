@@ -79,7 +79,10 @@ pub(super) fn surface() -> Vec<Gesture> {
     }
     // The routing leg's two reads (bl-024b): one names a handle, the other
     // names nothing — the queue it drains is the intake's own.
-    out.push(Gesture::Ask(Query::Invocations));
+    out.push(Gesture::Ask(Query::Invocations { holding: None }));
+    out.push(Gesture::Ask(Query::Invocations {
+        holding: Some(vec!["inv-7".to_owned()]),
+    }));
     // With the asker's own offsets (REMOTE §5.7) and without.
     for since in [
         None,

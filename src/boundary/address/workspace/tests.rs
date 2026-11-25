@@ -158,7 +158,7 @@ fn a_gesture_naming_no_workspace_answers_none() {
         Gesture::Act(Action::Ack),
         Gesture::Act(Action::Advertise { tools: Vec::new() }),
         Gesture::Ask(Query::Workspaces),
-        Gesture::Ask(Query::Invocations),
+        Gesture::Ask(Query::Invocations { holding: None }),
     ] {
         assert_eq!(gesture.workspace(), None, "{gesture:?}");
     }

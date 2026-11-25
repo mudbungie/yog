@@ -15,7 +15,7 @@ fn a_piece_crosses_while_the_run_is_live_and_the_capture_is_the_remainder() {
     let driver = deps(root.path(), crate::registry::LOCAL, &mail);
     let host = deps(root.path(), "laptop", &mail);
     let id = handle(invoke(&driver, "100", &call("laptop", "bz")));
-    assert!(invocations(&host).is_ok());
+    assert!(invocations(&host, None, 0).is_ok());
 
     let piece = Piece {
         stdout: "hel".to_owned(),

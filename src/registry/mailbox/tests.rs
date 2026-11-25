@@ -98,3 +98,19 @@ fn the_streamed_spellings_round_trip_and_refuse_by_name() {
     );
     assert_eq!(read(json!({})), Err("complete: missing capture".to_owned()));
 }
+
+/// **`holding`** (REMOTE §5.8): absent is the serial read, an empty list is a
+/// pushing host holding nothing, and anything but a list of ids refuses.
+#[test]
+fn holding_is_read_strictly_and_absent_is_not_empty() {
+    let read = |v: Value| super::holding_of(v.as_object().expect("an envelope"));
+    assert_eq!(read(json!({})), Ok(None));
+    assert_eq!(read(json!({"holding": []})), Ok(Some(Vec::new())));
+    assert_eq!(
+        read(json!({"holding": ["inv-1"]})),
+        Ok(Some(vec!["inv-1".to_owned()]))
+    );
+    for bad in [json!({"holding": "inv-1"}), json!({"holding": [1]})] {
+        assert!(read(bad).is_err_and(|e| e.contains("holding")));
+    }
+}

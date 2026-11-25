@@ -123,3 +123,19 @@ pub(super) fn capture(tail: &str, verb: &str) -> Result<Gesture, String> {
         since,
     }))
 }
+
+/// `/invocations [--holding [<invocation>…]]` — the follow-class read, and
+/// its pushing form (REMOTE §5.8): `--holding` alone states that this host
+/// holds nothing, which is a different read from not stating it at all.
+pub(super) fn invocations(tail: &str, verb: &str) -> Result<Gesture, String> {
+    let holding = match tail.split_whitespace().collect::<Vec<_>>().split_first() {
+        None => None,
+        Some((&"--holding", ids)) => Some(ids.iter().map(|id| (*id).to_owned()).collect()),
+        Some(_) => {
+            return Err(format!(
+                "/{verb}: usage: /{verb} [--holding [<invocation>…]]"
+            ));
+        }
+    };
+    Ok(Gesture::Ask(Query::Invocations { holding }))
+}

@@ -45,7 +45,7 @@ pub const FOLLOWING: &[HelpRow] = &[
     },
     HelpRow {
         verb: "invocations",
-        usage: "/invocations",
+        usage: "/invocations [--holding [<invocation>…]]",
         summary: "a tool host's next work: wait for what this machine has been asked to run",
         detail: "The routing leg's follow-class read. It does not answer until this machine has \
                  an invocation or the server's hold expires — thirty seconds — so a tool host \
@@ -57,7 +57,11 @@ pub const FOLLOWING: &[HelpRow] = &[
                  failure — unless it carries `\"superseded\": true`, which says a newer \
                  activation of this certificate advertised and took the queue: stop, do not \
                  ask again. Each row is `{\"invocation\": …, \"tool\": …, \"input\": …}`; run \
-                 it and post the result with `/complete`.",
+                 it and post the result with `/complete`. With `--holding` it is a pushing \
+                 host's read: it stays open, each job is one frame the moment it \
+                 is queued, a frame with no rows every thirty seconds is a heartbeat, the ids \
+                 listed are left alone, and anything else this machine was handed and has not \
+                 finished is taken back.",
         surface: Surface::Machine,
     },
     HelpRow {

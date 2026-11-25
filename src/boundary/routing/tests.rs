@@ -96,7 +96,7 @@ fn a_call_crosses_and_the_capture_comes_back() {
     let id = handle(invoke(&driver, "100", &call("laptop", "Bash")));
 
     let host = deps(root.path(), "laptop", &mail);
-    let taken = invocations(&host);
+    let taken = invocations(&host, None, 0);
     assert_eq!(
         taken,
         Ok(Reply::Invocations(Taken::Work(vec![
@@ -170,7 +170,7 @@ fn an_in_world_caller_has_no_invocations_and_completes_nothing() {
     let inbox = deps(root.path(), crate::registry::LOCAL, &mail);
 
     for refusal in [
-        invocations(&inbox),
+        invocations(&inbox, None, 0),
         complete(
             &inbox,
             "100",
@@ -195,7 +195,7 @@ fn an_empty_hold_and_an_unheld_handle_are_both_ordinary_answers() {
     let mail = Mailbox::holding(1, Duration::from_millis(1));
     let host = deps(root.path(), "laptop", &mail);
     assert_eq!(
-        invocations(&host),
+        invocations(&host, None, 0),
         Ok(Reply::Invocations(Taken::Work(Vec::new())))
     );
     assert!(
@@ -272,7 +272,7 @@ fn a_read_a_newer_activation_ended_is_answered_superseded() {
     let root = tempdir().expect("tmp");
     let mail = Mailbox::holding(4000, Duration::from_millis(5));
     let (path, theirs) = (root.path().to_path_buf(), mail.clone());
-    let old = std::thread::spawn(move || invocations(&deps(&path, "laptop", &theirs)));
+    let old = std::thread::spawn(move || invocations(&deps(&path, "laptop", &theirs), None, 0));
     crate::test_support::foot::parked(&mail, "laptop");
     mail.supersede("laptop");
     assert_eq!(
@@ -289,7 +289,7 @@ fn a_bare_redial_does_not_take_the_queue_from_a_live_reader() {
     let root = tempdir().expect("tmp");
     let mail = Mailbox::holding(1, Duration::from_millis(1));
     let _live = mail.reading("laptop").expect("the live reader");
-    let said = invocations(&deps(root.path(), "laptop", &mail)).expect_err("refused");
+    let said = invocations(&deps(root.path(), "laptop", &mail), None, 0).expect_err("refused");
     assert!(said.contains("already holding"), "{said}");
     assert!(said.contains("advertises first"), "{said}");
     assert!(mail.serving("laptop"), "the live reader still holds it");

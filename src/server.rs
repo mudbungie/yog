@@ -145,7 +145,7 @@ impl Server {
             // beside presence and for its reason: the listener's connections
             // drain it while the deposit inbox's callers fill it, so one
             // handle, held by the one context both intakes answer through.
-            mailbox: crate::registry::mailbox::Mailbox::default(),
+            mailbox: crate::registry::mailbox::Mailbox::booted(clock.unix()),
             // The §8.3 sign-in runs (REMOTE §8.3, bl-c285), minted here beside
             // them and over the **world-nested** `bz` every other substrate
             // spawn goes through: the act layers the named workspace's wall on

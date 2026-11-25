@@ -14,7 +14,7 @@
 use std::time::Duration;
 
 use super::super::doubt::{ASKED_AGAIN, in_doubt};
-use super::{Invocation, MailCell, Mailbox, Slots, lock_mail};
+use super::{Invocation, MailCell, Mailbox, Slot, Slots, lock_mail};
 
 /// How long a follow-class read waits for work before answering with none:
 /// 240 looks, 125 ms apart — thirty seconds. A bound rather than an open wait,
@@ -116,14 +116,24 @@ impl Mailbox {
                  Something else is presenting this certificate: stop it, or stop this"
             ));
         }
+        Ok(self.claim(&mut slots, client, false))
+    }
+
+    /// The claim itself, under the lock its caller holds. A **pushing** read
+    /// (REMOTE §5.8) makes it over whatever read holds it, as an advertisement
+    /// does: a host that states what it holds is an activation entitled to its
+    /// queue, and the read it ends is answered [`Taken::Superseded`].
+    pub(super) fn claim(&self, slots: &mut Slots, client: &str, push: bool) -> Reading {
         slots.reads += 1;
         let token = slots.reads;
-        slots.reading.insert(client.to_owned(), token);
-        Ok(Reading {
+        slots
+            .reading
+            .insert(client.to_owned(), Claim { token, push });
+        Reading {
             cell: self.cell.clone(),
             name: client.to_owned(),
             token,
-        })
+        }
     }
 
     /// **A newer activation of `client` has spoken** (REMOTE §5.1, bl-96e0):
@@ -171,22 +181,41 @@ impl Mailbox {
         if !reading.holds(&slots) {
             return None;
         }
-        let mut out = Vec::new();
-        for slot in slots.live.values_mut() {
-            if slot.client != client || slot.run.over() {
-                continue;
-            }
-            if slot.run.acknowledged() {
-                slot.doubt(ASKED_AGAIN);
-            } else if slot.handed >= HAND_OFFS {
-                slot.run.doubt(&in_doubt(client, slot.handed));
-            } else if ack || slot.handed == 0 {
-                slot.handed += 1;
-                out.push(slot.invocation.clone());
-            }
-        }
-        Some(out)
+        let mine = slots.live.values_mut();
+        Some(
+            mine.filter(|slot| slot.client == client && !slot.run.over())
+                .filter_map(|slot| slot.met(ack, true, ASKED_AGAIN))
+                .collect(),
+        )
     }
+}
+
+impl Slot {
+    /// **One slot, met by a look** (REMOTE §5.3, §5.6, §5.7): an acknowledged
+    /// run is answered in doubt for `why`, an exhausted lease in doubt for its
+    /// count, and otherwise the slot is handed — when the look acknowledges
+    /// (`ack`) or nobody has been handed it, and only while its asker is
+    /// `listening` (§5.8: an ask nobody waits on is not run for nobody).
+    pub(super) fn met(&mut self, ack: bool, listening: bool, why: &str) -> Option<Invocation> {
+        if self.run.acknowledged() {
+            self.doubt(why);
+        } else if self.handed >= HAND_OFFS {
+            self.run.doubt(&in_doubt(&self.client, self.handed));
+        } else if (ack || self.handed == 0) && listening {
+            self.handed += 1;
+            return Some(self.invocation.clone());
+        }
+        None
+    }
+}
+
+/// Who holds one machine's reader slot: the read's token, and whether it is a
+/// pushing read (REMOTE §5.8) — the one fact that says a machine's host takes
+/// work while it works, so *busy* is not a thing it can be.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct Claim {
+    token: u64,
+    pub(super) push: bool,
 }
 
 /// One parked follow-class read, as a claim on its client's reader slot.
@@ -205,8 +234,13 @@ pub(crate) struct Reading {
 }
 
 impl Reading {
-    fn holds(&self, slots: &Slots) -> bool {
-        slots.reading.get(&self.name) == Some(&self.token)
+    /// The client this read is the reader for.
+    pub(super) fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub(super) fn holds(&self, slots: &Slots) -> bool {
+        slots.reading.get(&self.name).map(|claim| claim.token) == Some(self.token)
     }
 }
 

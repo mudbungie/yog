@@ -2,6 +2,9 @@
 //! intake whose answer is a frame *sequence* rather than a value, split from
 //! [`super`] at §12's budget on the seam the answer's own shape draws.
 //!
+//! A fourth is a pushing host's `invocations` read (REMOTE §5.8), which is
+//! held here for the same reason and shares nothing else with the three.
+//!
 //! Three reads reach it and they share everything but their subject: `Follow`
 //! is one conversation's live tail (bl-73e7), `LoginTail` is one sign-in's
 //! output (REMOTE §8.3, bl-c285), and `Attention` is what needs the operator
@@ -76,6 +79,12 @@ impl ConsumerCtx {
         if !peer.grade.admits(&gesture) {
             return None;
         }
+        if let Gesture::Ask(Query::Invocations {
+            holding: Some(held),
+        }) = &gesture
+        {
+            return Some(self.push(peer, held));
+        }
         let (named, subject) = match gesture {
             Gesture::Ask(Query::Follow { workspace, agent }) => {
                 (Some(workspace), Subject::Tail(agent))
@@ -120,5 +129,21 @@ impl ConsumerCtx {
         Some(Box::new(
             frames.map(|reply| crate::boundary::reply::encode(&reply)),
         ))
+    }
+
+    /// **A pushing host's read, held** (REMOTE §5.8): each job written the
+    /// moment it is queued for this certificate, an empty frame on every
+    /// quiet hold, and `superseded` last. The identity is the certificate's,
+    /// as every read of the queue is (§5.3).
+    fn push(
+        &self,
+        peer: &crate::registry::Peer,
+        held: &[String],
+    ) -> Box<dyn Iterator<Item = Value>> {
+        let clock = Arc::clone(&self.clock);
+        let push = self
+            .mailbox
+            .push(&peer.client.name(), held, Box::new(move || clock.unix()));
+        Box::new(push.map(|taken| crate::boundary::reply::encode(&Reply::Invocations(taken))))
     }
 }

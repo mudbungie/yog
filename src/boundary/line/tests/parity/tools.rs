@@ -66,7 +66,13 @@ fn the_routing_legs_gestures_round_trip() {
             post,
         }))));
     }
-    rt(Gesture::Ask(Query::Invocations));
+    for holding in [
+        None,
+        Some(Vec::new()),
+        Some(vec!["inv-1".to_owned(), "inv-2".to_owned()]),
+    ] {
+        rt(Gesture::Ask(Query::Invocations { holding }));
+    }
     for since in [
         None,
         Some(Offsets {
@@ -96,6 +102,8 @@ fn a_malformed_offset_or_piece_is_refused_on_the_line() {
         let e = crate::boundary::line::parse(line, &ctx).expect_err(line);
         assert!(e.contains("<stdout bytes> <stderr bytes>"), "{e}");
     }
+    let e = crate::boundary::line::parse("/invocations inv-1", &ctx).expect_err("not a flag");
+    assert!(e.contains("--holding"), "{e}");
     let e = crate::boundary::line::parse("/complete inv-1 --partial {\"stdout\":\"a\"}", &ctx)
         .expect_err("a piece states both streams");
     assert!(e.contains("stderr"), "{e}");

@@ -16,6 +16,8 @@ mod activation;
 mod known;
 /// The two silences that end a streamed run, and the refused post.
 mod listen;
+/// **The pushing read** (REMOTE §5.8): a job as it is queued, one read open.
+mod push;
 /// **The streamed form's own corpus** (REMOTE §5.7): N posts, offsets, the
 /// two silences and the bound.
 mod stream;

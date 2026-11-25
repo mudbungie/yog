@@ -42,6 +42,7 @@ pub(crate) mod slots;
 pub mod stream;
 
 pub use slots::Mailbox;
+pub use slots::push::{Now, Push};
 pub use slots::read::Taken;
 pub use stream::{Offsets, Piece, Post, Standing};
 
@@ -169,6 +170,23 @@ pub fn cwd_of(o: &serde_json::Map<String, Value>) -> Result<Option<String>, Stri
         Some(Value::String(s)) => Ok(Some(s.clone())),
         Some(_) => Err("field \"cwd\" is not a string".to_owned()),
     }
+}
+
+/// **`holding`** (REMOTE §5.8), read strictly: absent is the serial read it
+/// always was, and present — empty included — is a pushing host's list of
+/// what it holds. Anything but an array of strings refuses: it is what the
+/// server leaves alone and what it takes back, so a guess at it is a job run
+/// twice or lost.
+pub fn holding_of(o: &serde_json::Map<String, Value>) -> Result<Option<Vec<String>>, String> {
+    let Some(v) = o.get("holding") else {
+        return Ok(None);
+    };
+    let bad = || "field \"holding\" is not an array of invocation ids".to_owned();
+    let ids = v.as_array().ok_or_else(bad)?;
+    ids.iter()
+        .map(|id| id.as_str().map(str::to_owned).ok_or_else(bad))
+        .collect::<Result<_, _>>()
+        .map(Some)
 }
 
 /// An exit code narrowed to what a process can actually have exited with.

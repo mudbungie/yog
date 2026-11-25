@@ -157,3 +157,33 @@ fn an_undecodable_envelope_is_still_the_codecs_refusal() {
         "{refusal}"
     );
 }
+
+/// **A foot's pushing read is held at the connection** (REMOTE §5.8): the
+/// lane writes each job as one frame. The same read at the one-frame door
+/// answers its first frame — and, being a pushing read, takes the queue from
+/// the held one, which is then told.
+#[test]
+fn a_foot_s_pushing_read_is_held_and_one_frame_elsewhere() {
+    let (root, data) = (tempdir().unwrap(), tempdir().unwrap());
+    let ctx = quiet(root.path(), data.path());
+    let host = foot("host");
+    let call = crate::registry::mailbox::Call {
+        client: "host".to_owned(),
+        tool: "Bash".to_owned(),
+        input: json!({}),
+        cwd: None,
+    };
+    let first = ctx.mailbox.post(ctx.clock.unix(), "driver", &call);
+    let mut lane = ctx
+        .follow(&host, &json!({"op": "invocations", "holding": []}))
+        .expect("held");
+    let frame = lane.next().expect("the job");
+    assert_eq!(frame["rows"][0]["invocation"], first.as_str(), "{frame}");
+    assert_eq!(frame["rows"].as_array().map(Vec::len), Some(1), "{frame}");
+
+    let second = ctx.mailbox.post(ctx.clock.unix(), "driver", &call);
+    let once = ctx.answer_as(&host, &json!({"op": "invocations", "holding": [first]}));
+    assert_eq!(once["rows"][0]["invocation"], second.as_str(), "{once}");
+    assert_eq!(lane.next().expect("told")["superseded"], true);
+    assert!(lane.next().is_none());
+}

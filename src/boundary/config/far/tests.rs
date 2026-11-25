@@ -25,6 +25,8 @@ const LISTING: &str = r#"{"providers":[{"name":"sub","protocol":"anthropic_messa
 
 /// A machine that is working, or between jobs, is asked (bl-3b4b, bl-d9ad).
 mod busy;
+/// A pushing host is never busy (REMOTE §5.8).
+mod push;
 
 fn ws() -> PathBuf {
     crate::test_support::fixture_workspace()

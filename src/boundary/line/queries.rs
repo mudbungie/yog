@@ -127,7 +127,7 @@ pub(super) fn queries(verb: &str, tail: &str, ctx: &Context) -> Result<Gesture, 
         // REMOTE §3's follow-class read and the poll beside it (bl-024b). The
         // first names nothing: the queue it drains is the intake's own, so a
         // line seat typing it drains nothing and is told why at dispatch.
-        "invocations" => args::none(tail, verb).map(|()| ask(Query::Invocations)),
+        "invocations" => super::tools::invocations(tail, verb),
         "capture" => super::tools::capture(tail, verb),
         // The sign-in lane (REMOTE §8.3, bl-c285) — `/login`'s own grammar at
         // the read: the wall is the seat's, the row is the one word. A line

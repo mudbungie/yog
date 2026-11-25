@@ -122,7 +122,7 @@ impl Query {
             | Query::Ops { .. }
             | Query::Search { .. }
             | Query::Help { .. }
-            | Query::Invocations
+            | Query::Invocations { .. }
             | Query::LoginTail { .. }
             | Query::Capture { .. }
             | Query::Prices => None,

@@ -172,7 +172,7 @@ impl Query {
             | Query::Help { .. }
             // The routing leg's two reads: one is answered to the intake's own
             // identity, the other to a handle — neither names a world.
-            | Query::Invocations
+            | Query::Invocations { .. }
             | Query::Capture { .. }
             | Query::Prices => None,
         }

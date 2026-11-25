@@ -53,10 +53,14 @@ fn key(call: &Call) -> Key {
 }
 
 impl Slots {
+    /// A pushing host (REMOTE §5.8) is never busy: it takes work while it
+    /// works, so what it is running stands in front of nothing.
     fn busy(&self, now: i64, client: &str) -> bool {
-        self.live
-            .values()
-            .any(|slot| slot.client == client && slot.works(now))
+        !self.reading.get(client).is_some_and(|claim| claim.push)
+            && self
+                .live
+                .values()
+                .any(|slot| slot.client == client && slot.works(now))
     }
 
     /// **Look at `key`'s flight**: listened to, ended in doubt if its machine

@@ -65,8 +65,10 @@ pub(super) fn in_doubt(client: &str, handed: u32) -> String {
 }
 
 /// What ended a run that had begun to arrive — the three ways the server
-/// learns one will not finish (REMOTE §5.7).
+/// learns one will not finish (REMOTE §5.7), and the fourth a pushing host
+/// says outright (§5.8).
 pub(super) const ASKED_AGAIN: &str = "the box asked for work again without finishing it";
+pub(super) const NOT_HELD: &str = "the box said it no longer holds it";
 pub(super) const WENT_QUIET: &str = "the box posted nothing for thirty seconds";
 pub(super) const UNHEARD: &str =
     "it was refused a post because nobody had asked for its capture in thirty seconds";

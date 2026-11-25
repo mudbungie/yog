@@ -110,7 +110,14 @@ pub(super) fn spell_query(query: &Query) -> String {
         }
         // The follow-class read names nothing at all; its sibling names the
         // handle, which is the one thing a seat cannot hold.
-        Query::Invocations => "/invocations".to_owned(),
+        Query::Invocations { holding: None } => "/invocations".to_owned(),
+        Query::Invocations {
+            holding: Some(held),
+        } => held
+            .iter()
+            .fold("/invocations --holding".to_owned(), |line, id| {
+                format!("{line} {id}")
+            }),
         Query::Capture { invocation, since } => match since {
             None => format!("/capture {invocation}"),
             Some(at) => format!("/capture {invocation} {} {}", at.stdout, at.stderr),

@@ -252,7 +252,9 @@ pub fn answer(query: &Query, deps: &Deps, ui: &UiState, now_unix: i64) -> Result
         // for this client's next work, and the asker's poll for what one
         // captured. Neither names a world, so neither reads the resolution
         // above.
-        Query::Invocations => return super::routing::invocations(deps),
+        Query::Invocations { holding } => {
+            return super::routing::invocations(deps, holding.as_deref(), now_unix);
+        }
         Query::Capture { invocation, since } => {
             return super::routing::capture(deps, now_unix, invocation, *since);
         }

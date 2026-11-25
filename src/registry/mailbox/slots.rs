@@ -18,6 +18,8 @@ use super::{Call, Invocation};
 mod exchange;
 /// A machine that is working, and what it last answered (REMOTE §5.7).
 mod known;
+/// The pushing read (REMOTE §5.8): every job as it is queued, one read open.
+pub(crate) mod push;
 /// The follow-class read, its one-reader claim and the bound on its lease.
 pub(crate) mod read;
 /// One run's text as it arrives (REMOTE §5.7): appended, read, bounded.
@@ -93,7 +95,7 @@ pub(crate) struct Slots {
     /// connections holding one machine's *queue* is the pathology itself,
     /// where two holding one machine's *presence* is an operator with two
     /// seats.
-    reading: BTreeMap<String, u64>,
+    reading: BTreeMap<String, read::Claim>,
     /// The serial a read's token is minted from.
     reads: u64,
     /// **Each read put to a machine** (REMOTE §5.7, bl-3b4b, bl-d9ad), by
@@ -134,6 +136,17 @@ impl Mailbox {
             waits,
             tick,
         }
+    }
+
+    /// **The server's own mailbox, minted at boot**: ids continue from the
+    /// boot's clock in microseconds, so no id a host still holds from an
+    /// earlier life of this server is minted again — a pushing host's
+    /// `holding` outlives the server that handed it (REMOTE §5.8), and an old
+    /// id reused would be a new job left alone, or an old result landed on it.
+    pub fn booted(unix: i64) -> Self {
+        let mail = Self::default();
+        lock_mail(&mail.cell).seq = u64::try_from(unix).unwrap_or(0).saturating_mul(1_000_000);
+        mail
     }
 
     /// Queue `call` for its client on `by`'s behalf and answer the handle it is

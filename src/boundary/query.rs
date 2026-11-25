@@ -269,8 +269,10 @@ pub enum Query {
     /// the deposit inbox, `yog gesture`, the window — refuses in band.
     ///
     /// It names no workspace: a tool set is a fact about a machine (REMOTE
-    /// §5.1) and so is the queue of calls to it.
-    Invocations,
+    /// §5.1) and so is the queue of calls to it. `holding` (REMOTE §5.8):
+    /// stated, a pushing host's read — held open, one frame per job as it is
+    /// queued; absent, the serial read it always was.
+    Invocations { holding: Option<Vec<String>> },
     /// **What one routed invocation captured** (REMOTE §5): the asking side's
     /// poll, answered `null` while the far machine still runs it. Bounded by
     /// the *asker's* patience rather than the server's — a vanished client is

@@ -111,7 +111,7 @@ impl Grade {
                 gesture,
                 Gesture::Act(
                     Action::Advertise { .. } | Action::Route(super::mailbox::Verb::Complete(_))
-                ) | Gesture::Ask(Query::Invocations)
+                ) | Gesture::Ask(Query::Invocations { .. })
             ),
         }
     }

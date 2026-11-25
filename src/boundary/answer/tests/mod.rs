@@ -245,7 +245,7 @@ fn the_governing_read_refuses_and_the_routing_reads_name_no_world() {
     // carries, has no certificate to be addressed by. Both say so, which is
     // the arm proving it routed rather than fell through to a workspace
     // refusal naming the query's absent workspace.
-    let held = answer(&Query::Invocations, &d, &ui(), 200)
+    let held = answer(&Query::Invocations { holding: None }, &d, &ui(), 200)
         .expect_err("an in-world caller carries no certificate to be addressed by");
     assert!(held.contains("no client identity"), "{held}");
     let capture = answer(
