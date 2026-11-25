@@ -3464,7 +3464,12 @@ sight* and §3.3's busy predicate. A pushing host states the facts instead.
 
 **`holding`** is every job this host has taken whose final `complete` the
 server has not yet answered (*final*: the post carrying `capture`; a refusal
-of it is an answer). It may be empty. **The key's presence is the whole
+of it is an answer). **A run that ended with no final post left to make is
+not held either**: a `partial` the server refused has already ended its slot
+in doubt, and a `partial` the wire swallowed stops the child (§5.7) — in both
+the host has nothing more to say for that id, so it leaves `holding` when the
+run ends. `holding` is, exactly, the jobs this host still has something to
+post for. It may be empty. **The key's presence is the whole
 signal** that this is a pushing read — there is no flag beside it. Anything
 but an array of strings is refused, by name. On the line it is `/invocations
 --holding <id>…`, and `--holding` alone is the empty list.
@@ -3519,7 +3524,8 @@ but an array of strings is refused, by name. On the line it is `/invocations
 - **Start every pushed job at once, on its own thread, with no limit**, and
   post its results on **its own connection**, never on the read's.
 - **Keep an id in `holding` until its final `complete` is answered**
-  (landed or refused). Then any interleaving of a result and a reconnect is
+  (landed or refused), **or its run has ended with no final post to make**
+  (above). Then any interleaving of a result and a reconnect is
   safe: listed and finished is ignored, unlisted and finished has nothing to
   hand out.
 - **A pushed id already in `holding` is not started twice.**
