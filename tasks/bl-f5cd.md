@@ -1,7 +1,8 @@
 +++
 title = "REMOTE 5.8 in force: a host that sends holding on its invocations read is pushed every job over one open read, with a heartbeat; old hosts unchanged"
 created = 1795581082
-updated = 1795581082
+updated = 1795581083
+claimant = "Rabid"
 priority = 2
 root_commit = "4dca48efee9e480f122f613931435d280a6ddedf"
 tags = ["feature"]
